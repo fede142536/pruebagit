@@ -1,0 +1,440 @@
+using System;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UI;
+using Football.Core.Common;
+using Football.Core.MatchCore;
+
+namespace Football.Game
+{
+    /// <summary>
+    /// Ejecuta un partido: avanza el motor con paso fijo, interpola entre instantáneas para dibujar, lee los controles
+    /// táctiles, muestra el marcador, los avisos de las jugadas y el menú de pausa.
+    /// </summary>
+    public sealed class MatchScreen
+    {
+        private const int MaxStepsPerFrame = 8;
+        private const float MaxFrameTime = 0.1f;
+        private const float BannerSeconds = 2.4f;
+        private const float EndDelaySeconds = 2.5f;
+        private const ulong BenchmarkSeed = 12345UL;
+        private const float BenchmarkHalfSeconds = 150f;
+        private const float HumanTopSpeedReference = 9.8f;
+
+        private readonly Transform _parent;
+        private readonly PointerInput _pointers;
+        private readonly GameSettings _settings;
+        private readonly Canvas _canvas;
+        private readonly TouchControls _controls;
+        private readonly DebugPanel _debug;
+        private readonly Text _homeName, _awayName, _score, _clock, _banner;
+        private readonly GameObject _pausePanel;
+        private readonly UiButton _resume, _quit, _lefty, _debugToggle, _fpsToggle;
+
+        private MatchEngine _engine;
+        private MatchSnapshot _previous = new MatchSnapshot();
+        private MatchSnapshot _current = new MatchSnapshot();
+        private MatchView _view;
+        private OpponentInfo _opponent;
+        private bool _benchmark;
+        private bool _paused;
+        private float _accumulator;
+        private float _bannerTimer;
+        private float _endTimer;
+        private int _eventsSeen;
+        private int _shownHome = -1, _shownAway = -1, _shownSecond = -1;
+        private bool _shownHasBall = true;
+        private float _benchmarkStart;
+        private int _frameCounter;
+        private readonly StringBuilder _clockText = new StringBuilder(8);
+
+        /// <summary>El partido terminó y pasó la pausa final.</summary>
+        public bool Finished { get; private set; }
+
+        /// <summary>El jugador pidió volver al menú.</summary>
+        public bool QuitRequested { get; private set; }
+
+        /// <summary>Crea la pantalla (los objetos de interfaz se construyen una sola vez).</summary>
+        public MatchScreen(Transform parent, PointerInput pointers, GameSettings settings)
+        {
+            _parent = parent;
+            _pointers = pointers;
+            _settings = settings;
+            _canvas = UiKit.CreateCanvas("PartidoUI", parent, 10);
+            Transform c = _canvas.transform;
+
+            Color panel = new Color(0f, 0f, 0f, 0.55f);
+            UiKit.Panel(c, "Marcador", new Vector2(960f, 1020f), new Vector2(760f, 100f), panel);
+            _homeName = UiKit.Label(c, "Local", new Vector2(700f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleRight);
+            _awayName = UiKit.Label(c, "Visitante", new Vector2(1220f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleLeft);
+            _score = UiKit.Label(c, "Goles", new Vector2(960f, 1035f), new Vector2(160f, 70f), "0 - 0", 54, Color.white);
+            _clock = UiKit.Label(c, "Reloj", new Vector2(960f, 985f), new Vector2(200f, 40f), "00:00", 28, new Color(1f, 0.9f, 0.4f));
+            _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
+
+            _controls = new TouchControls(_canvas);
+            _debug = new DebugPanel(c);
+
+            Image dim = UiKit.Panel(c, "Pausa", new Vector2(960f, 540f), UiKit.Reference, new Color(0f, 0f, 0f, 0.7f));
+            _pausePanel = dim.gameObject;
+            UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
+            _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 720f), new Vector2(560f, 110f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
+            _lefty = UiKit.Button(dim.transform, "Zurdo", new Vector2(960f, 590f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
+            _debugToggle = UiKit.Button(dim.transform, "Depuracion", new Vector2(960f, 470f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
+            _fpsToggle = UiKit.Button(dim.transform, "Fps", new Vector2(960f, 350f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
+            _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 210f), new Vector2(560f, 110f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
+            _pausePanel.SetActive(false);
+            _canvas.gameObject.SetActive(false);
+        }
+
+        /// <summary>Empieza un partido nuevo.</summary>
+        /// <param name="opponent">Rival.</param>
+        /// <param name="difficulty">Índice de dificultad.</param>
+        /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
+        /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
+        public void Begin(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
+        {
+            _opponent = opponent;
+            _benchmark = benchmark;
+            Finished = false;
+            QuitRequested = false;
+            _paused = false;
+            _pausePanel.SetActive(false);
+            _canvas.gameObject.SetActive(true);
+
+            var config = new MatchConfig();
+            config.Rules.HalfDuration = benchmark ? BenchmarkHalfSeconds : halfMinutes * 60f;
+            ulong seed = benchmark ? BenchmarkSeed : (ulong)DateTime.Now.Ticks;
+            var rng = new SeededRandom(seed);
+            IRandom teams = rng.Fork("teams");
+            MatchTeamSetup home = RosterFactory.CreateTeam(teams, TeamCatalog.PlayerTeamName, TeamCatalog.PlayerRating, Formations.F442, config.Styles[0]);
+            MatchTeamSetup away = RosterFactory.CreateTeam(teams, opponent.Name, opponent.Rating, opponent.Formation, config.Styles[opponent.StyleIndex]);
+            _engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, difficulty);
+            _engine.SetHuman(0, !benchmark);
+
+            _view?.Destroy();
+            _view = new MatchView(_engine.Pitch, TeamCatalog.PlayerKit, opponent.Kit);
+            _previous.CopyFrom(_engine);
+            _current.CopyFrom(_engine);
+            _accumulator = 0f;
+            _eventsSeen = 0;
+            _bannerTimer = 0f;
+            _endTimer = 0f;
+            _shownHome = _shownAway = _shownSecond = -1;
+            _banner.text = string.Empty;
+            _homeName.text = TeamCatalog.PlayerTeamName.ToUpperInvariant();
+            _awayName.text = opponent.Name.ToUpperInvariant();
+
+            _controls.Layout(_settings.LeftHanded);
+            ApplyControlsVisibility();
+            _controls.SetHasBall(true);
+            _shownHasBall = true;
+            _debug.SetVisible(_settings.ShowDebug || benchmark);
+            _debug.Reset();
+            _benchmarkStart = Time.realtimeSinceStartup;
+            _frameCounter = 0;
+            Application.targetFrameRate = _settings.TargetFps;
+            RefreshPauseLabels();
+        }
+
+        /// <summary>Resumen de lo ocurrido, para la pantalla final.</summary>
+        public string BuildSummary()
+        {
+            if (_engine == null)
+            {
+                return string.Empty;
+            }
+
+            TeamStats a = _engine.Teams[0].Stats, b = _engine.Teams[1].Stats;
+            float possession = a.PossessionTicks + b.PossessionTicks > 0 ? 100f * a.PossessionTicks / (a.PossessionTicks + b.PossessionTicks) : 50f;
+            var sb = new StringBuilder();
+            sb.Append("Tiros: ").Append(a.Shots).Append(" - ").Append(b.Shots).Append('\n');
+            sb.Append("Posesión: ").Append(possession.ToString("F0")).Append("% - ").Append((100f - possession).ToString("F0")).Append("%\n");
+            sb.Append("Pases completados: ").Append(a.PassesCompleted).Append('/').Append(a.Passes).Append(" - ")
+                .Append(b.PassesCompleted).Append('/').Append(b.Passes).Append('\n');
+            sb.Append("Faltas: ").Append(a.Fouls).Append(" - ").Append(b.Fouls).Append('\n');
+            sb.Append("Córners: ").Append(a.Corners).Append(" - ").Append(b.Corners).Append('\n');
+            sb.Append("Fueras de juego: ").Append(a.Offsides).Append(" - ").Append(b.Offsides).Append('\n');
+            sb.Append("Tarjetas: ").Append(a.Yellows).Append("A ").Append(a.Reds).Append("R - ").Append(b.Yellows).Append("A ").Append(b.Reds).Append('R');
+            if (_benchmark)
+            {
+                sb.Append("\n\nBENCHMARK (partido IA contra IA, semilla fija)\n");
+                sb.Append("FPS medios: ").Append(AverageFps().ToString("F1")).Append('\n');
+                sb.Append("Fotograma medio / p99: ").Append(_debug.AverageFrameMs.ToString("F1")).Append(" / ").Append(_debug.P99FrameMs.ToString("F1")).Append(" ms\n");
+                sb.Append("Recolecciones de basura (gen0): ").Append(_debug.GcCollections).Append('\n');
+                sb.Append("Dispositivo: ").Append(SystemInfo.deviceModel).Append(", ").Append(SystemInfo.systemMemorySize).Append(" MB RAM");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>Texto del marcador final, como "Tu Equipo 2 - 1 Rival".</summary>
+        public string BuildResultLine()
+        {
+            return TeamCatalog.PlayerTeamName + "  " + _engine.Teams[0].Stats.Goals + " - " + _engine.Teams[1].Stats.Goals + "  " + _opponent.Name;
+        }
+
+        private float AverageFps()
+        {
+            float seconds = Time.realtimeSinceStartup - _benchmarkStart;
+            return seconds > 0f ? _frameCounter / seconds : 0f;
+        }
+
+        /// <summary>Oculta la interfaz y libera la escena del partido.</summary>
+        public void End()
+        {
+            _canvas.gameObject.SetActive(false);
+            _view?.Destroy();
+            _view = null;
+        }
+
+        /// <summary>Avanza un fotograma.</summary>
+        public void Update(float deltaTime)
+        {
+            if (_engine == null)
+            {
+                return;
+            }
+
+            MatchInput input = _controls.Read(_pointers, Time.realtimeSinceStartup);
+            if (_controls.PauseDown || _pointers.Keyboard.PauseDown)
+            {
+                SetPaused(!_paused);
+            }
+
+            if (_paused)
+            {
+                HandlePauseInput();
+                return;
+            }
+
+            _frameCounter++;
+            int steps = Step(deltaTime, input);
+            HandleEvents();
+            UpdateHud();
+
+            float alpha = Mathf.Clamp01(_accumulator * _engine.Config.TickRate);
+            int controlled = _engine.Teams[0].Controlled != null ? _engine.Teams[0].Controlled.Index : -1;
+            int target = -1;
+            if (controlled >= 0 && _engine.Owner != null && _engine.Owner.Index == controlled && _controls.Stick.sqrMagnitude > 0.01f)
+            {
+                MatchPlayer preview = _engine.PreviewPassTarget(0, new Vec2(_controls.Stick.x, _controls.Stick.y), false);
+                target = preview != null ? preview.Index : -1;
+            }
+
+            _view.Render(_previous, _current, alpha, controlled, target, HumanTopSpeedReference, deltaTime);
+            _debug.Frame(deltaTime, steps);
+
+            if (_engine.IsFinished)
+            {
+                _endTimer += deltaTime;
+                if (_endTimer >= EndDelaySeconds)
+                {
+                    Finished = true;
+                }
+            }
+        }
+
+        private int Step(float deltaTime, MatchInput input)
+        {
+            bool humanHadBall = _engine.Owner != null && _engine.Owner.Team == 0 && _engine.Teams[0].Controlled == _engine.Owner;
+            if (!_benchmark)
+            {
+                _engine.SetInput(0, input);
+            }
+
+            _accumulator += Mathf.Min(deltaTime, MaxFrameTime);
+            float tick = 1f / _engine.Config.TickRate;
+            int steps = 0;
+            while (_accumulator >= tick && steps < MaxStepsPerFrame && !_engine.IsFinished)
+            {
+                MatchSnapshot swap = _previous;
+                _previous = _current;
+                _current = swap;
+                _engine.Tick();
+                _current.CopyFrom(_engine);
+                _accumulator -= tick;
+                steps++;
+            }
+
+            if (_engine.IsFinished)
+            {
+                _accumulator = 0f;
+            }
+
+            bool kickAction = input.Pass || input.Through || input.Cross || input.Shoot;
+            if (!_benchmark && humanHadBall && kickAction && _engine.Owner != _engine.Teams[0].Controlled)
+            {
+                _debug.RecordLatency(Time.realtimeSinceStartup - _controls.LastActionTime);
+            }
+
+            return steps;
+        }
+
+        private void HandleEvents()
+        {
+            for (; _eventsSeen < _engine.Events.Count; _eventsSeen++)
+            {
+                MatchEvent e = _engine.Events[_eventsSeen];
+                string text = null;
+                switch (e.Type)
+                {
+                    case MatchEventType.Goal:
+                        text = e.Team == 0 ? "¡GOL!" : "GOL DE " + _opponent.Name.ToUpperInvariant();
+                        break;
+                    case MatchEventType.Offside: text = "FUERA DE JUEGO"; break;
+                    case MatchEventType.Foul: text = "FALTA"; break;
+                    case MatchEventType.YellowCard: text = "TARJETA AMARILLA"; break;
+                    case MatchEventType.RedCard: text = "TARJETA ROJA"; break;
+                    case MatchEventType.Penalty: text = "¡PENAL!"; break;
+                    case MatchEventType.Corner: text = "CÓRNER"; break;
+                    case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; break;
+                    case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; break;
+                    case MatchEventType.Save: text = "¡PARADÓN!"; break;
+                    case MatchEventType.Woodwork: text = "¡AL PALO!"; break;
+                }
+
+                if (text != null)
+                {
+                    _banner.text = text;
+                    _bannerTimer = BannerSeconds;
+                }
+            }
+
+            if (_bannerTimer > 0f)
+            {
+                _bannerTimer -= Time.unscaledDeltaTime;
+                if (_bannerTimer <= 0f)
+                {
+                    _banner.text = string.Empty;
+                }
+            }
+        }
+
+        private void UpdateHud()
+        {
+            int home = _engine.Teams[0].Stats.Goals;
+            int away = _engine.Teams[1].Stats.Goals;
+            if (home != _shownHome || away != _shownAway)
+            {
+                _shownHome = home;
+                _shownAway = away;
+                _score.text = home + " - " + away;
+            }
+
+            int second = Mathf.FloorToInt(_engine.Minute * 60f);
+            if (second != _shownSecond)
+            {
+                _shownSecond = second;
+                int minutes = second / 60;
+                int seconds = second % 60;
+                _clockText.Length = 0;
+                if (minutes < 10)
+                {
+                    _clockText.Append('0');
+                }
+
+                _clockText.Append(minutes).Append(':');
+                if (seconds < 10)
+                {
+                    _clockText.Append('0');
+                }
+
+                _clockText.Append(seconds);
+                _clock.text = _clockText.ToString();
+            }
+
+            if (!_benchmark)
+            {
+                bool hasBall = _engine.Owner != null && _engine.Owner.Team == 0;
+                if (hasBall != _shownHasBall)
+                {
+                    _shownHasBall = hasBall;
+                    _controls.SetHasBall(hasBall);
+                }
+            }
+        }
+
+        // ---- Pausa -----------------------------------------------------------------------------------------------
+
+        private void SetPaused(bool paused)
+        {
+            _paused = paused;
+            _pausePanel.SetActive(paused);
+            if (paused)
+            {
+                _controls.SetActive(false);
+            }
+            else
+            {
+                ApplyControlsVisibility();
+                _controls.SetHasBall(_shownHasBall);
+            }
+
+            RefreshPauseLabels();
+        }
+
+        private void ApplyControlsVisibility()
+        {
+            if (_benchmark)
+            {
+                _controls.ShowPauseOnly();
+            }
+            else
+            {
+                _controls.SetActive(true);
+            }
+        }
+
+        private void RefreshPauseLabels()
+        {
+            _lefty.Label.text = "CONTROLES PARA ZURDOS: " + (_settings.LeftHanded ? "SÍ" : "NO");
+            _debugToggle.Label.text = "PANEL DE DEPURACIÓN: " + (_settings.ShowDebug ? "SÍ" : "NO");
+            _fpsToggle.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
+        }
+
+        private void HandlePauseInput()
+        {
+            float scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
+            for (int i = 0; i < _pointers.Count; i++)
+            {
+                PointerState p = _pointers.Pointers[i];
+                if (p.Phase != PointerPhase.Began)
+                {
+                    continue;
+                }
+
+                Vector2 point = p.Position / scale;
+                if (_resume.Contains(point))
+                {
+                    SetPaused(false);
+                }
+                else if (_quit.Contains(point))
+                {
+                    SetPaused(false);
+                    QuitRequested = true;
+                }
+                else if (_lefty.Contains(point))
+                {
+                    _settings.LeftHanded = !_settings.LeftHanded;
+                    _settings.Save();
+                    _controls.Layout(_settings.LeftHanded);
+                    RefreshPauseLabels();
+                }
+                else if (_debugToggle.Contains(point))
+                {
+                    _settings.ShowDebug = !_settings.ShowDebug;
+                    _settings.Save();
+                    _debug.SetVisible(_settings.ShowDebug);
+                    RefreshPauseLabels();
+                }
+                else if (_fpsToggle.Contains(point))
+                {
+                    _settings.TargetFps = _settings.TargetFps == 30 ? 60 : 30;
+                    _settings.Save();
+                    Application.targetFrameRate = _settings.TargetFps;
+                    RefreshPauseLabels();
+                }
+            }
+        }
+    }
+}

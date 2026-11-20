@@ -55,6 +55,28 @@ namespace Football.Core.MatchCore
             Teams[team].Input = current;
         }
 
+        /// <summary>
+        /// Compañero al que iría un pase con la dirección dada, para mostrar una vista previa en pantalla.
+        /// No modifica el estado ni consume azar.
+        /// </summary>
+        /// <param name="team">Equipo controlado por la persona.</param>
+        /// <param name="stick">Dirección del joystick.</param>
+        /// <param name="through">Verdadero para un pase filtrado al espacio.</param>
+        /// <returns>El receptor previsto, o null si el equipo no tiene el balón o no hay candidato.</returns>
+        public MatchPlayer PreviewPassTarget(int team, Vec2 stick, bool through)
+        {
+            TeamState t = Teams[team];
+            MatchPlayer p = t.Controlled;
+            if (p == null || Owner != p)
+            {
+                return null;
+            }
+
+            var input = new MatchInput { Move = stick };
+            ChooseHumanTarget(p, t, input, through, 0f, out _, out MatchPlayer target);
+            return target;
+        }
+
         private void ClearInputImpulses()
         {
             for (int t = 0; t < 2; t++)

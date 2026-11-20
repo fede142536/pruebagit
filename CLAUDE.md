@@ -6,7 +6,7 @@ Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.m
 
 ## Estado actual
 
-**Fase 0 completada. Fase 1 (corte vertical jugable) en curso** (D-03 aprobada; el usuario tiene PC con Windows y un Galaxy A13). **No se avanza de fase sin confirmación explícita del usuario.** Al terminar cada fase: ejecutar pruebas, resumir qué funciona y qué no, y detenerse.
+**Fase 0 completada. Fase 1 (corte vertical jugable): núcleo hecho y probado; la capa Unity está escrita pero sin ejecutar en Unity** (D-03 aprobada; el usuario tiene PC con Windows y un Galaxy A13). Falta que el usuario la pruebe y reporte mediciones y sensaciones. **No se avanza de fase sin confirmación explícita del usuario.** Al terminar cada fase: ejecutar pruebas, resumir qué funciona y qué no, y detenerse.
 
 ## Comandos
 
@@ -24,7 +24,8 @@ El entorno de nube **no trae Unity ni .NET SDK preinstalados**; el SDK de .NET 8
 ## Arquitectura (resumen; detalle en `Docs/ARCHITECTURE.md`)
 
 - `Core/` — C# puro (netstandard2.1), **sin dependencias de Unity**. Dominio, gestión, competiciones, simulación, persistencia, utilidades. Se prueba con `dotnet test`.
-- `Game/` — proyecto Unity: presentación, UI, entrada táctil. Solo **lee** el estado del núcleo y le envía comandos.
+- `Game/Assets/Football/` — capa Unity (`Runtime/` presentación, UI y entrada; `Editor/` scripts del editor). Solo **lee** el estado del núcleo (`MatchSnapshot`) y le envía comandos (`MatchInput`). El proyecto de Unity en sí lo crea el usuario con Unity Hub y se le copian `Assets/Football` y `Assets/Plugins` (ver `Docs/COMO_PROBAR_EN_ANDROID.md`).
+- `Game/Assets/Plugins/Core/Football.Core.dll` — DLL del núcleo **versionada**: regenerarla con `Tools/build-core.sh` y confirmarla en cada cambio de `Core/`.
 - `Tests/` — NUnit para el núcleo.
 - `Docs/` — documentación viva.
 

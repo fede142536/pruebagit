@@ -13,8 +13,8 @@ TestResults/
 /Game/Builds/
 /Game/*.csproj
 /Game/*.sln
-# DLL del núcleo generada por Tools/build-core.sh
-/Game/Assets/Plugins/Core/*.dll
+# La DLL del núcleo (Game/Assets/Plugins/Core/Football.Core.dll) SÍ se versiona, para poder usar el proyecto de Unity
+# sin instalar .NET. Se regenera con Tools/build-core.sh cada vez que cambia Core/.
 /Game/Assets/Plugins/Core/*.pdb
 /Game/Assets/Plugins/Core/*.xml
 

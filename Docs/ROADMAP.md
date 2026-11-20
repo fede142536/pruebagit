@@ -58,9 +58,9 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.2 Movimiento de jugadores | ✅ hecho y probado |
 | 1.3 Reglas esenciales | ✅ hecho y probado (gol, fuera de juego, banda, puerta, córner, falta, tarjetas, penalti, descanso y final) |
 | 1.4 IA con varios rivales y estilos | ✅ hecho: 5 estilos y 5 dificultades en datos; portero con paradas |
-| 1.5 Adaptador Unity (render, cámara) | ⏳ pendiente / sin verificar (requiere Unity) |
-| 1.6 Controles táctiles | ⏳ pendiente / sin verificar (requiere Unity y el dispositivo) |
-| 1.7 HUD, depuración y benchmark | ⏳ pendiente / sin verificar (requiere Unity y el dispositivo) |
+| 1.5 Adaptador Unity (render, cámara) | ⚠️ escrito, compila contra una simulación de la API de Unity; **sin ejecutar en Unity** (`MatchView`, `MatchScreen`) |
+| 1.6 Controles táctiles | ⚠️ escrito, **sin probar en el dispositivo** (`TouchControls`: joystick flotante, botones contextuales, zurdos, pase asistido con vista previa, tiro con carga; teclado para probar en PC) |
+| 1.7 HUD, depuración y benchmark | ⚠️ escrito, **sin medir en el dispositivo** (marcador, pausa, panel de depuración, partido IA contra IA con semilla fija) |
 
 ### Criterios de aceptación medibles
 

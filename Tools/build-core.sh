@@ -9,5 +9,4 @@ dest="$root/Game/Assets/Plugins/Core"
 dotnet build "$root/Core/Core.csproj" -c Release --nologo -v quiet
 mkdir -p "$dest"
 cp "$root/Core/bin/Release/netstandard2.1/Football.Core.dll" "$dest/"
-cp "$root/Core/bin/Release/netstandard2.1/Football.Core.xml" "$dest/" 2>/dev/null || true
 echo "Núcleo copiado a: $dest"

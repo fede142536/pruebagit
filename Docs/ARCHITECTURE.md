@@ -108,6 +108,21 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
 
 ## 6. Capa Unity
 
+Implementada en `Game/Assets/Football/Runtime` (Fase 1; **sin ejecutar aún en Unity**):
+
+| Archivo | Responsabilidad |
+|---|---|
+| `Bootstrap` / `GameRoot` | Arranque automático, estado (menú → partido → resultado), ajustes del dispositivo |
+| `MatchScreen` | Bucle de paso fijo con acumulador, interpolación entre dos `MatchSnapshot`, HUD, pausa, avisos |
+| `MatchView` | Campo (3 mallas), jugadores, balón, cámara de transmisión; convierte coordenadas del motor a Unity |
+| `TouchControls` | Joystick flotante, botones contextuales, zurdos, tiro con carga; produce un `MatchInput` por fotograma |
+| `PointerInput` | Toques, ratón y teclado con el sistema de entrada nuevo o el antiguo |
+| `UiKit` / `MenuScreen` / `ResultScreen` | Interfaz creada por código, sin `EventSystem` |
+| `DebugPanel` | FPS, tiempo de fotograma p99, recolecciones de basura, asignaciones, memoria, latencia estimada |
+| `Materials` | Materiales planos sin iluminación a partir de un material base en `Resources` |
+
+Notas de la versión anterior de este apartado:
+
 - **UI de gestión:** UI Toolkit (UXML/USS), vertical, navegación inferior. Vistas sin lógica: leen *view models* del núcleo.
 - **HUD de partido:** overlay ligero y horizontal.
 - **Presentación:** modelos, materiales, audio y VFX detrás de interfaces (`IPlayerAvatarFactory`, `IStadiumView`, `IAudioBank`); los placeholders son procedurales y se reemplazan sin tocar lógica.

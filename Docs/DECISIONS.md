@@ -39,6 +39,23 @@ Formato: contexto → decisión → consecuencias. Estado: **Propuesta** hasta q
 **Decisión:** Samsung Galaxy A13 (SM-A135M, Android 14) como dispositivo de referencia; Android primero. Objetivo principal: **30 FPS estables en perfil Bajo**. 60 FPS queda como objetivo para gama media-alta, sin dispositivo para medirlo por ahora.
 **Consecuencias:** el presupuesto de CPU/GPU se diseña para gama baja desde el inicio (IA escalonada, pocas sombras, público con impostors, resolución dinámica). Si funciona en el A13, funcionará en gamas superiores.
 
+## D-09 · DLL del núcleo versionada en el repositorio — Aceptada
+**Contexto:** el usuario no tiene .NET instalado en su PC y no conoce Unity. **Decisión:** `Game/Assets/Plugins/Core/Football.Core.dll`
+(Release, netstandard2.1, ~85 KB) se guarda en el repositorio; `Tools/build-core.sh` la regenera. **Riesgo:** puede quedar desfasada
+respecto a `Core/`. **Mitigación:** regenerarla en cada cambio del núcleo (anotado en `CLAUDE.md`); más adelante, un paso de CI que la
+compare.
+
+## D-10 · La capa Unity se construye por código — Aceptada
+Sin escenas ni prefabs que montar a mano: `Bootstrap` (`RuntimeInitializeOnLoadMethod`) crea el juego al cargar cualquier escena;
+la interfaz, el campo y los jugadores se generan por código con formas simples. Ventajas: reproducible, revisable en git y sin pasos
+manuales para el usuario. El único activo "de archivo" es un material base que crea un script del editor (para que su shader entre en
+la compilación). El arte definitivo se enchufará después sin tocar la lógica.
+
+## D-11 · Entrada táctil independiente del sistema de entrada de Unity — Aceptada
+`PointerInput` usa `#if ENABLE_INPUT_SYSTEM` para soportar el sistema nuevo (`EnhancedTouch`) o el antiguo (`UnityEngine.Input`) según
+cómo esté configurado el proyecto, y la interfaz hace su propia detección de toques (sin `EventSystem`). Evita depender de la
+plantilla de proyecto que elija el usuario.
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 
