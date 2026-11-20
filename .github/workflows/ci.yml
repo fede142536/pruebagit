@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    name: Núcleo (build + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Compilar
+        run: dotnet build Core/Core.sln --configuration Release
+      - name: Pruebas
+        run: dotnet test Core/Core.sln --configuration Release --no-build --logger "trx;LogFileName=results.trx"
+      - name: Verificar que la DLL para Unity se genera
+        run: Tools/build-core.sh

@@ -8,7 +8,8 @@ Formato: contexto → decisión → consecuencias. Estado: **Propuesta** hasta q
 **Consecuencias:** el editor de Unity no está en el entorno de nube; la capa Unity solo se compila y prueba en la máquina del usuario.
 
 ## D-02 · Núcleo en C# puro y empaquetado — Propuesta
-**Decisión:** `Core` como proyecto .NET `netstandard2.1` (compatible con Unity), probado con NUnit/`dotnet test` en CI. En Unity se consume como asmdef o DLL; se decide en Fase 0 según fricción real.
+**Decisión (cerrada en Fase 0):** `Core` como proyecto .NET `netstandard2.1` (C# 9, compatible con Unity 6), sin paquetes NuGet, probado con NUnit/`dotnet test` en CI. En Unity se consume como **DLL precompilada**: `Tools/build-core.sh` la genera y copia a `Game/Assets/Plugins/Core/`. Se descartó asmdef porque Unity compilaría las carpetas `obj/` y `bin/` y no admite recursos embebidos; por eso las migraciones SQL son código C#, no archivos `.sql`.
+**Convención reforzada por el compilador:** todo miembro público requiere comentario XML (CS1591 es error).
 **Por qué:** verificabilidad en CI sin editor y límites de dependencia que el compilador hace cumplir.
 **Consecuencias:** sin APIs de Unity en `Core` (vectores propios `Vec2/Vec3` en structs).
 
@@ -24,7 +25,8 @@ Formato: contexto → decisión → consecuencias. Estado: **Propuesta** hasta q
 
 ## D-04 · Persistencia — Propuesta
 **Decisión:** SQLite con migraciones numeradas y repositorios tras interfaces. Librería concreta (p. ej. `sqlite-net` con SQLitePCLRaw) a validar con un spike en Android e iOS en la Fase 0.
-**Riesgo:** binarios nativos y compilación AOT en iOS; si falla, plan B: JSON versionado + SQLite solo para consultas pesadas.
+**Avance (Fase 0):** el núcleo no depende de ningún proveedor: repositorios y migrador usan `System.Data.Common` (`DbConnection`). Las pruebas usan `Microsoft.Data.Sqlite`; en Unity/Android habrá que proporcionar una `DbConnection` equivalente.
+**Pendiente (requiere Unity y el Galaxy A13):** spike que demuestre abrir, migrar y leer la base en el dispositivo. Candidatos: Mono.Data.Sqlite o `Microsoft.Data.Sqlite` con SQLitePCLRaw y binarios nativos Android (arm64-v8a/armeabi-v7a). Plan B: JSON versionado + SQLite solo para consultas pesadas.
 
 ## D-05 · Determinismo — Propuesta
 **Decisión:** semilla única, flujos derivados por subsistema, paso fijo. Se garantiza reproducibilidad **dentro de la misma plataforma y build**; no entre arquitecturas de CPU distintas (coma flotante).

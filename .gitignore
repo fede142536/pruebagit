@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
+# Unity
+/Game/Library/
+/Game/Temp/
+/Game/Obj/
+/Game/Logs/
+/Game/UserSettings/
+/Game/Builds/
+/Game/*.csproj
+/Game/*.sln
+# DLL del núcleo generada por Tools/build-core.sh
+/Game/Assets/Plugins/Core/*.dll
+/Game/Assets/Plugins/Core/*.pdb
+/Game/Assets/Plugins/Core/*.xml
+
+# Android
+*.apk
+*.aab
+*.keystore
+
+# Editor / sistema
+.vs/
+.idea/
+.vscode/
+.DS_Store
+__pycache__/
+.env

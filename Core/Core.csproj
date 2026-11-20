@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Núcleo en C# puro: sin dependencias de Unity ni paquetes NuGet (ver Docs/DECISIONS.md D-02). -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- Unity 6 soporta C# 9. -->
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>Football.Core</AssemblyName>
+    <RootNamespace>Football.Core</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Convención del proyecto: todo miembro público lleva comentario XML. -->
+    <WarningsAsErrors>CS1591</WarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

@@ -6,7 +6,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 
 | Fase | Objetivo | Criterio de salida (resumen) |
 |---|---|---|
-| **0 — Fundamentos** | Docs, estructura, CI, RNG determinista, modelo de datos base, esquema SQLite con migraciones | `dotnet test` verde en CI; migración 0→N probada; spike de SQLite en Android/iOS documentado |
+| **0 — Fundamentos** ✅ *(núcleo; ver estado abajo)* | Docs, estructura, CI, RNG determinista, modelo de datos base, esquema SQLite con migraciones | `dotnet test` verde en CI; migración 0→N probada; spike de SQLite en Android documentado |
 | **1 — Corte vertical jugable** | Partido 11v11 3D jugable con controles táctiles (detalle abajo) | Criterios medibles de la sección "Fase 1"; el usuario valida la sensación de juego |
 | **2 — Núcleo de gestión** | Plantilla, contratos, finanzas, calendario, ligas, tablas, simulación rápida, guardado/carga | Temporada completa simulada headless sin errores; economía sin quiebras absurdas |
 | **3 — Integración gestión ↔ partido** | Táctica, forma, moral, fatiga, lesiones y sanciones fluyen en ambos sentidos | Un partido jugado actualiza la carrera; prueba de ida y vuelta |
@@ -15,6 +15,22 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | **6 — IA y dificultad** | Roles tácticos, 5 niveles calibrados, adaptativa opcional | `BALANCE.md` con métricas dentro de rango en los 5 niveles |
 | **7 — Pulido** | Arte intercambiable, audio, VFX, repeticiones, accesibilidad, localización | Auditoría de accesibilidad y localización es/en completa |
 | **8 — Estabilización** | Resistencia (1.000 simulaciones), perfilado en dispositivos reales, documentación de usuario | Sin crashes en 1.000 temporadas; FPS objetivo en dispositivos reales |
+
+---
+
+## Fase 0 — Estado
+
+| Criterio | Estado |
+|---|---|
+| Estructura del repositorio (`Core`, `Tests`, `Tools`, `Docs`, CI) | ✅ hecho |
+| RNG determinista (xoshiro256** + SplitMix64) con flujos derivados (`Fork`) | ✅ hecho; contrastado con una implementación de referencia independiente |
+| Bus de eventos sin allocations y reloj de simulación | ✅ hecho; allocations medidas = 0 B |
+| Modelo de datos base (jugador, 24 atributos, contrato, club, estadio, partido) | ✅ hecho |
+| Esquema SQLite con migraciones versionadas (v1 inicial, v2 contratos) | ✅ hecho; prueba que migra desde cada versión conservando datos, revierte migraciones fallidas y rechaza bases más nuevas |
+| `dotnet test Core/Core.sln` | ✅ 50 pruebas pasan (ejecutadas aquí) |
+| CI en GitHub Actions (`.github/workflows/ci.yml`) | ⚠️ escrito; su primera ejecución se verá en GitHub tras el push |
+| DLL del núcleo para Unity (`Tools/build-core.sh`) | ✅ se genera; **no probada dentro de Unity** |
+| Spike de SQLite en Android (Galaxy A13) | ⏳ pendiente: requiere Unity y el dispositivo |
 
 ---
 
