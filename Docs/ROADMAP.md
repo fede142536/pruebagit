@@ -29,7 +29,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.1 | Física del balón (gravedad, arrastre, rebote, rodadura, efecto) y tipos de golpeo, en `MatchCore` | Sí (`dotnet test`) | — |
 | 1.2 | Movimiento de jugadores: aceleración, giro con inercia, velocidad por atributos y fatiga | Sí | — |
 | 1.3 | Reglas esenciales: gol, fuera de juego, saques de banda/esquina/puerta, faltas y tarjetas básicas, penalti, tiempo reglamentario | Sí | — |
-| 1.4 | IA básica: formación 4-4-2/4-3-3, posicionamiento por zonas, utility AI (pasar/conducir/tirar/presionar/cubrir), portero | Sí | — |
+| 1.4 | IA básica: formaciones 4-4-2/4-3-3, posicionamiento por zonas, utility AI (pasar/conducir/tirar/presionar/cubrir), portero, y **varios rivales con estilos distintos** definidos en datos (posesión, contraataque, presión alta, defensivo) | Sí | — |
 | 1.5 | Adaptador Unity: snapshot→render con placeholders procedurales, cámara de transmisión, árbitro visual | No (requiere Unity) | Compilar y abrir escena |
 | 1.6 | Controles táctiles: joystick flotante/fijo, botones contextuales, cambio de jugador, zurdos, háptica, preview de pase | No | Probar en dispositivo |
 | 1.7 | HUD: marcador, reloj, fin de partido, perfil gráfico, panel de depuración, escena de benchmark | No | Medir FPS/GC/RAM |
@@ -40,24 +40,31 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 - A1. Determinismo: misma semilla e idéntica secuencia de inputs ⇒ marcador y hash final del estado idénticos en 100 de 100 ejecuciones.
 - A2. Física del balón: caída libre desde 10 m coherente con la fórmula analítica (error < 1 %); coeficiente de rebote y distancia de rodadura dentro de tolerancias definidas en datos; un tiro con efecto se curva en el sentido correcto.
 - A3. Reglas: cada regla (gol, fuera de juego, banda, esquina, saque de puerta, falta, tarjeta, penalti) tiene ≥ 3 casos de prueba positivos y ≥ 2 negativos.
-- A4. Simulación headless de 1.000 partidos IA vs IA: 0 excepciones, 0 partidos que no terminan, media de goles por partido en **[2,0 ; 3,5]** (afinado a 2,5–2,9 en Fase 6), ningún jugador fuera del campo salvo estados permitidos.
+- A4. Simulación headless de 1.000 partidos IA vs IA (todas las combinaciones de estilos): 0 excepciones, 0 partidos que no terminan, media de goles por partido en **[2,0 ; 3,5]** (afinado a 2,5–2,9 en Fase 6), ningún jugador fuera del campo salvo estados permitidos.
 - A5. 0 bytes asignados por tick de `MatchCore` en régimen estable (prueba con `GC.GetAllocatedBytesForCurrentThread`).
 - A6. `MatchCore` simula un partido de 90' en < 2 s en headless con 1 hilo (indicador de coste de CPU).
 
 **Dispositivo (lo mides tú con mis herramientas; yo entrego los pasos y scripts)**
 - B1. Latencia toque→acción del jugador (instrumentada en el HUD de depuración) < 100 ms en el percentil 95.
-- B2. FPS en dispositivo de referencia de gama media-alta: ≥ 58 FPS de media y p99 de frame time ≤ 20 ms durante 5 min de partido; en gama baja, 30 FPS estables.
+- B2. FPS en el **Galaxy A13 (dispositivo de referencia, gama baja)**: 30 FPS estables, con p99 de frame time ≤ 40 ms durante 5 min de partido, en perfil gráfico Bajo. El objetivo de 60 FPS queda para gama media-alta y no se puede medir con el dispositivo actual.
 - B3. Sin picos de GC en partido (perfilador: 0 B/frame de GC.Alloc en régimen estable).
-- B4. RAM ≤ 1,5 GB en gama baja; arranque a partido en < 15 s.
+- B4. RAM ≤ 1,5 GB en el Galaxy A13; arranque a partido en < 15 s.
 - B5. Un partido completo jugable de principio a fin sin crashes, con marcador, fin de partido y vuelta al menú.
 
 **Sensación de juego (lo valida el usuario)**
 - C1. Lista de playtest con 10 preguntas (¿el pase va donde apuntas?, ¿el cambio de jugador elige al correcto?, ¿el esprint se siente pesado o ligero?, etc.); la fase solo cierra si el usuario da el visto bueno o define ajustes.
 
-### Qué necesito de ti para empezar la Fase 1
+### Decisiones del usuario (registradas)
 
-1. **Dispositivo(s) de referencia:** modelo y versión de Android/iOS de tu móvil principal y, si tienes, uno de gama baja.
-2. **Unity:** versión instalada (propongo Unity 6 LTS) y módulos de Android y/o iOS. Para compilar a iOS hace falta un Mac con Xcode; dime si lo tienes.
-3. **Cámara:** ¿transmisión lateral alta (estilo FIFA) por defecto, o prefieres otra?
-4. **Controles:** joystick izquierdo + botones a la derecha (estándar), ¿mano dominante y tamaño de pantalla típico? ¿Aceptas que el pase tenga auto-apuntado asistido por defecto?
-5. **Alcance de la Fase 1:** ¿el partido es contra la IA de un solo rival fijo y duración de 3 min por tiempo? ¿Con 4-4-2 y 4-3-3 como únicas formaciones?
+| Tema | Respuesta |
+|---|---|
+| Dispositivo de referencia | Samsung Galaxy A13 (SM-A135M), Android 14, One UI 6.1 — **gama baja**; se optimiza para 30 FPS estables |
+| iOS | Sin Mac por ahora: se desarrolla solo para Android |
+| Cámara | Transmisión lateral alta (estilo FIFA) por defecto |
+| Controles | Usuario diestro: joystick a la izquierda, botones a la derecha; auto-apuntado de pase activado por defecto y configurable; opción de zurdos disponible |
+| Alcance Fase 1 | **Varios rivales con estilos de juego distintos** (no uno solo); 4-4-2 y 4-3-3; 3 min por tiempo por defecto |
+
+### Pendiente antes de empezar
+
+1. **Aprobación del plan y de D-03** (`MatchCore` sin PhysX).
+2. **Computadora:** Unity es un programa gratuito (para uso personal) que se instala en una PC o Mac y con el que se arma la aplicación para el teléfono. Hace falta una computadora con Windows o Mac, preferiblemente con 16 GB de RAM y ~30 GB libres. Con ella instalaríamos Unity y generaríamos el archivo `.apk` que se instala en tu A13.
