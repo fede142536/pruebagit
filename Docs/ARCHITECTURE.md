@@ -121,7 +121,7 @@ Implementada en `Game/Assets/Football/Runtime` (Fase 1; **sin ejecutar aún en U
 | `DebugPanel` | FPS, tiempo de fotograma p99, recolecciones de basura, asignaciones, memoria, latencia estimada |
 | `Materials` | Materiales planos sin iluminación a partir de un material base en `Resources` |
 
-Notas de la versión anterior de este apartado:
+Principios generales de la capa Unity:
 
 - **UI de gestión:** UI Toolkit (UXML/USS), vertical, navegación inferior. Vistas sin lógica: leen *view models* del núcleo.
 - **HUD de partido:** overlay ligero y horizontal.
