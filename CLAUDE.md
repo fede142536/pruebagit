@@ -2,11 +2,11 @@
 
 Videojuego de fútbol para **Android** (objetivo actual: Samsung Galaxy A13, gama baja; iOS queda para cuando haya un Mac): **Modo Carrera** (gestión tipo Football Manager) + **partidos 3D jugables** (tipo FIFA/PES). Uso personal: sin monetización, sin anuncios, offline-first.
 
-Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.md`, `Docs/DECISIONS.md`. Los de la Fase 0 (`BALANCE.md`) y `ASSETS_LICENSES.md` se crean cuando haya contenido que registrar.
+Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.md`, `Docs/DECISIONS.md`, `Docs/BALANCE.md`. `ASSETS_LICENSES.md` se crea cuando haya assets que registrar.
 
 ## Estado actual
 
-**Fase 0 (fundamentos) implementada y probada en el núcleo; pendiente de revisión del usuario.** La Fase 1 no empieza sin confirmación explícita. **No se avanza de fase sin confirmación explícita del usuario.** Al terminar cada fase: ejecutar pruebas, resumir qué funciona y qué no, y detenerse.
+**Fase 0 completada. Fase 1 (corte vertical jugable) en curso** (D-03 aprobada; el usuario tiene PC con Windows y un Galaxy A13). **No se avanza de fase sin confirmación explícita del usuario.** Al terminar cada fase: ejecutar pruebas, resumir qué funciona y qué no, y detenerse.
 
 ## Comandos
 
@@ -15,7 +15,7 @@ Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.m
 | Compilar el núcleo | `dotnet build Core/Core.sln` | Fase 0 ✅ |
 | Pruebas del núcleo | `dotnet test Core/Core.sln` | Fase 0 ✅ |
 | DLL del núcleo para Unity | `Tools/build-core.sh` (copia a `Game/Assets/Plugins/Core/`) | Fase 0 ✅ |
-| Simulación masiva headless | `dotnet run --project Tools/HeadlessSim -- --matches 1000 --seed 1` | Fase 1 |
+| Simulación masiva headless | `dotnet run -c Release --project Tools/HeadlessSim -- --matches 1000 --seed 1` (opciones: `--difficulty`, `--away-difficulty`, `--rating`, `--ascii 12`, `--dump-config ruta`) | Fase 1 ✅ |
 | Pruebas Unity (EditMode/PlayMode) | desde el editor, o `Unity -runTests -batchmode -projectPath Game` | Fase 1 |
 | Benchmark reproducible | escena `Game/Benchmark` + script `Tools/benchmark.md` | Fase 1 |
 

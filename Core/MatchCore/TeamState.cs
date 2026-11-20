@@ -1,0 +1,71 @@
+using Football.Core.Common;
+
+namespace Football.Core.MatchCore
+{
+    /// <summary>Estado de un equipo durante el partido.</summary>
+    public sealed class TeamState
+    {
+        /// <summary>Índice del equipo (0 local, 1 visitante).</summary>
+        public readonly int Index;
+        /// <summary>Nombre.</summary>
+        public readonly string Name;
+        /// <summary>Formación.</summary>
+        public readonly Formation Formation;
+        /// <summary>Estilo de juego.</summary>
+        public readonly TeamStyle Style;
+        /// <summary>Dificultad de la IA de este equipo.</summary>
+        public readonly DifficultyProfile Difficulty;
+        /// <summary>Jugadores, en el orden de los puestos de la formación.</summary>
+        public readonly MatchPlayer[] Players = new MatchPlayer[11];
+        /// <summary>Estadísticas.</summary>
+        public readonly TeamStats Stats = new TeamStats();
+
+        /// <summary>Dirección de ataque: +1 hacia +X, -1 hacia -X. Se invierte en el descanso.</summary>
+        public float AttackDirection;
+
+        /// <summary>El equipo está controlado por una persona.</summary>
+        public bool IsHuman;
+        /// <summary>Jugador que controla la persona.</summary>
+        public MatchPlayer Controlled;
+        /// <summary>Última entrada recibida de la persona.</summary>
+        public MatchInput Input;
+        /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
+        public float SwitchTimer;
+
+        /// <summary>Jugador que persigue un balón suelto.</summary>
+        public MatchPlayer Chaser;
+        /// <summary>Jugador que presiona al poseedor rival.</summary>
+        public MatchPlayer Presser;
+        /// <summary>Segundo jugador que presiona.</summary>
+        public MatchPlayer Presser2;
+        /// <summary>Jugadores que ofrecen apoyo al poseedor.</summary>
+        public readonly MatchPlayer[] Support = new MatchPlayer[8];
+        /// <summary>Cuántos de <see cref="Support"/> están en uso.</summary>
+        public int SupportCount;
+        /// <summary>Punto de intercepción del perseguidor.</summary>
+        public Vec2 InterceptPoint;
+        /// <summary>Coordenada X de la línea de fuera de juego que enfrenta este equipo al atacar.</summary>
+        public float OffsideLine;
+
+        /// <summary>Extremo (+1/-1) cuya portería defiende el equipo.</summary>
+        public float DefendedEnd => -AttackDirection;
+
+        /// <summary>Crea el equipo y sus once jugadores, que se añaden al arreglo global.</summary>
+        public TeamState(int index, float attackDirection, MatchTeamSetup setup, DifficultyProfile difficulty,
+            PlayerConfig playerConfig, MatchPlayer[] allPlayers)
+        {
+            Index = index;
+            AttackDirection = attackDirection;
+            Name = setup.Name;
+            Formation = setup.Formation;
+            Style = setup.Style;
+            Difficulty = difficulty;
+            for (int slot = 0; slot < Players.Length; slot++)
+            {
+                var player = new MatchPlayer(index * Players.Length + slot, index, slot, setup.Players[slot], playerConfig);
+                Players[slot] = player;
+                allPlayers[player.Index] = player;
+            }
+        }
+    }
+}

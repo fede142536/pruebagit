@@ -13,4 +13,8 @@
     <WarningsAsErrors>CS1591</WarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Football.Core.Tests" />
+  </ItemGroup>
+
 </Project>

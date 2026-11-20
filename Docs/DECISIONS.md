@@ -13,7 +13,7 @@ Formato: contexto → decisión → consecuencias. Estado: **Propuesta** hasta q
 **Por qué:** verificabilidad en CI sin editor y límites de dependencia que el compilador hace cumplir.
 **Consecuencias:** sin APIs de Unity en `Core` (vectores propios `Vec2/Vec3` en structs).
 
-## D-03 · Motor de partido en tiempo real sin PhysX (`MatchCore`) — Propuesta, requiere tu OK
+## D-03 · Motor de partido en tiempo real sin PhysX (`MatchCore`) — Aceptada por el usuario
 **Contexto:** el prompt original coloca el motor 3D jugable dentro de `/Game/Match` (Unity) y deja el estadístico en `Core/MatchSim`.
 **Decisión:** añadir `Core/MatchCore`: física del balón, movimiento, reglas, árbitro e IA en C# puro con paso fijo de 60 Hz. `Game/Match` solo dibuja un snapshot por tick.
 **Por qué:**

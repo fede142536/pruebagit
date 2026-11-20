@@ -82,6 +82,24 @@ Input táctil ──► IntentBuffer ──► MatchCore.Tick(dt)
 ### IA
 Tres capas por jugador: **posicionamiento** (zona dinámica según formación, rol y balón), **decisión** (utility AI con considerandos ponderados por atributos y táctica), **ejecución** (error en pase/tiro según atributos y dificultad). Los parámetros de dificultad se inyectan desde datos; no hay rama de código "trampa".
 
+### 4.1 `MatchCore` en la práctica (Fase 1)
+
+- **Sistema de coordenadas.** Origen en el centro del campo; X a lo largo (105 m), Y a lo ancho (68 m), Z altura. El equipo local
+  ataca hacia +X en la primera parte y los equipos cambian de lado en el descanso. En la capa Unity: `x → x`, `Y → z`, `Z → y`.
+  Con `AttackDirection = +1`, "izquierda" del equipo es +Y.
+- **Paso fijo de 60 Hz.** La presentación acumula tiempo real, llama a `Tick()` las veces necesarias e interpola entre dos
+  `MatchSnapshot`.
+- **Datos.** Toda la configuración (campo, balón, jugadores, reglas, IA, 5 dificultades, 5 estilos) está en `MatchConfig`, serializable
+  a `Data/balance/match.json` (una prueba verifica que el archivo coincide con los valores por defecto).
+- **IA en tres capas.** (1) *Planes de equipo* cada 0,18 s: quién presiona, quién da apoyo, quién persigue un balón suelto y el
+  marcaje; (2) *decisión* con balón: se puntúan tiros, pases, centros y conducciones por valor esperado (probabilidad de éxito ×
+  amenaza del punto de destino − riesgo de perder el balón) con ruido según el atributo Decisions; (3) *ejecución* con error
+  angular y de velocidad según atributos, presión y dificultad.
+- **Reglas** como funciones puras en `Rules` (límites del campo, saques, fuera de juego, faltas, tarjetas) y el motor las aplica.
+- **Control humano.** `SetHuman(team, true)` + `SetInput(team, input)` cada frame. El movimiento y el esprint se mantienen; los
+  botones son impulsos de un solo paso. Pase con auto-apuntado graduable, disparo con potencia, centro, entrada y cambio de jugador.
+- **Sin allocations por paso** (verificado por prueba: 0 bytes en 6.000 pasos) y **determinista** (100/100 ejecuciones idénticas).
+
 ## 5. Persistencia
 
 - **SQLite** para carrera y guardados; el esquema tiene `schema_version` y migraciones incrementales numeradas (`0001_init.sql`, …) con prueba que migra desde cada versión anterior.

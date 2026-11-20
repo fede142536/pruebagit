@@ -5,6 +5,7 @@
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Football.Core.Tests</RootNamespace>
+    <AssemblyName>Football.Core.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -50,15 +50,27 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.6 | Controles táctiles: joystick flotante/fijo, botones contextuales, cambio de jugador, zurdos, háptica, preview de pase | No | Probar en dispositivo |
 | 1.7 | HUD: marcador, reloj, fin de partido, perfil gráfico, panel de depuración, escena de benchmark | No | Medir FPS/GC/RAM |
 
+### Estado de la Fase 1
+
+| Subhito | Estado |
+|---|---|
+| 1.1 Física del balón y tipos de golpeo | ✅ hecho y probado (15 pruebas, error < 1 % frente a la fórmula analítica) |
+| 1.2 Movimiento de jugadores | ✅ hecho y probado |
+| 1.3 Reglas esenciales | ✅ hecho y probado (gol, fuera de juego, banda, puerta, córner, falta, tarjetas, penalti, descanso y final) |
+| 1.4 IA con varios rivales y estilos | ✅ hecho: 5 estilos y 5 dificultades en datos; portero con paradas |
+| 1.5 Adaptador Unity (render, cámara) | ⏳ pendiente / sin verificar (requiere Unity) |
+| 1.6 Controles táctiles | ⏳ pendiente / sin verificar (requiere Unity y el dispositivo) |
+| 1.7 HUD, depuración y benchmark | ⏳ pendiente / sin verificar (requiere Unity y el dispositivo) |
+
 ### Criterios de aceptación medibles
 
 **Núcleo (lo verifico yo con pruebas automáticas)**
-- A1. Determinismo: misma semilla e idéntica secuencia de inputs ⇒ marcador y hash final del estado idénticos en 100 de 100 ejecuciones.
-- A2. Física del balón: caída libre desde 10 m coherente con la fórmula analítica (error < 1 %); coeficiente de rebote y distancia de rodadura dentro de tolerancias definidas en datos; un tiro con efecto se curva en el sentido correcto.
-- A3. Reglas: cada regla (gol, fuera de juego, banda, esquina, saque de puerta, falta, tarjeta, penalti) tiene ≥ 3 casos de prueba positivos y ≥ 2 negativos.
-- A4. Simulación headless de 1.000 partidos IA vs IA (todas las combinaciones de estilos): 0 excepciones, 0 partidos que no terminan, media de goles por partido en **[2,0 ; 3,5]** (afinado a 2,5–2,9 en Fase 6), ningún jugador fuera del campo salvo estados permitidos.
-- A5. 0 bytes asignados por tick de `MatchCore` en régimen estable (prueba con `GC.GetAllocatedBytesForCurrentThread`).
-- A6. `MatchCore` simula un partido de 90' en < 2 s en headless con 1 hilo (indicador de coste de CPU).
+- A1. ✅ Determinismo: misma semilla e idéntica secuencia de inputs ⇒ marcador y hash final del estado idénticos en 100 de 100 ejecuciones (`SameSeed_GivesTheSameMatch_100Times`).
+- A2. ✅ Física del balón: caída libre desde 10 m coherente con la fórmula analítica (error < 1 %); coeficiente de rebote y distancia de rodadura dentro de tolerancias definidas en datos; un tiro con efecto se curva en el sentido correcto.
+- A3. ✅ Reglas: cada regla (gol, fuera de juego, banda, esquina, saque de puerta, falta, tarjeta, penalti) tiene ≥ 3 casos de prueba positivos y ≥ 2 negativos.
+- A4. ✅ Simulación headless de 1.000 partidos IA vs IA (estilos y formaciones al azar): 0 excepciones, 0 sin terminar, 0 estados inválidos, **2,59 goles por partido** (rango [2,0 ; 3,5]).
+- A5. ✅ 0 bytes asignados por paso de `MatchCore` en régimen estable (6.000 pasos medidos con `GC.GetAllocatedBytesForCurrentThread`).
+- A6. ✅ `MatchCore` simula un partido de 90' en **50 ms** de media (máximo 257 ms) en headless con 1 hilo, en Release.
 
 **Dispositivo (lo mides tú con mis herramientas; yo entrego los pasos y scripts)**
 - B1. Latencia toque→acción del jugador (instrumentada en el HUD de depuración) < 100 ms en el percentil 95.
