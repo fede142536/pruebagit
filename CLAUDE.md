@@ -52,6 +52,14 @@ Reglas:
 - Solo assets con licencia clara (CC0/MIT o equivalente), registrados en `ASSETS_LICENSES.md` (fuente, autor, licencia, URL, fecha).
 - La capa de arte es intercambiable: la lógica no depende de modelos, texturas ni audio concretos.
 
+## Entrega al usuario
+
+- El usuario actualiza su proyecto de Unity descargando el ZIP de la rama. **Copiar carpetas encima de las viejas le mezcló versiones**
+  (errores CS0111 por archivos duplicados). En cada entrega, indicarle que use `ACTUALIZAR_JUEGO.bat` (en la raíz del repositorio:
+  sincroniza `Assets/Football` y `Assets/Plugins/Core` con `robocopy /MIR`, borrando archivos que ya no existen). Si se renombra o
+  elimina un archivo de `Game/Assets`, mencionarlo explícitamente.
+- Su proyecto está en `C:\Users\Charly\Juego de futbol` (Unity 6.6, plantilla Universal 3D con Input System).
+
 ## Flujo de trabajo y git
 
 - Commits pequeños y descriptivos, pruebas verdes antes de cada commit.

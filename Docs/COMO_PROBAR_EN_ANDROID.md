@@ -30,11 +30,19 @@ Tiempo estimado: 1 hora la primera vez (casi todo es esperar descargas). Necesit
 
 ## Actualizar a una versión nueva
 
+> **No copies las carpetas encima de las viejas:** Windows mezcla los archivos nuevos con los viejos y Unity da decenas de
+> errores ("already defines a member…"). Usa el actualizador, que además borra lo que sobra.
+
 Cada vez que te avise de cambios:
-1. Cierra el modo Play en Unity (botón ▶ apagado).
-2. Descarga otra vez el ZIP de la rama `ccr-8f161947-ai8n46` y extráelo.
-3. En la carpeta `Assets` de tu proyecto **borra** las carpetas `Football` y `Plugins` y copia las nuevas (de `Game/Assets/` del ZIP).
-4. Vuelve a Unity y espera a que termine de compilar.
+1. **Cierra Unity.**
+2. Descarga el ZIP de la rama `ccr-8f161947-ai8n46` y extráelo en una carpeta **nueva** (si el navegador lo guarda como
+   `… (1).zip`, usa ese: es el más reciente).
+3. Dentro de la carpeta extraída, haz doble clic en **`ACTUALIZAR_JUEGO.bat`**. Pulsa Enter si tu proyecto está en
+   `C:\Users\<tu usuario>\Juego de futbol`, o escribe la ruta correcta.
+4. Abre Unity y espera a que termine de compilar (si pregunta por la Library, **Rebuild Library**).
+
+Si Windows muestra "Windows protegió tu PC", pulsa **Más información → Ejecutar de todas formas** (es un archivo de texto que
+solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verlo).
 
 ## 4. Probar en el ordenador
 
