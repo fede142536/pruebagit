@@ -67,7 +67,7 @@
         },
         {
           "Name": "Lautaro Di Lollo",
-          "ShortName": "",
+          "ShortName": "Di Lollo",
           "Number": 0,
           "Position": "DFC",
           "Rating": 72
@@ -243,7 +243,7 @@
       "Players": [
         {
           "Name": "Santiago Beltrán",
-          "ShortName": "",
+          "ShortName": "S. Beltrán",
           "Number": 0,
           "Position": "POR",
           "Rating": 72
@@ -271,14 +271,14 @@
         },
         {
           "Name": "Giovanni González",
-          "ShortName": "",
+          "ShortName": "G. González",
           "Number": 0,
           "Position": "LD",
           "Rating": 72
         },
         {
           "Name": "Lucas Martínez Quarta",
-          "ShortName": "",
+          "ShortName": "Martínez Quarta",
           "Number": 0,
           "Position": "DFC",
           "Rating": 77
@@ -299,7 +299,7 @@
         },
         {
           "Name": "Facundo González",
-          "ShortName": "",
+          "ShortName": "F. González",
           "Number": 0,
           "Position": "DFC",
           "Rating": 69
@@ -418,14 +418,14 @@
         },
         {
           "Name": "Rafael Santos Borré",
-          "ShortName": "",
+          "ShortName": "Borré",
           "Number": 0,
           "Position": "DC",
           "Rating": 75
         },
         {
           "Name": "Lucas Beltrán",
-          "ShortName": "",
+          "ShortName": "L. Beltrán",
           "Number": 0,
           "Position": "DC",
           "Rating": 72
@@ -496,14 +496,14 @@
         },
         {
           "Name": "Marco Di Césare",
-          "ShortName": "",
+          "ShortName": "Di Césare",
           "Number": 0,
           "Position": "DFC",
           "Rating": 72
         },
         {
           "Name": "Agustín García Basso",
-          "ShortName": "",
+          "ShortName": "García Basso",
           "Number": 0,
           "Position": "DFC",
           "Rating": 71
@@ -841,14 +841,14 @@
         },
         {
           "Name": "Mathías De Ritis",
-          "ShortName": "",
+          "ShortName": "De Ritis",
           "Number": 0,
           "Position": "LD",
           "Rating": 66
         },
         {
           "Name": "Teo Rodríguez Pagano",
-          "ShortName": "",
+          "ShortName": "Rodríguez Pagano",
           "Number": 0,
           "Position": "LD",
           "Rating": 63

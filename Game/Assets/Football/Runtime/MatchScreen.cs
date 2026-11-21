@@ -147,7 +147,7 @@ namespace Football.Game
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(true);
 
-            var config = new MatchConfig();
+            MatchConfig config = BalanceConfig.Create();
             // La velocidad del juego frena la simulación; la duración en tiempo de simulación se ajusta para que cada parte
             // siga durando los minutos reales elegidos.
             _speed = benchmark ? 1f : _settings.SpeedFactor;

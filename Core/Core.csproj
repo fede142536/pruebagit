@@ -11,6 +11,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Convención del proyecto: todo miembro público lleva comentario XML. -->
     <WarningsAsErrors>CS1591</WarningsAsErrors>
+    <!-- Sin el commit en la versión: la DLL solo cambia si cambia el código (CI comprueba que la versionada esté al día). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Deterministic>true</Deterministic>
+    <!-- Sin símbolos de depuración en la DLL: así no lleva rutas de la máquina que compila. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

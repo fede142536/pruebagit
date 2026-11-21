@@ -35,10 +35,11 @@ namespace Football.Core.Persistence
                     birth_date TEXT NOT NULL,
                     position INTEGER NOT NULL,
                     potential INTEGER NOT NULL)",
-                $@"CREATE TABLE player_attributes (
+                // Migración publicada: los límites van escritos tal cual (1..100) para que no cambien si cambia la escala.
+                @"CREATE TABLE player_attributes (
                     player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
                     attribute_id INTEGER NOT NULL,
-                    value INTEGER NOT NULL CHECK (value BETWEEN {AttributeScale.Min} AND {AttributeScale.Max}),
+                    value INTEGER NOT NULL CHECK (value BETWEEN 1 AND 100),
                     PRIMARY KEY (player_id, attribute_id))",
                 "CREATE INDEX ix_players_club ON players(club_id)"),
 

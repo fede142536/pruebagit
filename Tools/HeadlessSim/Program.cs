@@ -18,6 +18,9 @@ namespace Football.Tools.HeadlessSim
     {
         private static readonly JsonSerializerOptions Json = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
 
+        private const int MaxTicksPerMatch = 200000;
+
+        /// <summary>Punto de entrada: interpreta las opciones y ejecuta la simulación pedida.</summary>
         public static int Main(string[] args)
         {
             int matches = 100;
@@ -32,6 +35,13 @@ namespace Football.Tools.HeadlessSim
             string teamsPath = null;
             for (int i = 0; i < args.Length; i++)
             {
+                bool needsValue = args[i] != "--verbose";
+                if (needsValue && i + 1 >= args.Length)
+                {
+                    Console.Error.WriteLine($"Falta el valor de {args[i]}.");
+                    return 2;
+                }
+
                 switch (args[i])
                 {
                     case "--matches": matches = int.Parse(args[++i]); break;
@@ -44,12 +54,22 @@ namespace Football.Tools.HeadlessSim
                     case "--verbose": verbose = true; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
+                    default:
+                        Console.Error.WriteLine($"Opción desconocida: {args[i]}");
+                        return 2;
                 }
             }
 
             MatchConfig config = configPath != null
                 ? JsonSerializer.Deserialize<MatchConfig>(File.ReadAllText(configPath), Json)
                 : new MatchConfig();
+
+            int levels = config.Difficulties.Length;
+            if (difficulty < 0 || difficulty >= levels || awayDifficulty >= levels || matches <= 0)
+            {
+                Console.Error.WriteLine($"Valores fuera de rango: --difficulty y --away-difficulty van de 0 a {levels - 1}; --matches debe ser positivo.");
+                return 2;
+            }
 
             if (dumpPath != null)
             {
@@ -97,7 +117,7 @@ namespace Football.Tools.HeadlessSim
                     var engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, awayDifficulty);
                     timer.Restart();
                     int guard = 0;
-                    while (!engine.IsFinished && guard++ < 200000)
+                    while (!engine.IsFinished && guard++ < MaxTicksPerMatch)
                     {
                         engine.Tick();
                         if ((guard & 63) == 0)
@@ -187,7 +207,17 @@ namespace Football.Tools.HeadlessSim
                         var engine = new MatchEngine(config, rng.Fork("engine"),
                             TeamBuilder.Build(db.Teams[h], config, rng.Fork("h")), TeamBuilder.Build(db.Teams[a], config, rng.Fork("a")),
                             difficulty, difficulty);
-                        while (!engine.IsFinished) engine.Tick();
+                        for (int guard = 0; !engine.IsFinished; guard++)
+                        {
+                            if (guard >= MaxTicksPerMatch)
+                            {
+                                Console.Error.WriteLine($"Partido sin terminar: {db.Teams[h].Name} - {db.Teams[a].Name}");
+                                return 1;
+                            }
+
+                            engine.Tick();
+                        }
+
                         int gh = engine.Teams[0].Stats.Goals, ga = engine.Teams[1].Stats.Goals;
                         goalsFor[h] += gh; goalsAgainst[h] += ga; goalsFor[a] += ga; goalsAgainst[a] += gh;
                         if (gh > ga) points[h] += 3; else if (gh < ga) points[a] += 3; else { points[h]++; points[a]++; }

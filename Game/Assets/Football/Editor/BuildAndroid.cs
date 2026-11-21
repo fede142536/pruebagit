@@ -13,7 +13,9 @@ namespace Football.Game.Editor
     public static class BuildAndroid
     {
         private const string ApkPath = "Builds/FootballGame.apk";
-        private const string ScenePath = "Assets/Football/Scenes/Main.unity";
+        // Fuera de Assets/Football: ACTUALIZAR_JUEGO.bat sincroniza esa carpeta con /MIR y borraría la escena.
+        private const string SceneFolder = "Assets/FootballGenerated";
+        private const string ScenePath = SceneFolder + "/Main.unity";
 
         /// <summary>Configura el proyecto para Android y genera el .apk.</summary>
         [MenuItem("Football/Construir APK para Android")]
@@ -38,7 +40,7 @@ namespace Football.Game.Editor
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
             EditorUserBuildSettings.buildAppBundle = false;
 
-            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
+            string[] scenes = EditorBuildSettings.scenes.Where(s => s.enabled && File.Exists(s.path)).Select(s => s.path).ToArray();
             if (scenes.Length == 0)
             {
                 scenes = new[] { CreateEmptyScene() };
@@ -66,9 +68,9 @@ namespace Football.Game.Editor
 
         private static string CreateEmptyScene()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/Football/Scenes"))
+            if (!AssetDatabase.IsValidFolder(SceneFolder))
             {
-                AssetDatabase.CreateFolder("Assets/Football", "Scenes");
+                AssetDatabase.CreateFolder("Assets", "FootballGenerated");
             }
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

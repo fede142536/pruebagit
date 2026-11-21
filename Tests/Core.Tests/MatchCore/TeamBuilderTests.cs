@@ -81,6 +81,64 @@ namespace Football.Core.Tests.MatchCore
         }
 
         [Test]
+        public void ArgentinaFile_PassesTheRuntimeValidation_AndIsReadableOnScreen()
+        {
+            foreach (TeamDefinition t in LoadArgentina().Teams)
+            {
+                Assert.That(TeamBuilder.Validate(t), Is.Null);
+                Assert.That(t.Players.Select(TeamBuilder.DisplayName), Is.Unique, t.Name + ": dos jugadores se verían con el mismo nombre");
+                Assert.That(t.Home.Shirt, Is.Not.EqualTo(t.Away.Shirt), t.Name + ": la camiseta suplente es igual a la titular");
+                int[] numbers = t.Players.Where(p => p.Number > 0).Select(p => p.Number).ToArray();
+                Assert.That(numbers, Is.Unique, t.Name + ": dorsales repetidos");
+                Assert.That(numbers, Is.All.InRange(1, 99), t.Name + ": dorsal fuera de rango");
+                foreach (Formation f in new[] { Formations.F442, Formations.F433 })
+                {
+                    int[] xi = TeamBuilder.PickLineup(t, f);
+                    Assert.That(TeamBuilder.ParsePosition(t.Players[xi[0]].Position), Is.EqualTo(Position.Goalkeeper), $"{t.Name} {f.Name}: arquero");
+                }
+            }
+        }
+
+        [Test]
+        public void Validate_RejectsUnplayableTeams()
+        {
+            var keeperOnly = Enumerable.Range(0, 11).Select(i => new PlayerDefinition { Name = "J" + i, Position = "DC", Rating = 60 }).ToArray();
+            Assert.That(TeamBuilder.Validate(null), Is.Not.Null);
+            Assert.That(TeamBuilder.Validate(new TeamDefinition { Name = "Sin jugadores" }), Is.Not.Null);
+            Assert.That(TeamBuilder.Validate(new TeamDefinition { Name = "Sin arquero", Players = keeperOnly }), Does.Contain("portero"));
+            keeperOnly[0].Position = "POR";
+            Assert.That(TeamBuilder.Validate(new TeamDefinition { Name = "Bien", Players = keeperOnly }), Is.Null);
+            keeperOnly[3].Position = "XX";
+            Assert.That(TeamBuilder.Validate(new TeamDefinition { Name = "Posición rara", Players = keeperOnly }), Is.Not.Null);
+        }
+
+        [Test]
+        public void Build_KeepsShirtNumbersStableAcrossFormations()
+        {
+            TeamDefinition t = LoadArgentina().Teams[0];
+            var config = new MatchConfig();
+            MatchTeamSetup a = TeamBuilder.Build(t, config, new SeededRandom(1), SquadSelection.Auto(t, Formations.F442));
+            MatchTeamSetup b = TeamBuilder.Build(t, config, new SeededRandom(1), SquadSelection.Auto(t, Formations.F433));
+            foreach (PlayerMatchView p in a.Players)
+            {
+                PlayerMatchView same = b.Players.FirstOrDefault(q => q.Name == p.Name);
+                if (same != null)
+                {
+                    Assert.That(same.Number, Is.EqualTo(p.Number), p.Name + ": el dorsal no depende del puesto");
+                }
+            }
+        }
+
+        [Test]
+        public void UnityCopyOfTheBalanceFile_IsUpToDate()
+        {
+            string source = RepoFile("Data", "balance", "match.json");
+            string copy = RepoFile("Game", "Assets", "Football", "Resources", "match.json");
+            Assert.That(copy, Is.Not.Null, "falta la copia para Unity: ejecutar Tools/build-core.sh");
+            Assert.That(File.ReadAllText(copy), Is.EqualTo(File.ReadAllText(source)), "copia desactualizada: ejecutar Tools/build-core.sh");
+        }
+
+        [Test]
         public void UnityCopyOfTheFile_IsUpToDate()
         {
             string source = RepoFile("Data", "teams", "argentina.json");

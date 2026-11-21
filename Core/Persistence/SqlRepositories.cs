@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
+using System.IO;
 using Football.Core.Domain;
 
 namespace Football.Core.Persistence
@@ -149,6 +150,16 @@ namespace Football.Core.Persistence
     /// <summary>Repositorio de jugadores sobre ADO.NET.</summary>
     public sealed class SqlPlayerRepository : SqlRepositoryBase, IPlayerRepository
     {
+        private static Position ReadPosition(int value, int playerId)
+        {
+            if (!Enum.IsDefined(typeof(Position), value))
+            {
+                throw new InvalidDataException($"El jugador {playerId} tiene una posición desconocida ({value}).");
+            }
+
+            return (Position)value;
+        }
+
         /// <summary>Crea el repositorio.</summary>
         /// <param name="connection">Conexión abierta y migrada.</param>
         public SqlPlayerRepository(DbConnection connection) : base(connection) { }
@@ -216,7 +227,7 @@ namespace Football.Core.Persistence
                     FirstName = r.GetString(2),
                     LastName = r.GetString(3),
                     BirthDate = DateFormat.Parse(r.GetString(4)),
-                    Position = (Position)r.GetInt32(5),
+                    Position = ReadPosition(r.GetInt32(5), id),
                     Potential = r.GetInt32(6)
                 };
             }
@@ -227,7 +238,13 @@ namespace Football.Core.Persistence
             {
                 while (r.Read())
                 {
-                    player.Attributes[(AttributeId)r.GetInt32(0)] = r.GetInt32(1);
+                    int attribute = r.GetInt32(0);
+                    if (!AttributeSet.IsDefined(attribute))
+                    {
+                        throw new InvalidDataException($"El jugador {id} tiene un atributo desconocido ({attribute}).");
+                    }
+
+                    player.Attributes[(AttributeId)attribute] = r.GetInt32(1);
                 }
             }
 

@@ -17,5 +17,14 @@ jobs:
         run: dotnet build Core/Core.sln --configuration Release
       - name: Pruebas
         run: dotnet test Core/Core.sln --configuration Release --no-build --logger "trx;LogFileName=results.trx"
-      - name: Verificar que la DLL para Unity se genera
-        run: Tools/build-core.sh
+      - name: Verificar que la DLL y los datos para Unity están al día
+        run: |
+          Tools/build-core.sh
+          git diff --exit-code -- Game/Assets/Plugins/Core Game/Assets/Football/Resources || {
+            echo "::error::La DLL o los datos copiados a Unity no coinciden con el código. Ejecuta Tools/build-core.sh y confirma los cambios."
+            exit 1
+          }
+      - name: Simulación de humo (sin excepciones ni partidos colgados)
+        run: |
+          dotnet run -c Release --no-build --project Tools/HeadlessSim -- --matches 20 --seed 1
+          dotnet run -c Release --no-build --project Tools/HeadlessSim -- --teams Data/teams/argentina.json --matches 1

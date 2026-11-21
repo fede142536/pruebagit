@@ -92,6 +92,55 @@ namespace Football.Core.MatchCore
             return space >= 0 ? full.Substring(space + 1) : full;
         }
 
+        /// <summary>Jugadores mínimos para formar un once.</summary>
+        public const int MinPlayers = 11;
+
+        /// <summary>
+        /// Comprueba que un equipo leído de un archivo se pueda jugar: nombre, al menos once jugadores con posición y media
+        /// válidas y al menos un portero.
+        /// </summary>
+        /// <param name="team">Equipo a comprobar.</param>
+        /// <returns>null si es válido; si no, el motivo en español.</returns>
+        public static string Validate(TeamDefinition team)
+        {
+            if (team == null || string.IsNullOrWhiteSpace(team.Name))
+            {
+                return "equipo sin nombre";
+            }
+
+            if (team.Players == null || team.Players.Length < MinPlayers)
+            {
+                return team.Name + ": menos de " + MinPlayers + " jugadores";
+            }
+
+            bool keeper = false;
+            foreach (PlayerDefinition p in team.Players)
+            {
+                if (p == null || string.IsNullOrWhiteSpace(p.Name) || !IsKnownPosition(p.Position))
+                {
+                    return team.Name + ": jugador sin nombre o con posición desconocida";
+                }
+
+                if (p.Rating < AttributeScale.Min || p.Rating > AttributeScale.Max)
+                {
+                    return team.Name + ": media fuera de rango (" + p.Name + ")";
+                }
+
+                keeper |= ParsePosition(p.Position) == Position.Goalkeeper;
+            }
+
+            return keeper ? null : team.Name + ": sin portero";
+        }
+
+        /// <summary>Fracción de la penalización por jugar fuera de puesto que se aplica a la media en el partido.</summary>
+        public const float OutOfPositionFactor = 0.5f;
+
+        /// <summary>Media con la que juega un jugador en un puesto (su media menos la penalización si no es su posición).</summary>
+        /// <param name="def">Jugador.</param>
+        /// <param name="role">Puesto en el que se lo alinea.</param>
+        public static float EffectiveRating(PlayerDefinition def, Position role) =>
+            def.Rating - Penalty(ParsePosition(def.Position), role) * OutOfPositionFactor;
+
         /// <summary>Penalización de media al alinear en <paramref name="slot"/> a un jugador cuya posición natural es <paramref name="natural"/>.</summary>
         public static int Penalty(Position natural, Position slot)
         {
@@ -299,12 +348,13 @@ namespace Football.Core.MatchCore
                 {
                     Id = lineup[slot] + 1,
                     Name = DisplayName(def),
-                    Number = def.Number > 0 ? def.Number : slot + 1,
+                    // Sin dorsal en el archivo, se usa el orden en la plantilla: no cambia al cambiar de formación o de puesto.
+                    Number = def.Number > 0 ? def.Number : lineup[slot] + 1,
                     Role = role
                 };
 
                 // Los atributos salen de su posición natural; jugar fuera de puesto le resta algo de media.
-                float effective = def.Rating - Penalty(natural, role) * 0.5f;
+                float effective = EffectiveRating(def, role);
                 RosterFactory.FillAttributes(rng, effective, natural == Position.Goalkeeper || role != Position.Goalkeeper ? natural : role, view.Attributes);
                 players[slot] = view;
             }

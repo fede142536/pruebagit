@@ -1,3 +1,4 @@
+using System;
 using Football.Core.Common;
 using Football.Core.Domain;
 
@@ -42,7 +43,7 @@ namespace Football.Core.MatchCore
             foreach (AttributeId id in AttributeSet.All)
             {
                 float value = rating + Offset(role, id) + rng.NextGaussian(0f, AttributeNoise);
-                attributes[id] = (int)MathUtil.Clamp(value, AttributeScale.Min, AttributeScale.Max);
+                attributes[id] = (int)MathF.Round(MathUtil.Clamp(value, AttributeScale.Min, AttributeScale.Max));
             }
 
             if (role != Position.Goalkeeper)

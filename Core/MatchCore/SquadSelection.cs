@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Football.Core.Common;
 using Football.Core.Data;
 
 namespace Football.Core.MatchCore
@@ -102,7 +103,7 @@ namespace Football.Core.MatchCore
         public int EffectiveRating(TeamDefinition team, int slot)
         {
             PlayerDefinition p = team.Players[Starters[slot]];
-            return p.Rating - TeamBuilder.Penalty(TeamBuilder.ParsePosition(p.Position), Formation.Slots[slot].Role);
+            return (int)MathF.Round(TeamBuilder.EffectiveRating(p, Formation.Slots[slot].Role));
         }
 
         /// <summary>Indica si la convocatoria es coherente con el equipo: once titulares y cada jugador en un solo grupo.</summary>
@@ -136,15 +137,33 @@ namespace Football.Core.MatchCore
             return true;
         }
 
-        /// <summary>Texto compacto para guardar la convocatoria (formación|titulares|suplentes).</summary>
-        public string Serialize()
+        /// <summary>
+        /// Texto compacto para guardar la convocatoria (formación|titulares|suplentes|huella de la plantilla). La huella hace que
+        /// una convocatoria guardada se descarte si la plantilla cambió (los índices ya no señalarían a los mismos jugadores).
+        /// </summary>
+        /// <param name="team">Equipo al que pertenece la convocatoria.</param>
+        public string Serialize(TeamDefinition team)
         {
             var sb = new StringBuilder();
             sb.Append(Formation.Name).Append(Separator);
             AppendList(sb, Starters);
             sb.Append(Separator);
             AppendList(sb, Bench);
+            sb.Append(Separator).Append(Fingerprint(team));
             return sb.ToString();
+        }
+
+        /// <summary>Huella de la plantilla: cambia si se agrega, quita, reordena o cambia de posición un jugador.</summary>
+        /// <param name="team">Equipo.</param>
+        public static string Fingerprint(TeamDefinition team)
+        {
+            var sb = new StringBuilder();
+            foreach (PlayerDefinition p in team.Players)
+            {
+                sb.Append(p.Name).Append('/').Append(p.Position).Append(';');
+            }
+
+            return HashUtil.Fnv1a64(sb.ToString()).ToString("x16", CultureInfo.InvariantCulture);
         }
 
         private static void AppendList(StringBuilder sb, List<int> list)
@@ -160,7 +179,7 @@ namespace Football.Core.MatchCore
             }
         }
 
-        /// <summary>Recupera una convocatoria guardada; devuelve null si el texto no corresponde a este equipo.</summary>
+        /// <summary>Recupera una convocatoria guardada; devuelve null si el texto no corresponde a esta plantilla.</summary>
         public static SquadSelection Deserialize(TeamDefinition team, string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -169,7 +188,7 @@ namespace Football.Core.MatchCore
             }
 
             string[] parts = text.Split(Separator);
-            if (parts.Length != 3)
+            if (parts.Length != 4 || parts[3] != Fingerprint(team))
             {
                 return null;
             }

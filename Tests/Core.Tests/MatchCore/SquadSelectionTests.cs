@@ -102,13 +102,39 @@ namespace Football.Core.Tests.MatchCore
             SquadSelection s = SquadSelection.Auto(t, Formations.F4231);
             s.Swap(SquadGroup.Starter, 3, SquadGroup.Bench, 2);
 
-            SquadSelection copy = SquadSelection.Deserialize(t, s.Serialize());
+            SquadSelection copy = SquadSelection.Deserialize(t, s.Serialize(t));
 
             Assert.That(copy, Is.Not.Null);
             Assert.That(copy.Formation, Is.SameAs(Formations.F4231));
             Assert.That(copy.Starters, Is.EqualTo(s.Starters));
             Assert.That(copy.Bench, Is.EqualTo(s.Bench));
             Assert.That(copy.Reserves.OrderBy(i => i), Is.EqualTo(s.Reserves.OrderBy(i => i)));
+        }
+
+        [Test]
+        public void Deserialize_RejectsASelectionSavedForADifferentRoster()
+        {
+            TeamDefinition t = Team();
+            string saved = SquadSelection.Auto(t, Formations.F442).Serialize(t);
+            TeamDefinition changed = Team();
+            PlayerDefinition first = changed.Players[0];
+            changed.Players[0] = changed.Players[1];
+            changed.Players[1] = first; // mismos jugadores en otro orden: los índices guardados ya no valen
+
+            Assert.That(SquadSelection.Deserialize(changed, saved), Is.Null);
+            Assert.That(SquadSelection.Deserialize(t, saved), Is.Not.Null);
+        }
+
+        [Test]
+        public void EffectiveRating_MatchesWhatTheEngineUses()
+        {
+            TeamDefinition t = Team();
+            SquadSelection s = SquadSelection.Auto(t, Formations.F442);
+            for (int slot = 0; slot < s.Starters.Count; slot++)
+            {
+                float engine = TeamBuilder.EffectiveRating(t.Players[s.Starters[slot]], Formations.F442.Slots[slot].Role);
+                Assert.That(s.EffectiveRating(t, slot), Is.EqualTo((int)System.MathF.Round(engine)));
+            }
         }
 
         [TestCase(null)]

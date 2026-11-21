@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Football.Core.Data;
 using Football.Core.MatchCore;
@@ -143,13 +144,32 @@ namespace Football.Game
                 try
                 {
                     TeamDatabase db = JsonUtility.FromJson<TeamDatabase>(asset.text);
-                    if (db != null && db.Teams != null && db.Teams.Length >= 2)
+                    var valid = new List<TeamDefinition>();
+                    if (db != null && db.Teams != null)
                     {
-                        _teams = db.Teams;
+                        foreach (TeamDefinition team in db.Teams)
+                        {
+                            string problem = TeamBuilder.Validate(team);
+                            if (problem == null)
+                            {
+                                valid.Add(team);
+                            }
+                            else
+                            {
+                                // Un equipo mal cargado se descarta (y se avisa) en lugar de romper el partido.
+                                LoadError = (LoadError == null ? string.Empty : LoadError + "; ") + problem;
+                                Debug.LogWarning("Football: equipo descartado: " + problem);
+                            }
+                        }
+                    }
+
+                    if (valid.Count >= 2)
+                    {
+                        _teams = valid.ToArray();
                         return;
                     }
 
-                    LoadError = "el archivo de equipos no tiene al menos dos equipos";
+                    LoadError = "el archivo de equipos no tiene al menos dos equipos válidos" + (LoadError == null ? string.Empty : " (" + LoadError + ")");
                 }
                 catch (Exception e)
                 {

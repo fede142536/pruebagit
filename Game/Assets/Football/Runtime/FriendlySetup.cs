@@ -108,7 +108,7 @@ namespace Football.Game
         /// <summary>Guarda la convocatoria del club.</summary>
         public static void Save(int teamIndex, SquadSelection selection)
         {
-            PlayerPrefs.SetString(Prefix + TeamCatalog.Teams[teamIndex].Name, selection.Serialize());
+            PlayerPrefs.SetString(Prefix + TeamCatalog.Teams[teamIndex].Name, selection.Serialize(TeamCatalog.Teams[teamIndex]));
             PlayerPrefs.Save();
         }
     }
