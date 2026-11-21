@@ -236,7 +236,11 @@ namespace Football.Core.MatchCore
         /// <summary>Entrando al balón.</summary>
         Tackle,
         /// <summary>Portero lanzándose.</summary>
-        Dive
+        Dive,
+        /// <summary>Trastabilla tras un choque con un rival más fuerte.</summary>
+        Stumble,
+        /// <summary>Festejando un gol.</summary>
+        Celebrate
     }
 
     /// <summary>Vista inmutable de un jugador para el partido, con los atributos efectivos ya modificados por forma, moral y fatiga.</summary>

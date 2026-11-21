@@ -39,6 +39,7 @@ namespace Football.Core.MatchCore
         private const float SetPieceBoxMaxDistance = 28f;
 
         private readonly bool[] _claimed;
+        private const float CelebrationInset = 1.5f;
 
         private void UpdateTeamPlans()
         {
@@ -664,6 +665,21 @@ namespace Football.Core.MatchCore
 
         /// <summary>Posiciones de todos los jugadores durante un saque (o la pausa tras un gol).</summary>
         private void UpdateSetPieceTargets()
+        {
+            UpdateSetPieceTargetsCore();
+            MatchPlayer c = Celebrator;
+            if (c != null && !c.SentOff)
+            {
+                // Festejo: el goleador corre al banderín del córner más cercano.
+                float sx = c.Pos.X >= 0f ? 1f : -1f, sy = c.Pos.Y >= 0f ? 1f : -1f;
+                c.Target = new Vec2(sx * (Pitch.HalfLength - CelebrationInset), sy * (Pitch.HalfWidth - CelebrationInset));
+                c.SpeedFactor = 1f;
+                c.Action = PlayerAction.Celebrate;
+                c.ActionDisplayTimer = Config.Ai.DecisionInterval * 2f;
+            }
+        }
+
+        private void UpdateSetPieceTargetsCore()
         {
             Restart r = _restart;
             float distance = Config.Rules.SetPieceDistance + SetPieceMargin;

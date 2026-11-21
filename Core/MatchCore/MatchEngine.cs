@@ -1,5 +1,6 @@
 using System;
 using Football.Core.Common;
+using Football.Core.Domain;
 
 namespace Football.Core.MatchCore
 {
@@ -304,6 +305,11 @@ namespace Football.Core.MatchCore
                 {
                     p.RecoverTimer -= dt;
                 }
+
+                if (p.StumbleTimer > 0f)
+                {
+                    p.StumbleTimer -= dt;
+                }
             }
         }
 
@@ -344,7 +350,12 @@ namespace Football.Core.MatchCore
                 KeepKeeperInFrontOfHisLine(p);
                 FaceTheBall(p, dt);
 
-                if (p.ActionDisplayTimer <= 0f)
+                if (p.StumbleTimer > 0f)
+                {
+                    p.Speed = MathF.Min(p.Speed, p.TopSpeed * Config.Player.StumbleSpeedFactor);
+                    p.Action = PlayerAction.Stumble;
+                }
+                else if (p.ActionDisplayTimer <= 0f)
                 {
                     float relative = p.Speed / p.TopSpeed;
                     p.Action = p.Speed < 0.5f ? PlayerAction.Idle : (relative > 0.85f ? PlayerAction.Sprint : PlayerAction.Run);
@@ -421,10 +432,43 @@ namespace Football.Core.MatchCore
 
                     float dist = MathF.Sqrt(distSq);
                     Vec2 push = dist > MathUtil.Epsilon ? delta / dist : new Vec2(1f, 0f);
-                    float overlap = (min - dist) * 0.5f;
-                    a.Pos -= push * overlap;
-                    b.Pos += push * overlap;
+                    float overlap = min - dist;
+                    if (a.Team == b.Team || Phase != MatchPhase.Playing)
+                    {
+                        a.Pos -= push * (overlap * 0.5f);
+                        b.Pos += push * (overlap * 0.5f);
+                        continue;
+                    }
+
+                    // Choque entre rivales: el más fuerte desplaza más al otro y, si el golpe es fuerte, el débil trastabilla.
+                    float sa = a.Skill(AttributeId.Strength), sb = b.Skill(AttributeId.Strength);
+                    float shareA = MathUtil.Clamp(0.5f + 0.5f * (sb - sa), 0.2f, 0.8f);
+                    a.Pos -= push * (overlap * shareA);
+                    b.Pos += push * (overlap * (1f - shareA));
+                    float impact = MathF.Abs(Vec2.Dot(a.Velocity - b.Velocity, push));
+                    if (impact > Config.Player.StumbleMinImpact && a.StumbleTimer <= 0f && b.StumbleTimer <= 0f)
+                    {
+                        Collide(a, b, sa, sb);
+                    }
                 }
+            }
+        }
+
+        /// <summary>Hombro con hombro: pierde el equilibrio el más débil (con algo de azar) y puede soltar el balón.</summary>
+        private void Collide(MatchPlayer a, MatchPlayer b, float strengthA, float strengthB)
+        {
+            PlayerConfig c = Config.Player;
+            float advantageA = c.StumbleStrengthWeight * (strengthA - strengthB) + _rng.NextGaussian(0f, 0.5f);
+            MatchPlayer loser = advantageA >= 0f ? b : a;
+            loser.StumbleTimer = c.StumbleDuration;
+            loser.Speed *= c.StumbleSpeedFactor;
+            if (Owner == loser && _rng.NextFloat() < c.StumbleLoseBall)
+            {
+                // El balón se le escapa hacia delante (no es falta: fue un choque legal).
+                Owner = null;
+                Vec2 dir = Vec2.FromAngle(loser.Heading);
+                Ball.Vel = new Vec3(dir.X * c.HeavyTouchSpeed, dir.Y * c.HeavyTouchSpeed, 0f);
+                loser.KickTimer = c.StumbleDuration;
             }
         }
 

@@ -85,9 +85,9 @@ namespace Football.Core.MatchCore
         /// <summary>Aceleración con Acceleration = 100 (m/s²).</summary>
         public float MaxAcceleration = 7.4f;
         /// <summary>Frenada (m/s²).</summary>
-        public float Deceleration = 9f;
+        public float Deceleration = 8f;
         /// <summary>Velocidad de giro parado (rad/s).</summary>
-        public float TurnRate = 10f;
+        public float TurnRate = 8.5f;
         /// <summary>Cuánto reduce la velocidad la capacidad de girar.</summary>
         public float TurnSpeedPenalty = 0.09f;
         /// <summary>Fracción de la velocidad deseada cuando el jugador mira en dirección contraria.</summary>
@@ -106,6 +106,16 @@ namespace Football.Core.MatchCore
         public float StaminaAttributeSpread = 0.5f;
         /// <summary>Distancia mínima entre jugadores.</summary>
         public float SeparationDistance = 0.8f;
+        /// <summary>Velocidad de choque entre rivales a partir de la cual el más débil trastabilla (m/s).</summary>
+        public float StumbleMinImpact = 3f;
+        /// <summary>Duración del trastabilleo (s).</summary>
+        public float StumbleDuration = 0.45f;
+        /// <summary>Fracción de la velocidad que conserva quien trastabilla.</summary>
+        public float StumbleSpeedFactor = 0.45f;
+        /// <summary>Probabilidad de que el poseedor pierda el balón al trastabillar.</summary>
+        public float StumbleLoseBall = 0.3f;
+        /// <summary>Cuánto pesa la fuerza al decidir quién gana el choque (0 = azar puro).</summary>
+        public float StumbleStrengthWeight = 1.5f;
         /// <summary>Radio dentro del cual el jugador reduce la velocidad al llegar a su objetivo.</summary>
         public float ArriveRadius = 1.5f;
         /// <summary>Radio dentro del cual el jugador se detiene en su objetivo.</summary>

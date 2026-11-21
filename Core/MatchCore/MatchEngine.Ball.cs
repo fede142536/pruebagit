@@ -758,7 +758,9 @@ namespace Football.Core.MatchCore
             }
 
             _offsideActive = false;
-            AddEvent(MatchEventType.Goal, scoring, ScorerIndex(scoring), at);
+            int scorer = ScorerIndex(scoring);
+            _celebrator = scorer >= 0 && Players[scorer].Team == scoring ? Players[scorer] : null;
+            AddEvent(MatchEventType.Goal, scoring, scorer, at);
             Owner = null;
             _passActive = false;
             _shotLive = false;
@@ -769,6 +771,11 @@ namespace Football.Core.MatchCore
             _restart = new Restart(RestartKind.KickOff, _kickoffTeam, Vec2.Zero);
             _planTimer = 0f;
         }
+
+        private MatchPlayer _celebrator;
+
+        /// <summary>Jugador que festeja el último gol (corre hacia el banderín más cercano durante la pausa), o null.</summary>
+        public MatchPlayer Celebrator => Phase == MatchPhase.GoalPause ? _celebrator : null;
 
         private void TickGoalPause(float dt)
         {

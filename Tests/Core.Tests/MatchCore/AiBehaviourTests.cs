@@ -1,3 +1,4 @@
+using System;
 using Football.Core.Common;
 using Football.Core.MatchCore;
 using NUnit.Framework;
@@ -129,6 +130,66 @@ namespace Football.Core.Tests.MatchCore
             }
 
             Assert.That(e.TestRunIntoSpace(forward).Y, Is.LessThan(0f));
+        }
+
+        [Test]
+        public void ShoulderToShoulder_TheWeakerPlayerStumbles_MostOfTheTime()
+        {
+            int weakerStumbled = 0, strongerStumbled = 0;
+            for (ulong seed = 0; seed < 100; seed++)
+            {
+                MatchEngine e = Isolated(seed);
+                MatchPlayer strong = e.Teams[0].Players[9];
+                MatchPlayer weak = e.Teams[1].Players[9];
+                strong.Attr[Football.Core.Domain.AttributeId.Strength] = 95;
+                weak.Attr[Football.Core.Domain.AttributeId.Strength] = 25;
+                e.TestPlace(strong, new Vec2(0f, -0.6f));
+                e.TestPlace(weak, new Vec2(0f, 0.6f));
+                strong.Heading = MathF.PI / 2f; // corren uno contra el otro
+                weak.Heading = -MathF.PI / 2f;
+                strong.Speed = 5f;
+                weak.Speed = 5f;
+                strong.Target = new Vec2(0f, 10f);
+                weak.Target = new Vec2(0f, -10f);
+                strong.SpeedFactor = weak.SpeedFactor = 1f;
+                for (int t = 0; t < 30 && weak.StumbleTimer <= 0f && strong.StumbleTimer <= 0f; t++)
+                {
+                    e.Tick();
+                    strong.Target = new Vec2(0f, 10f);
+                    weak.Target = new Vec2(0f, -10f);
+                }
+
+                weakerStumbled += weak.StumbleTimer > 0f ? 1 : 0;
+                strongerStumbled += strong.StumbleTimer > 0f ? 1 : 0;
+            }
+
+            Assert.That(weakerStumbled + strongerStumbled, Is.EqualTo(100), "en cada choque fuerte alguien trastabilla");
+            Assert.That(weakerStumbled, Is.GreaterThan(80), $"el débil cae {weakerStumbled} veces, el fuerte {strongerStumbled}");
+        }
+
+        [Test]
+        public void Scorer_RunsToTheCornerFlagToCelebrate()
+        {
+            MatchEngine e = Isolated(5);
+            MatchPlayer shooter = e.Teams[0].Players[10];
+            e.TestPlace(shooter, new Vec2(40f, 1f));
+            e.TestPlace(e.Teams[1].Players[0], new Vec2(30f, 30f));
+            e.TestKick(shooter, new Vec3(30f, -2f, 0.5f), true);
+            for (int i = 0; i < 120 && e.Phase == MatchPhase.Playing; i++)
+            {
+                e.Tick();
+            }
+
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.GoalPause), $"balón en {e.Ball.Pos.X:F1},{e.Ball.Pos.Y:F1}");
+            Assert.That(e.Celebrator, Is.SameAs(shooter));
+            float before = Vec2.Distance(shooter.Pos, new Vec2(e.Pitch.HalfLength, e.Pitch.HalfWidth));
+            for (int i = 0; i < 60; i++)
+            {
+                e.Tick();
+            }
+
+            Assert.That(Vec2.Distance(shooter.Pos, new Vec2(e.Pitch.HalfLength, e.Pitch.HalfWidth)), Is.LessThan(before - 2f), "corre al banderín");
+            Assert.That(shooter.Action, Is.EqualTo(PlayerAction.Celebrate));
         }
     }
 }
