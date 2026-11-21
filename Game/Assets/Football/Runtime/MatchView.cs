@@ -45,7 +45,11 @@ namespace Football.Game
 
         private readonly GameObject _root;
         private readonly Pitch _pitch;
+        private const float NameHeight = 2.15f;
+
         private readonly PlayerModel[] _players = new PlayerModel[MatchSnapshot.PlayerCount];
+        private readonly Vector3[] _heads = new Vector3[MatchSnapshot.PlayerCount];
+        private readonly bool[] _visible = new bool[MatchSnapshot.PlayerCount];
         private Camera _camera;
         private Transform _ball;
         private Transform _ballShadow;
@@ -62,9 +66,9 @@ namespace Football.Game
 
         /// <summary>Crea toda la escena del partido.</summary>
         /// <param name="pitch">Geometría del campo.</param>
-        /// <param name="homeKit">Color del equipo local.</param>
-        /// <param name="awayKit">Color del equipo visitante.</param>
-        public MatchView(Pitch pitch, Color homeKit, Color awayKit)
+        /// <param name="homeKit">Equipación del local.</param>
+        /// <param name="awayKit">Equipación del visitante.</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit)
         {
             _pitch = pitch;
             _root = new GameObject("MatchView");
@@ -254,24 +258,27 @@ namespace Football.Game
 
         // ---- Jugadores, balón e indicadores -----------------------------------------------------------------------------
 
-        private void BuildPlayers(Color homeKit, Color awayKit)
+        private void BuildPlayers(KitColors homeKit, KitColors awayKit)
         {
             for (int i = 0; i < _players.Length; i++)
             {
                 bool home = i < 11;
                 bool keeper = i % 11 == 0;
-                Color kit = home ? homeKit : awayKit;
+                KitColors kit = home ? homeKit : awayKit;
                 if (keeper)
                 {
-                    kit = home ? new Color(0.95f, 0.85f, 0.1f) : new Color(0.15f, 0.75f, 0.35f);
+                    // Los porteros visten distinto que los jugadores de campo de ambos equipos.
+                    Color gk = home ? new Color(0.55f, 0.85f, 0.15f) : new Color(0.95f, 0.55f, 0.1f);
+                    kit = new KitColors { Shirt = gk, Secondary = gk, Shorts = new Color(0.1f, 0.1f, 0.1f), Socks = gk, Pattern = KitPattern.Solid };
                 }
 
-                float brightness = kit.r * 0.3f + kit.g * 0.59f + kit.b * 0.11f;
                 var look = new PlayerLook
                 {
-                    Shirt = kit,
-                    Shorts = brightness > 0.6f ? new Color(0.12f, 0.12f, 0.16f) : new Color(0.95f, 0.95f, 0.95f),
-                    Socks = kit,
+                    Shirt = kit.Shirt,
+                    Secondary = kit.Secondary,
+                    Pattern = kit.Pattern,
+                    Shorts = kit.Shorts,
+                    Socks = kit.Socks,
                     Skin = SkinTones[(i * 7 + 3) % SkinTones.Length],
                     Hair = HairColors[(i * 5 + 1) % HairColors.Length],
                     Boots = new Color(0.08f, 0.08f, 0.08f)
@@ -328,6 +335,7 @@ namespace Football.Game
 
                 bool visible = !current.SentOff[i];
                 model.SetVisible(visible);
+                _visible[i] = visible;
                 if (!visible)
                 {
                     continue;
@@ -342,6 +350,7 @@ namespace Football.Game
                 float toBall = Mathf.Atan2(by - y, bx - x) * Mathf.Rad2Deg;
                 float relative = Mathf.DeltaAngle(heading, toBall);
                 model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, current.PlayerAction[i], -relative, relative < 0f, deltaTime);
+                _heads[i] = ToUnity(x, y, NameHeight);
             }
 
             if (_ball != null)
@@ -407,6 +416,19 @@ namespace Football.Game
             Transform t = _camera.transform;
             t.localPosition = new Vector3(_cameraX, CameraHeight, _cameraZ - CameraDistance);
             t.LookAt(new Vector3(_cameraX, 0f, _cameraZ + 2f));
+        }
+
+        /// <summary>Posición en pantalla (píxeles) sobre la cabeza de un jugador; falso si no está visible.</summary>
+        public bool HeadOnScreen(int player, out Vector3 screen)
+        {
+            screen = default;
+            if (_camera == null || !_visible[player])
+            {
+                return false;
+            }
+
+            screen = _camera.WorldToScreenPoint(_heads[player]);
+            return screen.z > 0f;
         }
 
         /// <summary>Elimina todo lo creado.</summary>

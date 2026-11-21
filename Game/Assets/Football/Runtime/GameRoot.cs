@@ -42,7 +42,15 @@ namespace Football.Game
             _lastWasBenchmark = benchmark;
             _menu.Hide();
             _result.Hide();
-            if (_match.Begin(_menu.SelectedOpponent, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
+            int awayKit = _settings.AwayKit;
+            if (_menu.KitsClash)
+            {
+                awayKit = 1 - awayKit; // Si las camisetas se confunden, el rival usa la otra.
+            }
+
+            if (_match.Begin(TeamCatalog.Teams[_settings.HomeTeam], TeamCatalog.Teams[_settings.Opponent],
+                    MenuScreen.Kit(_settings.HomeTeam, _settings.HomeKit), MenuScreen.Kit(_settings.Opponent, awayKit),
+                    _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
             {
                 _state = State.Match;
                 return;

@@ -1,0 +1,1154 @@
+{
+  "Source": "Búsquedas web del 20 y 21 de noviembre de 2026: listas de convocados y planteles publicados por medios (El Gráfico, RPP, La Página Millonaria, Fichajes.com, Vavel, ESPN, sitios oficiales). Las fuentes tienen fechas distintas y no siempre coinciden.",
+  "Updated": "2026-11-21",
+  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC.",
+  "Teams": [
+    {
+      "Name": "Boca Juniors",
+      "ShortName": "BOC",
+      "Style": "Balanced",
+      "Formation": "4-3-3",
+      "Home": {
+        "Shirt": "#0A2A6B",
+        "Secondary": "#FFC20E",
+        "Pattern": "Band",
+        "Shorts": "#0A2A6B",
+        "Socks": "#0A2A6B"
+      },
+      "Away": {
+        "Shirt": "#FFC20E",
+        "Secondary": "#0A2A6B",
+        "Pattern": "Solid",
+        "Shorts": "#0A2A6B",
+        "Socks": "#FFC20E"
+      },
+      "Players": [
+        {
+          "Name": "Álvaro Montero",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 75
+        },
+        {
+          "Name": "Agustín Marchesín",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 73
+        },
+        {
+          "Name": "Leandro Brey",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 70
+        },
+        {
+          "Name": "Javier García",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 65
+        },
+        {
+          "Name": "Leandro Lozano",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 68
+        },
+        {
+          "Name": "Dylan Gorosito",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 66
+        },
+        {
+          "Name": "Lautaro Di Lollo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Ayrton Costa",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 74
+        },
+        {
+          "Name": "Facundo Herrera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Marco Pellegrino",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Jorge Figal",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 71
+        },
+        {
+          "Name": "Rodrigo Battaglia",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 74
+        },
+        {
+          "Name": "Lautaro Blanco",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 73
+        },
+        {
+          "Name": "Matías Satas",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 64
+        },
+        {
+          "Name": "Leandro Paredes",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 80
+        },
+        {
+          "Name": "Santiago Ascacíbar",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 75
+        },
+        {
+          "Name": "Milton Delgado",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 72
+        },
+        {
+          "Name": "Tomás Belmonte",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 71
+        },
+        {
+          "Name": "Alan Velasco",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 74
+        },
+        {
+          "Name": "Tomás Aranda",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 70
+        },
+        {
+          "Name": "Sebastián Villa",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 76
+        },
+        {
+          "Name": "Ángel Romero",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 71
+        },
+        {
+          "Name": "Leonel Flores",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 66
+        },
+        {
+          "Name": "Miguel Merentiel",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 76
+        },
+        {
+          "Name": "Enner Valencia",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 74
+        },
+        {
+          "Name": "Milton Giménez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Adam Bareiro",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Rodrigo Bacidalupe",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 62
+        }
+      ]
+    },
+    {
+      "Name": "River Plate",
+      "ShortName": "RIV",
+      "Style": "Possession",
+      "Formation": "4-3-3",
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#D7001E",
+        "Pattern": "Sash",
+        "Shorts": "#111111",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#1A1A1A",
+        "Secondary": "#D7001E",
+        "Pattern": "Sash",
+        "Shorts": "#1A1A1A",
+        "Socks": "#1A1A1A"
+      },
+      "Players": [
+        {
+          "Name": "Santiago Beltrán",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 72
+        },
+        {
+          "Name": "Ezequiel Centurión",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 70
+        },
+        {
+          "Name": "Franco Jaroszewicz",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 63
+        },
+        {
+          "Name": "Gonzalo Montiel",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 77
+        },
+        {
+          "Name": "Giovanni González",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 72
+        },
+        {
+          "Name": "Lucas Martínez Quarta",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 77
+        },
+        {
+          "Name": "Nicolás Otamendi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 75
+        },
+        {
+          "Name": "Lautaro Rivero",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Facundo González",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Juan Portillo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Tobías Ramírez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Marcos Acuña",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 75
+        },
+        {
+          "Name": "Francisco Ortega",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 68
+        },
+        {
+          "Name": "Aníbal Moreno",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 74
+        },
+        {
+          "Name": "Fausto Vera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 72
+        },
+        {
+          "Name": "Mauro Arambarri",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 74
+        },
+        {
+          "Name": "Juan Cruz Meza",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 70
+        },
+        {
+          "Name": "Lucas Silva",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 66
+        },
+        {
+          "Name": "Tobías Andrada",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 64
+        },
+        {
+          "Name": "Lautaro Pereyra",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 64
+        },
+        {
+          "Name": "Tomás Galván",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 71
+        },
+        {
+          "Name": "Thiago Almada",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 80
+        },
+        {
+          "Name": "Ángel Correa",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 77
+        },
+        {
+          "Name": "Joaquín Freitas",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 68
+        },
+        {
+          "Name": "Sebastián Driussi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 76
+        },
+        {
+          "Name": "Rafael Santos Borré",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 75
+        },
+        {
+          "Name": "Lucas Beltrán",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Agustín Ruberto",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 69
+        }
+      ]
+    },
+    {
+      "Name": "Racing Club",
+      "ShortName": "RAC",
+      "Style": "High Press",
+      "Formation": "4-3-3",
+      "Home": {
+        "Shirt": "#75AADB",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#1E2A4A",
+        "Secondary": "#75AADB",
+        "Pattern": "Solid",
+        "Shorts": "#1E2A4A",
+        "Socks": "#1E2A4A"
+      },
+      "Players": [
+        {
+          "Name": "Facundo Cambeses",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 74
+        },
+        {
+          "Name": "Francisco Gómez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 62
+        },
+        {
+          "Name": "Matías Tagliamonte",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 60
+        },
+        {
+          "Name": "Ezequiel Cannavo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 70
+        },
+        {
+          "Name": "Marcos Rojo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Marco Di Césare",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Agustín García Basso",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 71
+        },
+        {
+          "Name": "Matías Pérez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Gonzalo Escudero",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Mateo Martínez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Ignacio Rodríguez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 67
+        },
+        {
+          "Name": "Matías Zaracho",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 73
+        },
+        {
+          "Name": "Adrián Fernández",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 69
+        },
+        {
+          "Name": "Gastón Lodico",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 68
+        },
+        {
+          "Name": "Alan Forneris",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 66
+        },
+        {
+          "Name": "Martín Barrios",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 65
+        },
+        {
+          "Name": "Ramiro Degregorio",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 62
+        },
+        {
+          "Name": "Matko Miljevic",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 70
+        },
+        {
+          "Name": "Valentín Carboni",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 74
+        },
+        {
+          "Name": "Duván Vergara",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 72
+        },
+        {
+          "Name": "Tomás Conechny",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 70
+        },
+        {
+          "Name": "Adrián Martínez",
+          "ShortName": "Maravilla",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 77
+        },
+        {
+          "Name": "Elías Torres",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 66
+        }
+      ]
+    },
+    {
+      "Name": "Estudiantes de La Plata",
+      "ShortName": "EST",
+      "Style": "Counter Attack",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#E30613",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#E30613"
+      },
+      "Away": {
+        "Shirt": "#1C2B5A",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#1C2B5A",
+        "Socks": "#1C2B5A"
+      },
+      "Players": [
+        {
+          "Name": "Fernando Muslera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 74
+        },
+        {
+          "Name": "Matías Mansilla",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 69
+        },
+        {
+          "Name": "Fabricio Iacovich",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 62
+        },
+        {
+          "Name": "Juan Pablo Zozaya",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 60
+        },
+        {
+          "Name": "Eros Mancuso",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 71
+        },
+        {
+          "Name": "Faustino Messina",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 62
+        },
+        {
+          "Name": "Santiago Núñez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 70
+        },
+        {
+          "Name": "Valente Pierani",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Máximo Desábato",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Gastón Benedetti",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 68
+        },
+        {
+          "Name": "Santiago Arzamendia",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 70
+        },
+        {
+          "Name": "Gabriel Neves",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 72
+        },
+        {
+          "Name": "Ezequiel Piovi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 70
+        },
+        {
+          "Name": "Franco Basualdo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 66
+        },
+        {
+          "Name": "Tiago Palacios",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 71
+        },
+        {
+          "Name": "Agustín Palavecino",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 69
+        },
+        {
+          "Name": "Brian Aguirre",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 71
+        },
+        {
+          "Name": "Facundo Farías",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 72
+        },
+        {
+          "Name": "Guido Carrillo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Lucas Alario",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 71
+        },
+        {
+          "Name": "Adolfo Gaich",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 69
+        },
+        {
+          "Name": "Fabricio Pérez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 64
+        }
+      ]
+    },
+    {
+      "Name": "San Lorenzo",
+      "ShortName": "SLO",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#0033A0",
+        "Secondary": "#D21034",
+        "Pattern": "Stripes",
+        "Shorts": "#0B1F4D",
+        "Socks": "#0B1F4D"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#0033A0",
+        "Pattern": "Band",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Orlando Gill",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 73
+        },
+        {
+          "Name": "Facundo Altamirano",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 69
+        },
+        {
+          "Name": "José Devecchi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 60
+        },
+        {
+          "Name": "Mathías De Ritis",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 66
+        },
+        {
+          "Name": "Teo Rodríguez Pagano",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 63
+        },
+        {
+          "Name": "Gastón Hernández",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 72
+        },
+        {
+          "Name": "Guzmán Corujo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Danilo Arboleda",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Ezequiel Herrera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Emiliano Amor",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Franco Lorenzon",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 62
+        },
+        {
+          "Name": "Ignacio Perruzzi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 70
+        },
+        {
+          "Name": "Mauricio Cardillo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 64
+        },
+        {
+          "Name": "Juan Pablo Álvarez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 65
+        },
+        {
+          "Name": "Facundo Gulli",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 63
+        },
+        {
+          "Name": "Nahuel Barrios",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 70
+        },
+        {
+          "Name": "Matías Reali",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 68
+        },
+        {
+          "Name": "Agustín Ladstatter",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 64
+        },
+        {
+          "Name": "Ezequiel Cerutti",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 69
+        },
+        {
+          "Name": "Branco Salinardi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 62
+        },
+        {
+          "Name": "Luciano Vietto",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 71
+        },
+        {
+          "Name": "Alexis Cuello",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 70
+        },
+        {
+          "Name": "Andrés Vombergar",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 68
+        },
+        {
+          "Name": "Diego Herazo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 66
+        }
+      ]
+    },
+    {
+      "Name": "Independiente",
+      "ShortName": "IND",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#E2001A",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#0B2C6B",
+        "Socks": "#E2001A"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#E2001A",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Rodrigo Rey",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 74
+        },
+        {
+          "Name": "Santiago Mele",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 68
+        },
+        {
+          "Name": "Joaquín Blázquez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 66
+        },
+        {
+          "Name": "Santiago Arias",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 71
+        },
+        {
+          "Name": "Leonardo Godoy",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 70
+        },
+        {
+          "Name": "Juan Arrayago",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 66
+        },
+        {
+          "Name": "Kevin Lomónaco",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 70
+        },
+        {
+          "Name": "Nicolás Freire",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Fernando Closter",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 64
+        },
+        {
+          "Name": "Iván Marcone",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 73
+        },
+        {
+          "Name": "Facundo Cruz",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 66
+        },
+        {
+          "Name": "Maximiliano Meza",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 70
+        },
+        {
+          "Name": "Luciano Cabral",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 72
+        },
+        {
+          "Name": "Felipe Tempone",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 64
+        },
+        {
+          "Name": "Walter Montiel",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 65
+        },
+        {
+          "Name": "Walter Mazzantti",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 71
+        },
+        {
+          "Name": "Ignacio Pussetto",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 68
+        },
+        {
+          "Name": "Gabriel Ávalos",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Sebastián Ávila",
+          "ShortName": "Chimy Ávila",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 72
+        },
+        {
+          "Name": "Iván Morales",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 69
+        }
+      ]
+    }
+  ]
+}

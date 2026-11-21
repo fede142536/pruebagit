@@ -46,6 +46,17 @@ Cada vez que te avise de cambios:
    **I** centro · **E** presionar (sin balón) · **Tab** cambiar de jugador · **Shift** esprint · **Esc** pausa.
 3. Consejo: en la pestaña *Game* elige una proporción 16:9 para ver la pantalla como en el móvil.
 
+### Equipos, camisetas y nombres
+
+- En el menú elige **TU EQUIPO** (columna izquierda) y el **RIVAL** (columna central). Al lado de cada club ves su media y su estilo.
+- Debajo de cada lista, el botón **CAMISETA** alterna entre **titular** y **alternativa** (el cuadrado de color muestra cómo es).
+  Si las dos camisetas se parecen demasiado, el rival usa automáticamente la otra.
+- Los nombres aparecen sobre los jugadores; el tuyo, en amarillo. En **Pausa → NOMBRES** eliges entre todos, solo el tuyo y el que
+  lleva el balón, o ninguno.
+- Los planteles están en `Data/teams/argentina.json` (en Unity, `Assets/Football/Resources/teams.json`). Puedes abrirlo con el
+  Bloc de notas para corregir jugadores, posiciones (POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC) o medias.
+  **Las medias son estimaciones mías**, no oficiales, y los planteles pueden tener algún error porque las fuentes no coincidían del todo.
+
 ## 5. Generar la aplicación para el móvil
 
 1. **File → Build Profiles** (o *Build Settings*), elige **Android** y pulsa **Switch Platform**. Espera.

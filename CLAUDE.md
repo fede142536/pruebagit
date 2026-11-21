@@ -15,7 +15,8 @@ Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.m
 | Compilar el núcleo | `dotnet build Core/Core.sln` | Fase 0 ✅ |
 | Pruebas del núcleo | `dotnet test Core/Core.sln` | Fase 0 ✅ |
 | DLL del núcleo para Unity | `Tools/build-core.sh` (copia a `Game/Assets/Plugins/Core/`) | Fase 0 ✅ |
-| Simulación masiva headless | `dotnet run -c Release --project Tools/HeadlessSim -- --matches 1000 --seed 1` (opciones: `--difficulty`, `--away-difficulty`, `--rating`, `--ascii 12`, `--dump-config ruta`) | Fase 1 ✅ |
+| Simulación masiva headless | `dotnet run -c Release --project Tools/HeadlessSim -- --matches 1000 --seed 1` (opciones: `--difficulty`, `--away-difficulty`, `--rating`, `--ascii 12`, `--dump-config ruta`, `--config ruta`) | Fase 1 ✅ |
+| Alineaciones y torneo entre equipos de un archivo | `dotnet run -c Release --project Tools/HeadlessSim -- --teams Data/teams/argentina.json --matches 10` | Fase 1 ✅ |
 | Pruebas Unity (EditMode/PlayMode) | desde el editor, o `Unity -runTests -batchmode -projectPath Game` | Fase 1 |
 | Benchmark reproducible | escena `Game/Benchmark` + script `Tools/benchmark.md` | Fase 1 |
 
@@ -47,7 +48,7 @@ Reglas:
 
 ## Contenido y licencias
 
-- **No usar nombres, escudos, equipaciones ni jugadores con licencia.** La base de datos por defecto es ficticia; existirá un importador/editor JSON/CSV para que el usuario cargue datos reales por su cuenta.
+- **Sin escudos, logotipos ni diseños oficiales.** Por pedido explícito del usuario (D-12), `Data/teams/argentina.json` tiene nombres reales de jugadores de seis clubes con medias **estimadas por nosotros**; es para uso personal. El juego debe seguir funcionando sin ese archivo (equipos ficticios de reserva). Tras editarlo, `Tools/build-core.sh` lo copia a `Game/Assets/Football/Resources/teams.json` (una prueba verifica que coinciden).
 - Solo assets con licencia clara (CC0/MIT o equivalente), registrados en `ASSETS_LICENSES.md` (fuente, autor, licencia, URL, fecha).
 - La capa de arte es intercambiable: la lógica no depende de modelos, texturas ni audio concretos.
 

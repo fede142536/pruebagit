@@ -9,6 +9,10 @@ namespace Football.Game
     {
         /// <summary>Camiseta.</summary>
         public Color Shirt;
+        /// <summary>Color secundario de la camiseta.</summary>
+        public Color Secondary;
+        /// <summary>Diseño de la camiseta.</summary>
+        public KitPattern Pattern;
         /// <summary>Pantalón corto.</summary>
         public Color Shorts;
         /// <summary>Medias.</summary>
@@ -84,6 +88,7 @@ namespace Football.Game
             _body = Pivot(Root, "Cuerpo", Vector3.zero);
             Part(_body, "Tronco", MeshKit.Torso, look.Shirt, new Vector3(0f, ShoulderHeight + 0.03f, 0f), new Vector3(0.44f, TorsoLength, 0.25f));
             Part(_body, "Pantalon", MeshKit.Box, look.Shorts, new Vector3(0f, HipHeight - 0.05f, 0f), new Vector3(0.41f, 0.22f, 0.27f));
+            AddPattern(_body, look);
 
             _head = Pivot(_body, "Cabeza", new Vector3(0f, ShoulderHeight + 0.05f, 0f));
             Part(_head, "Cara", MeshKit.Sphere, look.Skin, new Vector3(0f, 0.15f, 0f), new Vector3(0.22f, 0.26f, 0.24f));
@@ -96,6 +101,29 @@ namespace Football.Game
             Part(_armL, "Brazo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.1f, ArmLength, 0.1f));
             _armR = Pivot(_body, "BrazoDer", new Vector3(ShoulderOffset, ShoulderHeight - 0.02f, 0f));
             Part(_armR, "Brazo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.1f, ArmLength, 0.1f));
+        }
+
+        /// <summary>Rayas, franja o banda de la camiseta: piezas finas que asoman por delante y por detrás del tronco.</summary>
+        private static void AddPattern(Transform body, PlayerLook look)
+        {
+            const float chest = ShoulderHeight - TorsoLength * 0.42f;
+            switch (look.Pattern)
+            {
+                case KitPattern.Stripes:
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        Part(body, "Raya", MeshKit.Box, look.Secondary, new Vector3(i * 0.12f, chest, 0f), new Vector3(0.06f, TorsoLength * 0.92f, 0.27f));
+                    }
+
+                    break;
+                case KitPattern.Band:
+                    Part(body, "Franja", MeshKit.Box, look.Secondary, new Vector3(0f, chest + 0.04f, 0f), new Vector3(0.46f, 0.12f, 0.28f));
+                    break;
+                case KitPattern.Sash:
+                    Transform sash = Part(body, "Banda", MeshKit.Box, look.Secondary, new Vector3(0f, chest, 0f), new Vector3(0.1f, TorsoLength * 1.15f, 0.27f));
+                    sash.localRotation = Quaternion.Euler(0f, 0f, 38f);
+                    break;
+            }
         }
 
         private static Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
@@ -116,7 +144,7 @@ namespace Football.Game
             return go.transform;
         }
 
-        private static void Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale)
+        private static Transform Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -127,6 +155,7 @@ namespace Football.Game
             renderer.sharedMaterial = Materials.Get(color);
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+            return go.transform;
         }
 
         /// <summary>Muestra u oculta al jugador (por ejemplo, si lo expulsan).</summary>

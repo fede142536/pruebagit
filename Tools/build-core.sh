@@ -9,4 +9,6 @@ dest="$root/Game/Assets/Plugins/Core"
 dotnet build "$root/Core/Core.csproj" -c Release --nologo -v quiet
 mkdir -p "$dest"
 cp "$root/Core/bin/Release/netstandard2.1/Football.Core.dll" "$dest/"
-echo "Núcleo copiado a: $dest"
+mkdir -p "$root/Game/Assets/Football/Resources"
+cp "$root/Data/teams/argentina.json" "$root/Game/Assets/Football/Resources/teams.json"
+echo "Núcleo copiado a: $dest (y equipos a Game/Assets/Football/Resources/teams.json)"

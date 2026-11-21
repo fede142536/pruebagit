@@ -67,10 +67,25 @@ presión alta juegan en promedio más adelantados que los defensivos (`HighPress
 | Paradas: 40 % se desvían por encima del larguero | — | Sin córners por paradas |
 | `FoulBase` | 0,09 → 0,22 | Casi no había faltas |
 
-## 5. Pendientes de calibración
+## 5. Equipos reales: medias y estilos (noviembre de 2026)
+
+Medición con `dotnet run -c Release --project Tools/HeadlessSim -- --teams Data/teams/argentina.json --matches 10 --seed 3`
+(10 vueltas de ida y vuelta = 50 partidos por equipo).
+
+| Prueba | Resultado |
+|---|---|
+| Todos con el mismo estilo y formación | El orden sigue a las medias: Boca (74,2) 159 pts, River (75,4) 154, Racing (71,8) 144, Independiente (70,1) 130, Estudiantes (71,3) 112, San Lorenzo (68,6) 110. **Las medias sí diferencian a los equipos.** |
+| Solo Boca cambia a «Presión alta» | Boca pasa de 159 a 179 pts: **el estilo de presión alta da demasiada ventaja** |
+| Archivo real (estilos variados) | Racing (presión alta, media 71,8) termina primero y River (posesión, 75,2) tercero |
+
+Conclusión: los estilos aún no están equilibrados (presión alta fuerte, posesión débil). Se ajustará en la Fase 6 con más
+partidos por medición, porque con 50 partidos por equipo el ruido es de unos ±9 puntos.
+
+## 6. Pendientes de calibración
 
 - Fueras de juego casi inexistentes (Fase 6).
 - Ventaja de local (Fase 3, junto con estadio y afición).
 - Brecha de dificultad excesiva (Fase 6).
+- Equilibrio entre estilos: «Presión alta» demasiado fuerte y «Posesión» floja (Fase 6, ver sección 5).
 - Consistencia *Jugar* / *Ver* / *Simular*: el motor estadístico `MatchSim` aún no existe (Fase 2); se calibrará contra `MatchCore`.
 - Economía de la carrera (Fase 2 en adelante).

@@ -56,6 +56,17 @@ la compilación). El arte definitivo se enchufará después sin tocar la lógica
 cómo esté configurado el proyecto, y la interfaz hace su propia detección de toques (sin `EventSystem`). Evita depender de la
 plantilla de proyecto que elija el usuario.
 
+## D-12 · Plantillas reales de seis clubes argentinos — Aceptada (a pedido del usuario)
+**Contexto:** el prompt original pedía una base ficticia y que el usuario cargara los datos reales por su cuenta. El usuario pidió
+después, de forma explícita, los planteles reales de Boca, River, Racing, Estudiantes, San Lorenzo e Independiente con medias.
+**Decisión:** `Data/teams/argentina.json` (formato editable, con copia en `Game/Assets/Football/Resources/teams.json`) contiene esos
+planteles armados con búsquedas web del 20-21/11/2026. Transfermarkt bloquea el acceso automático y sus condiciones prohíben
+extraer datos, y Wikipedia no fue accesible desde la sesión; por eso las listas salen de medios y sitios de clubes, con fechas
+distintas, y pueden tener errores. **Las medias son estimaciones propias** (no de EA FC ni de Transfermarkt). Solo nombres y colores:
+sin escudos, logotipos ni diseños oficiales de camisetas.
+**Uso:** personal. Si el repositorio es público, conviene hacerlo privado o quitar el archivo antes de compartirlo.
+El juego sigue funcionando sin el archivo (usa dos equipos ficticios).
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 

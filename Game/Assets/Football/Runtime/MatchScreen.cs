@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using Football.Core.Common;
+using Football.Core.Data;
 using Football.Core.MatchCore;
 
 namespace Football.Game
@@ -29,13 +30,15 @@ namespace Football.Game
         private readonly DebugPanel _debug;
         private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
         private readonly GameObject _pausePanel;
-        private readonly UiButton _resume, _quit, _lefty, _debugToggle, _fpsToggle;
+        private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle;
+        private readonly NameTags _nameTags;
 
         private MatchEngine _engine;
         private MatchSnapshot _previous = new MatchSnapshot();
         private MatchSnapshot _current = new MatchSnapshot();
         private MatchView _view;
-        private OpponentInfo _opponent;
+        private TeamDefinition _homeTeam;
+        private TeamDefinition _awayTeam;
         private bool _benchmark;
         private bool _paused;
         private float _accumulator;
@@ -80,26 +83,32 @@ namespace Football.Game
             Image dim = UiKit.Panel(c, "Pausa", new Vector2(960f, 540f), UiKit.Reference, new Color(0f, 0f, 0f, 0.7f));
             _pausePanel = dim.gameObject;
             UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
-            _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 720f), new Vector2(560f, 110f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
-            _lefty = UiKit.Button(dim.transform, "Zurdo", new Vector2(960f, 590f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
-            _debugToggle = UiKit.Button(dim.transform, "Depuracion", new Vector2(960f, 470f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
-            _fpsToggle = UiKit.Button(dim.transform, "Fps", new Vector2(960f, 350f), new Vector2(560f, 100f), string.Empty, 38, new Color(0.3f, 0.3f, 0.4f));
-            _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 210f), new Vector2(560f, 110f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
+            Color option = new Color(0.3f, 0.3f, 0.4f);
+            _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 770f), new Vector2(620f, 100f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
+            _names = UiKit.Button(dim.transform, "Nombres", new Vector2(960f, 660f), new Vector2(620f, 92f), string.Empty, 34, option);
+            _lefty = UiKit.Button(dim.transform, "Zurdo", new Vector2(960f, 556f), new Vector2(620f, 92f), string.Empty, 34, option);
+            _debugToggle = UiKit.Button(dim.transform, "Depuracion", new Vector2(960f, 452f), new Vector2(620f, 92f), string.Empty, 34, option);
+            _fpsToggle = UiKit.Button(dim.transform, "Fps", new Vector2(960f, 348f), new Vector2(620f, 92f), string.Empty, 34, option);
+            _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 225f), new Vector2(620f, 100f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
+            _nameTags = new NameTags(parent);
         }
 
         /// <summary>Empieza un partido nuevo.</summary>
-        /// <param name="opponent">Rival.</param>
+        /// <param name="home">Equipo del jugador.</param>
+        /// <param name="away">Rival.</param>
+        /// <param name="homeKit">Camiseta del jugador.</param>
+        /// <param name="awayKit">Camiseta del rival.</param>
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
         /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
         /// <returns>Verdadero si el partido arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
-        public bool Begin(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
+        public bool Begin(TeamDefinition home, TeamDefinition away, KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
         {
             try
             {
-                BeginUnsafe(opponent, difficulty, halfMinutes, benchmark);
+                BeginUnsafe(home, away, homeKit, awayKit, difficulty, halfMinutes, benchmark);
                 LastError = null;
                 return true;
             }
@@ -116,9 +125,11 @@ namespace Football.Game
         /// <summary>Motivo por el que no arrancó el último partido, o null.</summary>
         public string LastError { get; private set; }
 
-        private void BeginUnsafe(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
+        private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, KitColors homeKit, KitColors awayKit,
+            int difficulty, int halfMinutes, bool benchmark)
         {
-            _opponent = opponent;
+            _homeTeam = homeTeam;
+            _awayTeam = awayTeam;
             _benchmark = benchmark;
             Finished = false;
             QuitRequested = false;
@@ -131,13 +142,14 @@ namespace Football.Game
             ulong seed = benchmark ? BenchmarkSeed : (ulong)DateTime.Now.Ticks;
             var rng = new SeededRandom(seed);
             IRandom teams = rng.Fork("teams");
-            MatchTeamSetup home = RosterFactory.CreateTeam(teams, TeamCatalog.PlayerTeamName, TeamCatalog.PlayerRating, Formations.F442, config.Styles[0]);
-            MatchTeamSetup away = RosterFactory.CreateTeam(teams, opponent.Name, opponent.Rating, opponent.Formation, config.Styles[opponent.StyleIndex]);
+            MatchTeamSetup home = TeamBuilder.Build(homeTeam, config, teams.Fork("home"));
+            MatchTeamSetup away = TeamBuilder.Build(awayTeam, config, teams.Fork("away"));
             _engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, difficulty);
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
-            _view = new MatchView(_engine.Pitch, TeamCatalog.PlayerKit, opponent.Kit);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit);
+            _nameTags.Setup(_engine);
             _previous.CopyFrom(_engine);
             _current.CopyFrom(_engine);
             _accumulator = 0f;
@@ -146,8 +158,8 @@ namespace Football.Game
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
             _banner.text = string.Empty;
-            _homeName.text = TeamCatalog.PlayerTeamName.ToUpperInvariant();
-            _awayName.text = opponent.Name.ToUpperInvariant();
+            _homeName.text = TeamCatalog.ScoreboardName(homeTeam);
+            _awayName.text = TeamCatalog.ScoreboardName(awayTeam);
             _warning.text = _view.BuildErrors.Length > 0
                 ? "Algo no se pudo dibujar (manda una captura de esto):\n" + _view.BuildErrors
                 : string.Empty;
@@ -203,7 +215,7 @@ namespace Football.Game
         /// <summary>Texto del marcador final, como "Tu Equipo 2 - 1 Rival".</summary>
         public string BuildResultLine()
         {
-            return TeamCatalog.PlayerTeamName + "  " + _engine.Teams[0].Stats.Goals + " - " + _engine.Teams[1].Stats.Goals + "  " + _opponent.Name;
+            return _homeTeam.Name + "  " + _engine.Teams[0].Stats.Goals + " - " + _engine.Teams[1].Stats.Goals + "  " + _awayTeam.Name;
         }
 
         private float AverageFps()
@@ -216,6 +228,7 @@ namespace Football.Game
         public void End()
         {
             _canvas.gameObject.SetActive(false);
+            _nameTags.Hide();
             _view?.Destroy();
             _view = null;
         }
@@ -255,6 +268,7 @@ namespace Football.Game
             }
 
             _view.Render(_previous, _current, alpha, controlled, target, deltaTime);
+            _nameTags.Update(_view, _settings.Names, controlled, _engine.Owner != null ? _engine.Owner.Index : -1, _engine.Teams[0].Players.Length);
             UpdateHint(deltaTime, input);
             _debug.Frame(deltaTime, steps);
 
@@ -327,7 +341,10 @@ namespace Football.Game
                 switch (e.Type)
                 {
                     case MatchEventType.Goal:
-                        text = e.Team == 0 ? "¡GOL!" : "GOL DE " + _opponent.Name.ToUpperInvariant();
+                        string scorer = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Name : string.Empty;
+                        bool ownGoal = e.PlayerIndex >= 0 && _engine.Players[e.PlayerIndex].Team != e.Team;
+                        text = "¡GOL DE " + (e.Team == 0 ? _homeTeam.Name : _awayTeam.Name).ToUpperInvariant() + "!\n"
+                               + (ownGoal ? "en contra de " + scorer : scorer);
                         break;
                     case MatchEventType.Offside: text = "FUERA DE JUEGO"; break;
                     case MatchEventType.Foul: text = "FALTA"; break;
@@ -436,6 +453,7 @@ namespace Football.Game
         private void RefreshPauseLabels()
         {
             _lefty.Label.text = "CONTROLES PARA ZURDOS: " + (_settings.LeftHanded ? "SÍ" : "NO");
+            _names.Label.text = "NOMBRES: " + (_settings.Names == NameMode.All ? "TODOS" : _settings.Names == NameMode.Controlled ? "SOLO EL TUYO Y EL BALÓN" : "NINGUNO");
             _debugToggle.Label.text = "PANEL DE DEPURACIÓN: " + (_settings.ShowDebug ? "SÍ" : "NO");
             _fpsToggle.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
         }
@@ -460,6 +478,12 @@ namespace Football.Game
                 {
                     SetPaused(false);
                     QuitRequested = true;
+                }
+                else if (_names.Contains(point))
+                {
+                    _settings.Names = (NameMode)(((int)_settings.Names + 1) % 3);
+                    _settings.Save();
+                    RefreshPauseLabels();
                 }
                 else if (_lefty.Contains(point))
                 {

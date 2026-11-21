@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Linq;
 using Football.Core.Common;
+using Football.Core.Data;
 using Football.Core.MatchCore;
 
 namespace Football.Tools.HeadlessSim
@@ -27,6 +29,7 @@ namespace Football.Tools.HeadlessSim
             string dumpPath = null;
             bool verbose = false;
             float asciiEvery = 0f;
+            string teamsPath = null;
             for (int i = 0; i < args.Length; i++)
             {
                 switch (args[i])
@@ -39,6 +42,7 @@ namespace Football.Tools.HeadlessSim
                     case "--config": configPath = args[++i]; break;
                     case "--dump-config": dumpPath = args[++i]; break;
                     case "--verbose": verbose = true; break;
+                    case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                 }
             }
@@ -53,6 +57,11 @@ namespace Football.Tools.HeadlessSim
                 File.WriteAllText(dumpPath, JsonSerializer.Serialize(config, Json) + "\n");
                 Console.WriteLine("Configuración escrita en " + dumpPath);
                 return 0;
+            }
+
+            if (teamsPath != null)
+            {
+                return League(config, teamsPath, matches, seed, difficulty);
             }
 
             if (asciiEvery > 0f)
@@ -143,6 +152,53 @@ namespace Football.Tools.HeadlessSim
 
             Console.WriteLine($"  Pases completados  {100.0 * (total[0, 5] + total[1, 5]) / Math.Max(1.0, total[0, 4] + total[1, 4]),7:F1}%");
             return failures == 0 && unfinished == 0 && outOfBounds == 0 ? 0 : 1;
+        }
+
+        /// <summary>Muestra el once de cada equipo de un archivo y juega todos contra todos (ida y vuelta) varias veces.</summary>
+        private static int League(MatchConfig config, string path, int rounds, ulong seed, int difficulty)
+        {
+            TeamDatabase db = JsonSerializer.Deserialize<TeamDatabase>(File.ReadAllText(path), Json);
+            foreach (TeamDefinition t in db.Teams)
+            {
+                Formation f = TeamBuilder.ParseFormation(t.Formation);
+                int[] xi = TeamBuilder.PickLineup(t, f);
+                Console.WriteLine($"{t.Name} ({t.Formation}, {t.Style}) media del once {TeamBuilder.LineupRating(t):F1}");
+                Console.WriteLine("  " + string.Join(", ", xi.Select((p, s) => $"{f.Slots[s].Role}: {t.Players[p].Name} {t.Players[p].Rating}")));
+            }
+
+            int n = db.Teams.Length;
+            var points = new int[n];
+            var goalsFor = new int[n];
+            var goalsAgainst = new int[n];
+            var root = new SeededRandom(seed);
+            int played = 0;
+            for (int r = 0; r < Math.Max(1, rounds); r++)
+            {
+                for (int h = 0; h < n; h++)
+                {
+                    for (int a = 0; a < n; a++)
+                    {
+                        if (h == a) continue;
+                        IRandom rng = root.Fork($"{r}-{h}-{a}");
+                        var engine = new MatchEngine(config, rng.Fork("engine"),
+                            TeamBuilder.Build(db.Teams[h], config, rng.Fork("h")), TeamBuilder.Build(db.Teams[a], config, rng.Fork("a")),
+                            difficulty, difficulty);
+                        while (!engine.IsFinished) engine.Tick();
+                        int gh = engine.Teams[0].Stats.Goals, ga = engine.Teams[1].Stats.Goals;
+                        goalsFor[h] += gh; goalsAgainst[h] += ga; goalsFor[a] += ga; goalsAgainst[a] += gh;
+                        if (gh > ga) points[h] += 3; else if (gh < ga) points[a] += 3; else { points[h]++; points[a]++; }
+                        played++;
+                    }
+                }
+            }
+
+            Console.WriteLine($"\nTabla tras {played} partidos ({Math.Max(1, rounds)} vueltas de ida y vuelta):");
+            foreach (int i in Enumerable.Range(0, n).OrderByDescending(i => points[i]).ThenByDescending(i => goalsFor[i] - goalsAgainst[i]))
+            {
+                Console.WriteLine($"  {db.Teams[i].Name,-26} {points[i],4} pts  {goalsFor[i],4}-{goalsAgainst[i],-4} media {TeamBuilder.LineupRating(db.Teams[i]):F1}");
+            }
+
+            return 0;
         }
 
         /// <summary>Dibuja el campo en texto cada cierto número de segundos reales del primer partido.</summary>

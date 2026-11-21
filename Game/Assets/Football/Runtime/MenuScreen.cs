@@ -3,20 +3,34 @@ using UnityEngine.UI;
 
 namespace Football.Game
 {
-    /// <summary>Menú principal: elegir rival (con su estilo de juego), dificultad y duración.</summary>
+    /// <summary>Menú principal: elegir tu equipo, el rival, la camiseta de cada uno, la dificultad y la duración.</summary>
     public sealed class MenuScreen
     {
         private static readonly Color Idle = new Color(0.22f, 0.25f, 0.32f);
         private static readonly Color Selected = new Color(0.15f, 0.6f, 0.3f);
+        private static readonly Color Disabled = new Color(0.15f, 0.15f, 0.18f);
+        private static readonly Color Gold = new Color(1f, 0.9f, 0.4f);
+
+        private const float HomeColumn = 330f;
+        private const float AwayColumn = 960f;
+        private const float OptionsColumn = 1590f;
+        private const float ListTop = 830f;
+        private const float RowStep = 92f;
+        private const float KitRowY = 215f;
 
         private readonly PointerInput _pointers;
         private readonly GameSettings _settings;
         private readonly Canvas _canvas;
-        private readonly UiButton[] _opponents;
+        private readonly UiButton[] _homeTeams;
+        private readonly UiButton[] _awayTeams;
+        private readonly UiButton _homeKit;
+        private readonly UiButton _awayKit;
+        private readonly Image _homeSwatch, _homeSwatchDetail, _awaySwatch, _awaySwatchDetail;
         private readonly UiButton[] _difficulties;
         private readonly UiButton[] _lengths;
         private readonly UiButton _play;
         private readonly UiButton _benchmark;
+        private readonly Text _clash;
         private readonly Text _error;
         private readonly GameObject _errorPanel;
 
@@ -35,40 +49,54 @@ namespace Football.Game
             Transform c = _canvas.transform;
 
             UiKit.Panel(c, "Fondo", new Vector2(960f, 540f), UiKit.Reference, new Color(0.06f, 0.16f, 0.1f));
-            UiKit.Label(c, "Titulo", new Vector2(960f, 1000f), new Vector2(1400f, 120f), "FÚTBOL", 96, Color.white);
-            UiKit.Label(c, "Rival", new Vector2(480f, 905f), new Vector2(700f, 60f), "RIVAL", 40, new Color(1f, 0.9f, 0.4f));
-            UiKit.Label(c, "Dificultad", new Vector2(1380f, 905f), new Vector2(600f, 60f), "DIFICULTAD", 40, new Color(1f, 0.9f, 0.4f));
-            UiKit.Label(c, "Duracion", new Vector2(1380f, 405f), new Vector2(600f, 60f), "DURACIÓN DE CADA PARTE", 36, new Color(1f, 0.9f, 0.4f));
+            UiKit.Label(c, "Titulo", new Vector2(960f, 1010f), new Vector2(900f, 100f), "FÚTBOL", 84, Color.white);
+            UiKit.Label(c, "TuEquipo", new Vector2(HomeColumn, 915f), new Vector2(560f, 60f), "TU EQUIPO", 38, Gold);
+            UiKit.Label(c, "Rival", new Vector2(AwayColumn, 915f), new Vector2(560f, 60f), "RIVAL", 38, Gold);
+            UiKit.Label(c, "Dificultad", new Vector2(OptionsColumn, 915f), new Vector2(460f, 60f), "DIFICULTAD", 38, Gold);
+            UiKit.Label(c, "Duracion", new Vector2(OptionsColumn, 445f), new Vector2(460f, 50f), "MINUTOS POR TIEMPO", 30, Gold);
 
-            _opponents = new UiButton[TeamCatalog.Opponents.Length];
-            for (int i = 0; i < _opponents.Length; i++)
+            int count = TeamCatalog.Teams.Length;
+            _homeTeams = new UiButton[count];
+            _awayTeams = new UiButton[count];
+            for (int i = 0; i < count; i++)
             {
-                OpponentInfo o = TeamCatalog.Opponents[i];
-                string text = o.Name + "   ·   " + TeamCatalog.StyleLabels[o.StyleIndex] + "   ·   " + o.Rating.ToString("F0");
-                _opponents[i] = UiKit.Button(c, "Rival" + i, new Vector2(480f, 810f - i * 125f), new Vector2(780f, 105f), text, 34, Idle);
+                string text = TeamCatalog.Teams[i].Name + "  ·  " + TeamCatalog.Rating(i).ToString("F0") + "\n"
+                              + TeamCatalog.StyleLabel(TeamCatalog.Teams[i].Style) + " · " + TeamCatalog.Teams[i].Formation;
+                float y = ListTop - i * RowStep;
+                _homeTeams[i] = UiKit.Button(c, "Equipo" + i, new Vector2(HomeColumn, y), new Vector2(560f, 84f), text, 26, Idle);
+                _awayTeams[i] = UiKit.Button(c, "Rival" + i, new Vector2(AwayColumn, y), new Vector2(560f, 84f), text, 26, Idle);
             }
+
+            _homeKit = UiKit.Button(c, "CamisetaPropia", new Vector2(HomeColumn - 50f, KitRowY), new Vector2(460f, 78f), string.Empty, 28, Idle);
+            _awayKit = UiKit.Button(c, "CamisetaRival", new Vector2(AwayColumn - 50f, KitRowY), new Vector2(460f, 78f), string.Empty, 28, Idle);
+            _homeSwatch = UiKit.Panel(c, "MuestraPropia", new Vector2(HomeColumn + 230f, KitRowY), new Vector2(70f, 78f), Color.white);
+            _homeSwatchDetail = UiKit.Panel(c, "DetallePropia", new Vector2(HomeColumn + 230f, KitRowY), new Vector2(18f, 78f), Color.white);
+            _awaySwatch = UiKit.Panel(c, "MuestraRival", new Vector2(AwayColumn + 230f, KitRowY), new Vector2(70f, 78f), Color.white);
+            _awaySwatchDetail = UiKit.Panel(c, "DetalleRival", new Vector2(AwayColumn + 230f, KitRowY), new Vector2(18f, 78f), Color.white);
+            _clash = UiKit.Label(c, "Choque", new Vector2(645f, 150f), new Vector2(1200f, 40f), string.Empty, 24, new Color(1f, 0.6f, 0.3f));
 
             _difficulties = new UiButton[TeamCatalog.DifficultyLabels.Length];
             for (int i = 0; i < _difficulties.Length; i++)
             {
-                _difficulties[i] = UiKit.Button(c, "Dif" + i, new Vector2(1380f, 810f - i * 78f), new Vector2(520f, 66f),
-                    TeamCatalog.DifficultyLabels[i].ToUpperInvariant(), 32, Idle);
+                _difficulties[i] = UiKit.Button(c, "Dif" + i, new Vector2(OptionsColumn, 835f - i * 76f), new Vector2(440f, 64f),
+                    TeamCatalog.DifficultyLabels[i].ToUpperInvariant(), 30, Idle);
             }
 
             _lengths = new UiButton[TeamCatalog.HalfMinutes.Length];
             for (int i = 0; i < _lengths.Length; i++)
             {
-                _lengths[i] = UiKit.Button(c, "Dur" + i, new Vector2(1160f + i * 220f, 330f), new Vector2(190f, 80f),
-                    TeamCatalog.HalfMinutes[i] + " MIN", 32, Idle);
+                _lengths[i] = UiKit.Button(c, "Dur" + i, new Vector2(OptionsColumn - 150f + i * 150f, 375f), new Vector2(130f, 72f),
+                    TeamCatalog.HalfMinutes[i].ToString(), 34, Idle);
             }
 
-            _play = UiKit.Button(c, "Jugar", new Vector2(1380f, 170f), new Vector2(640f, 140f), "JUGAR", 64, new Color(0.15f, 0.65f, 0.25f));
+            _play = UiKit.Button(c, "Jugar", new Vector2(OptionsColumn, 215f), new Vector2(440f, 120f), "JUGAR", 60, new Color(0.15f, 0.65f, 0.25f));
             _benchmark = UiKit.Button(c, "Benchmark", new Vector2(240f, 1010f), new Vector2(420f, 70f), "PRUEBA DE RENDIMIENTO", 24, new Color(0.35f, 0.35f, 0.45f));
             UiKit.Label(c, "Ayuda", new Vector2(960f, 20f), new Vector2(1800f, 40f),
                 "En el ordenador: WASD mover · J pase · K tiro (mantener) · L filtrado · I centro · E presionar · Tab cambiar · Shift esprint · Esc pausa",
                 22, new Color(1f, 1f, 1f, 0.6f));
             UiKit.Label(c, "Foco", new Vector2(960f, 60f), new Vector2(1800f, 40f),
                 "En el ordenador, haz clic dentro de esta ventana antes de usar el teclado.", 22, new Color(1f, 1f, 1f, 0.6f));
+
             Image errorPanel = UiKit.Panel(c, "ErrorMenu", new Vector2(960f, 540f), new Vector2(1600f, 300f), new Color(0.35f, 0.05f, 0.05f, 0.95f));
             _errorPanel = errorPanel.gameObject;
             _error = UiKit.Label(errorPanel.transform, "Texto", new Vector2(800f, 150f), new Vector2(1560f, 280f), string.Empty, 28, Color.white);
@@ -90,7 +118,7 @@ namespace Football.Game
         {
             PlayRequested = false;
             BenchmarkRequested = false;
-            SetError(null);
+            SetError(TeamCatalog.LoadError != null ? "No se pudieron leer los equipos (" + TeamCatalog.LoadError + "); se usan equipos de prueba." : null);
             _canvas.gameObject.SetActive(true);
             Refresh();
         }
@@ -101,14 +129,19 @@ namespace Football.Game
             _canvas.gameObject.SetActive(false);
         }
 
-        /// <summary>Elección actual de rival.</summary>
-        public OpponentInfo SelectedOpponent => TeamCatalog.Opponents[_settings.Opponent];
+        /// <summary>Equipación elegida para un equipo (0 titular, 1 alternativa).</summary>
+        public static KitColors Kit(int team, int which) =>
+            KitColors.From(which == 0 ? TeamCatalog.Teams[team].Home : TeamCatalog.Teams[team].Away);
+
+        /// <summary>Las camisetas elegidas se parecen demasiado.</summary>
+        public bool KitsClash => Kit(_settings.HomeTeam, _settings.HomeKit).Distance(Kit(_settings.Opponent, _settings.AwayKit)) < TeamCatalog.KitClashDistance;
 
         private void Refresh()
         {
-            for (int i = 0; i < _opponents.Length; i++)
+            for (int i = 0; i < _homeTeams.Length; i++)
             {
-                _opponents[i].Background.color = i == _settings.Opponent ? Selected : Idle;
+                _homeTeams[i].Background.color = i == _settings.HomeTeam ? Selected : Idle;
+                _awayTeams[i].Background.color = i == _settings.HomeTeam ? Disabled : (i == _settings.Opponent ? Selected : Idle);
             }
 
             for (int i = 0; i < _difficulties.Length; i++)
@@ -120,6 +153,18 @@ namespace Football.Game
             {
                 _lengths[i].Background.color = i == _settings.Length ? Selected : Idle;
             }
+
+            ShowKit(_homeKit, _homeSwatch, _homeSwatchDetail, _settings.HomeTeam, _settings.HomeKit);
+            ShowKit(_awayKit, _awaySwatch, _awaySwatchDetail, _settings.Opponent, _settings.AwayKit);
+            _clash.text = KitsClash ? "Las camisetas se parecen: cambia una para distinguir a los equipos." : string.Empty;
+        }
+
+        private static void ShowKit(UiButton button, Image swatch, Image detail, int team, int which)
+        {
+            KitColors kit = Kit(team, which);
+            button.Label.text = which == 0 ? "CAMISETA: TITULAR" : "CAMISETA: ALTERNATIVA";
+            swatch.color = kit.Shirt;
+            detail.color = kit.Pattern == KitPattern.Solid ? kit.Shirt : kit.Secondary;
         }
 
         /// <summary>Procesa los toques del fotograma.</summary>
@@ -140,12 +185,31 @@ namespace Football.Game
                     continue;
                 }
 
-                for (int i = 0; i < _opponents.Length; i++)
+                for (int i = 0; i < _homeTeams.Length; i++)
                 {
-                    if (_opponents[i].Contains(point))
+                    if (_homeTeams[i].Contains(point))
+                    {
+                        _settings.HomeTeam = i;
+                        if (_settings.Opponent == i)
+                        {
+                            _settings.Opponent = (i + 1) % _homeTeams.Length;
+                        }
+                    }
+
+                    if (_awayTeams[i].Contains(point) && i != _settings.HomeTeam)
                     {
                         _settings.Opponent = i;
                     }
+                }
+
+                if (_homeKit.Contains(point))
+                {
+                    _settings.HomeKit = 1 - _settings.HomeKit;
+                }
+
+                if (_awayKit.Contains(point))
+                {
+                    _settings.AwayKit = 1 - _settings.AwayKit;
                 }
 
                 for (int i = 0; i < _difficulties.Length; i++)

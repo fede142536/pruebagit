@@ -22,24 +22,36 @@ namespace Football.Core.MatchCore
             {
                 Position role = formation.Slots[i].Role;
                 var view = new PlayerMatchView { Id = i + 1, Name = name + " " + (i + 1), Number = i + 1, Role = role };
-                foreach (AttributeId id in AttributeSet.All)
-                {
-                    float value = rating + Offset(role, id) + rng.NextGaussian(0f, AttributeNoise);
-                    view.Attributes[id] = (int)MathUtil.Clamp(value, AttributeScale.Min, AttributeScale.Max);
-                }
-
-                if (role != Position.Goalkeeper)
-                {
-                    foreach (AttributeId id in new[] { AttributeId.Reflexes, AttributeId.Handling, AttributeId.GoalkeeperPositioning, AttributeId.Distribution })
-                    {
-                        view.Attributes[id] = IrrelevantKeeperAttribute;
-                    }
-                }
-
+                FillAttributes(rng, rating, role, view.Attributes);
                 players[i] = view;
             }
 
             return new MatchTeamSetup { Name = name, Formation = formation, Style = style, Players = players };
+        }
+
+        /// <summary>
+        /// Rellena los atributos de un jugador a partir de su media y su posición natural: los atributos propios del puesto
+        /// quedan por encima de la media y los ajenos por debajo, con algo de variación individual.
+        /// </summary>
+        /// <param name="rng">Fuente de azar.</param>
+        /// <param name="rating">Media del jugador (1..100).</param>
+        /// <param name="role">Posición natural.</param>
+        /// <param name="attributes">Conjunto a rellenar.</param>
+        public static void FillAttributes(IRandom rng, float rating, Position role, AttributeSet attributes)
+        {
+            foreach (AttributeId id in AttributeSet.All)
+            {
+                float value = rating + Offset(role, id) + rng.NextGaussian(0f, AttributeNoise);
+                attributes[id] = (int)MathUtil.Clamp(value, AttributeScale.Min, AttributeScale.Max);
+            }
+
+            if (role != Position.Goalkeeper)
+            {
+                attributes[AttributeId.Reflexes] = IrrelevantKeeperAttribute;
+                attributes[AttributeId.Handling] = IrrelevantKeeperAttribute;
+                attributes[AttributeId.GoalkeeperPositioning] = IrrelevantKeeperAttribute;
+                attributes[AttributeId.Distribution] = IrrelevantKeeperAttribute;
+            }
         }
 
         private static float Offset(Position role, AttributeId id)
