@@ -578,7 +578,7 @@ namespace Football.Core.MatchCore
                 }
             }
 
-            if (team.Chaser == keeper)
+            if (Owner == null && team.Chaser == keeper)
             {
                 keeper.Target = team.InterceptPoint;
                 keeper.SpeedFactor = 1f;

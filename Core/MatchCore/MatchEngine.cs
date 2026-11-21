@@ -56,6 +56,7 @@ namespace Football.Core.MatchCore
         private Vec3 _prevBallPos;
         private float _planTimer;
         private float _adaptTimer;
+        private const float PenaltyShotSeconds = 2f;
 
         /// <summary>Cambia la mentalidad y la presión de un equipo durante el partido.</summary>
         /// <param name="team">Equipo (0 local, 1 visitante).</param>
@@ -111,6 +112,16 @@ namespace Football.Core.MatchCore
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             _rng = rng ?? throw new ArgumentNullException(nameof(rng));
+            if (config.TickRate <= 0 || config.Rules.HalfDuration <= 0f)
+            {
+                throw new ArgumentException("TickRate y HalfDuration deben ser positivos.", nameof(config));
+            }
+
+            if (homeDifficulty < 0 || homeDifficulty >= config.Difficulties.Length || awayDifficulty < 0 || awayDifficulty >= config.Difficulties.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(homeDifficulty), "Dificultad inexistente en la configuración.");
+            }
+
             Pitch = new Pitch(config.Pitch);
             _dt = config.FixedDeltaTime();
             Teams[0] = new TeamState(0, 1f, home, config.Difficulties[homeDifficulty], config.Player, Players);
@@ -148,7 +159,7 @@ namespace Football.Core.MatchCore
             if (Phase != MatchPhase.Finished)
             {
                 HalfElapsed += _dt;
-                if (HalfElapsed >= Config.Rules.HalfDuration)
+                if (HalfElapsed >= Config.Rules.HalfDuration && !PenaltyPending())
                 {
                     EndHalf();
                 }
@@ -170,7 +181,14 @@ namespace Football.Core.MatchCore
                 h = Mix(h, BitConverter.SingleToInt32Bits(Players[i].Pos.X));
                 h = Mix(h, BitConverter.SingleToInt32Bits(Players[i].Pos.Y));
                 h = Mix(h, BitConverter.SingleToInt32Bits(Players[i].Heading));
+                h = Mix(h, BitConverter.SingleToInt32Bits(Players[i].Speed));
+                h = Mix(h, BitConverter.SingleToInt32Bits(Players[i].Stamina));
             }
+
+            h = Mix(h, BitConverter.SingleToInt32Bits(Ball.Vel.X));
+            h = Mix(h, BitConverter.SingleToInt32Bits(Ball.Vel.Y));
+            h = Mix(h, BitConverter.SingleToInt32Bits(Ball.Vel.Z));
+            h = Mix(h, Owner != null ? Owner.Index : -1);
 
             h = Mix(h, Teams[0].Stats.Goals);
             h = Mix(h, Teams[1].Stats.Goals);
@@ -181,6 +199,18 @@ namespace Football.Core.MatchCore
         {
             h ^= (uint)value;
             return h * 1099511628211UL;
+        }
+
+        /// <summary>Un penal ya pitado se lanza aunque se cumpla el tiempo, y se espera a que el tiro termine.</summary>
+        private bool PenaltyPending()
+        {
+            if (_restart.Kind != RestartKind.Penalty)
+            {
+                return false;
+            }
+
+            return Phase == MatchPhase.SetPiece
+                   || (Phase == MatchPhase.Playing && _shotLive && TickCount - _shotStartTick < Config.TickRate * PenaltyShotSeconds);
         }
 
         private void AddEvent(MatchEventType type, int team, int playerIndex, Vec2 at)
@@ -285,6 +315,7 @@ namespace Football.Core.MatchCore
                 }
 
                 p.Pos = Pitch.Clamp(p.Pos, margin);
+                KeepKeeperInFrontOfHisLine(p);
                 FaceTheBall(p, dt);
 
                 if (p.ActionDisplayTimer <= 0f)
@@ -295,6 +326,26 @@ namespace Football.Core.MatchCore
             }
 
             Separate();
+            if (Owner != null)
+            {
+                KeepKeeperInFrontOfHisLine(Owner); // la separación también podría empujarlo detrás de la línea
+            }
+        }
+
+        /// <summary>El arquero con el balón nunca cruza su propia línea de gol (sería gol en contra).</summary>
+        private void KeepKeeperInFrontOfHisLine(MatchPlayer p)
+        {
+            if (Owner != p || !p.IsKeeper)
+            {
+                return;
+            }
+
+            float end = Teams[p.Team].DefendedEnd;
+            float limit = Pitch.HalfLength - Config.Player.KeeperLineInset;
+            if (end * p.Pos.X > limit)
+            {
+                p.Pos = new Vec2(end * limit, p.Pos.Y);
+            }
         }
 
         /// <summary>Un jugador parado gira poco a poco hacia el balón, como haría un jugador real atento a la jugada.</summary>

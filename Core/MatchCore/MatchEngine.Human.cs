@@ -36,8 +36,9 @@ namespace Football.Core.MatchCore
         }
 
         /// <summary>
-        /// Entrega la entrada de la persona para el próximo paso. Los botones son impulsos que se consumen en un solo paso;
-        /// el movimiento y el esprint se mantienen hasta la siguiente llamada.
+        /// Entrega la entrada de la persona para el próximo paso. Los botones son impulsos; los de golpeo (pase, tiro, centro,
+        /// despeje) se guardan un instante (<see cref="PlayerConfig.HumanInputBuffer"/>) por si se pulsan justo antes de
+        /// controlar el balón. El movimiento y el esprint se mantienen hasta la siguiente llamada.
         /// </summary>
         /// <param name="team">Equipo controlado.</param>
         /// <param name="input">Entrada.</param>
@@ -57,6 +58,11 @@ namespace Football.Core.MatchCore
             current.Clear |= input.Clear;
             current.Keeper |= input.Keeper;
             current.Press = input.Press;
+            if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
+            {
+                Teams[team].KickBufferTimer = Config.Player.HumanInputBuffer;
+            }
+
             Teams[team].Input = current;
         }
 
@@ -86,9 +92,16 @@ namespace Football.Core.MatchCore
         {
             for (int t = 0; t < 2; t++)
             {
-                MatchInput i = Teams[t].Input;
-                i.Pass = i.Through = i.Cross = i.Shoot = i.Tackle = i.Switch = i.Slide = i.Clear = i.Keeper = false;
-                Teams[t].Input = i;
+                TeamState team = Teams[t];
+                MatchInput i = team.Input;
+                i.Tackle = i.Switch = i.Slide = i.Keeper = false;
+                team.KickBufferTimer -= _dt;
+                if (team.KickBufferTimer <= 0f)
+                {
+                    i.Pass = i.Through = i.Cross = i.Shoot = i.Clear = false;
+                }
+
+                team.Input = i;
             }
         }
 
@@ -220,9 +233,10 @@ namespace Football.Core.MatchCore
 
                 if (Owner == p)
                 {
-                    if (p.ActionTimer <= 0f)
+                    if (p.ActionTimer <= 0f && (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear))
                     {
                         HumanKick(p, team, input);
+                        ConsumeKick(team);
                     }
                 }
                 else
@@ -264,6 +278,15 @@ namespace Football.Core.MatchCore
         /// Presión mantenida: si el defensor ya está de frente al poseedor rival va a por el balón y entra de pie al alcanzarlo;
         /// si lo persigue por detrás, primero busca ponerse entre él y la portería. Con balón suelto va hacia el balón.
         /// </summary>
+        /// <summary>Descarta los botones de golpeo ya usados (para que un pase guardado no se repita).</summary>
+        private static void ConsumeKick(TeamState team)
+        {
+            MatchInput i = team.Input;
+            i.Pass = i.Through = i.Cross = i.Shoot = i.Clear = false;
+            team.Input = i;
+            team.KickBufferTimer = 0f;
+        }
+
         private void ApplyPress(MatchPlayer p, MatchInput input)
         {
             float run = 0.5f * (1f + Config.Player.JogFraction);

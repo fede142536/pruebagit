@@ -54,6 +54,16 @@ Mundial vs Profesional 48 % / 30 % / 22 %.
 Estilos con los equipos reales (20 vueltas, 600 partidos): Racing (presión alta) 314 pts, **River (posesión) 305**, Estudiantes 275,
 Independiente 266, Boca 265, San Lorenzo 198. La posesión dejó de ser el estilo débil; la presión alta sigue algo por encima.
 
+### 1.2 Revisión de código del motor (21/11/2026)
+
+Una revisión encontró que **unos dos tercios de los goles venían de errores**, no de buenas jugadas: el tiro que el arquero no
+atajaba lo «atravesaba» (y el gol se le acreditaba a él), el arquero llevaba el balón detrás de su propia línea, y el manotazo por
+encima del larguero podía terminar dentro del arco. Al corregirlos los goles cayeron a **0,8 por partido**. Se modeló así:
+el arquero que falla la atajada de un tiro ya no lo toca (gol del que pateó); un bloqueo de un jugador de campo rebota según el
+punto de contacto; el arquero con el balón en las manos no lo pierde ni cruza la línea; el manotazo solo va por encima del
+larguero si la trayectoria es posible. Medición tras los arreglos (1.000 partidos, semilla 1): **2,15 goles por partido**,
+2,36 tiros a puerta y 1,37 paradas por equipo, posesión 8,9 s, 3,25 pases por posesión, 0 estados inválidos.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

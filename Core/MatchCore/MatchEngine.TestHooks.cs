@@ -45,5 +45,31 @@ namespace Football.Core.MatchCore
         }
 
         internal bool TestPassInFlight => _passActive;
+
+        internal void TestKickoff(int team) => PlaceForKickoff(team);
+
+        /// <summary>El jugador golpea el balón con la velocidad dada, como un tiro o un despeje.</summary>
+        internal void TestKick(MatchPlayer p, Vec3 velocity, bool shot)
+        {
+            Ball.Pos = new Vec3(p.Pos.X, p.Pos.Y, 0.11f);
+            _prevBallPos = Ball.Pos;
+            Ball.Vel = velocity;
+            Ball.Spin = 0f;
+            AfterKick(p, shot ? KickKind.Shot : KickKind.Clearance, null);
+        }
+
+        internal bool TestParryOverTheBar(MatchPlayer keeper)
+        {
+            if (!TryParryOverTheBar(Teams[keeper.Team].DefendedEnd, out Vec3 velocity))
+            {
+                return false;
+            }
+
+            Ball.Vel = velocity;
+            Ball.Spin = 0f;
+            OnTouch(keeper, false);
+            keeper.KickTimer = 1f;
+            return true;
+        }
     }
 }

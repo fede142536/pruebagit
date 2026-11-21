@@ -117,6 +117,28 @@ namespace Football.Core.MatchCore
         public float ControlSpeedSpread = 0.35f;
         /// <summary>Radio en el que un jugador bloquea un balón rápido.</summary>
         public float BlockRadius = 0.55f;
+        /// <summary>Fracción de velocidad que conserva un balón que rebota en un jugador.</summary>
+        public float DeflectionSpeedFactor = 0.45f;
+        /// <summary>Dispersión angular del rebote (rad).</summary>
+        public float DeflectionNoise = 0.6f;
+        /// <summary>Velocidad vertical máxima de un rebote (m/s).</summary>
+        public float DeflectionLift = 2f;
+        /// <summary>Velocidad hacia la línea de fondo de un manotazo por encima del larguero (m/s).</summary>
+        public float ParryOverBarForward = 3f;
+        /// <summary>Velocidad vertical inicial que se prueba para ese manotazo (m/s).</summary>
+        public float ParryOverBarLift = 8f;
+        /// <summary>Altura que el manotazo deja por encima del larguero (m).</summary>
+        public float ParryBarMargin = 0.5f;
+        /// <summary>Velocidad vertical máxima que puede dar el arquero a un manotazo (m/s).</summary>
+        public float ParryOverBarMaxLift = 14f;
+        /// <summary>Distancia más allá de la línea de gol a la que debe pasar ese manotazo (m).</summary>
+        public float ParryLineMargin = 0.4f;
+        /// <summary>Tiempo que se guarda un botón de golpeo pulsado justo antes de poder usarlo (s).</summary>
+        public float HumanInputBuffer = 0.2f;
+        /// <summary>Altura a la que el arquero sostiene el balón en las manos (m).</summary>
+        public float KeeperHoldHeight = 1.0f;
+        /// <summary>Distancia mínima del arquero con balón a su línea de gol (m): nunca la cruza con el balón en las manos.</summary>
+        public float KeeperLineInset = 0.5f;
         /// <summary>Tras patear, el jugador no puede recuperar el balón durante este tiempo (s).</summary>
         public float KickCooldown = 0.5f;
         /// <summary>Tiempo tras controlar el balón antes de poder actuar (s).</summary>

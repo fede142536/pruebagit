@@ -29,6 +29,8 @@ namespace Football.Core.MatchCore
             _prevBallPos = Ball.Pos;
             Owner = null;
             _passActive = false;
+            _offsideActive = false;
+            _beatenKeeper = null;
             _shotLive = false;
             _saveRolled = false;
 
@@ -68,7 +70,7 @@ namespace Football.Core.MatchCore
             }
 
             TeamState kicking = Teams[kickingTeam];
-            _taker = kicking.Players[kicking.Players.Length - 1];
+            _taker = KickoffTaker(kicking);
             _taker.Pos = new Vec2(-kicking.AttackDirection * TakerOffset, 0f);
             _taker.Target = _taker.Pos;
 
@@ -89,6 +91,8 @@ namespace Football.Core.MatchCore
             }
 
             _passActive = false;
+            _offsideActive = false;
+            _beatenKeeper = null;
             _shotLive = false;
             _saveRolled = false;
             _restart = restart;
@@ -118,6 +122,20 @@ namespace Football.Core.MatchCore
             AddEvent(type, restart.Team, _taker != null ? _taker.Index : -1, restart.Position);
             UpdateSetPieceTargets();
             _planTimer = Config.Ai.DecisionInterval;
+        }
+
+        /// <summary>Saca del medio el último jugador de campo que no esté expulsado (el arquero solo si no queda nadie).</summary>
+        private static MatchPlayer KickoffTaker(TeamState team)
+        {
+            for (int i = team.Players.Length - 1; i > 0; i--)
+            {
+                if (!team.Players[i].SentOff)
+                {
+                    return team.Players[i];
+                }
+            }
+
+            return team.Players[0];
         }
 
         private MatchPlayer ChooseTaker(Restart r)

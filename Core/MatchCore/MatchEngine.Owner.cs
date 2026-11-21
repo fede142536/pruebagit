@@ -578,7 +578,9 @@ namespace Football.Core.MatchCore
             Owner = null;
             LastToucher = p;
             _lastKicker = p;
+            _lastKickerOfTeam[p.Team] = p;
             _saveRolled = false;
+            _beatenKeeper = null;
             p.KickTimer = Config.Player.KickCooldown;
             p.Action = PlayerAction.Kick;
             p.ActionDisplayTimer = KickDisplay;
@@ -603,8 +605,12 @@ namespace Football.Core.MatchCore
             else if (_passActive)
             {
                 team.Stats.Passes++;
-                ComputeOffsideFlags(p);
             }
+
+            // El fuera de juego se juzga en cualquier envío de un compañero: pase, centro, despeje o tiro que rebota.
+            ComputeOffsideFlags(p);
+            _offsideActive = true;
+            _offsideTeam = p.Team;
         }
 
         private void ComputeOffsideFlags(MatchPlayer kicker)

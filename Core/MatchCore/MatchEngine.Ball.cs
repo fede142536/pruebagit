@@ -6,15 +6,11 @@ namespace Football.Core.MatchCore
 {
     public sealed partial class MatchEngine
     {
-        private const float DeflectionNoise = 0.6f;
-        private const float DeflectionSpeedFactor = 0.45f;
-        private const float DeflectionLift = 2f;
         private const float ParryLateralSpeed = 5f;
         private const float ParryRetainFactor = 0.35f;
         private const float ParryLift = 3f;
         private const float ParryOverBarChance = 0.4f;
-        private const float ParryOverBarForward = 3f;
-        private const float ParryOverBarLift = 8f;
+        private const float ParryLiftStep = 1f;
         private const float SaveMinBallSpeed = 5f;
         private const float SaveReachPenalty = 0.25f;
         private const float MinSaveChance = 0.05f;
@@ -32,6 +28,10 @@ namespace Football.Core.MatchCore
         private bool _passActive;
         private int _passTeam;
         private MatchPlayer _lastKicker;
+        private readonly MatchPlayer[] _lastKickerOfTeam = new MatchPlayer[2];
+        private bool _offsideActive;
+        private MatchPlayer _beatenKeeper;
+        private int _offsideTeam;
         private MatchPlayer _passTarget;
         private readonly bool[] _offsideFlag = new bool[22];
         private bool _shotLive;
@@ -61,10 +61,21 @@ namespace Football.Core.MatchCore
             }
         }
 
+        /// <summary>El arquero dentro de su área lleva el balón en las manos: no se le puede quitar ni se le escapa.</summary>
+        private bool KeeperHolding(MatchPlayer p) => p.IsKeeper && Pitch.InPenaltyArea(Teams[p.Team].DefendedEnd, p.Pos);
+
         private void CarryBall(float dt)
         {
             MatchPlayer p = Owner;
             PlayerConfig c = Config.Player;
+            if (KeeperHolding(p))
+            {
+                Ball.Pos = new Vec3(p.Pos.X, p.Pos.Y, c.KeeperHoldHeight);
+                Ball.Vel = new Vec3(p.Velocity.X, p.Velocity.Y, 0f);
+                Ball.Spin = 0f;
+                return;
+            }
+
             Vec2 front = p.Pos + Vec2.FromAngle(p.Heading) * c.CarryDistance;
             Vec2 velocity = p.Velocity;
             Ball.Pos = new Vec3(front.X, front.Y, 0f);
@@ -99,16 +110,17 @@ namespace Football.Core.MatchCore
             float bestScore = float.MaxValue;
             MatchPlayer blocker = null;
             float blockerDistance = float.MaxValue;
+            Vec2 blockerContact = to;
 
             for (int i = 0; i < Players.Length; i++)
             {
                 MatchPlayer p = Players[i];
-                if (p.SentOff || p.KickTimer > 0f || p.SlideTimer > 0f || p.RecoverTimer > 0f)
+                if (p.SentOff || p.KickTimer > 0f || p.SlideTimer > 0f || p.RecoverTimer > 0f || p == _beatenKeeper)
                 {
-                    continue;
+                    continue; // un arquero que ya falló la atajada de este tiro no lo vuelve a tocar
                 }
 
-                float distance = MathUtil.DistancePointSegment(p.Pos, from, to, out _);
+                float distance = MathUtil.DistancePointSegment(p.Pos, from, to, out float along);
                 float firstTouch = p.Skill(AttributeId.FirstTouch);
                 float radius = p.IsKeeper ? c.ControlRadius + KeeperHandReach : c.ControlRadius;
                 if (distance > radius)
@@ -130,6 +142,7 @@ namespace Football.Core.MatchCore
                 {
                     blockerDistance = distance;
                     blocker = p;
+                    blockerContact = from + (to - from) * along;
                 }
             }
 
@@ -139,7 +152,7 @@ namespace Football.Core.MatchCore
             }
             else if (blocker != null)
             {
-                Deflect(blocker);
+                Deflect(blocker, blockerContact);
             }
         }
 
@@ -156,7 +169,7 @@ namespace Football.Core.MatchCore
 
         private void GainPossession(MatchPlayer p)
         {
-            if (OnTouch(p))
+            if (OnTouch(p, true))
             {
                 return;
             }
@@ -168,37 +181,74 @@ namespace Football.Core.MatchCore
             Ball.Spin = 0f;
             p.ActionTimer = Config.Player.ControlDelay;
             p.OwnerTimer = 0f;
-            p.Target = p.Pos + Vec2.FromAngle(p.Heading) * Config.Ai.DribbleLookahead;
+            // El arquero se queda con el balón en las manos; los demás arrancan hacia delante sin salirse del campo.
+            p.Target = p.IsKeeper ? p.Pos : Pitch.Clamp(p.Pos + Vec2.FromAngle(p.Heading) * Config.Ai.DribbleLookahead, -SafeMarginToLine);
             p.SpeedFactor = Config.Player.JogFraction;
         }
 
-        private void Deflect(MatchPlayer p)
+        /// <summary>
+        /// Un balón demasiado rápido para controlarlo golpea el cuerpo del jugador: rebota según el punto de contacto, pierde
+        /// velocidad y, si es el arquero, sale hacia fuera de su portería.
+        /// </summary>
+        private void Deflect(MatchPlayer p, Vec2 contact)
         {
-            if (OnTouch(p))
+            if (OnTouch(p, false))
             {
                 return;
             }
 
-            float noise = _rng.NextGaussian(0f, DeflectionNoise);
-            Vec2 horizontal = Ball.Vel.Horizontal.Rotated(noise) * DeflectionSpeedFactor;
-            Ball.Vel = new Vec3(horizontal.X, horizontal.Y, DeflectionLift * _rng.NextFloat());
+            PlayerConfig c = Config.Player;
+            Vec2 velocity = Ball.Vel.Horizontal;
+            Vec2 normal = contact - p.Pos;
+            normal = normal.LengthSquared > 1e-6f ? normal.Normalized : -velocity.Normalized;
+            float into = Vec2.Dot(velocity, normal);
+            if (into < 0f)
+            {
+                velocity -= normal * (2f * into); // reflexión sobre el cuerpo
+            }
+
+            velocity = velocity.Rotated(_rng.NextGaussian(0f, c.DeflectionNoise)) * c.DeflectionSpeedFactor;
+            if (p.IsKeeper)
+            {
+                float end = Teams[p.Team].DefendedEnd;
+                velocity = new Vec2(-end * MathF.Abs(velocity.X), velocity.Y);
+            }
+
+            Ball.Pos = new Vec3(contact.X, contact.Y, Ball.Pos.Z);
+            Ball.Vel = new Vec3(velocity.X, velocity.Y, c.DeflectionLift * _rng.NextFloat());
             p.KickTimer = BlockLockout;
         }
 
-        /// <summary>Registra un toque de balón. Devuelve true si provoca una interrupción (fuera de juego).</summary>
-        private bool OnTouch(MatchPlayer p)
+        /// <summary>
+        /// Registra un toque de balón. Devuelve true si provoca una interrupción (fuera de juego).
+        /// </summary>
+        /// <param name="p">Jugador que toca el balón.</param>
+        /// <param name="deliberate">Juega el balón a propósito (control, entrada). Un rebote o una parada no lo es: según el
+        /// reglamento, tras ellos sigue valiendo la posición de fuera de juego del último envío.</param>
+        private bool OnTouch(MatchPlayer p, bool deliberate)
         {
+            if (_offsideActive)
+            {
+                if (p.Team == _offsideTeam && p != _lastKicker && _offsideFlag[p.Index])
+                {
+                    _offsideActive = false;
+                    _passActive = false;
+                    CallOffside(p);
+                    return true;
+                }
+
+                if (p.Team == _offsideTeam || deliberate)
+                {
+                    _offsideActive = false;
+                }
+            }
+
             if (_passActive)
             {
                 _passActive = false;
                 if (p.Team == _passTeam && p != _lastKicker)
                 {
                     Teams[_passTeam].Stats.PassesCompleted++;
-                    if (_offsideFlag[p.Index])
-                    {
-                        CallOffside(p);
-                        return true;
-                    }
                 }
                 else if (p.Team != _passTeam)
                 {
@@ -209,6 +259,7 @@ namespace Football.Core.MatchCore
             LastToucher = p;
             _saveRolled = false;
             _shotLive = false;
+            _beatenKeeper = null;
             return false;
         }
 
@@ -251,6 +302,7 @@ namespace Football.Core.MatchCore
             chance = MathUtil.Clamp(chance, MinSaveChance, MaxSaveChance);
             if (_rng.NextFloat() >= chance)
             {
+                _beatenKeeper = keeper;
                 return;
             }
 
@@ -258,9 +310,8 @@ namespace Football.Core.MatchCore
             {
                 Teams[keeper.Team].Stats.Saves++;
                 Teams[1 - keeper.Team].Stats.ShotsOnTarget++;
+                AddEvent(MatchEventType.Save, keeper.Team, keeper.Index, Ball.Pos.Horizontal);
             }
-
-            AddEvent(MatchEventType.Save, keeper.Team, keeper.Index, Ball.Pos.Horizontal);
             keeper.Action = PlayerAction.Dive;
             keeper.ActionDisplayTimer = ActionDisplay;
 
@@ -272,12 +323,12 @@ namespace Football.Core.MatchCore
             }
 
             float end = Teams[keeper.Team].DefendedEnd;
-            if (_rng.NextFloat() < ParryOverBarChance)
+            if (_rng.NextFloat() < ParryOverBarChance && TryParryOverTheBar(end, out Vec3 overTheBar))
             {
                 // Desvía por encima del larguero: el balón sale por la línea de fondo y es córner.
-                Ball.Vel = new Vec3(end * ParryOverBarForward, 0f, ParryOverBarLift);
+                Ball.Vel = overTheBar;
                 Ball.Spin = 0f;
-                OnTouch(keeper);
+                OnTouch(keeper, false);
                 keeper.KickTimer = BlockLockout;
                 return;
             }
@@ -285,8 +336,46 @@ namespace Football.Core.MatchCore
             float lateral = _rng.NextGaussian(0f, ParryLateralSpeed);
             Ball.Vel = new Vec3(-end * speed * ParryRetainFactor, lateral, ParryLift * _rng.NextFloat());
             Ball.Spin = 0f;
-            OnTouch(keeper);
+            OnTouch(keeper, false);
             keeper.KickTimer = BlockLockout;
+        }
+
+        /// <summary>
+        /// Busca un manotazo que pase el balón por encima del larguero: debe estar por encima del travesaño mientras cruza la
+        /// línea y caer detrás de ella. Devuelve false si desde donde está el balón no es posible (por ejemplo, pegado a la
+        /// línea y a media altura): entonces el arquero lo desvía hacia el campo.
+        /// </summary>
+        private bool TryParryOverTheBar(float end, out Vec3 velocity)
+        {
+            BallConfig b = Config.Ball;
+            PlayerConfig c = Config.Player;
+            float g = b.Gravity;
+            float toLine = Pitch.HalfLength - end * Ball.Pos.X;
+            float contact = b.Radius + Config.Pitch.PostRadius;
+            float height = Config.Pitch.GoalHeight + contact + c.ParryBarMargin - Ball.Pos.Z; // altura a superar
+            for (float lift = c.ParryOverBarLift; lift <= c.ParryOverBarMaxLift; lift += ParryLiftStep)
+            {
+                float disc = lift * lift - 2f * g * height;
+                if (disc < 0f)
+                {
+                    continue;
+                }
+
+                float root = MathF.Sqrt(disc);
+                float up = height <= 0f ? 0f : (lift - root) / g;   // momento en que supera la altura del larguero
+                float down = (lift + root) / g;                    // momento en que vuelve a bajar de ella
+                float fastest = (toLine + contact + c.ParryLineMargin) / down; // debe pasar la línea antes de bajar
+                float slowest = up > 0f ? MathF.Max(0f, toLine - contact) / up : float.MaxValue; // y no llegar antes de subir
+                if (fastest <= slowest)
+                {
+                    float forward = MathF.Min(MathF.Max(c.ParryOverBarForward, fastest), slowest);
+                    velocity = new Vec3(end * forward, 0f, lift);
+                    return true;
+                }
+            }
+
+            velocity = Vec3.Zero;
+            return false;
         }
 
         private MatchPlayer _cutTracked;
@@ -343,7 +432,7 @@ namespace Football.Core.MatchCore
         private void ResolveTackles()
         {
             MatchPlayer owner = Owner;
-            if (owner == null)
+            if (owner == null || KeeperHolding(owner))
             {
                 return;
             }
@@ -425,7 +514,7 @@ namespace Football.Core.MatchCore
                 }
 
                 MatchPlayer owner = Owner;
-                if (owner != null && owner.Team != p.Team)
+                if (owner != null && owner.Team != p.Team && !KeeperHolding(owner))
                 {
                     if (Vec2.Distance(p.Pos, owner.Pos) > rules.SlideReach)
                     {
@@ -471,12 +560,12 @@ namespace Football.Core.MatchCore
         /// <summary>El jugador que barre toca el balón y lo manda hacia donde se desliza.</summary>
         private void KnockBall(MatchPlayer p)
         {
-            if (OnTouch(p))
+            if (OnTouch(p, true))
             {
                 return;
             }
 
-            Vec2 direction = Vec2.FromAngle(p.Heading).Rotated(_rng.NextGaussian(0f, DeflectionNoise * 0.5f));
+            Vec2 direction = Vec2.FromAngle(p.Heading).Rotated(_rng.NextGaussian(0f, Config.Player.DeflectionNoise * 0.5f));
             float speed = Config.Rules.SlideKnockSpeed;
             Ball.Vel = new Vec3(direction.X * speed, direction.Y * speed, 0f);
             Ball.Pos = new Vec3(Ball.Pos.X, Ball.Pos.Y, 0f);
@@ -493,7 +582,7 @@ namespace Football.Core.MatchCore
                 return;
             }
 
-            if (OnTouch(tackler))
+            if (OnTouch(tackler, true))
             {
                 return;
             }
@@ -504,7 +593,7 @@ namespace Football.Core.MatchCore
                 away = new Vec2(1f, 0f);
             }
 
-            Vec2 direction = away.Rotated(_rng.NextGaussian(0f, DeflectionNoise));
+            Vec2 direction = away.Rotated(_rng.NextGaussian(0f, Config.Player.DeflectionNoise));
             Ball.Vel = new Vec3(direction.X * TackleKnockSpeed, direction.Y * TackleKnockSpeed, 0f);
             Ball.Pos = new Vec3(Ball.Pos.X, Ball.Pos.Y, 0f);
         }
@@ -573,6 +662,27 @@ namespace Football.Core.MatchCore
             }
         }
 
+        /// <summary>
+        /// Autor del gol: el último que tocó el balón si es del equipo que marca. Si lo último fue un rebote o una parada de un
+        /// rival, el gol es del último atacante que pateó; solo es en contra si el rival lo metió con un golpeo propio.
+        /// </summary>
+        private int ScorerIndex(int scoring)
+        {
+            MatchPlayer last = LastToucher;
+            if (last == null)
+            {
+                return -1;
+            }
+
+            if (last.Team == scoring || last == _lastKicker)
+            {
+                return last.Index;
+            }
+
+            MatchPlayer attacker = _lastKickerOfTeam[scoring];
+            return attacker != null ? attacker.Index : last.Index;
+        }
+
         private void ScoreGoal(float endSign, Vec2 at)
         {
             int scoring = Teams[0].AttackDirection == endSign ? 0 : 1;
@@ -582,7 +692,8 @@ namespace Football.Core.MatchCore
                 Teams[scoring].Stats.ShotsOnTarget++;
             }
 
-            AddEvent(MatchEventType.Goal, scoring, LastToucher != null ? LastToucher.Index : -1, at);
+            _offsideActive = false;
+            AddEvent(MatchEventType.Goal, scoring, ScorerIndex(scoring), at);
             Owner = null;
             _passActive = false;
             _shotLive = false;

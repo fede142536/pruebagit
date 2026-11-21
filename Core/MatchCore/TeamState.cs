@@ -37,6 +37,8 @@ namespace Football.Core.MatchCore
         public MatchPlayer Controlled;
         /// <summary>Última entrada recibida de la persona.</summary>
         public MatchInput Input;
+        /// <summary>Tiempo que se guarda un botón de golpeo aún no usado (s).</summary>
+        public float KickBufferTimer;
         /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
         public float SwitchTimer;
         /// <summary>La persona controla al arquero hasta que lo suelte (o el arquero juegue el balón).</summary>
