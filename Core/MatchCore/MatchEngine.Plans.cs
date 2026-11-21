@@ -445,7 +445,7 @@ namespace Football.Core.MatchCore
                 }
                 else if (IsAttackingRole(p.Role) && Pitch.Progress(dir, Ball.Pos.X) > 0.35f)
                 {
-                    target = p.Anchor + new Vec2(dir * ai.RunAhead, 0f);
+                    target = RunIntoSpace(p, dir); // se desmarca hacia el hueco más libre
                     speed = run;
                     positional = false;
                 }
@@ -543,6 +543,29 @@ namespace Football.Core.MatchCore
             return best;
         }
 
+        /// <summary>
+        /// Desmarque de un delantero: entre correr recto, abrirse a un lado o al otro, elige el espacio más alejado de los
+        /// rivales (con algo de preferencia por el recto). Sin asignaciones de memoria.
+        /// </summary>
+        private Vec2 RunIntoSpace(MatchPlayer p, float dir)
+        {
+            AiConfig ai = Config.Ai;
+            Vec2 best = p.Anchor + new Vec2(dir * ai.RunAhead, 0f);
+            float bestScore = float.MinValue;
+            for (int k = -1; k <= 1; k++)
+            {
+                Vec2 candidate = Pitch.Clamp(p.Anchor + new Vec2(dir * ai.RunAhead, k * ai.RunWidth), -SideMargin);
+                float score = NearestOpponentDistance(candidate, p.Team) + (k == 0 ? ai.RunStraightBias : 0f);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
         private Vec2 KeeperAnchor(MatchPlayer keeper, TeamState team)
         {
             AiConfig ai = Config.Ai;
@@ -550,6 +573,42 @@ namespace Football.Core.MatchCore
             Vec2 toBall = Ball.Pos.Horizontal - goal;
             float depth = MathUtil.Clamp(ai.KeeperMinDepth + ai.KeeperDepthPerMeter * toBall.Length, ai.KeeperMinDepth, ai.KeeperMaxDepth);
             return goal + toBall.Normalized * depth;
+        }
+
+        /// <summary>
+        /// Un rival con el balón cerca de la portería sin ningún defensor de campo entre él y el arco: el arquero debe salir.
+        /// </summary>
+        private bool OneOnOne(TeamState team)
+        {
+            if (Owner == null || Owner.Team == team.Index)
+            {
+                return false;
+            }
+
+            AiConfig ai = Config.Ai;
+            Vec2 goal = Pitch.GoalCenter(team.DefendedEnd);
+            float toGoal = Vec2.Distance(Owner.Pos, goal);
+            if (toGoal > ai.KeeperRushDistance)
+            {
+                return false;
+            }
+
+            for (int i = 1; i < team.Players.Length; i++)
+            {
+                MatchPlayer d = team.Players[i];
+                if (d.SentOff)
+                {
+                    continue;
+                }
+
+                float lane = MathUtil.DistancePointSegment(d.Pos, Owner.Pos, goal, out float along);
+                if (along > 0.05f && lane < ai.KeeperRushLaneWidth)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void DecideKeeper(MatchPlayer keeper, TeamState team)
@@ -585,6 +644,17 @@ namespace Football.Core.MatchCore
             {
                 keeper.Target = team.InterceptPoint;
                 keeper.SpeedFactor = 1f;
+                return;
+            }
+
+            if (OneOnOne(team))
+            {
+                // Mano a mano: sale a achicar el ángulo y, si llega, le disputa el balón.
+                AiConfig ai = Config.Ai;
+                Vec2 goal = Pitch.GoalCenter(end);
+                keeper.Target = Owner.Pos + (goal - Owner.Pos).Normalized * ai.KeeperRushStop;
+                keeper.SpeedFactor = 1f;
+                keeper.WantsTackle = Vec2.Distance(keeper.Pos, Owner.Pos) <= Config.Rules.TackleRange * TackleReadyFactor;
                 return;
             }
 

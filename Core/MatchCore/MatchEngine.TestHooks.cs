@@ -48,6 +48,8 @@ namespace Football.Core.MatchCore
 
         internal void TestKickoff(int team) => PlaceForKickoff(team);
 
+        internal Vec2 TestRunIntoSpace(MatchPlayer p) => RunIntoSpace(p, Teams[p.Team].AttackDirection);
+
         /// <summary>El jugador golpea el balón con la velocidad dada, como un tiro o un despeje.</summary>
         internal void TestKick(MatchPlayer p, Vec3 velocity, bool shot)
         {

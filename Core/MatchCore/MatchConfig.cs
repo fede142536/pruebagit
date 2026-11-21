@@ -451,6 +451,17 @@ namespace Football.Core.MatchCore
         /// <summary>Reducción de la distancia entre líneas con alta compactación.</summary>
         public float CompactnessEffect = 0.18f;
 
+        /// <summary>Separación lateral entre los espacios que evalúa un delantero para desmarcarse (m).</summary>
+        public float RunWidth = 8f;
+        /// <summary>Preferencia por desmarcarse en línea recta frente a abrirse (m de espacio equivalentes).</summary>
+        public float RunStraightBias = 1.5f;
+        /// <summary>El arquero sale a achicar si un rival con balón está a esta distancia de su portería o menos (m).</summary>
+        public float KeeperRushDistance = 15f;
+        /// <summary>Distancia al poseedor a la que el arquero se planta al achicar (m).</summary>
+        public float KeeperRushStop = 1.5f;
+        /// <summary>Margen con el que un defensor cuenta como "entre el poseedor y la portería" (m).</summary>
+        public float KeeperRushLaneWidth = 2.5f;
+
         /// <summary>Profundidad mínima del portero respecto a la línea de gol (m).</summary>
         public float KeeperMinDepth = 1.0f;
         /// <summary>Profundidad máxima del portero respecto a la línea de gol (m).</summary>

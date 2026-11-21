@@ -110,6 +110,27 @@ namespace Football.Core.MatchCore
             }
         }
 
+        /// <summary>
+        /// Jugador al que pasaría el control con CAMBIAR (para dibujar su aro): con el balón suelto, el que llega primero;
+        /// si no, el más cercano al balón (sin contar al que ya controlas). Null si el equipo no es humano.
+        /// </summary>
+        /// <param name="team">Equipo de la persona.</param>
+        public MatchPlayer PreviewSwitchTarget(int team)
+        {
+            TeamState t = Teams[team];
+            return t.IsHuman && !t.KeeperLock && (Owner == null || Owner.Team != team) ? SwitchCandidate(t) : null;
+        }
+
+        private MatchPlayer SwitchCandidate(TeamState team)
+        {
+            if (Owner == null && team.Chaser != null && team.Chaser != team.Controlled && !team.Chaser.SentOff)
+            {
+                return team.Chaser;
+            }
+
+            return NearestToBall(team, team.Controlled);
+        }
+
         private MatchPlayer NearestToBall(TeamState team, MatchPlayer exclude)
         {
             Vec2 ball = Ball.Pos.Horizontal;
@@ -182,12 +203,19 @@ namespace Football.Core.MatchCore
                 }
                 else if (team.Input.Switch)
                 {
-                    MatchPlayer next = NearestToBall(team, team.Controlled);
+                    MatchPlayer next = SwitchCandidate(team);
                     if (next != null)
                     {
                         team.Controlled = next;
                         team.SwitchTimer = ai.SwitchCooldown;
                     }
+                }
+                else if (team.SwitchTimer <= 0f && Owner == null && team.Chaser != null && team.Chaser != team.Controlled
+                         && !team.Chaser.IsKeeper)
+                {
+                    // Balón dividido o pase largo del rival: el control pasa al compañero que llega primero.
+                    team.Controlled = team.Chaser;
+                    team.SwitchTimer = ai.SwitchCooldown;
                 }
                 else if (team.SwitchTimer <= 0f)
                 {
