@@ -87,7 +87,9 @@ namespace Football.Core.MatchCore
         /// <summary>Fin de la primera parte.</summary>
         HalfTime,
         /// <summary>Fin del partido.</summary>
-        FullTime
+        FullTime,
+        /// <summary>Un equipo cambió su mentalidad o su presión.</summary>
+        TacticsChanged
     }
 
     /// <summary>Evento registrado durante el partido.</summary>
@@ -138,6 +140,12 @@ namespace Football.Core.MatchCore
         public int Offsides;
         /// <summary>Pasos de simulación con posesión.</summary>
         public int PossessionTicks;
+        /// <summary>Veces que el equipo recuperó o ganó la posesión.</summary>
+        public int Possessions;
+        /// <summary>Entradas intentadas (de pie o en barrida).</summary>
+        public int Tackles;
+        /// <summary>Entradas que ganaron el balón.</summary>
+        public int TacklesWon;
     }
 
     /// <summary>Registro de eventos con capacidad reservada (no genera basura en régimen normal).</summary>

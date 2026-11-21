@@ -143,6 +143,17 @@ namespace Football.Core.MatchCore
             }
         }
 
+        private int _possessionTeam = -1;
+
+        private void CountPossessionChange(int team)
+        {
+            if (team != _possessionTeam)
+            {
+                _possessionTeam = team;
+                Teams[team].Stats.Possessions++;
+            }
+        }
+
         private void GainPossession(MatchPlayer p)
         {
             if (OnTouch(p))
@@ -150,7 +161,9 @@ namespace Football.Core.MatchCore
                 return;
             }
 
+            CountPossessionChange(p.Team);
             Owner = p;
+            _holder = null;
             Ball.Vel = Vec3.Zero;
             Ball.Spin = 0f;
             p.ActionTimer = Config.Player.ControlDelay;
@@ -276,6 +289,57 @@ namespace Football.Core.MatchCore
             keeper.KickTimer = BlockLockout;
         }
 
+        private MatchPlayer _cutTracked;
+
+        /// <summary>Detecta los recortes del poseedor: un giro brusco a velocidad deja atrás por un instante al defensor.</summary>
+        private void TrackDribbleCut(float dt)
+        {
+            MatchPlayer o = Owner;
+            RulesConfig rules = Config.Rules;
+            if (o == null)
+            {
+                _cutTracked = null;
+                return;
+            }
+
+            if (o != _cutTracked)
+            {
+                _cutTracked = o;
+                o.HeadingSample = o.Heading;
+                o.CutSampleTimer = rules.CutSampleInterval;
+                o.CutTimer = 0f;
+                return;
+            }
+
+            o.CutTimer = MathF.Max(0f, o.CutTimer - dt);
+            o.CutSampleTimer -= dt;
+            if (o.CutSampleTimer > 0f)
+            {
+                return;
+            }
+
+            float turn = MathF.Abs(MathUtil.AngleDiff(o.Heading, o.HeadingSample));
+            if (turn >= rules.CutAngleDeg * MathUtil.Deg2Rad && o.Speed >= rules.CutMinSpeed)
+            {
+                o.CutTimer = rules.CutWindow;
+            }
+
+            o.HeadingSample = o.Heading;
+            o.CutSampleTimer = rules.CutSampleInterval;
+        }
+
+        /// <summary>Probabilidad de que <paramref name="tackler"/> le gane el balón a <paramref name="owner"/> desde donde está ahora.</summary>
+        private float ContextTackleChance(MatchPlayer tackler, MatchPlayer owner, out bool fromBehind)
+        {
+            RulesConfig rules = Config.Rules;
+            Vec2 toOwner = (owner.Pos - tackler.Pos).Normalized;
+            float facing = Vec2.Dot(Vec2.FromAngle(tackler.Heading), toOwner);
+            float front = -Vec2.Dot(Vec2.FromAngle(owner.Heading), toOwner);
+            float cut = rules.CutWindow > 0f ? owner.CutTimer / rules.CutWindow : 0f;
+            fromBehind = Rules.IsFromBehind(rules, front);
+            return Rules.TackleWinChance(rules, tackler.Skill(AttributeId.Tackling), owner.Skill(AttributeId.Dribbling), facing, front, cut);
+        }
+
         private void ResolveTackles()
         {
             MatchPlayer owner = Owner;
@@ -304,9 +368,11 @@ namespace Football.Core.MatchCore
                 p.Action = PlayerAction.Tackle;
                 p.ActionDisplayTimer = ActionDisplay;
 
+                Teams[p.Team].Stats.Tackles++;
                 float tackling = p.Skill(AttributeId.Tackling);
-                float foulChance = Rules.FoulChance(rules, tackling, p.Skill(AttributeId.Aggression));
-                float winChance = Rules.TackleWinChance(rules, tackling, owner.Skill(AttributeId.Dribbling));
+                float winChance = ContextTackleChance(p, owner, out bool behind);
+                float foulChance = Rules.FoulChance(rules, tackling, p.Skill(AttributeId.Aggression))
+                                   * (behind ? rules.StandingBehindFoulMultiplier : 1f);
                 TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foulChance, winChance);
 
                 if (outcome == TackleOutcome.Foul)
@@ -317,6 +383,7 @@ namespace Football.Core.MatchCore
 
                 if (outcome == TackleOutcome.Won)
                 {
+                    Teams[p.Team].Stats.TacklesWon++;
                     WinBall(p, owner);
                     return;
                 }
@@ -366,11 +433,10 @@ namespace Football.Core.MatchCore
                     }
 
                     p.SlideResolved = true;
-                    bool fromBehind = Vec2.Dot(Vec2.FromAngle(p.Heading), Vec2.FromAngle(owner.Heading)) > 0.5f;
+                    Teams[p.Team].Stats.Tackles++;
+                    float win = MathUtil.Clamp(ContextTackleChance(p, owner, out bool fromBehind) + rules.SlideWinBonus, 0f, 0.95f);
                     float foul = Rules.FoulChance(rules, p.Skill(AttributeId.Tackling), p.Skill(AttributeId.Aggression))
                                  * rules.SlideFoulMultiplier * (fromBehind ? rules.BehindFoulMultiplier : 1f);
-                    float win = MathUtil.Clamp(Rules.TackleWinChance(rules, p.Skill(AttributeId.Tackling), owner.Skill(AttributeId.Dribbling))
-                                               + rules.SlideWinBonus, 0f, 0.95f);
                     TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foul, win);
                     if (outcome == TackleOutcome.Foul)
                     {
@@ -380,6 +446,7 @@ namespace Football.Core.MatchCore
 
                     if (outcome == TackleOutcome.Won)
                     {
+                        Teams[p.Team].Stats.TacklesWon++;
                         Owner = null;
                         owner.KickTimer = DispossessedLockout;
                         KnockBall(p);

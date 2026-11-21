@@ -199,6 +199,30 @@ namespace Football.Core.MatchCore
         public static float TackleWinChance(RulesConfig c, float tackling, float dribbling) =>
             MathUtil.Clamp(c.TackleWinBase + c.TackleSkillWeight * (tackling - dribbling), 0.05f, 0.85f);
 
+        /// <summary>
+        /// Probabilidad de ganar el balón teniendo en cuenta la posición: entrar de frente y mirando al poseedor ayuda; perseguirlo
+        /// por detrás o llegar justo después de un recorte suyo, no.
+        /// </summary>
+        /// <param name="c">Reglas.</param>
+        /// <param name="tackling">Habilidad de entrada del defensor (0..1).</param>
+        /// <param name="dribbling">Habilidad de regate del poseedor (0..1).</param>
+        /// <param name="facing">Coseno entre la orientación del defensor y la dirección hacia el poseedor (−1..1).</param>
+        /// <param name="front">Coseno entre la orientación del poseedor y la dirección hacia el defensor (−1..1); positivo = de frente.</param>
+        /// <param name="cut">Frescura de un recorte del poseedor (0 = ninguno, 1 = recién hecho).</param>
+        public static float TackleWinChance(RulesConfig c, float tackling, float dribbling, float facing, float front, float cut)
+        {
+            float chance = c.TackleWinBase + c.TackleSkillWeight * (tackling - dribbling)
+                           + c.TackleFacingWeight * MathUtil.Clamp(facing, -1f, 1f)
+                           + c.TackleFrontWeight * MathUtil.Clamp(front, -1f, 1f)
+                           - c.CutEvadeBonus * MathUtil.Clamp01(cut) * (0.5f + 0.5f * dribbling);
+            return MathUtil.Clamp(chance, 0.05f, 0.85f);
+        }
+
+        /// <summary>Indica si una entrada es por detrás.</summary>
+        /// <param name="c">Reglas.</param>
+        /// <param name="front">Coseno entre la orientación del poseedor y la dirección hacia el defensor.</param>
+        public static bool IsFromBehind(RulesConfig c, float front) => front < c.BehindThreshold;
+
         /// <summary>Probabilidad de que una entrada sea falta.</summary>
         /// <param name="c">Reglas.</param>
         /// <param name="tackling">Habilidad de entrada del defensor (0..1).</param>

@@ -245,19 +245,38 @@ namespace Football.Core.MatchCore
                     }
 
                     // Con la presión mantenida, entra de pie en cuanto alcanza al poseedor rival.
+                    // Solo si está bien colocado (no por detrás): la presión premia la posición, no el botón.
                     bool pressTackle = input.Press && Owner != null && Owner.Team != p.Team
-                                       && Vec2.Distance(p.Pos, Owner.Pos) <= Config.Rules.TackleRange;
+                                       && Vec2.Distance(p.Pos, Owner.Pos) <= Config.Rules.TackleRange
+                                       && !IsBehind(p, Owner);
                     p.WantsTackle = p.TackleWindow > 0f || pressTackle;
                 }
             }
         }
 
-        /// <summary>Presión mantenida: va hacia el poseedor rival (o el balón suelto) y entra de pie al alcanzarlo.</summary>
+        private bool IsBehind(MatchPlayer defender, MatchPlayer owner)
+        {
+            Vec2 toOwner = (owner.Pos - defender.Pos).Normalized;
+            return Rules.IsFromBehind(Config.Rules, -Vec2.Dot(Vec2.FromAngle(owner.Heading), toOwner));
+        }
+
+        /// <summary>
+        /// Presión mantenida: si el defensor ya está de frente al poseedor rival va a por el balón y entra de pie al alcanzarlo;
+        /// si lo persigue por detrás, primero busca ponerse entre él y la portería. Con balón suelto va hacia el balón.
+        /// </summary>
         private void ApplyPress(MatchPlayer p, MatchInput input)
         {
             float run = 0.5f * (1f + Config.Player.JogFraction);
             bool rivalBall = Owner != null && Owner.Team != p.Team;
-            p.Target = rivalBall ? Owner.Pos + Owner.Velocity * PressLead : Ball.Pos.Horizontal;
+            if (rivalBall)
+            {
+                p.Target = IsBehind(p, Owner) ? ContainPoint(p, PressLead) : Owner.Pos + Owner.Velocity * PressLead;
+            }
+            else
+            {
+                p.Target = Ball.Pos.Horizontal;
+            }
+
             p.SpeedFactor = input.Sprint ? 1f : run;
         }
 

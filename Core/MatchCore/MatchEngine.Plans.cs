@@ -59,6 +59,7 @@ namespace Football.Core.MatchCore
                 team.Chaser = null;
                 team.Presser = null;
                 team.Presser2 = null;
+                team.Cover = null;
                 team.SupportCount = 0;
                 for (int i = 0; i < team.Players.Length; i++)
                 {
@@ -200,6 +201,8 @@ namespace Football.Core.MatchCore
                 team.Presser2 = second;
             }
 
+            team.Cover = team.Presser != null ? PickCover(team) : null;
+
             for (int i = 0; i < _claimed.Length; i++)
             {
                 _claimed[i] = false;
@@ -209,7 +212,7 @@ namespace Football.Core.MatchCore
             for (int i = 1; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
-                if (p.SentOff || p == team.Presser || p == team.Presser2)
+                if (p.SentOff || p == team.Presser || p == team.Presser2 || p == team.Cover)
                 {
                     continue;
                 }
@@ -238,6 +241,77 @@ namespace Football.Core.MatchCore
                     p.MarkTarget = mark;
                 }
             }
+        }
+
+        /// <summary>Punto por detrás del que presiona, en la línea entre el poseedor y la portería propia.</summary>
+        private Vec2 CoverPoint(TeamState team)
+        {
+            Vec2 goal = Pitch.GoalCenter(team.DefendedEnd);
+            return Owner.Pos + (goal - Owner.Pos).Normalized * Config.Ai.CoverDepth;
+        }
+
+        /// <summary>Elige al compañero más cercano al punto de cobertura (si hay uno a distancia razonable).</summary>
+        private MatchPlayer PickCover(TeamState team)
+        {
+            Vec2 point = CoverPoint(team);
+            MatchPlayer best = null;
+            float bestDistance = Config.Ai.CoverRadius;
+            for (int i = 1; i < team.Players.Length; i++)
+            {
+                MatchPlayer p = team.Players[i];
+                if (p.SentOff || p == team.Presser || p == team.Presser2)
+                {
+                    continue;
+                }
+
+                float d = Vec2.Distance(p.Pos, point);
+                if (d < bestDistance)
+                {
+                    bestDistance = d;
+                    best = p;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// Punto de contención: entre el poseedor (un instante por delante) y la portería propia. Así el defensor le cierra el
+        /// camino en lugar de perseguirlo por detrás.
+        /// </summary>
+        private Vec2 ContainPoint(MatchPlayer defender, float lead)
+        {
+            Vec2 carrier = Owner.Pos + Owner.Velocity * lead;
+            Vec2 goal = Pitch.GoalCenter(Teams[defender.Team].DefendedEnd);
+            Vec2 goalDir = (goal - carrier).Normalized;
+            Vec2 contain = carrier + goalDir * Config.Ai.ContainDistance;
+
+            // Si está detrás del poseedor y casi en su línea, lo rodea por el costado en lugar de chocar contra su espalda.
+            Vec2 rel = defender.Pos - carrier;
+            float along = Vec2.Dot(rel, goalDir);
+            var side = new Vec2(-goalDir.Y, goalDir.X);
+            float lateral = Vec2.Dot(rel, side);
+            if (along < 0f && MathF.Abs(lateral) < Config.Ai.ContainDistance)
+            {
+                float sign = lateral >= 0f ? 1f : -1f;
+                return carrier + side * (sign * Config.Ai.ContainDistance) + goalDir * Config.Ai.ContainDistance;
+            }
+
+            return contain;
+        }
+
+        /// <summary>La IA solo entra de frente o de costado y si la jugada lo merece; un equipo que presiona mucho arriesga más.</summary>
+        private bool AiShouldTackle(MatchPlayer p, TeamState team)
+        {
+            AiConfig ai = Config.Ai;
+            if (Vec2.Distance(p.Pos, Owner.Pos) > ai.TackleEngageDistance)
+            {
+                return false;
+            }
+
+            float threshold = ai.TackleChanceThreshold - ai.TackleThresholdPressSpread * 2f * (team.Style.PressIntensity - 0.5f);
+            float chance = ContextTackleChance(p, Owner, out bool fromBehind);
+            return !fromBehind && chance >= threshold; // por detrás no entra: es falta fácil y casi nunca gana el balón
         }
 
         private void PlanLoose(TeamState team)
@@ -383,10 +457,19 @@ namespace Football.Core.MatchCore
             {
                 if (p == team.Presser || p == team.Presser2)
                 {
-                    target = Owner.Pos + Owner.Velocity * PresserLeadTime;
+                    // Contiene a distancia y solo se lanza a por el balón cuando la entrada tiene buenas opciones.
                     float distance = Vec2.Distance(p.Pos, Owner.Pos);
                     speed = distance > ai.PressSprintDistance ? 1f : run;
-                    p.WantsTackle = distance <= Config.Rules.TackleRange * TackleReadyFactor;
+                    p.WantsTackle = AiShouldTackle(p, team);
+                    target = p.WantsTackle || p == team.Presser2
+                        ? Owner.Pos + Owner.Velocity * PresserLeadTime
+                        : ContainPoint(p, PresserLeadTime);
+                    positional = false;
+                }
+                else if (p == team.Cover)
+                {
+                    target = CoverPoint(team);
+                    speed = run;
                     positional = false;
                 }
                 else if (p.MarkTarget != null)

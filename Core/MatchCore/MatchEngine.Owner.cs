@@ -6,7 +6,7 @@ namespace Football.Core.MatchCore
 {
     public sealed partial class MatchEngine
     {
-        private enum OptionKind { Shoot, Pass, Cross, Dribble }
+        private enum OptionKind { Shoot, Pass, Cross, Dribble, Hold }
 
         private enum KickKind { Pass, Shot, Cross, Clearance }
 
@@ -52,6 +52,8 @@ namespace Football.Core.MatchCore
         private readonly Option[] _options = new Option[MaxOptions];
         private int _optionCount;
         private bool _offsideExempt;
+        private MatchPlayer _holder;
+        private float _holdTime;
 
         private float NearestOpponentDistance(Vec2 pos, int team)
         {
@@ -100,7 +102,10 @@ namespace Football.Core.MatchCore
                 }
 
                 float ballTime = t * distance / averageBallSpeed;
-                float opponentTime = ai.InterceptReaction + MathF.Max(0f, d - ai.InterceptReach) / (o.TopSpeed * ai.InterceptRunFactor);
+                // Un rival plantado en el carril lo bloquea aunque el balón le llegue enseguida.
+                float opponentTime = d <= ai.BlockReach
+                    ? 0f
+                    : ai.InterceptReaction + MathF.Max(0f, d - ai.InterceptReach) / (o.TopSpeed * ai.InterceptRunFactor);
                 float margin = ballTime - opponentTime;
                 if (margin > slack)
                 {
@@ -265,6 +270,7 @@ namespace Football.Core.MatchCore
             AddPassOptions(p, pos, ai.PassMaxDistance, noise);
             AddCrossOption(p, pos, noise);
             AddDribbleOptions(p, pos, noise);
+            AddHoldOption(p, pos, opponentDistance, noise);
 
             int chosen = BestOption();
             if (chosen < 0)
@@ -284,11 +290,81 @@ namespace Football.Core.MatchCore
                 case OptionKind.Cross:
                     KickCross(p, o.Point, false, (pos.Y > 0f ? -1f : 1f) * CrossSpin * dir, KickKind.Cross);
                     break;
+                case OptionKind.Hold:
+                    p.Target = o.Point;
+                    p.SpeedFactor = ai.WalkFraction;
+                    break;
                 default:
                     p.Target = o.Point;
                     p.SpeedFactor = o.Cautious ? Config.Player.JogFraction : 1f;
                     break;
             }
+
+            if (o.Kind == OptionKind.Hold)
+            {
+                if (_holder != p)
+                {
+                    _holder = p;
+                    _holdTime = 0f;
+                }
+
+                _holdTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale;
+            }
+            else
+            {
+                _holder = null;
+            }
+        }
+
+        /// <summary>
+        /// Mantener el balón: protegerlo al paso, alejándose del rival más cercano, para esperar un desmarque. Los equipos de
+        /// posesión lo valoran más; los directos, menos. Nunca más de <see cref="AiConfig.HoldMaxTime"/> seguidos.
+        /// </summary>
+        private void AddHoldOption(MatchPlayer p, Vec2 pos, float opponentDistance, float noiseSigma)
+        {
+            AiConfig ai = Config.Ai;
+            if (_optionCount >= MaxOptions || (_holder == p && _holdTime >= ai.HoldMaxTime))
+            {
+                return;
+            }
+
+            TeamState team = Teams[p.Team];
+            float dir = team.AttackDirection;
+            float skill = 0.5f * (p.Skill(AttributeId.Dribbling) + p.Skill(AttributeId.Composure));
+            float safety = MathUtil.Clamp01(opponentDistance / ai.HoldSafeDistance);
+            float success = (ai.DribbleBase + ai.DribbleSkillSpread * skill) * (0.35f + 0.65f * safety);
+            float patience = ai.HoldStyleWeight * (0.5f - team.Style.Directness) * 2f;
+            float utility = success * Threat(dir, pos) - (1f - success) * ai.LossWeight * Threat(-dir, pos)
+                            + ai.HoldBias + patience + _rng.NextGaussian(0f, noiseSigma);
+
+            Vec2 away = pos - NearestOpponentPos(pos, p.Team);
+            Vec2 step = away.LengthSquared > 0.0001f ? away.Normalized * ai.HoldStep : Vec2.Zero;
+            Vec2 point = Pitch.Clamp(pos + step, -SafeMarginToLine);
+            _options[_optionCount++] = new Option { Kind = OptionKind.Hold, Point = point, Cautious = true, Utility = utility };
+        }
+
+        private Vec2 NearestOpponentPos(Vec2 pos, int team)
+        {
+            TeamState opponents = Teams[1 - team];
+            Vec2 best = pos;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < opponents.Players.Length; i++)
+            {
+                MatchPlayer o = opponents.Players[i];
+                if (o.SentOff)
+                {
+                    continue;
+                }
+
+                float d = Vec2.Distance(o.Pos, pos);
+                if (d < bestDistance)
+                {
+                    bestDistance = d;
+                    best = o.Pos;
+                }
+            }
+
+            return best;
         }
 
         private Vec2 ClearanceTarget(MatchPlayer p, Vec2 pos, float dir)

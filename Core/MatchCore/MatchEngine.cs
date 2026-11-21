@@ -55,6 +55,49 @@ namespace Football.Core.MatchCore
         private int _kickoffTeam;
         private Vec3 _prevBallPos;
         private float _planTimer;
+        private float _adaptTimer;
+
+        /// <summary>Cambia la mentalidad y la presión de un equipo durante el partido.</summary>
+        /// <param name="team">Equipo (0 local, 1 visitante).</param>
+        /// <param name="mentality">Mentalidad.</param>
+        /// <param name="pressing">Presión.</param>
+        public void SetTactics(int team, Mentality mentality, PressLevel pressing)
+        {
+            TeamState t = Teams[team];
+            if (t.Mentality == mentality && t.Pressing == pressing)
+            {
+                return;
+            }
+
+            t.Mentality = mentality;
+            t.Pressing = pressing;
+            Tactics.Apply(t.BaseStyle, mentality, pressing, Config.Ai, t.Style);
+            AddEvent(MatchEventType.TacticsChanged, team, -1, Ball.Pos.Horizontal);
+        }
+
+        /// <summary>La IA revisa de vez en cuando su táctica según el marcador y el minuto.</summary>
+        private void AdaptTactics(float dt)
+        {
+            _adaptTimer -= dt;
+            if (_adaptTimer > 0f)
+            {
+                return;
+            }
+
+            _adaptTimer = Config.Ai.AdaptInterval;
+            for (int t = 0; t < 2; t++)
+            {
+                TeamState team = Teams[t];
+                if (team.IsHuman || !team.AdaptiveTactics)
+                {
+                    continue;
+                }
+
+                int difference = team.Stats.Goals - Teams[1 - t].Stats.Goals;
+                Mentality mentality = Tactics.Adaptive(difference, Minute, Config.Ai, out PressLevel pressing);
+                SetTactics(t, mentality, pressing);
+            }
+        }
 
         /// <summary>Crea un partido listo para el saque inicial del equipo local.</summary>
         /// <param name="config">Configuración.</param>
@@ -148,6 +191,7 @@ namespace Football.Core.MatchCore
         private void TickPlaying(float dt)
         {
             TickTimers(dt);
+            AdaptTactics(dt);
             UpdateHumanControl(dt);
             _planTimer -= dt;
             if (_planTimer <= 0f)
@@ -166,6 +210,7 @@ namespace Football.Core.MatchCore
                 return;
             }
 
+            TrackDribbleCut(dt);
             ResolveTackles();
             if (Phase != MatchPhase.Playing)
             {

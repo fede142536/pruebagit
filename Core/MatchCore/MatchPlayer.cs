@@ -72,6 +72,12 @@ namespace Football.Core.MatchCore
         public float RecoverTimer;
         /// <summary>La barrida en curso ya tocó (o falló) al rival.</summary>
         public bool SlideResolved;
+        /// <summary>Tiempo que queda del efecto de su último recorte con el balón (s).</summary>
+        public float CutTimer;
+        /// <summary>Orientación medida al inicio del intervalo de muestreo de recortes.</summary>
+        public float HeadingSample;
+        /// <summary>Tiempo hasta la próxima medición del giro (s).</summary>
+        public float CutSampleTimer;
 
         /// <summary>Tarjetas amarillas recibidas.</summary>
         public int Yellows;

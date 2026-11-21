@@ -77,6 +77,12 @@ namespace Football.Game
         /// <summary>Nombres en español de las dificultades de <c>MatchConfig.Difficulties</c>, en el mismo orden.</summary>
         public static readonly string[] DifficultyLabels = { "Principiante", "Amateur", "Profesional", "Mundial", "Leyenda" };
 
+        /// <summary>Nombres de las mentalidades, de muy defensiva (índice 0) a muy ofensiva (índice 4).</summary>
+        public static readonly string[] MentalityLabels = { "MUY DEFENSIVA", "DEFENSIVA", "EQUILIBRADA", "OFENSIVA", "MUY OFENSIVA" };
+
+        /// <summary>Nombres de los niveles de presión, de baja (índice 0) a alta (índice 2).</summary>
+        public static readonly string[] PressLabels = { "BAJA", "NORMAL", "ALTA" };
+
         /// <summary>Opciones de duración de cada parte, en minutos reales.</summary>
         public static readonly int[] HalfMinutes = { 2, 3, 5 };
 

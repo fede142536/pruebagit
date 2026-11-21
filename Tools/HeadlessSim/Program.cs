@@ -74,7 +74,7 @@ namespace Football.Tools.HeadlessSim
 
         private static int Run(MatchConfig config, int matches, ulong seed, int difficulty, int awayDifficulty, float rating, bool verbose)
         {
-            var total = new double[2, 14];
+            var total = new double[2, 17];
             int failures = 0, unfinished = 0, homeWins = 0, draws = 0, awayWins = 0, outOfBounds = 0;
             double goals = 0, maxMs = 0, totalMs = 0;
             var goalHistogram = new int[10];
@@ -137,7 +137,7 @@ namespace Football.Tools.HeadlessSim
                 return 1;
             }
 
-            string[] names = { "Goles", "Tiros", "A puerta", "Paradas", "Pases", "Pases ok", "Interceptados", "Perdidos fuera", "Faltas", "Amarillas", "Rojas", "Córners", "Fueras de juego" };
+            string[] names = { "Goles", "Tiros", "A puerta", "Paradas", "Pases", "Pases ok", "Interceptados", "Perdidos fuera", "Faltas", "Amarillas", "Rojas", "Córners", "Fueras de juego", "Posesiones", "Entradas", "Entradas ganadas" };
             Console.WriteLine($"Partidos: {matches}  semilla: {seed}  dificultad: {config.Difficulties[difficulty].Name} (local) vs {config.Difficulties[awayDifficulty].Name} (visitante)  calidad media: {rating}");
             Console.WriteLine($"Excepciones: {failures}  sin terminar: {unfinished}  estados inválidos (NaN/fuera del campo): {outOfBounds}");
             Console.WriteLine($"Tiempo por partido: media {totalMs / ok:F0} ms, máximo {maxMs:F0} ms");
@@ -151,6 +151,10 @@ namespace Football.Tools.HeadlessSim
             }
 
             Console.WriteLine($"  Pases completados  {100.0 * (total[0, 5] + total[1, 5]) / Math.Max(1.0, total[0, 4] + total[1, 4]),7:F1}%");
+            double possessions = Math.Max(1.0, total[0, 13] + total[1, 13]);
+            Console.WriteLine($"  Duración media de una posesión {(total[0, 16] + total[1, 16]) / possessions / config.TickRate,6:F1} s (tiempo de simulación)");
+            Console.WriteLine($"  Pases por posesión             {(total[0, 5] + total[1, 5]) / possessions,6:F2}");
+            Console.WriteLine($"  Acierto de las entradas        {100.0 * (total[0, 15] + total[1, 15]) / Math.Max(1.0, total[0, 14] + total[1, 14]),6:F1}%");
             return failures == 0 && unfinished == 0 && outOfBounds == 0 ? 0 : 1;
         }
 
@@ -267,6 +271,10 @@ namespace Football.Tools.HeadlessSim
                 total[t, 10] += s.Reds;
                 total[t, 11] += s.Corners;
                 total[t, 12] += s.Offsides;
+                total[t, 13] += s.Possessions;
+                total[t, 14] += s.Tackles;
+                total[t, 15] += s.TacklesWon;
+                total[t, 16] += s.PossessionTicks;
             }
         }
 

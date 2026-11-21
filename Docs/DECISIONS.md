@@ -67,6 +67,15 @@ sin escudos, logotipos ni diseños oficiales de camisetas.
 **Uso:** personal. Si el repositorio es público, conviene hacerlo privado o quitar el archivo antes de compartirlo.
 El juego sigue funcionando sin el archivo (usa dos equipos ficticios).
 
+## D-13 · Defensa por posición y táctica en vivo — Aceptada (pedido del usuario: «enfocate en el gameplay del partido»)
+**Decisión:** la probabilidad de una entrada depende de la geometría (orientación del defensor, si está delante o detrás del
+poseedor y si este acaba de recortar), no solo de los atributos. La IA contiene (se planta entre el poseedor y su portería) y solo
+entra con buenas opciones; un compañero cubre su espalda. La mentalidad y la presión se pueden cambiar en vivo y la IA las adapta al
+marcador, siempre de forma visible (aviso en pantalla), nunca como ayuda oculta.
+**Por qué:** que defender exija posicionarse y que el regate premie el momento justo, con efectos medibles (ver `BALANCE.md` §1.1).
+**Consecuencias:** el estilo de cada equipo pasa a ser una copia propia dentro del partido (`TeamState.Style`) para poder ajustarlo
+sin tocar la configuración compartida.
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 

@@ -59,6 +59,13 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    | Con balón | PASE · TIRO (mantener y soltar) · DESPEJAR (en tu campo) | J · K · R |
    | Opcionales | FILTRADO · CENTRO (se activan en Ajustes) | L · I |
    | Sin balón | PRESIONAR (mantener: quita sin barrer) · BARRER · CAMBIAR | E · Q · Tab |
+   | Táctica | En la pausa: MENTALIDAD (muy defensiva … muy ofensiva) y PRESIÓN (baja, normal, alta) | Esc |
+
+   **Cómo defender y regatear ahora.** Quitar el balón depende de *dónde* estás: de frente al rival y mirándolo tienes más
+   opciones; por la espalda casi nunca lo ganas y es falta fácil. Al mantener PRESIONAR estando detrás del rival, tu jugador
+   primero lo rodea para ponerse entre él y tu arco, y recién ahí entra. Con balón, un **giro brusco con el joystick justo antes de
+   que el defensor entre** (un recorte) lo deja atrás durante un instante; funciona mejor con buenos regateadores. La IA rival
+   también contiene, cubre al compañero que presiona y, si va perdiendo desde el minuto 60, se vuelca al ataque (lo verás anunciado).
    | Arquero | ARQUERO (tomar el control para salir, barrer, pasar o despejar); JUGADOR lo devuelve | G |
    | Pausa | II | Esc |
 
@@ -113,7 +120,8 @@ encima de los 100 ms objetivo; si es así probaremos 60 FPS o ajustes.
 5. ¿Los botones están en un lugar cómodo para tu mano derecha? ¿Alguno es demasiado pequeño o grande?
 6. ¿Se entiende qué pasa en el campo con esta cámara? ¿Prefieres más cerca o más lejos?
 7. ¿La potencia del tiro (mantener y soltar) es intuitiva?
-8. ¿Los rivales juegan de forma distinta entre sí? ¿Cuál se siente más difícil?
+8. ¿Los rivales juegan de forma distinta entre sí? ¿Cuál se siente más difícil? ¿Notas el cambio al tocar MENTALIDAD o PRESIÓN?
+   ¿El recorte deja atrás al defensor? ¿Presionar se siente útil o lento?
 9. ¿Alguna jugada rara (jugadores quietos, balón atascado, goles raros)?
 10. ¿Cómo va de fluidez en tu móvil? ¿Se calienta o se traba?
 

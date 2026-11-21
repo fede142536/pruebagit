@@ -62,6 +62,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.6 Controles táctiles | ⚠️ escrito, **sin probar en el dispositivo** (`TouchControls`: joystick flotante, botones contextuales, zurdos, pase asistido con vista previa, tiro con carga; teclado para probar en PC) |
 | 1.6b Menús por pantallas (estilo FC) | ⚠️ escrito, sin ejecutar en Unity: menú principal (amistoso; carrera y torneo «próximamente»), equipos en tarjetas, alineación (formación, titulares, suplentes, no convocados), ajustes del partido y ajustes generales |
 | 1.7 HUD, depuración y benchmark | ⚠️ escrito, **sin medir en el dispositivo** (marcador, pausa, panel de depuración, partido IA contra IA con semilla fija) |
+| 1.8 Jugabilidad del partido: entradas según posición y orientación, recortes, contención y cobertura de la IA, mantener el balón, táctica en vivo (mentalidad y presión) e IA que se adapta al marcador | ✅ núcleo hecho y probado (`DuelTests`, `TacticsTests`; métricas en `BALANCE.md` §1.1); ⚠️ botones de táctica en la pausa sin ejecutar en Unity |
 
 ### Criterios de aceptación medibles
 

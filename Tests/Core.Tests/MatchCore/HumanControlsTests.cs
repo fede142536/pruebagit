@@ -25,7 +25,7 @@ namespace Football.Core.Tests.MatchCore
             return e;
         }
 
-        /// <summary>Rival (visitante) con balón y defensor local controlado por la persona a cierta distancia, detrás del rival.</summary>
+        /// <summary>Rival (visitante) con balón, de frente al defensor local que controla la persona, a cierta distancia.</summary>
         private static MatchEngine Duel(ulong seed, float gap, out MatchPlayer defender, out MatchPlayer owner)
         {
             MatchEngine e = Isolated(seed);
@@ -34,6 +34,7 @@ namespace Football.Core.Tests.MatchCore
             e.TestPlace(owner, new Vec2(0f, 0f));
             e.TestPlace(defender, new Vec2(gap, 0f));
             defender.Heading = MathF.PI; // mira hacia el rival
+            owner.Heading = 0f;          // y el rival viene de frente hacia él
             owner.ActionTimer = Frozen;
             e.TestGiveBall(owner);
             e.SetHuman(0, true);
@@ -130,6 +131,28 @@ namespace Football.Core.Tests.MatchCore
             }
 
             Assert.That(attempts, Is.GreaterThan(15), "al alcanzarlo entra de pie");
+        }
+
+        [Test]
+        public void Press_FromBehind_FirstGetsGoalSideInsteadOfTacklingTheBack()
+        {
+            MatchEngine e = Duel(5, 3f, out MatchPlayer defender, out MatchPlayer owner);
+            owner.Heading = MathF.PI; // el rival se va hacia la portería local (−X): el defensor queda detrás
+            bool tackledFromBehind = false, gotGoalSide = false;
+            for (int i = 0; i < 150 && !gotGoalSide; i++)
+            {
+                Vec2 toOwner = (owner.Pos - defender.Pos).Normalized;
+                bool behind = Rules.IsFromBehind(e.Config.Rules, -Vec2.Dot(Vec2.FromAngle(owner.Heading), toOwner));
+                e.SetInput(0, new MatchInput { Press = true });
+                e.Tick();
+                tackledFromBehind |= behind && defender.TackleTimer > 0f && e.Events.CountOf(MatchEventType.Foul, 0) == 0
+                                     && defender.TackleTimer >= e.Config.Rules.TackleCooldown - 0.02f;
+                // Lo rodea hasta quedar entre el rival y la portería, o le gana el balón entrando de costado.
+                gotGoalSide = defender.Pos.X < owner.Pos.X - 1f || e.Owner == defender;
+            }
+
+            Assert.That(tackledFromBehind, Is.False, "presionar no entra por la espalda");
+            Assert.That(gotGoalSide, Is.True, "rodea al rival (y le entra de costado o queda entre él y la portería)");
         }
 
         [Test]

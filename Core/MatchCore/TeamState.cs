@@ -11,8 +11,16 @@ namespace Football.Core.MatchCore
         public readonly string Name;
         /// <summary>Formación.</summary>
         public readonly Formation Formation;
-        /// <summary>Estilo de juego.</summary>
+        /// <summary>Estilo de juego efectivo (el base con los ajustes tácticos aplicados).</summary>
         public readonly TeamStyle Style;
+        /// <summary>Estilo con el que el equipo empezó el partido.</summary>
+        public readonly TeamStyle BaseStyle;
+        /// <summary>Mentalidad actual.</summary>
+        public Mentality Mentality;
+        /// <summary>Presión actual.</summary>
+        public PressLevel Pressing;
+        /// <summary>Si la IA de este equipo adapta la táctica al marcador (no se aplica al equipo humano).</summary>
+        public bool AdaptiveTactics = true;
         /// <summary>Dificultad de la IA de este equipo.</summary>
         public readonly DifficultyProfile Difficulty;
         /// <summary>Jugadores, en el orden de los puestos de la formación.</summary>
@@ -40,6 +48,8 @@ namespace Football.Core.MatchCore
         public MatchPlayer Presser;
         /// <summary>Segundo jugador que presiona.</summary>
         public MatchPlayer Presser2;
+        /// <summary>Jugador que cubre la espalda del que presiona.</summary>
+        public MatchPlayer Cover;
         /// <summary>Jugadores que ofrecen apoyo al poseedor.</summary>
         public readonly MatchPlayer[] Support = new MatchPlayer[8];
         /// <summary>Cuántos de <see cref="Support"/> están en uso.</summary>
@@ -60,7 +70,8 @@ namespace Football.Core.MatchCore
             AttackDirection = attackDirection;
             Name = setup.Name;
             Formation = setup.Formation;
-            Style = setup.Style;
+            BaseStyle = setup.Style.Clone();
+            Style = setup.Style.Clone();
             Difficulty = difficulty;
             for (int slot = 0; slot < Players.Length; slot++)
             {

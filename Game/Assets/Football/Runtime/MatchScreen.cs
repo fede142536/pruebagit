@@ -30,7 +30,7 @@ namespace Football.Game
         private readonly DebugPanel _debug;
         private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
         private readonly GameObject _pausePanel;
-        private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle;
+        private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle, _mentality, _pressing;
         private readonly NameTags _nameTags;
 
         private MatchEngine _engine;
@@ -91,6 +91,12 @@ namespace Football.Game
             _debugToggle = UiKit.Button(dim.transform, "Depuracion", new Vector2(960f, 452f), new Vector2(620f, 92f), string.Empty, 34, option);
             _fpsToggle = UiKit.Button(dim.transform, "Fps", new Vector2(960f, 348f), new Vector2(620f, 92f), string.Empty, 34, option);
             _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 225f), new Vector2(620f, 100f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
+            Color tactic = new Color(0.2f, 0.35f, 0.55f);
+            UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
+            _mentality = UiKit.Button(dim.transform, "Mentalidad", new Vector2(1600f, 660f), new Vector2(520f, 92f), string.Empty, 30, tactic);
+            _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
+            UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
+                "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
             _nameTags = new NameTags(parent);
@@ -363,6 +369,16 @@ namespace Football.Game
                     case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; break;
                     case MatchEventType.Save: text = "¡PARADÓN!"; break;
                     case MatchEventType.Woodwork: text = "¡AL PALO!"; break;
+                    case MatchEventType.TacticsChanged:
+                        // Solo se anuncia el cambio del rival (el propio lo elige la persona en la pausa) y sin tapar otro aviso.
+                        if (e.Team == 1 && _bannerTimer <= 0f)
+                        {
+                            Mentality m = _engine.Teams[1].Mentality;
+                            text = _awayTeam.Name.ToUpperInvariant() + (m > Mentality.Balanced ? " SE VUELCA AL ATAQUE"
+                                : m < Mentality.Balanced ? " SE CIERRA ATRÁS" : " VUELVE AL EQUILIBRIO");
+                        }
+
+                        break;
                 }
 
                 if (text != null)
@@ -460,6 +476,12 @@ namespace Football.Game
             _names.Label.text = "NOMBRES: " + (_settings.Names == NameMode.All ? "TODOS" : _settings.Names == NameMode.Controlled ? "SOLO EL TUYO Y EL BALÓN" : "NINGUNO");
             _debugToggle.Label.text = "PANEL DE DEPURACIÓN: " + (_settings.ShowDebug ? "SÍ" : "NO");
             _fpsToggle.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
+            if (_engine != null)
+            {
+                TeamState own = _engine.Teams[0];
+                _mentality.Label.text = "MENTALIDAD: " + TeamCatalog.MentalityLabels[(int)own.Mentality + 2];
+                _pressing.Label.text = "PRESIÓN: " + TeamCatalog.PressLabels[(int)own.Pressing + 1];
+            }
         }
 
         private void HandlePauseInput()
@@ -501,6 +523,20 @@ namespace Football.Game
                     _settings.ShowDebug = !_settings.ShowDebug;
                     _settings.Save();
                     _debug.SetVisible(_settings.ShowDebug);
+                    RefreshPauseLabels();
+                }
+                else if (_mentality.Contains(point) && _engine != null)
+                {
+                    TeamState own = _engine.Teams[0];
+                    int next = (int)own.Mentality + 1 > (int)Mentality.VeryAttacking ? (int)Mentality.VeryDefensive : (int)own.Mentality + 1;
+                    _engine.SetTactics(0, (Mentality)next, own.Pressing);
+                    RefreshPauseLabels();
+                }
+                else if (_pressing.Contains(point) && _engine != null)
+                {
+                    TeamState own = _engine.Teams[0];
+                    int next = (int)own.Pressing + 1 > (int)PressLevel.High ? (int)PressLevel.Low : (int)own.Pressing + 1;
+                    _engine.SetTactics(0, own.Mentality, (PressLevel)next);
                     RefreshPauseLabels();
                 }
                 else if (_fpsToggle.Contains(point))

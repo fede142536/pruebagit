@@ -135,7 +135,7 @@ namespace Football.Core.MatchCore
         /// <summary>Altura del centro de la esfera de alcance del portero (m).</summary>
         public float KeeperReachHeight = 1.0f;
         /// <summary>Probabilidad base de parada cuando el balón entra en el alcance.</summary>
-        public float KeeperSaveBase = 0.72f;
+        public float KeeperSaveBase = 0.58f;
         /// <summary>Variación de la parada según la habilidad del portero (±).</summary>
         public float KeeperSaveSkillSpread = 0.30f;
         /// <summary>Velocidad de tiro a partir de la cual la parada se vuelve más difícil (m/s).</summary>
@@ -191,11 +191,29 @@ namespace Football.Core.MatchCore
         /// <summary>Tiempo entre entradas de un mismo jugador (s).</summary>
         public float TackleCooldown = 1.0f;
         /// <summary>Probabilidad base de ganar el balón en una entrada.</summary>
-        public float TackleWinBase = 0.32f;
+        public float TackleWinBase = 0.28f;
         /// <summary>Peso de la diferencia Tackling − Dribbling en la entrada.</summary>
         public float TackleSkillWeight = 0.5f;
+        /// <summary>Probabilidad extra (±) según si el defensor mira al poseedor (+1) o le da la espalda (−1).</summary>
+        public float TackleFacingWeight = 0.12f;
+        /// <summary>Probabilidad extra (±) según si el defensor está delante del poseedor (+1) o lo persigue por detrás (−1).</summary>
+        public float TackleFrontWeight = 0.08f;
+        /// <summary>Probabilidad que resta un recorte recién hecho por el poseedor (con regate máximo).</summary>
+        public float CutEvadeBonus = 0.25f;
+        /// <summary>Tiempo durante el que un recorte deja atrás al defensor (s).</summary>
+        public float CutWindow = 0.4f;
+        /// <summary>Giro mínimo dentro de un intervalo de muestreo para contar como recorte (grados).</summary>
+        public float CutAngleDeg = 40f;
+        /// <summary>Intervalo con el que se mide el giro del poseedor (s).</summary>
+        public float CutSampleInterval = 0.25f;
+        /// <summary>Velocidad mínima del poseedor para que un giro cuente como recorte (m/s).</summary>
+        public float CutMinSpeed = 2.5f;
+        /// <summary>Por debajo de este valor de "frente" la entrada se considera por detrás.</summary>
+        public float BehindThreshold = -0.3f;
+        /// <summary>Multiplicador de falta de una entrada de pie por detrás.</summary>
+        public float StandingBehindFoulMultiplier = 1.3f;
         /// <summary>Probabilidad base de falta en una entrada.</summary>
-        public float FoulBase = 0.22f;
+        public float FoulBase = 0.30f;
         /// <summary>Probabilidad base de tarjeta amarilla en una falta.</summary>
         public float YellowBase = 0.14f;
         /// <summary>Aumento de la amarilla según la agresividad (±).</summary>
@@ -227,7 +245,7 @@ namespace Football.Core.MatchCore
         public float ShotEagerness = 2.2f;
 
         /// <summary>Valor mínimo de tener el balón en cualquier punto.</summary>
-        public float ThreatBase = 0.005f;
+        public float ThreatBase = 0.06f;
         /// <summary>Valor adicional de tener el balón junto a la portería rival.</summary>
         public float ThreatScale = 0.30f;
         /// <summary>Exponente del avance hacia la portería rival.</summary>
@@ -251,6 +269,8 @@ namespace Football.Core.MatchCore
         public float InterceptRunFactor = 0.85f;
         /// <summary>Tiempo de reacción que se concede a un rival al cortar un pase (s).</summary>
         public float InterceptReaction = 0.15f;
+        /// <summary>Un rival a esta distancia del carril o menos bloquea el pase sin necesidad de reaccionar (m).</summary>
+        public float BlockReach = 0.8f;
         /// <summary>Distancia mínima de un pase (m).</summary>
         public float PassMinDistance = 4f;
         /// <summary>Distancia máxima de un pase (m).</summary>
@@ -277,7 +297,7 @@ namespace Football.Core.MatchCore
         /// <summary>Velocidad máxima de un tiro (m/s).</summary>
         public float ShotSpeedMax = 31f;
         /// <summary>Error angular típico de un tiro con Shooting = 1 (grados).</summary>
-        public float ShotAngleErrorDeg = 26f;
+        public float ShotAngleErrorDeg = 12f;
         /// <summary>Error típico de la elevación (grados).</summary>
         public float ShotLoftErrorDeg = 4f;
         /// <summary>Margen respecto al poste al apuntar a una esquina (m).</summary>
@@ -310,7 +330,7 @@ namespace Football.Core.MatchCore
         /// <summary>Ruido de la utilidad con Decisions = 1 (se multiplica por la dificultad).</summary>
         public float DecisionNoise = 0.04f;
         /// <summary>Ventaja de mantener el balón conduciendo frente a pasar en igualdad de utilidad.</summary>
-        public float DribbleBias = 0.004f;
+        public float DribbleBias = 0.002f;
         /// <summary>Distancia del rival más cercano que obliga a despejar dentro del área propia (m).</summary>
         public float ClearancePressure = 4f;
 
@@ -337,6 +357,44 @@ namespace Football.Core.MatchCore
         public float PressTrigger = 14f;
         /// <summary>Distancia a la que el que presiona corre a máxima velocidad (m).</summary>
         public float PressSprintDistance = 9f;
+        /// <summary>Distancia a la que el que presiona se planta entre el poseedor y su portería para contenerlo (m).</summary>
+        public float ContainDistance = 2.0f;
+        /// <summary>Distancia al poseedor desde la que el que contiene puede lanzarse a entrar (m).</summary>
+        public float TackleEngageDistance = 2.6f;
+        /// <summary>Probabilidad mínima de ganar el balón para que la IA entre (con presión media).</summary>
+        public float TackleChanceThreshold = 0.30f;
+        /// <summary>Cuánto baja ese umbral un equipo de presión máxima (y sube uno de presión mínima).</summary>
+        public float TackleThresholdPressSpread = 0.10f;
+        /// <summary>Distancia por detrás del que presiona a la que se sitúa el compañero que cubre (m).</summary>
+        public float CoverDepth = 7f;
+        /// <summary>Distancia máxima de un defensor al punto de cobertura para asignarle esa tarea (m).</summary>
+        public float CoverRadius = 18f;
+
+        /// <summary>Cambio de la altura de la línea por cada paso de mentalidad.</summary>
+        public float MentalityLineStep = 0.12f;
+        /// <summary>Cambio del riesgo por cada paso de mentalidad.</summary>
+        public float MentalityRiskStep = 0.10f;
+        /// <summary>Cambio del juego directo por cada paso de mentalidad.</summary>
+        public float MentalityDirectnessStep = 0.10f;
+        /// <summary>Cambio de la intensidad de presión por cada paso de presión.</summary>
+        public float PressLevelStep = 0.30f;
+        /// <summary>Minuto desde el que la IA adapta su táctica al marcador.</summary>
+        public float AdaptStartMinute = 60f;
+        /// <summary>Minuto desde el que la IA toma medidas extremas (todo al ataque o cerrar el partido).</summary>
+        public float AdaptLateMinute = 80f;
+        /// <summary>Cada cuántos segundos reales revisa la IA su táctica.</summary>
+        public float AdaptInterval = 3f;
+
+        /// <summary>Ventaja base de mantener el balón (esperar un desmarque) frente a jugarlo.</summary>
+        public float HoldBias = 0.002f;
+        /// <summary>Ventaja extra de mantener el balón de un equipo de posesión (Directness 0) respecto a uno directo (±).</summary>
+        public float HoldStyleWeight = 0.012f;
+        /// <summary>Distancia al rival más cercano a partir de la cual mantener el balón es seguro (m).</summary>
+        public float HoldSafeDistance = 6f;
+        /// <summary>Tiempo máximo seguido que la IA mantiene el balón sin jugarlo (s).</summary>
+        public float HoldMaxTime = 1.5f;
+        /// <summary>Distancia a la que se aleja del rival más cercano mientras protege el balón (m).</summary>
+        public float HoldStep = 1.5f;
 
         /// <summary>Cuánto se desplaza el bloque hacia el balón (fracción del campo por cada fracción de posición del balón).</summary>
         public float BallShiftX = 0.35f;
@@ -419,6 +477,9 @@ namespace Football.Core.MatchCore
         public float Risk = 0.5f;
         /// <summary>Compactación entre líneas (0..1).</summary>
         public float Compactness = 0.5f;
+
+        /// <summary>Crea una copia independiente (para modificarla durante un partido sin tocar la configuración).</summary>
+        public TeamStyle Clone() => (TeamStyle)MemberwiseClone();
     }
 
     /// <summary>Configuración completa del motor de partido.</summary>
