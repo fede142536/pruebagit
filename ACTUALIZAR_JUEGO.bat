@@ -40,23 +40,46 @@ for /f "delims=" %%F in ('dir /s /b "%PROJ%\Assets\Football\*(1).*" "%PROJ%\Asse
     del /f /q "%%F"
 )
 
-rem Otras copias de los scripts del juego fuera de Assets\Football (por ejemplo una carpeta Football vieja en otro
-rem lugar): no se borran solas, solo se avisa.
-set "DUP="
-set "OWN1=%PROJ%\Assets\Football\Editor\BuildAndroid.cs"
-set "OWN2=%PROJ%\Assets\Football\Runtime\GameRoot.cs"
-set "OWN3=%PROJ%\Assets\Plugins\Core\Football.Core.dll"
-for /f "delims=" %%F in ('dir /s /b "%PROJ%\Assets\BuildAndroid*.cs" "%PROJ%\Assets\GameRoot*.cs" "%PROJ%\Assets\Football.Core*.dll" 2^>nul') do (
-    if /i not "%%F"=="%OWN1%" if /i not "%%F"=="%OWN2%" if /i not "%%F"=="%OWN3%" (
-        echo   ATENCION: hay otra copia del juego en %%F
-        set "DUP=1"
+rem Otras copias del codigo del juego en cualquier otro lugar de Assets (carpetas copiadas a mano, "- copia", "(1)"...).
+rem Se buscan por contenido: todo .cs con "namespace Football." fuera de Assets\Football, y toda Football.Core.dll fuera
+rem de Assets\Plugins\Core. Se muestran y se pregunta antes de borrar.
+set "LIST=%TEMP%\football_copias.txt"
+if exist "%LIST%" del /f /q "%LIST%"
+findstr /m /c:"namespace Football." "%PROJ%\Assets\*.cs" >>"%LIST%" 2>nul
+for /d %%D in ("%PROJ%\Assets\*") do (
+    if /i not "%%~nxD"=="Football" if /i not "%%~nxD"=="Plugins" findstr /s /m /c:"namespace Football." "%%D\*.cs" >>"%LIST%" 2>nul
+)
+findstr /m /c:"namespace Football." "%PROJ%\Assets\Plugins\*.cs" >>"%LIST%" 2>nul
+for %%F in ("%PROJ%\Assets\Plugins\Football.Core*.dll") do echo %%~fF>>"%LIST%"
+for /d %%D in ("%PROJ%\Assets\Plugins\*") do (
+    if /i not "%%~nxD"=="Core" (
+        findstr /s /m /c:"namespace Football." "%%D\*.cs" >>"%LIST%" 2>nul
+        dir /b /s "%%D\Football.Core*.dll" >>"%LIST%" 2>nul
     )
 )
-if defined DUP (
-    echo.
-    echo   Borra a mano esas copias ^(y su carpeta si es una copia entera^) antes de abrir Unity.
+for /d %%D in ("%PROJ%\Assets\*") do (
+    if /i not "%%~nxD"=="Plugins" dir /b /s "%%D\Football.Core*.dll" >>"%LIST%" 2>nul
 )
 
+for %%A in ("%LIST%") do if %%~zA EQU 0 goto nodups
+echo.
+echo   ATENCION: hay OTRA COPIA del juego en tu proyecto (por eso Unity da errores CS0101 / CS0111):
+type "%LIST%"
+echo.
+set "ANS="
+set /p "ANS=  Borrar esas copias? Escribe S y Enter para borrarlas: "
+if /i not "%ANS%"=="S" goto keepdups
+for /f "usebackq delims=" %%F in ("%LIST%") do (
+    del /f /q "%%F"
+    if exist "%%F.meta" del /f /q "%%F.meta"
+)
+echo   Copias borradas. Si quedaron carpetas vacias puedes borrarlas desde Unity.
+goto nodups
+
+:keepdups
+echo   No se borro nada. Borralas a mano antes de abrir Unity.
+
+:nodups
 echo.
 echo   Listo. Abre Unity y espera a que termine de compilar.
 echo   Si pregunta por la Library, elige "Rebuild Library".
