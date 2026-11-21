@@ -64,6 +64,17 @@ punto de contacto; el arquero con el balón en las manos no lo pierde ni cruza l
 larguero si la trayectoria es posible. Medición tras los arreglos (1.000 partidos, semilla 1): **2,15 goles por partido**,
 2,36 tiros a puerta y 1,37 paradas por equipo, posesión 8,9 s, 3,25 pases por posesión, 0 estados inválidos.
 
+### 1.3 Revisión de la batería de pruebas (21/11/2026)
+
+Se introdujeron errores a propósito en una copia del código (pruebas de mutación) para ver si las pruebas los detectaban:
+22 de 36 pasaban sin ser detectados (por ejemplo, acreditar los goles del segundo tiempo al equipo equivocado, o que la IA
+nunca adaptara su táctica). Se añadieron `CoverageGapTests` y se endurecieron los límites de balance (goles: objetivo ±3 errores
+típicos; acierto de pase 85–97 %). Siete de los mutantes más graves, comprobados de nuevo, ahora hacen fallar la batería.
+Una de las pruebas nuevas encontró que un tiro lento directo al arquero solo se atajaba el 46 % de las veces: la atajada pasa a
+depender más de la velocidad del tiro (`KeeperSaveBase` 0,58 → 0,85, `KeeperSaveSpeedRef` 18 → 14 m/s,
+`KeeperSaveSpeedPenalty` 0,012 → 0,045). Medición final (1.000 partidos, semilla 1): **2,34 goles por partido**, posesión 9,0 s,
+3,29 pases por posesión.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

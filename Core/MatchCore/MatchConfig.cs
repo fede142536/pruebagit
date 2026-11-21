@@ -157,13 +157,13 @@ namespace Football.Core.MatchCore
         /// <summary>Altura del centro de la esfera de alcance del portero (m).</summary>
         public float KeeperReachHeight = 1.0f;
         /// <summary>Probabilidad base de parada cuando el balón entra en el alcance.</summary>
-        public float KeeperSaveBase = 0.58f;
+        public float KeeperSaveBase = 0.85f;
         /// <summary>Variación de la parada según la habilidad del portero (±).</summary>
         public float KeeperSaveSkillSpread = 0.30f;
         /// <summary>Velocidad de tiro a partir de la cual la parada se vuelve más difícil (m/s).</summary>
-        public float KeeperSaveSpeedRef = 18f;
+        public float KeeperSaveSpeedRef = 14f;
         /// <summary>Penalización de la parada por cada m/s sobre la referencia.</summary>
-        public float KeeperSaveSpeedPenalty = 0.012f;
+        public float KeeperSaveSpeedPenalty = 0.045f;
         /// <summary>Velocidad máxima del balón que el portero puede atrapar (m/s).</summary>
         public float KeeperCatchMaxSpeed = 17f;
         /// <summary>Velocidad mínima del balón para considerarlo un tiro a portería (m/s).</summary>

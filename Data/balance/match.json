@@ -71,10 +71,10 @@
     "KeeperBaseReach": 1.35,
     "KeeperExtraReach": 1.5,
     "KeeperReachHeight": 1,
-    "KeeperSaveBase": 0.58,
+    "KeeperSaveBase": 0.85,
     "KeeperSaveSkillSpread": 0.3,
-    "KeeperSaveSpeedRef": 18,
-    "KeeperSaveSpeedPenalty": 0.012,
+    "KeeperSaveSpeedRef": 14,
+    "KeeperSaveSpeedPenalty": 0.045,
     "KeeperCatchMaxSpeed": 17,
     "ShotMinSpeed": 11
   },

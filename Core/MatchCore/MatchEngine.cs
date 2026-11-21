@@ -190,8 +190,19 @@ namespace Football.Core.MatchCore
             h = Mix(h, BitConverter.SingleToInt32Bits(Ball.Vel.Z));
             h = Mix(h, Owner != null ? Owner.Index : -1);
 
-            h = Mix(h, Teams[0].Stats.Goals);
-            h = Mix(h, Teams[1].Stats.Goals);
+            for (int t = 0; t < 2; t++)
+            {
+                TeamStats s = Teams[t].Stats;
+                h = Mix(h, s.Goals);
+                h = Mix(h, s.Shots);
+                h = Mix(h, s.Passes);
+                h = Mix(h, s.Fouls);
+                h = Mix(h, s.Yellows + 16 * s.Reds);
+                h = Mix(h, s.PossessionTicks);
+            }
+
+            h = Mix(h, Events.Count);
+            h = Mix(h, (int)Phase);
             return Mix(h, (int)TickCount);
         }
 

@@ -92,7 +92,7 @@ namespace Football.Core.Tests.MatchCore
             s.Swap(SquadGroup.Starter, keeperSlot, SquadGroup.Starter, strikerSlot);
 
             Assert.That(s.EffectiveRating(t, strikerSlot), Is.LessThan(t.Players[s.Starters[strikerSlot]].Rating), "un portero de delantero rinde menos");
-            Assert.That(natural, Is.EqualTo(t.Players[s.Starters[keeperSlot]].Rating).Or.LessThanOrEqualTo(80));
+            Assert.That(natural, Is.EqualTo(t.Players[s.Starters[keeperSlot]].Rating), "en su puesto no hay penalización");
         }
 
         [Test]
@@ -171,8 +171,13 @@ namespace Football.Core.Tests.MatchCore
             s.Starters.RemoveAt(0);
 
             MatchTeamSetup setup = TeamBuilder.Build(t, new MatchConfig(), new SeededRandom(1), s);
+            MatchTeamSetup auto = TeamBuilder.Build(t, new MatchConfig(), new SeededRandom(1), SquadSelection.Auto(t, Formations.F442));
 
             Assert.That(setup.Players, Has.Length.EqualTo(11));
+            for (int i = 0; i < 11; i++)
+            {
+                Assert.That(setup.Players[i].Name, Is.EqualTo(auto.Players[i].Name), "usa la alineación automática");
+            }
         }
 
         [Test]
