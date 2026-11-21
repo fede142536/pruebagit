@@ -17,6 +17,8 @@ namespace Football.Game
         private readonly UiButton[] _lengths;
         private readonly UiButton _play;
         private readonly UiButton _benchmark;
+        private readonly Text _error;
+        private readonly GameObject _errorPanel;
 
         /// <summary>Se pidió empezar un partido.</summary>
         public bool PlayRequested { get; private set; }
@@ -61,12 +63,26 @@ namespace Football.Game
             }
 
             _play = UiKit.Button(c, "Jugar", new Vector2(1380f, 170f), new Vector2(640f, 140f), "JUGAR", 64, new Color(0.15f, 0.65f, 0.25f));
-            _benchmark = UiKit.Button(c, "Benchmark", new Vector2(300f, 70f), new Vector2(480f, 80f), "PRUEBA DE RENDIMIENTO", 26, new Color(0.35f, 0.35f, 0.45f));
+            _benchmark = UiKit.Button(c, "Benchmark", new Vector2(240f, 1010f), new Vector2(420f, 70f), "PRUEBA DE RENDIMIENTO", 24, new Color(0.35f, 0.35f, 0.45f));
             UiKit.Label(c, "Ayuda", new Vector2(960f, 20f), new Vector2(1800f, 40f),
                 "En el ordenador: WASD mover · J pase · K tiro (mantener) · L filtrado · I centro · E presionar · Tab cambiar · Shift esprint · Esc pausa",
                 22, new Color(1f, 1f, 1f, 0.6f));
+            UiKit.Label(c, "Foco", new Vector2(960f, 60f), new Vector2(1800f, 40f),
+                "En el ordenador, haz clic dentro de esta ventana antes de usar el teclado.", 22, new Color(1f, 1f, 1f, 0.6f));
+            Image errorPanel = UiKit.Panel(c, "ErrorMenu", new Vector2(960f, 540f), new Vector2(1600f, 300f), new Color(0.35f, 0.05f, 0.05f, 0.95f));
+            _errorPanel = errorPanel.gameObject;
+            _error = UiKit.Label(errorPanel.transform, "Texto", new Vector2(800f, 150f), new Vector2(1560f, 280f), string.Empty, 28, Color.white);
+            _errorPanel.SetActive(false);
             Refresh();
             Hide();
+        }
+
+        /// <summary>Muestra un mensaje de error en el menú (vacío para quitarlo).</summary>
+        public void SetError(string message)
+        {
+            bool show = !string.IsNullOrEmpty(message);
+            _error.text = show ? message + "\n\n(toca para cerrar)" : string.Empty;
+            _errorPanel.SetActive(show);
         }
 
         /// <summary>Muestra el menú.</summary>
@@ -74,6 +90,7 @@ namespace Football.Game
         {
             PlayRequested = false;
             BenchmarkRequested = false;
+            SetError(null);
             _canvas.gameObject.SetActive(true);
             Refresh();
         }
@@ -117,6 +134,12 @@ namespace Football.Game
                 }
 
                 Vector2 point = _pointers.Pointers[p].Position / scale;
+                if (_errorPanel.activeSelf)
+                {
+                    SetError(null);
+                    continue;
+                }
+
                 for (int i = 0; i < _opponents.Length; i++)
                 {
                     if (_opponents[i].Contains(point))

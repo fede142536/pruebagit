@@ -347,9 +347,18 @@ namespace Football.Core.MatchCore
         /// <summary>Segundos de ventaja que gana el receptor previsto de un pase al elegir interceptor.</summary>
         public float ReceiverBonus = 0.6f;
         /// <summary>Distancia entre compañeros a la que se reasigna el control del jugador humano (m).</summary>
-        public float SwitchHysteresis = 3f;
+        public float SwitchHysteresis = 4.5f;
         /// <summary>Tiempo mínimo entre cambios automáticos de jugador (s).</summary>
-        public float SwitchCooldown = 0.6f;
+        public float SwitchCooldown = 1.2f;
+
+        /// <summary>Si un jugador sin balón ya está a menos de esta distancia de su posición, se queda quieto (m).</summary>
+        public float HoldRadius = 3f;
+        /// <summary>Por debajo de esta distancia a su posición un jugador sin balón camina en lugar de trotar (m).</summary>
+        public float WalkDistance = 9f;
+        /// <summary>Fracción de la velocidad punta al caminar.</summary>
+        public float WalkFraction = 0.32f;
+        /// <summary>Velocidad de giro de un jugador parado hacia el balón, como fracción de su giro normal.</summary>
+        public float IdleTurnFactor = 0.5f;
     }
 
     /// <summary>Parámetros de un nivel de dificultad. La dificultad sube por mejor decisión y ejecución, nunca por ventajas físicas.</summary>

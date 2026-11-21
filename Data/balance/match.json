@@ -158,8 +158,12 @@
     "InterceptHorizon": 3,
     "InterceptStep": 0.1,
     "ReceiverBonus": 0.6,
-    "SwitchHysteresis": 3,
-    "SwitchCooldown": 0.6
+    "SwitchHysteresis": 4.5,
+    "SwitchCooldown": 1.2,
+    "HoldRadius": 3,
+    "WalkDistance": 9,
+    "WalkFraction": 0.32,
+    "IdleTurnFactor": 0.5
   },
   "Difficulties": [
     {

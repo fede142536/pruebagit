@@ -26,6 +26,10 @@ namespace Football.Game
 
             var material = new Material(Template());
             material.color = color;
+            // Se dibujan ambas caras (las mallas generadas por código no dependen del orden de sus vértices) y se
+            // permite agrupar los dibujos iguales en una sola llamada (importante con 22 jugadores en gama baja).
+            material.SetFloat("_Cull", 0f);
+            material.enableInstancing = true;
             Cache[key] = material;
             return material;
         }

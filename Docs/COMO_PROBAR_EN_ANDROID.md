@@ -28,9 +28,20 @@ Tiempo estimado: 1 hora la primera vez (casi todo es esperar descargas). Necesit
    dentro de `Game/Assets/`) dentro de la carpeta **`Assets`** de tu proyecto (en Unity Hub, el icono de carpeta junto al proyecto la abre).
 3. Vuelve a Unity y espera a que termine "Compiling…" (abajo a la derecha). En la pestaña **Console** no debe haber mensajes rojos.
 
+## Actualizar a una versión nueva
+
+Cada vez que te avise de cambios:
+1. Cierra el modo Play en Unity (botón ▶ apagado).
+2. Descarga otra vez el ZIP de la rama `ccr-8f161947-ai8n46` y extráelo.
+3. En la carpeta `Assets` de tu proyecto **borra** las carpetas `Football` y `Plugins` y copia las nuevas (de `Game/Assets/` del ZIP).
+4. Vuelve a Unity y espera a que termine de compilar.
+
 ## 4. Probar en el ordenador
 
 1. Pulsa el botón **▶ Play**. Aparece el menú: elige **rival**, **dificultad** y **duración** y pulsa **JUGAR**.
+   **Haz un clic dentro de la ventana Game** para que reciba el teclado.
+   Tu jugador es el que tiene la **flecha amarilla** encima. Los demás de tu equipo (azul) los mueve la máquina; cuando el rival
+   tiene el balón, la flecha pasa sola al jugador más cercano (o pulsa **Tab**).
 2. Controles de teclado: **WASD** mover · **J** pase · **K** tiro (mantén para cargar potencia y suelta) · **L** pase filtrado ·
    **I** centro · **E** presionar (sin balón) · **Tab** cambiar de jugador · **Shift** esprint · **Esc** pausa.
 3. Consejo: en la pestaña *Game* elige una proporción 16:9 para ver la pantalla como en el móvil.

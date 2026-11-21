@@ -356,6 +356,7 @@ namespace Football.Core.MatchCore
             Vec2 target = p.Anchor;
             float speed = pc.JogFraction;
             int ownerTeam = Owner != null ? Owner.Team : -1;
+            bool positional = true; // false si el jugador tiene una tarea urgente (presionar, apoyar, perseguir)
 
             if (ownerTeam == p.Team)
             {
@@ -363,11 +364,13 @@ namespace Football.Core.MatchCore
                 {
                     target = SupportPosition(p, team);
                     speed = run;
+                    positional = false;
                 }
                 else if (IsAttackingRole(p.Role) && Pitch.Progress(dir, Ball.Pos.X) > 0.35f)
                 {
                     target = p.Anchor + new Vec2(dir * ai.RunAhead, 0f);
                     speed = run;
+                    positional = false;
                 }
 
                 float limit = team.OffsideLine - dir * ai.OffsideMargin;
@@ -384,6 +387,7 @@ namespace Football.Core.MatchCore
                     float distance = Vec2.Distance(p.Pos, Owner.Pos);
                     speed = distance > ai.PressSprintDistance ? 1f : run;
                     p.WantsTackle = distance <= Config.Rules.TackleRange * TackleReadyFactor;
+                    positional = false;
                 }
                 else if (p.MarkTarget != null)
                 {
@@ -397,9 +401,27 @@ namespace Football.Core.MatchCore
             {
                 target = team.InterceptPoint;
                 speed = 1f;
+                positional = false;
             }
 
-            p.Target = Pitch.Clamp(target, TargetMargin);
+            target = Pitch.Clamp(target, TargetMargin);
+            if (positional)
+            {
+                // Un jugador que solo mantiene su posición no corre sin parar: si ya está cerca se queda quieto y,
+                // si está a poca distancia, camina.
+                float away = Vec2.Distance(p.Pos, target);
+                if (away < ai.HoldRadius)
+                {
+                    target = p.Pos;
+                    speed = 0f;
+                }
+                else if (away < ai.WalkDistance)
+                {
+                    speed = MathF.Min(speed, ai.WalkFraction);
+                }
+            }
+
+            p.Target = target;
             p.SpeedFactor = speed;
         }
 

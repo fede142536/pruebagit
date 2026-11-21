@@ -210,6 +210,7 @@ namespace Football.Core.MatchCore
 
                 PlayerMotion.Step(p, dt, Config.Player);
                 p.Pos = Pitch.Clamp(p.Pos, margin);
+                FaceTheBall(p, dt);
 
                 if (p.ActionDisplayTimer <= 0f)
                 {
@@ -219,6 +220,24 @@ namespace Football.Core.MatchCore
             }
 
             Separate();
+        }
+
+        /// <summary>Un jugador parado gira poco a poco hacia el balón, como haría un jugador real atento a la jugada.</summary>
+        private void FaceTheBall(MatchPlayer p, float dt)
+        {
+            if (p.Speed > 0.3f || Owner == p)
+            {
+                return;
+            }
+
+            Vec2 toBall = Ball.Pos.Horizontal - p.Pos;
+            if (toBall.LengthSquared < 1f)
+            {
+                return;
+            }
+
+            float maxTurn = Config.Player.TurnRate * p.TurnScale * Config.Ai.IdleTurnFactor * dt;
+            p.Heading += MathUtil.Clamp(MathUtil.AngleDiff(toBall.Angle, p.Heading), -maxTurn, maxTurn);
         }
 
         private void Separate()

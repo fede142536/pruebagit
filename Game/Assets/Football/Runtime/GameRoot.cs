@@ -42,8 +42,15 @@ namespace Football.Game
             _lastWasBenchmark = benchmark;
             _menu.Hide();
             _result.Hide();
-            _match.Begin(_menu.SelectedOpponent, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark);
-            _state = State.Match;
+            if (_match.Begin(_menu.SelectedOpponent, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
+            {
+                _state = State.Match;
+                return;
+            }
+
+            // Si el partido no puede arrancar se vuelve al menú mostrando el motivo (antes se reintentaba en bucle).
+            ShowMenu();
+            _menu.SetError("No se pudo empezar el partido. Manda una captura de este mensaje:\n" + _match.LastError);
         }
 
         private void Update()

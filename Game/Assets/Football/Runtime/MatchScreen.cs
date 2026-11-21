@@ -19,7 +19,7 @@ namespace Football.Game
         private const float EndDelaySeconds = 2.5f;
         private const ulong BenchmarkSeed = 12345UL;
         private const float BenchmarkHalfSeconds = 150f;
-        private const float HumanTopSpeedReference = 9.8f;
+        private const float HintSeconds = 14f;
 
         private readonly Transform _parent;
         private readonly PointerInput _pointers;
@@ -27,7 +27,7 @@ namespace Football.Game
         private readonly Canvas _canvas;
         private readonly TouchControls _controls;
         private readonly DebugPanel _debug;
-        private readonly Text _homeName, _awayName, _score, _clock, _banner;
+        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
         private readonly GameObject _pausePanel;
         private readonly UiButton _resume, _quit, _lefty, _debugToggle, _fpsToggle;
 
@@ -46,6 +46,7 @@ namespace Football.Game
         private bool _shownHasBall = true;
         private float _benchmarkStart;
         private int _frameCounter;
+        private float _hintTimer;
         private readonly StringBuilder _clockText = new StringBuilder(8);
 
         /// <summary>El partido terminó y pasó la pausa final.</summary>
@@ -70,6 +71,8 @@ namespace Football.Game
             _score = UiKit.Label(c, "Goles", new Vector2(960f, 1035f), new Vector2(160f, 70f), "0 - 0", 54, Color.white);
             _clock = UiKit.Label(c, "Reloj", new Vector2(960f, 985f), new Vector2(200f, 40f), "00:00", 28, new Color(1f, 0.9f, 0.4f));
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
+            _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
+            _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
 
             _controls = new TouchControls(_canvas);
             _debug = new DebugPanel(c);
@@ -91,7 +94,29 @@ namespace Football.Game
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
         /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
-        public void Begin(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
+        /// <returns>Verdadero si el partido arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
+        public bool Begin(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
+        {
+            try
+            {
+                BeginUnsafe(opponent, difficulty, halfMinutes, benchmark);
+                LastError = null;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                LastError = e.GetType().Name + ": " + e.Message;
+                End();
+                _engine = null;
+                return false;
+            }
+        }
+
+        /// <summary>Motivo por el que no arrancó el último partido, o null.</summary>
+        public string LastError { get; private set; }
+
+        private void BeginUnsafe(OpponentInfo opponent, int difficulty, int halfMinutes, bool benchmark)
         {
             _opponent = opponent;
             _benchmark = benchmark;
@@ -123,6 +148,14 @@ namespace Football.Game
             _banner.text = string.Empty;
             _homeName.text = TeamCatalog.PlayerTeamName.ToUpperInvariant();
             _awayName.text = opponent.Name.ToUpperInvariant();
+            _warning.text = _view.BuildErrors.Length > 0
+                ? "Algo no se pudo dibujar (manda una captura de esto):\n" + _view.BuildErrors
+                : string.Empty;
+            _hintTimer = benchmark ? 0f : HintSeconds;
+            _hint.text = benchmark
+                ? string.Empty
+                : "Tu jugador es el de la FLECHA AMARILLA.  Arrastra el dedo en la mitad izquierda para moverlo.\n"
+                  + "En el ordenador: haz clic en esta ventana y usa WASD · J pase · K tiro (mantén y suelta) · E presionar · Tab cambiar";
 
             _controls.Layout(_settings.LeftHanded);
             ApplyControlsVisibility();
@@ -221,7 +254,8 @@ namespace Football.Game
                 target = preview != null ? preview.Index : -1;
             }
 
-            _view.Render(_previous, _current, alpha, controlled, target, HumanTopSpeedReference, deltaTime);
+            _view.Render(_previous, _current, alpha, controlled, target, deltaTime);
+            UpdateHint(deltaTime, input);
             _debug.Frame(deltaTime, steps);
 
             if (_engine.IsFinished)
@@ -231,6 +265,20 @@ namespace Football.Game
                 {
                     Finished = true;
                 }
+            }
+        }
+
+        private void UpdateHint(float deltaTime, MatchInput input)
+        {
+            if (_hintTimer <= 0f)
+            {
+                return;
+            }
+
+            _hintTimer -= deltaTime;
+            if (_hintTimer <= 0f)
+            {
+                _hint.text = string.Empty;
             }
         }
 
