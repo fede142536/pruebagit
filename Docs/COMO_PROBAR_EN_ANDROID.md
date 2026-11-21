@@ -132,6 +132,8 @@ encima de los 100 ms objetivo; si es así probaremos 60 FPS o ajustes.
 | Objetos rosados o negros | Menú **Football → Preparar proyecto** y vuelve a probar |
 | Toda la pantalla se vuelve rosa durante el partido | Mira la Console en ese momento y mándame los mensajes, y dime qué tarjeta de video tiene tu PC (Administrador de dispositivos → Adaptadores de pantalla) |
 | Error rojo sobre *Input* (`InvalidOperationException`) | **Edit → Project Settings → Player → Other Settings → Active Input Handling → Both** y reinicia Unity |
+| Errores rojos `CS0101` o `CS0111` ("already contains a definition"), o archivos con `(1)` en el nombre | Hay copias duplicadas del juego. Descomprime el ZIP en una carpeta **nueva y vacía** y ejecuta `ACTUALIZAR_JUEGO.bat`: borra las copias `(1)` dentro de `Assets\Football` y avisa si hay otras en otro lugar de `Assets` |
+| El partido se congela | Ahora el juego muestra en rojo «ERROR EN EL PARTIDO» o «EL PARTIDO DEJÓ DE AVANZAR» con los datos del fallo: manda una captura de ese texto y de la Console |
 | Errores rojos al compilar | Copia el texto de la pestaña Console y mándamelo |
 | No aparece el menú "Football" | Espera a que termine de compilar; si persiste, revisa que copiaste `Football` dentro de `Assets` |
 | Al construir el APK dice que falta la escena `Assets/Football/Scenes/Main.unity` | Ya no se usa: la escena ahora se crea en `Assets/FootballGenerated`. Vuelve a ejecutar **Football → Construir APK** |

@@ -52,6 +52,11 @@ namespace Football.Game
         private float _speed = 1f;
         private float _hintTimer;
         private static readonly string[] TwoDigits = BuildTwoDigits();
+        private const float StallSeconds = 3f;
+        private const int StackLinesShown = 4;
+        private int _errorsShown;
+        private long _lastTick = -1;
+        private float _stalledSeconds;
         private int _shownMinute = -1;
 
         /// <summary>El partido terminó y pasó la pausa final.</summary>
@@ -174,6 +179,9 @@ namespace Football.Game
             _current.CopyFrom(_engine);
             _accumulator = 0f;
             _eventsSeen = 0;
+            _errorsShown = 0;
+            _stalledSeconds = 0f;
+            _lastTick = -1;
             _bannerTimer = 0f;
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = _shownMinute = -1;
@@ -260,6 +268,60 @@ namespace Football.Game
             {
                 return;
             }
+
+            // Si algo falla durante el partido, en lugar de quedarse congelado sin explicación se muestra el error en
+            // pantalla (para poder mandar una captura) y se sigue intentando en el siguiente fotograma.
+            try
+            {
+                UpdateUnsafe(deltaTime);
+                WatchProgress(deltaTime);
+            }
+            catch (Exception e)
+            {
+                if (_errorsShown == 0)
+                {
+                    Debug.LogException(e);
+                }
+
+                _errorsShown++;
+                _warning.text = "ERROR EN EL PARTIDO (manda una captura de esto)\n" + e.GetType().Name + ": " + e.Message + "\n"
+                                + FirstStackLines(e.StackTrace, StackLinesShown) + "\nMinuto " + _engine.Minute.ToString("F1")
+                                + " · fase " + _engine.Phase + " · veces " + _errorsShown;
+            }
+        }
+
+        /// <summary>Avisa si el reloj del partido deja de avanzar sin estar en pausa (el partido "se tildó").</summary>
+        private void WatchProgress(float deltaTime)
+        {
+            if (_paused || _engine.IsFinished || _engine.TickCount != _lastTick)
+            {
+                _lastTick = _engine.TickCount;
+                _stalledSeconds = 0f;
+                return;
+            }
+
+            _stalledSeconds += deltaTime;
+            if (_stalledSeconds >= StallSeconds)
+            {
+                _warning.text = "EL PARTIDO DEJÓ DE AVANZAR (manda una captura de esto)\nMinuto " + _engine.Minute.ToString("F1")
+                                + " · fase " + _engine.Phase + " · saque " + _engine.CurrentRestart.Kind
+                                + " · paso de tiempo " + deltaTime.ToString("F3") + " s · acumulado " + _accumulator.ToString("F3");
+            }
+        }
+
+        private static string FirstStackLines(string stack, int count)
+        {
+            if (string.IsNullOrEmpty(stack))
+            {
+                return string.Empty;
+            }
+
+            string[] lines = stack.Split('\n');
+            return string.Join("\n", lines, 0, Math.Min(count, lines.Length));
+        }
+
+        private void UpdateUnsafe(float deltaTime)
+        {
 
             MatchInput input = _controls.Read(_pointers, Time.realtimeSinceStartup);
             if (_controls.PauseDown || _pointers.Keyboard.PauseDown)
