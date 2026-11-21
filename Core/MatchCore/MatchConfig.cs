@@ -133,6 +133,10 @@ namespace Football.Core.MatchCore
         public float ParryOverBarMaxLift = 14f;
         /// <summary>Distancia más allá de la línea de gol a la que debe pasar ese manotazo (m).</summary>
         public float ParryLineMargin = 0.4f;
+        /// <summary>Velocidad de un pase de la persona con potencia mínima, respecto de la que calcula la asistencia.</summary>
+        public float HumanPassPowerMin = 0.8f;
+        /// <summary>Velocidad de un pase de la persona con potencia máxima, respecto de la que calcula la asistencia.</summary>
+        public float HumanPassPowerMax = 1.6f;
         /// <summary>Tiempo que se guarda un botón de golpeo pulsado justo antes de poder usarlo (s).</summary>
         public float HumanInputBuffer = 0.2f;
         /// <summary>Altura a la que el arquero sostiene el balón en las manos (m).</summary>
@@ -157,7 +161,7 @@ namespace Football.Core.MatchCore
         /// <summary>Altura del centro de la esfera de alcance del portero (m).</summary>
         public float KeeperReachHeight = 1.0f;
         /// <summary>Probabilidad base de parada cuando el balón entra en el alcance.</summary>
-        public float KeeperSaveBase = 0.85f;
+        public float KeeperSaveBase = 0.90f;
         /// <summary>Variación de la parada según la habilidad del portero (±).</summary>
         public float KeeperSaveSkillSpread = 0.30f;
         /// <summary>Velocidad de tiro a partir de la cual la parada se vuelve más difícil (m/s).</summary>
@@ -212,6 +216,10 @@ namespace Football.Core.MatchCore
         public float TackleRange = 1.3f;
         /// <summary>Tiempo entre entradas de un mismo jugador (s).</summary>
         public float TackleCooldown = 1.0f;
+        /// <summary>Tiempo entre entradas del jugador que controla la persona (s): más corto para que presionar responda.</summary>
+        public float HumanTackleCooldown = 0.6f;
+        /// <summary>Probabilidad extra de ganar el balón en las entradas de la persona (ayuda de control táctil).</summary>
+        public float HumanTackleBonus = 0.10f;
         /// <summary>Probabilidad base de ganar el balón en una entrada.</summary>
         public float TackleWinBase = 0.28f;
         /// <summary>Peso de la diferencia Tackling − Dribbling en la entrada.</summary>
@@ -232,10 +240,14 @@ namespace Football.Core.MatchCore
         public float CutMinSpeed = 2.5f;
         /// <summary>Por debajo de este valor de "frente" la entrada se considera por detrás.</summary>
         public float BehindThreshold = -0.3f;
+        /// <summary>A partir de este valor de "frente" (y de orientación del defensor) la entrada se considera de frente.</summary>
+        public float FrontThreshold = 0.5f;
+        /// <summary>Multiplicador de falta de una entrada de pie de frente y mirando al poseedor (la entrada limpia).</summary>
+        public float FrontTackleFoulMultiplier = 0.5f;
         /// <summary>Multiplicador de falta de una entrada de pie por detrás.</summary>
         public float StandingBehindFoulMultiplier = 1.3f;
         /// <summary>Probabilidad base de falta en una entrada.</summary>
-        public float FoulBase = 0.30f;
+        public float FoulBase = 0.16f;
         /// <summary>Probabilidad base de tarjeta amarilla en una falta.</summary>
         public float YellowBase = 0.14f;
         /// <summary>Aumento de la amarilla según la agresividad (±).</summary>

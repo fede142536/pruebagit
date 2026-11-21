@@ -86,19 +86,35 @@ namespace Football.Game
             var scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = Reference;
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 1f;
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand; // mismo criterio que UiKit.Scale
             return canvas;
         }
 
-        /// <summary>Unidades de lienzo por píxel: el lienzo mide siempre <see cref="Reference"/>.y de alto.</summary>
-        public static float Scale => Screen.height > 0 ? Screen.height / Reference.y : 1f;
+        /// <summary>
+        /// Píxeles por unidad de lienzo. El lienzo nunca es más chico que 1920×1080 (modo «Expand»): en pantallas más anchas
+        /// que 16:9 crece a lo ancho y en las más angostas (ventana del editor, tabletas) crece a lo alto.
+        /// </summary>
+        public static float Scale
+        {
+            get
+            {
+                if (Screen.width <= 0 || Screen.height <= 0)
+                {
+                    return 1f;
+                }
+
+                return Mathf.Min(Screen.width / Reference.x, Screen.height / Reference.y);
+            }
+        }
 
         /// <summary>Ancho real del lienzo en unidades (≈2408 en un teléfono 20:9, 1920 en 16:9).</summary>
         public static float CanvasWidth => Screen.width / Scale;
 
+        /// <summary>Alto real del lienzo en unidades (1080, o más en pantallas más angostas que 16:9).</summary>
+        public static float CanvasHeight => Screen.height / Scale;
+
         /// <summary>Desplazamiento del área de diseño de 1920×1080, centrada en el lienzo real.</summary>
-        public static Vector2 AreaOffset => new Vector2((CanvasWidth - Reference.x) * 0.5f, 0f);
+        public static Vector2 AreaOffset => new Vector2((CanvasWidth - Reference.x) * 0.5f, (CanvasHeight - Reference.y) * 0.5f);
 
         /// <summary>Convierte una posición de pantalla (píxeles) a unidades del lienzo real.</summary>
         public static Vector2 ToCanvas(Vector2 screen) => screen / Scale;
@@ -124,7 +140,7 @@ namespace Football.Game
         }
 
         /// <summary>Tamaño de un fondo que cubre cualquier proporción de pantalla, centrado en el área de diseño.</summary>
-        public static Vector2 FullScreenSize => new Vector2(Reference.x * 2f, Reference.y);
+        public static Vector2 FullScreenSize => new Vector2(Reference.x * 2f, Reference.y * 2f);
 
         /// <summary>Fuente integrada de Unity.</summary>
         public static Font DefaultFont

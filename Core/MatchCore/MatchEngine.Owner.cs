@@ -468,7 +468,7 @@ namespace Football.Core.MatchCore
             KickPass(p, point, nearest, false, false, maxSpeed);
         }
 
-        private void KickPass(MatchPlayer p, Vec2 point, MatchPlayer target, bool allowLob, bool human, float maxSpeed)
+        private void KickPass(MatchPlayer p, Vec2 point, MatchPlayer target, bool allowLob, bool human, float maxSpeed, float powerScale = 1f)
         {
             AiConfig ai = Config.Ai;
             Vec2 origin = Ball.Pos.Horizontal;
@@ -493,7 +493,7 @@ namespace Football.Core.MatchCore
                 speed = MathUtil.Clamp(Ballistics.GroundSpeedForDistance(distance, ai.PassArrivalSpeed, Config.Ball), ai.PassMinSpeed, ai.PassMaxSpeed);
             }
 
-            speed = MathF.Min(speed, maxSpeed);
+            speed = MathF.Min(speed * powerScale, MathF.Min(maxSpeed, ai.PassMaxSpeed * powerScale));
             speed *= 1f + _rng.NextGaussian(0f, ai.PassSpeedError * (1f - 0.5f * skill) * errorScale);
             Ballistics.Launch(Ball, Vec2.FromAngle(angle), speed, loft, 0f);
             AfterKick(p, KickKind.Pass, target);

@@ -48,6 +48,10 @@ namespace Football.Core.MatchCore
             current.Move = input.Move;
             current.Sprint = input.Sprint;
             current.ShootPower = input.ShootPower;
+            if (input.Pass || input.Through)
+            {
+                current.PassPower = input.PassPower;
+            }
             current.Pass |= input.Pass;
             current.Through |= input.Through;
             current.Cross |= input.Cross;
@@ -99,6 +103,7 @@ namespace Football.Core.MatchCore
                 if (team.KickBufferTimer <= 0f)
                 {
                     i.Pass = i.Through = i.Cross = i.Shoot = i.Clear = false;
+                    i.PassPower = 0f;
                 }
 
                 team.Input = i;
@@ -283,6 +288,7 @@ namespace Football.Core.MatchCore
         {
             MatchInput i = team.Input;
             i.Pass = i.Through = i.Cross = i.Shoot = i.Clear = false;
+            i.PassPower = 0f;
             team.Input = i;
             team.KickBufferTimer = 0f;
         }
@@ -416,7 +422,12 @@ namespace Football.Core.MatchCore
         private void HumanPass(MatchPlayer p, TeamState team, MatchInput input, bool through)
         {
             ChooseHumanTarget(p, team, input, through, 0f, out Vec2 point, out MatchPlayer target);
-            KickPass(p, point, target, true, true, float.MaxValue);
+            // Un toque deja la potencia a la asistencia; mantener el botón la elige la persona (más fuerte = más lejos y
+            // más rápido, pero más difícil de controlar para el compañero).
+            float scale = input.PassPower > 0f
+                ? MathUtil.Lerp(Config.Player.HumanPassPowerMin, Config.Player.HumanPassPowerMax, MathUtil.Clamp01(input.PassPower))
+                : 1f;
+            KickPass(p, point, target, true, true, float.MaxValue, scale);
         }
 
         private void HumanCross(MatchPlayer p, TeamState team, MatchInput input)

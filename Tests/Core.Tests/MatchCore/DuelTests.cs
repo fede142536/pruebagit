@@ -192,5 +192,58 @@ namespace Football.Core.Tests.MatchCore
 
             Assert.That(goalSide, Is.GreaterThan(12), "el que presiona se coloca entre el poseedor y su portería");
         }
+
+        /// <summary>
+        /// Sensación de juego medible: una persona que mantiene PRESIONAR sobre un rival que conduce (con su IA activa)
+        /// le quita el balón la mayoría de las veces en 8 s y sin hacer falta casi nunca (pedido del usuario: «es casi
+        /// imposible sacársela»). Antes del ajuste: 48 % de robos y 28 % de faltas.
+        /// </summary>
+        [Test]
+        public void HumanPressing_WinsTheBallMostOfTheTime_WithFewFouls()
+        {
+            int won = 0, fouls = 0;
+            const int n = 120;
+            for (ulong seed = 0; seed < n; seed++)
+            {
+                MatchEngine e = MatchEngineTests.NewEngine(5000 + seed);
+                e.TestBeginOpenPlay();
+                for (int i = 0; i < 22; i++)
+                {
+                    e.TestPlace(e.Players[i], new Vec2(i < 11 ? -30f : 30f, -30f + 6f * (i % 11)));
+                }
+
+                MatchPlayer carrier = e.Teams[1].Players[6];
+                e.TestPlace(carrier, Vec2.Zero);
+                e.TestPlace(e.Teams[0].Players[6], new Vec2(-6f, 2f));
+                e.TestGiveBall(carrier);
+                e.SetHuman(0, true);
+                for (int t = 0; t < 480; t++)
+                {
+                    MatchPlayer c = e.Teams[0].Controlled;
+                    Vec2 to = e.Owner != null && c != null ? e.Owner.Pos - c.Pos : Vec2.Zero;
+                    e.SetInput(0, new MatchInput { Press = true, Move = to.Normalized, Sprint = to.Length > 3f });
+                    e.Tick();
+                    if (e.Events.CountOf(MatchEventType.Foul, 0) > 0)
+                    {
+                        fouls++;
+                        break;
+                    }
+
+                    if (e.Owner != null && e.Owner.Team == 0)
+                    {
+                        won++;
+                        break;
+                    }
+
+                    if (e.Phase != MatchPhase.Playing)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            Assert.That(won, Is.GreaterThan(n * 55 / 100), $"robos {won} de {n}");
+            Assert.That(fouls, Is.LessThan(n * 20 / 100), $"faltas {fouls} de {n}");
+        }
     }
 }

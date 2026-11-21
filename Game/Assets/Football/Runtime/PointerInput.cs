@@ -40,6 +40,8 @@ namespace Football.Game
         public bool Sprint;
         /// <summary>Pase pulsado en este fotograma.</summary>
         public bool PassDown;
+        /// <summary>Pase mantenido (para cargar la potencia).</summary>
+        public bool PassHeld;
         /// <summary>Pase filtrado pulsado en este fotograma.</summary>
         public bool ThroughDown;
         /// <summary>Centro pulsado en este fotograma.</summary>
@@ -175,6 +177,7 @@ namespace Football.Game
             Keyboard.Move = new Vector2(x, y);
             Keyboard.Sprint = kb.leftShiftKey.isPressed;
             Keyboard.PassDown = kb.jKey.wasPressedThisFrame;
+            Keyboard.PassHeld = kb.jKey.isPressed;
             Keyboard.ThroughDown = kb.lKey.wasPressedThisFrame;
             Keyboard.CrossDown = kb.iKey.wasPressedThisFrame;
             Keyboard.ShootHeld = kb.kKey.isPressed;
@@ -242,6 +245,7 @@ namespace Football.Game
             Keyboard.Move = new Vector2(x, y);
             Keyboard.Sprint = Input.GetKey(KeyCode.LeftShift);
             Keyboard.PassDown = Input.GetKeyDown(KeyCode.J);
+            Keyboard.PassHeld = Input.GetKey(KeyCode.J);
             Keyboard.ThroughDown = Input.GetKeyDown(KeyCode.L);
             Keyboard.CrossDown = Input.GetKeyDown(KeyCode.I);
             Keyboard.ShootHeld = Input.GetKey(KeyCode.K);

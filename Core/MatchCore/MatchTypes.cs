@@ -206,6 +206,8 @@ namespace Football.Core.MatchCore
         public bool Shoot;
         /// <summary>Potencia del disparo de 0 a 1.</summary>
         public float ShootPower;
+        /// <summary>Potencia del pase de 0 a 1 (0 = la calcula la asistencia para que llegue al compañero).</summary>
+        public float PassPower;
         /// <summary>Entrada o presión al poseedor.</summary>
         public bool Tackle;
         /// <summary>Cambiar de jugador.</summary>

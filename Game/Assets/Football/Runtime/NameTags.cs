@@ -94,7 +94,7 @@ namespace Football.Game
                 _highlighted = controlled;
             }
 
-            float scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
+            float scale = UiKit.Scale;
             for (int i = 0; i < _labels.Length; i++)
             {
                 bool wanted = mode == NameMode.All || (mode == NameMode.Controlled && (i == controlled || i == owner));

@@ -219,6 +219,28 @@ namespace Football.Core.Tests.MatchCore
         }
 
         [Test]
+        public void HoldingPass_KicksHarderThanATap()
+        {
+            float Speed(float power)
+            {
+                MatchEngine e = Isolated(4);
+                MatchPlayer p = e.Teams[0].Players[6];
+                e.TestPlace(p, new Vec2(0f, 0f));
+                e.TestPlace(e.Teams[0].Players[7], new Vec2(15f, 0f));
+                e.TestGiveBall(p);
+                e.SetHuman(0, true);
+                e.Tick();
+                e.SetInput(0, new MatchInput { Pass = true, PassPower = power, Move = new Vec2(1f, 0f) });
+                e.Tick();
+                return e.Ball.Vel.Horizontal.Length;
+            }
+
+            float tap = Speed(0f), soft = Speed(0.01f), hard = Speed(1f);
+            Assert.That(soft, Is.LessThan(tap), "mantener poco: más suave que el automático");
+            Assert.That(hard, Is.GreaterThan(tap * 1.3f), "mantener mucho: bastante más fuerte");
+        }
+
+        [Test]
         public void StalePassPress_ExpiresAndDoesNotFireLater()
         {
             MatchEngine e = Isolated(4);

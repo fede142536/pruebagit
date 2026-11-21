@@ -12,16 +12,16 @@ namespace Football.Game
     public sealed class MatchView
     {
         private readonly List<Mesh> _meshes = new List<Mesh>();
-        private const float LineWidth = 0.13f;
-        private const float LineHeight = 0.02f;
-        private const float StripeHeight = 0.01f;
+        private const float LineWidth = 0.22f; // más ancha que la real (0,12 m) para que se vea de lejos sin antialiasing
+        private const float LineHeight = 0.035f; // capas separadas lo suficiente para que no parpadeen de lejos
+        private const float StripeHeight = 0.02f;
         private const int CircleSegments = 40;
         private const int StripeCount = 14;
         private const float BallVisualSize = 0.3f;
         private const float CameraHeight = 21f;
         private const float CameraDistance = 30f;
         private const float CameraFollowX = 0.8f;
-        private const float CameraFollowZ = 0.35f;
+        private const float CameraFollowZ = 0.85f; // sigue casi del todo a lo ancho: así se ven las dos líneas laterales
         private const float CameraMaxX = 34f;
         private const float CameraFollowSpeed = 3f;
         private const float CameraFov = 40f;
@@ -140,8 +140,13 @@ namespace Football.Game
             float halfL = _pitch.HalfLength;
             float halfW = _pitch.HalfWidth;
 
+            // Fuera del campo, un verde más oscuro: el límite se distingue aunque la línea quede lejos.
+            var apron = new MeshBuilder();
+            apron.Quad(-halfL - 12f, -halfW - 10f, halfL + 12f, halfW + 10f, 0f);
+            AddMesh("Contorno", apron, new Color(0.07f, 0.27f, 0.1f));
+
             var grass = new MeshBuilder();
-            grass.Quad(-halfL - 12f, -halfW - 10f, halfL + 12f, halfW + 10f, 0f);
+            grass.Quad(-halfL, -halfW, halfL, halfW, StripeHeight * 0.5f);
             AddMesh("Cesped", grass, new Color(0.11f, 0.42f, 0.15f));
 
             var stripes = new MeshBuilder();

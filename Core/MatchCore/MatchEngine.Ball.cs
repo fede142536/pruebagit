@@ -418,7 +418,10 @@ namespace Football.Core.MatchCore
         }
 
         /// <summary>Probabilidad de que <paramref name="tackler"/> le gane el balón a <paramref name="owner"/> desde donde está ahora.</summary>
-        private float ContextTackleChance(MatchPlayer tackler, MatchPlayer owner, out bool fromBehind)
+        private float ContextTackleChance(MatchPlayer tackler, MatchPlayer owner, out bool fromBehind) =>
+            ContextTackleChance(tackler, owner, out fromBehind, out _);
+
+        private float ContextTackleChance(MatchPlayer tackler, MatchPlayer owner, out bool fromBehind, out bool fromFront)
         {
             RulesConfig rules = Config.Rules;
             Vec2 toOwner = (owner.Pos - tackler.Pos).Normalized;
@@ -426,6 +429,7 @@ namespace Football.Core.MatchCore
             float front = -Vec2.Dot(Vec2.FromAngle(owner.Heading), toOwner);
             float cut = rules.CutWindow > 0f ? owner.CutTimer / rules.CutWindow : 0f;
             fromBehind = Rules.IsFromBehind(rules, front);
+            fromFront = front >= rules.FrontThreshold && facing >= rules.FrontThreshold;
             return Rules.TackleWinChance(rules, tackler.Skill(AttributeId.Tackling), owner.Skill(AttributeId.Dribbling), facing, front, cut);
         }
 
@@ -451,7 +455,8 @@ namespace Football.Core.MatchCore
                     continue;
                 }
 
-                p.TackleTimer = rules.TackleCooldown;
+                bool human = Teams[p.Team].IsHuman && Teams[p.Team].Controlled == p;
+                p.TackleTimer = human ? rules.HumanTackleCooldown : rules.TackleCooldown;
                 p.WantsTackle = false;
                 p.TackleWindow = 0f;
                 p.Action = PlayerAction.Tackle;
@@ -459,9 +464,10 @@ namespace Football.Core.MatchCore
 
                 Teams[p.Team].Stats.Tackles++;
                 float tackling = p.Skill(AttributeId.Tackling);
-                float winChance = ContextTackleChance(p, owner, out bool behind);
+                float winChance = ContextTackleChance(p, owner, out bool behind, out bool front) + (human ? rules.HumanTackleBonus : 0f);
+                // De frente y mirando al balón es una entrada limpia casi siempre; por detrás, falta fácil.
                 float foulChance = Rules.FoulChance(rules, tackling, p.Skill(AttributeId.Aggression))
-                                   * (behind ? rules.StandingBehindFoulMultiplier : 1f);
+                                   * (behind ? rules.StandingBehindFoulMultiplier : front ? rules.FrontTackleFoulMultiplier : 1f);
                 TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foulChance, winChance);
 
                 if (outcome == TackleOutcome.Foul)

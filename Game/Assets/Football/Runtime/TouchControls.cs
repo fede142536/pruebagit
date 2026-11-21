@@ -19,6 +19,9 @@ namespace Football.Game
     {
         private const float JoystickRadius = 130f;
         private const float ShootChargeSeconds = 0.8f;
+        private const float PassChargeSeconds = 0.7f;
+        private const float PassTapSeconds = 0.2f; // un toque más corto es un pase automático
+        private const float ChargeBarHeight = 14f;
         private const float ShootMinPower = 0.35f;
         private const float DeadZone = 0.12f;
         private const float BigScale = 1.2f;
@@ -66,6 +69,9 @@ namespace Football.Game
         private bool _showThrough;
         private bool _showCross;
         private bool _keyboardShootWasHeld;
+        private bool _keyboardPassWasHeld;
+        private float _keyboardPassHeld;
+        private RectTransform _passBar, _shootBar;
         private float _width = UiKit.Reference.x;
         private int _layoutScreenWidth;
         private const float PauseMargin = 75f;
@@ -96,6 +102,8 @@ namespace Football.Game
             _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, 0.8f), SprintSlot, SizeSprint);
             _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 90f);
             _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _switch, _keeper, _sprint, _pause };
+            _passBar = ChargeBar(_pass);
+            _shootBar = ChargeBar(_shoot);
 
             // El joystick se mueve cada fotograma: va en su propio lienzo para no reconstruir los botones.
             var joystickLayer = new GameObject("CapaJoystick", typeof(RectTransform));
@@ -115,6 +123,23 @@ namespace Football.Game
             _joystickKnob = (RectTransform)knob.transform;
             _joystickBase.SetActive(false);
             Layout(false, false, false, false);
+        }
+
+        /// <summary>Barra amarilla dentro del botón que muestra la carga de potencia mientras se mantiene pulsado.</summary>
+        private static RectTransform ChargeBar(Control c)
+        {
+            Image bar = UiKit.Panel(c.Ui.Root.transform, "Carga", new Vector2(c.Size * 0.5f, c.Size * 0.22f),
+                new Vector2(0f, ChargeBarHeight), new Color(1f, 0.85f, 0.2f, 0.95f));
+            return (RectTransform)bar.transform;
+        }
+
+        private static void ShowCharge(RectTransform bar, Control c, float charge)
+        {
+            float width = charge > 0f ? c.Ui.Size.x * 0.7f * charge : 0f;
+            if (Mathf.Abs(bar.sizeDelta.x - width) > 0.5f)
+            {
+                bar.sizeDelta = new Vector2(width, ChargeBarHeight);
+            }
         }
 
         private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size)
@@ -137,7 +162,7 @@ namespace Football.Game
             _width = UiKit.CanvasWidth;
             _layoutScreenWidth = Screen.width;
             float pauseX = leftHanded ? PauseMargin : _width - PauseMargin;
-            _pause.Ui.Place(new Vector2(pauseX, UiKit.Reference.y - PauseMargin), new Vector2(_pause.Size, _pause.Size));
+            _pause.Ui.Place(new Vector2(pauseX, UiKit.CanvasHeight - PauseMargin), new Vector2(_pause.Size, _pause.Size));
             for (int i = 0; i < _controls.Length; i++)
             {
                 Control c = _controls[i];
@@ -416,7 +441,8 @@ namespace Football.Game
             {
                 Move = new Vec2(stick.x, stick.y),
                 Sprint = _sprint.Down || kb.Sprint,
-                Pass = _pass.JustDown || kb.PassDown,
+                // El pase sale al soltar: un toque corto es automático; mantener carga la potencia.
+                Pass = false,
                 Through = _through.JustDown || kb.ThroughDown,
                 Cross = _cross.JustDown || kb.CrossDown,
                 Clear = _clear.JustDown || kb.ClearDown,
@@ -441,6 +467,38 @@ namespace Football.Game
             }
 
             _keyboardShootWasHeld = keyboardHeld;
+
+            if (kb.PassHeld)
+            {
+                _keyboardPassHeld += Time.unscaledDeltaTime;
+            }
+
+            float passHeld = -1f;
+            if (_pass.JustUp)
+            {
+                passHeld = _pass.Held;
+                _pass.Held = 0f;
+            }
+            else if (_keyboardPassWasHeld && !kb.PassHeld)
+            {
+                passHeld = _keyboardPassHeld;
+            }
+
+            if (passHeld >= 0f)
+            {
+                input.Pass = true;
+                input.PassPower = passHeld < PassTapSeconds ? 0f : Mathf.Clamp01((passHeld - PassTapSeconds) / PassChargeSeconds);
+            }
+
+            if (!kb.PassHeld)
+            {
+                _keyboardPassHeld = 0f;
+            }
+
+            _keyboardPassWasHeld = kb.PassHeld;
+            float passCharge = _pass.Down ? _pass.Held : _keyboardPassHeld;
+            ShowCharge(_passBar, _pass, passCharge < PassTapSeconds ? 0f : Mathf.Clamp01((passCharge - PassTapSeconds) / PassChargeSeconds));
+            ShowCharge(_shootBar, _shoot, ShootCharge);
 
             if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear || input.Slide || input.Switch || input.Keeper)
             {
