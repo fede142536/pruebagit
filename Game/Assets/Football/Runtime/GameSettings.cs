@@ -15,6 +15,16 @@ namespace Football.Game
         private const string DifficultyKey = "football.difficulty";
         private const string LengthKey = "football.length";
         private const string NamesKey = "football.names";
+        private const string SpeedKey = "football.speed";
+        private const string ThroughKey = "football.through";
+        private const string CrossKey = "football.cross";
+        private const string BigButtonsKey = "football.bigbuttons";
+
+        /// <summary>Velocidades del juego: fracción del tiempo real que avanza la simulación.</summary>
+        public static readonly float[] Speeds = { 0.6f, 0.75f, 1f };
+
+        /// <summary>Nombres de las velocidades.</summary>
+        public static readonly string[] SpeedLabels = { "LENTA", "NORMAL", "RÁPIDA" };
 
         /// <summary>Controles invertidos para zurdos.</summary>
         public bool LeftHanded;
@@ -36,6 +46,17 @@ namespace Football.Game
         public int Length = 1;
         /// <summary>Qué nombres se muestran sobre los jugadores.</summary>
         public NameMode Names = NameMode.All;
+        /// <summary>Velocidad del juego (índice en <see cref="Speeds"/>).</summary>
+        public int Speed = 1;
+        /// <summary>Mostrar el botón de pase filtrado.</summary>
+        public bool ShowThrough;
+        /// <summary>Mostrar el botón de centro.</summary>
+        public bool ShowCross;
+        /// <summary>Botones grandes.</summary>
+        public bool BigButtons;
+
+        /// <summary>Fracción del tiempo real que avanza la simulación.</summary>
+        public float SpeedFactor => Speeds[Mathf.Clamp(Speed, 0, Speeds.Length - 1)];
 
         /// <summary>Lee los ajustes guardados.</summary>
         public static GameSettings Load()
@@ -52,7 +73,11 @@ namespace Football.Game
                 AwayKit = Mathf.Clamp(PlayerPrefs.GetInt(AwayKitKey, 1), 0, 1),
                 Difficulty = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, 2), 0, TeamCatalog.DifficultyLabels.Length - 1),
                 Length = Mathf.Clamp(PlayerPrefs.GetInt(LengthKey, 1), 0, TeamCatalog.HalfMinutes.Length - 1),
-                Names = (NameMode)Mathf.Clamp(PlayerPrefs.GetInt(NamesKey, 0), 0, 2)
+                Names = (NameMode)Mathf.Clamp(PlayerPrefs.GetInt(NamesKey, 0), 0, 2),
+                Speed = Mathf.Clamp(PlayerPrefs.GetInt(SpeedKey, 1), 0, Speeds.Length - 1),
+                ShowThrough = PlayerPrefs.GetInt(ThroughKey, 0) == 1,
+                ShowCross = PlayerPrefs.GetInt(CrossKey, 0) == 1,
+                BigButtons = PlayerPrefs.GetInt(BigButtonsKey, 0) == 1
             };
 
             if (s.Opponent == s.HomeTeam)
@@ -76,6 +101,10 @@ namespace Football.Game
             PlayerPrefs.SetInt(DifficultyKey, Difficulty);
             PlayerPrefs.SetInt(LengthKey, Length);
             PlayerPrefs.SetInt(NamesKey, (int)Names);
+            PlayerPrefs.SetInt(SpeedKey, Speed);
+            PlayerPrefs.SetInt(ThroughKey, ShowThrough ? 1 : 0);
+            PlayerPrefs.SetInt(CrossKey, ShowCross ? 1 : 0);
+            PlayerPrefs.SetInt(BigButtonsKey, BigButtons ? 1 : 0);
             PlayerPrefs.Save();
         }
     }

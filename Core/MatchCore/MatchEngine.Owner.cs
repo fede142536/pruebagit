@@ -508,6 +508,11 @@ namespace Football.Core.MatchCore
             p.ActionDisplayTimer = KickDisplay;
             p.SpeedFactor = 0f;
 
+            if (p.IsKeeper)
+            {
+                team.KeeperLock = false; // tras jugar el balón, el control vuelve a los jugadores de campo
+            }
+
             _shotLive = kind == KickKind.Shot;
             _passActive = kind == KickKind.Pass || kind == KickKind.Cross;
             _passTeam = p.Team;

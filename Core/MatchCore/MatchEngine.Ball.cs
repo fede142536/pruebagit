@@ -103,7 +103,7 @@ namespace Football.Core.MatchCore
             for (int i = 0; i < Players.Length; i++)
             {
                 MatchPlayer p = Players[i];
-                if (p.SentOff || p.KickTimer > 0f)
+                if (p.SentOff || p.KickTimer > 0f || p.SlideTimer > 0f || p.RecoverTimer > 0f)
                 {
                     continue;
                 }
@@ -321,6 +321,99 @@ namespace Football.Core.MatchCore
                     return;
                 }
             }
+        }
+
+        /// <summary>Empieza una barrida en la dirección en la que mira el jugador.</summary>
+        private void StartSlide(MatchPlayer p)
+        {
+            if (p.SlideTimer > 0f || p.RecoverTimer > 0f || Owner == p)
+            {
+                return;
+            }
+
+            p.SlideTimer = Config.Rules.SlideDuration;
+            p.SlideResolved = false;
+            p.Speed = MathF.Max(p.Speed, Config.Rules.SlideSpeed);
+            p.WantsTackle = false;
+            p.Action = PlayerAction.Tackle;
+            p.ActionDisplayTimer = Config.Rules.SlideDuration + Config.Rules.SlideRecovery;
+        }
+
+        private void SlideStep(MatchPlayer p, float dt)
+        {
+            p.Speed = MathF.Max(0f, p.Speed - Config.Rules.SlideDeceleration * dt);
+            p.Pos += Vec2.FromAngle(p.Heading) * (p.Speed * dt);
+        }
+
+        /// <summary>Resuelve las barridas en curso: contra el poseedor rival o contra un balón suelto al alcance.</summary>
+        private void ResolveSlides()
+        {
+            RulesConfig rules = Config.Rules;
+            for (int i = 0; i < Players.Length; i++)
+            {
+                MatchPlayer p = Players[i];
+                if (p.SentOff || p.SlideTimer <= 0f || p.SlideResolved)
+                {
+                    continue;
+                }
+
+                MatchPlayer owner = Owner;
+                if (owner != null && owner.Team != p.Team)
+                {
+                    if (Vec2.Distance(p.Pos, owner.Pos) > rules.SlideReach)
+                    {
+                        continue;
+                    }
+
+                    p.SlideResolved = true;
+                    bool fromBehind = Vec2.Dot(Vec2.FromAngle(p.Heading), Vec2.FromAngle(owner.Heading)) > 0.5f;
+                    float foul = Rules.FoulChance(rules, p.Skill(AttributeId.Tackling), p.Skill(AttributeId.Aggression))
+                                 * rules.SlideFoulMultiplier * (fromBehind ? rules.BehindFoulMultiplier : 1f);
+                    float win = MathUtil.Clamp(Rules.TackleWinChance(rules, p.Skill(AttributeId.Tackling), owner.Skill(AttributeId.Dribbling))
+                                               + rules.SlideWinBonus, 0f, 0.95f);
+                    TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foul, win);
+                    if (outcome == TackleOutcome.Foul)
+                    {
+                        CommitFoul(p, owner);
+                        return;
+                    }
+
+                    if (outcome == TackleOutcome.Won)
+                    {
+                        Owner = null;
+                        owner.KickTimer = DispossessedLockout;
+                        KnockBall(p);
+                        return;
+                    }
+
+                    continue;
+                }
+
+                if (owner == null && Ball.Pos.Z < CatchHeight * 0.2f && Vec2.Distance(p.Pos, Ball.Pos.Horizontal) <= rules.SlideReach * 0.8f)
+                {
+                    p.SlideResolved = true;
+                    KnockBall(p);
+                    if (Phase != MatchPhase.Playing)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
+
+        /// <summary>El jugador que barre toca el balón y lo manda hacia donde se desliza.</summary>
+        private void KnockBall(MatchPlayer p)
+        {
+            if (OnTouch(p))
+            {
+                return;
+            }
+
+            Vec2 direction = Vec2.FromAngle(p.Heading).Rotated(_rng.NextGaussian(0f, DeflectionNoise * 0.5f));
+            float speed = Config.Rules.SlideKnockSpeed;
+            Ball.Vel = new Vec3(direction.X * speed, direction.Y * speed, 0f);
+            Ball.Pos = new Vec3(Ball.Pos.X, Ball.Pos.Y, 0f);
+            p.KickTimer = BlockLockout;
         }
 
         private void WinBall(MatchPlayer tackler, MatchPlayer victim)

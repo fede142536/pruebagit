@@ -49,6 +49,7 @@ namespace Football.Game
         private bool _shownHasBall = true;
         private float _benchmarkStart;
         private int _frameCounter;
+        private float _speed = 1f;
         private float _hintTimer;
         private readonly StringBuilder _clockText = new StringBuilder(8);
 
@@ -141,7 +142,10 @@ namespace Football.Game
             _canvas.gameObject.SetActive(true);
 
             var config = new MatchConfig();
-            config.Rules.HalfDuration = benchmark ? BenchmarkHalfSeconds : halfMinutes * 60f;
+            // La velocidad del juego frena la simulación; la duración en tiempo de simulación se ajusta para que cada parte
+            // siga durando los minutos reales elegidos.
+            _speed = benchmark ? 1f : _settings.SpeedFactor;
+            config.Rules.HalfDuration = benchmark ? BenchmarkHalfSeconds : halfMinutes * 60f * _speed;
             ulong seed = benchmark ? BenchmarkSeed : (ulong)DateTime.Now.Ticks;
             var rng = new SeededRandom(seed);
             IRandom teams = rng.Fork("teams");
@@ -169,12 +173,12 @@ namespace Football.Game
             _hintTimer = benchmark ? 0f : HintSeconds;
             _hint.text = benchmark
                 ? string.Empty
-                : "Tu jugador es el de la FLECHA AMARILLA.  Arrastra el dedo en la mitad izquierda para moverlo.\n"
-                  + "En el ordenador: haz clic en esta ventana y usa WASD · J pase · K tiro (mantén y suelta) · E presionar · Tab cambiar";
+                : "Tu jugador es el de la FLECHA AMARILLA. Mitad izquierda: mover. Con balón: PASE · TIRO (mantén y suelta) · DESPEJAR.\n"
+                  + "Sin balón: BARRER · PRESIONAR (mantén) · CAMBIAR · ARQUERO.  PC: WASD · J · K · R · Q · E · Tab · G · Shift";
 
-            _controls.Layout(_settings.LeftHanded);
+            _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
             ApplyControlsVisibility();
-            _controls.SetHasBall(true);
+            _controls.SetContext(true, true, false);
             _shownHasBall = true;
             _debug.SetVisible(_settings.ShowDebug || benchmark);
             _debug.Reset();
@@ -307,7 +311,7 @@ namespace Football.Game
                 _engine.SetInput(0, input);
             }
 
-            _accumulator += Mathf.Min(deltaTime, MaxFrameTime);
+            _accumulator += Mathf.Min(deltaTime, MaxFrameTime) * _speed;
             float tick = 1f / _engine.Config.TickRate;
             int steps = 0;
             while (_accumulator >= tick && steps < MaxStepsPerFrame && !_engine.IsFinished)
@@ -414,11 +418,9 @@ namespace Football.Game
             if (!_benchmark)
             {
                 bool hasBall = _engine.Owner != null && _engine.Owner.Team == 0;
-                if (hasBall != _shownHasBall)
-                {
-                    _shownHasBall = hasBall;
-                    _controls.SetHasBall(hasBall);
-                }
+                bool ownHalf = _engine.Ball.Pos.X * _engine.Teams[0].AttackDirection < 0f;
+                _shownHasBall = hasBall;
+                _controls.SetContext(hasBall, ownHalf, _engine.Teams[0].KeeperLock);
             }
         }
 
@@ -435,7 +437,6 @@ namespace Football.Game
             else
             {
                 ApplyControlsVisibility();
-                _controls.SetHasBall(_shownHasBall);
             }
 
             RefreshPauseLabels();
@@ -492,7 +493,7 @@ namespace Football.Game
                 {
                     _settings.LeftHanded = !_settings.LeftHanded;
                     _settings.Save();
-                    _controls.Layout(_settings.LeftHanded);
+                    _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
                     RefreshPauseLabels();
                 }
                 else if (_debugToggle.Contains(point))

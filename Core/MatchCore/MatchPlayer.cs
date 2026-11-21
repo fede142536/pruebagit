@@ -66,6 +66,12 @@ namespace Football.Core.MatchCore
         public float TackleWindow;
         /// <summary>Tiempo que se muestra la acción actual (s).</summary>
         public float ActionDisplayTimer;
+        /// <summary>Tiempo que queda de barrida (s); mientras dura, el jugador se desliza sin poder girar.</summary>
+        public float SlideTimer;
+        /// <summary>Tiempo que tarda en levantarse tras una barrida (s).</summary>
+        public float RecoverTimer;
+        /// <summary>La barrida en curso ya tocó (o falló) al rival.</summary>
+        public bool SlideResolved;
 
         /// <summary>Tarjetas amarillas recibidas.</summary>
         public int Yellows;

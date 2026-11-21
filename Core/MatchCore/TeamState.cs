@@ -31,6 +31,8 @@ namespace Football.Core.MatchCore
         public MatchInput Input;
         /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
         public float SwitchTimer;
+        /// <summary>La persona controla al arquero hasta que lo suelte (o el arquero juegue el balón).</summary>
+        public bool KeeperLock;
 
         /// <summary>Jugador que persigue un balón suelto.</summary>
         public MatchPlayer Chaser;

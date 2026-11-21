@@ -21,6 +21,7 @@ namespace Football.Core.MatchCore
         private const float HumanLobMinDistance = 25f;
         private const float HumanBlindDistance = 15f;
         private const float HumanCrossProgressFactor = 0.9f;
+        private const float PressLead = 0.25f;
 
         /// <summary>Indica si un equipo está controlado por una persona (por defecto la IA controla a ambos).</summary>
         /// <param name="team">Equipo (0 local, 1 visitante).</param>
@@ -52,6 +53,10 @@ namespace Football.Core.MatchCore
             current.Shoot |= input.Shoot;
             current.Tackle |= input.Tackle;
             current.Switch |= input.Switch;
+            current.Slide |= input.Slide;
+            current.Clear |= input.Clear;
+            current.Keeper |= input.Keeper;
+            current.Press = input.Press;
             Teams[team].Input = current;
         }
 
@@ -82,7 +87,7 @@ namespace Football.Core.MatchCore
             for (int t = 0; t < 2; t++)
             {
                 MatchInput i = Teams[t].Input;
-                i.Pass = i.Through = i.Cross = i.Shoot = i.Tackle = i.Switch = false;
+                i.Pass = i.Through = i.Cross = i.Shoot = i.Tackle = i.Switch = i.Slide = i.Clear = i.Keeper = false;
                 Teams[t].Input = i;
             }
         }
@@ -124,13 +129,33 @@ namespace Football.Core.MatchCore
                 }
 
                 team.SwitchTimer -= dt;
+                MatchPlayer keeper = team.Players[0];
+                if (team.Input.Keeper)
+                {
+                    team.KeeperLock = !team.KeeperLock && !keeper.SentOff;
+                }
+
                 if (Owner != null && Owner.Team == t)
                 {
                     team.Controlled = Owner;
+                    if (Owner != keeper)
+                    {
+                        team.KeeperLock = false;
+                    }
                 }
                 else if (Owner == null && _passActive && _passTeam == t && _passTarget != null && !_passTarget.SentOff)
                 {
                     team.Controlled = _passTarget;
+                }
+                else if (team.KeeperLock)
+                {
+                    team.Controlled = keeper;
+                    if (team.Input.Switch)
+                    {
+                        team.KeeperLock = false;
+                        team.Controlled = NearestToBall(team, keeper);
+                        team.SwitchTimer = ai.SwitchCooldown;
+                    }
                 }
                 else if (team.Controlled == null || team.Controlled.SentOff)
                 {
@@ -172,8 +197,17 @@ namespace Football.Core.MatchCore
                 }
 
                 MatchInput input = team.Input;
+                if (p.SlideTimer > 0f || p.RecoverTimer > 0f)
+                {
+                    continue; // barriendo o levantándose: no responde
+                }
+
                 float length = input.Move.Length;
-                if (length > HumanMoveDeadZone)
+                if (input.Press && Owner != p)
+                {
+                    ApplyPress(p, input);
+                }
+                else if (length > HumanMoveDeadZone)
                 {
                     p.Target = p.Pos + input.Move / length * HumanTargetDistance;
                     p.SpeedFactor = input.Sprint ? 1f : Config.Player.JogFraction * MathUtil.Clamp(length, HumanMinMove, 1f);
@@ -193,15 +227,38 @@ namespace Football.Core.MatchCore
                 }
                 else
                 {
+                    if (input.Slide)
+                    {
+                        if (length > HumanMoveDeadZone)
+                        {
+                            p.Heading = input.Move.Angle; // se barre hacia donde apunta el joystick
+                        }
+
+                        StartSlide(p);
+                        continue;
+                    }
+
                     p.TackleWindow -= dt;
                     if (input.Tackle)
                     {
                         p.TackleWindow = HumanTackleWindow;
                     }
 
-                    p.WantsTackle = p.TackleWindow > 0f;
+                    // Con la presión mantenida, entra de pie en cuanto alcanza al poseedor rival.
+                    bool pressTackle = input.Press && Owner != null && Owner.Team != p.Team
+                                       && Vec2.Distance(p.Pos, Owner.Pos) <= Config.Rules.TackleRange;
+                    p.WantsTackle = p.TackleWindow > 0f || pressTackle;
                 }
             }
+        }
+
+        /// <summary>Presión mantenida: va hacia el poseedor rival (o el balón suelto) y entra de pie al alcanzarlo.</summary>
+        private void ApplyPress(MatchPlayer p, MatchInput input)
+        {
+            float run = 0.5f * (1f + Config.Player.JogFraction);
+            bool rivalBall = Owner != null && Owner.Team != p.Team;
+            p.Target = rivalBall ? Owner.Pos + Owner.Velocity * PressLead : Ball.Pos.Horizontal;
+            p.SpeedFactor = input.Sprint ? 1f : run;
         }
 
         private void HumanKick(MatchPlayer p, TeamState team, MatchInput input)
@@ -222,6 +279,10 @@ namespace Football.Core.MatchCore
             else if (input.Cross)
             {
                 HumanCross(p, team, input);
+            }
+            else if (input.Clear)
+            {
+                KickCross(p, ClearanceTarget(p, Ball.Pos.Horizontal, team.AttackDirection), true, 0f, KickKind.Clearance);
             }
         }
 

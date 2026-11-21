@@ -6,8 +6,14 @@ using Football.Core.MatchCore;
 namespace Football.Game
 {
     /// <summary>
-    /// Controles táctiles del partido: joystick flotante a un lado y botones contextuales al otro (se puede invertir
-    /// para zurdos). También acepta el teclado para probar en el ordenador. Produce un <see cref="MatchInput"/> por fotograma.
+    /// Controles táctiles del partido: joystick flotante a un lado y botones que cambian según la situación al otro
+    /// (se puede invertir para zurdos y agrandar).
+    /// <list type="bullet">
+    /// <item>Con el balón: PASE, TIRO (mantener para cargar), DESPEJAR (en tu campo) o FILTRADO (en el rival, opcional), CENTRO (opcional).</item>
+    /// <item>Sin el balón: BARRER, PRESIONAR (mantener: persigue y entra de pie), CAMBIAR, ARQUERO (tomar o soltar al arquero).</item>
+    /// <item>Siempre: ESPRINT (mantener) y pausa.</item>
+    /// </list>
+    /// También acepta el teclado para probar en el ordenador. Produce un <see cref="MatchInput"/> por fotograma.
     /// </summary>
     public sealed class TouchControls
     {
@@ -15,8 +21,16 @@ namespace Football.Game
         private const float ShootChargeSeconds = 0.8f;
         private const float ShootMinPower = 0.35f;
         private const float DeadZone = 0.12f;
-        private const float SideMargin = 90f;
+        private const float BigScale = 1.2f;
         private const int NoPointer = -1;
+
+        // Posiciones (para diestros) y tamaños de las cuatro casillas de acción y del esprint.
+        private static readonly Vector2 SlotA = new Vector2(1560f, 250f);
+        private static readonly Vector2 SlotB = new Vector2(1775f, 370f);
+        private static readonly Vector2 SlotC = new Vector2(1585f, 490f);
+        private static readonly Vector2 SlotD = new Vector2(1800f, 580f);
+        private static readonly Vector2 SprintSlot = new Vector2(1345f, 160f);
+        private const float SizeA = 190f, SizeB = 175f, SizeC = 145f, SizeD = 135f, SizeSprint = 150f;
 
         private sealed class Control
         {
@@ -26,10 +40,14 @@ namespace Football.Game
             public bool JustDown;
             public bool JustUp;
             public float Held;
+            public Vector2 Slot;
+            public float Size;
         }
 
         private readonly Canvas _canvas;
-        private readonly Control _pass, _through, _cross, _shoot, _sprint, _tackle, _switch, _pause;
+        private readonly Control _pass, _shoot, _clear, _through, _cross;
+        private readonly Control _slide, _press, _switch, _keeper;
+        private readonly Control _sprint, _pause;
         private readonly Control[] _controls;
         private readonly GameObject _joystickBase;
         private readonly RectTransform _joystickBaseRect;
@@ -39,8 +57,14 @@ namespace Football.Game
         private Vector2 _joystickOrigin;
         private Vector2 _joystick;
         private bool _leftHanded;
-        private bool _hasBall;
+        private bool _big;
         private bool _enabled = true;
+        private bool _hasBall = true;
+        private bool _ownHalf;
+        private bool _keeperLocked;
+        private bool _showThrough;
+        private bool _showCross;
+        private bool _keyboardShootWasHeld;
 
         /// <summary>Dirección del joystick (longitud hasta 1) con la zona muerta ya aplicada.</summary>
         public Vector2 Stick { get; private set; }
@@ -56,15 +80,18 @@ namespace Football.Game
         {
             _canvas = canvas;
             Transform t = canvas.transform;
-            _pass = Make(t, "Pase", "PASE", new Color(0.15f, 0.65f, 0.25f, 0.75f), 170f);
-            _through = Make(t, "Filtrado", "FILTRADO", new Color(0.9f, 0.75f, 0.1f, 0.75f), 130f);
-            _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, 0.75f), 130f);
-            _shoot = Make(t, "Tiro", "TIRO", new Color(0.85f, 0.15f, 0.15f, 0.75f), 170f);
-            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, 0.75f), 120f);
-            _tackle = Make(t, "Presionar", "PRESIONAR", new Color(0.85f, 0.35f, 0.1f, 0.75f), 170f);
-            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, 0.75f), 130f);
-            _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), 90f);
-            _controls = new[] { _pass, _through, _cross, _shoot, _sprint, _tackle, _switch, _pause };
+            _pass = Make(t, "Pase", "PASE", new Color(0.15f, 0.65f, 0.25f, 0.8f), SlotA, SizeA);
+            _shoot = Make(t, "Tiro", "TIRO", new Color(0.85f, 0.15f, 0.15f, 0.8f), SlotB, SizeB);
+            _clear = Make(t, "Despejar", "DESPEJAR", new Color(0.55f, 0.4f, 0.2f, 0.8f), SlotC, SizeC);
+            _through = Make(t, "Filtrado", "FILTRADO", new Color(0.9f, 0.75f, 0.1f, 0.8f), SlotC, SizeC);
+            _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, 0.8f), SlotD, SizeD);
+            _slide = Make(t, "Barrer", "BARRER", new Color(0.85f, 0.3f, 0.1f, 0.8f), SlotA, SizeA);
+            _press = Make(t, "Presionar", "PRESIONAR", new Color(0.2f, 0.55f, 0.85f, 0.8f), SlotB, SizeB);
+            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, 0.8f), SlotC, SizeC);
+            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, 0.8f), SlotD, SizeD);
+            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, 0.8f), SprintSlot, SizeSprint);
+            _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x * 0.5f + 260f, UiKit.Reference.y - 60f), 90f);
+            _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _switch, _keeper, _sprint, _pause };
 
             Image ring = UiKit.Panel(t, "JoystickBase", Vector2.zero, new Vector2(JoystickRadius * 2f, JoystickRadius * 2f),
                 new Color(1f, 1f, 1f, 0.18f), true);
@@ -74,64 +101,95 @@ namespace Football.Game
                 new Color(1f, 1f, 1f, 0.5f), true);
             _joystickKnob = (RectTransform)knob.transform;
             _joystickBase.SetActive(false);
-            Layout(false);
-            SetHasBall(true);
+            Layout(false, false, false, false);
         }
 
-        private static Control Make(Transform parent, string name, string text, Color color, float size)
+        private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size)
         {
-            UiButton button = UiKit.Button(parent, name, Vector2.zero, new Vector2(size, size), text, size > 150f ? 34 : 26, color, true);
-            return new Control { Ui = button };
+            UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size > 160f ? 34 : 26, color, true);
+            return new Control { Ui = button, Slot = slot, Size = size };
         }
 
-        /// <summary>Coloca los botones; <paramref name="leftHanded"/> invierte los lados.</summary>
-        public void Layout(bool leftHanded)
+        /// <summary>Coloca los botones según las preferencias.</summary>
+        /// <param name="leftHanded">Invierte los lados (joystick a la derecha).</param>
+        /// <param name="big">Botones más grandes.</param>
+        /// <param name="showThrough">Mostrar el botón de pase filtrado.</param>
+        /// <param name="showCross">Mostrar el botón de centro.</param>
+        public void Layout(bool leftHanded, bool big, bool showThrough, bool showCross)
         {
             _leftHanded = leftHanded;
-            Place(_pass, 1540f, 250f);
-            Place(_shoot, 1760f, 330f);
-            Place(_through, 1560f, 470f);
-            Place(_cross, 1790f, 560f);
-            Place(_tackle, 1540f, 250f);
-            Place(_switch, 1560f, 470f);
-            Place(_sprint, 1340f, 150f);
-            _pause.Ui.Place(new Vector2(UiKit.Reference.x * 0.5f + 260f, UiKit.Reference.y - 60f), new Vector2(90f, 90f));
+            _big = big;
+            _showThrough = showThrough;
+            _showCross = showCross;
+            for (int i = 0; i < _controls.Length; i++)
+            {
+                Control c = _controls[i];
+                if (c == _pause)
+                {
+                    continue;
+                }
+
+                float size = c.Size * (big ? BigScale : 1f);
+                Vector2 slot = c.Slot;
+                if (big)
+                {
+                    // Al agrandar, se separan un poco del borde para que no se salgan.
+                    slot = new Vector2(slot.x - 40f, slot.y + 20f);
+                }
+
+                c.Ui.Place(new Vector2(leftHanded ? UiKit.Reference.x - slot.x : slot.x, slot.y), new Vector2(size, size));
+            }
+
+            ApplyVisibility();
         }
 
-        private void Place(Control c, float x, float y)
+        /// <summary>Indica la situación para mostrar los botones que corresponden.</summary>
+        /// <param name="hasBall">Tu equipo tiene el balón.</param>
+        /// <param name="ownHalf">El balón está en tu campo (se ofrece DESPEJAR en lugar de FILTRADO).</param>
+        /// <param name="keeperLocked">Estás controlando al arquero.</param>
+        public void SetContext(bool hasBall, bool ownHalf, bool keeperLocked)
         {
-            c.Ui.Place(new Vector2(_leftHanded ? UiKit.Reference.x - x : x, y), c.Ui.Size);
-        }
+            if (hasBall == _hasBall && ownHalf == _ownHalf && keeperLocked == _keeperLocked)
+            {
+                return;
+            }
 
-        /// <summary>Muestra los botones de ataque (con balón) o de defensa (sin balón).</summary>
-        public void SetHasBall(bool hasBall)
-        {
             _hasBall = hasBall;
-            _pass.Ui.SetVisible(_enabled && hasBall);
-            _through.Ui.SetVisible(_enabled && hasBall);
-            _cross.Ui.SetVisible(_enabled && hasBall);
-            _shoot.Ui.SetVisible(_enabled && hasBall);
-            _tackle.Ui.SetVisible(_enabled && !hasBall);
-            _switch.Ui.SetVisible(_enabled && !hasBall);
+            _ownHalf = ownHalf;
+            _keeperLocked = keeperLocked;
+            _keeper.Ui.Label.text = keeperLocked ? "JUGADOR" : "ARQUERO";
+            ApplyVisibility();
         }
 
-        /// <summary>Oculta o muestra todos los controles (por ejemplo durante un menú).</summary>
+        private void ApplyVisibility()
+        {
+            bool attack = _enabled && _hasBall;
+            bool defense = _enabled && !_hasBall;
+            _pass.Ui.SetVisible(attack);
+            _shoot.Ui.SetVisible(attack);
+            _clear.Ui.SetVisible(attack && (_ownHalf || !_showThrough));
+            _through.Ui.SetVisible(attack && !_ownHalf && _showThrough);
+            _cross.Ui.SetVisible(attack && _showCross);
+            _slide.Ui.SetVisible(defense);
+            _press.Ui.SetVisible(defense);
+            _switch.Ui.SetVisible(defense);
+            _keeper.Ui.SetVisible(defense);
+            _sprint.Ui.SetVisible(_enabled);
+            for (int i = 0; i < _controls.Length; i++)
+            {
+                if (!_controls[i].Ui.Root.activeSelf)
+                {
+                    Release(_controls[i]);
+                }
+            }
+        }
+
+        /// <summary>Muestra u oculta todos los controles (por ejemplo durante la pausa).</summary>
         public void SetActive(bool active)
         {
             _enabled = active;
-            for (int i = 0; i < _controls.Length; i++)
-            {
-                _controls[i].Ui.SetVisible(false);
-                ReleaseControl(_controls[i]);
-            }
-
-            if (active)
-            {
-                SetHasBall(_hasBall);
-                _sprint.Ui.SetVisible(true);
-                _pause.Ui.SetVisible(true);
-            }
-
+            ApplyVisibility();
+            _pause.Ui.SetVisible(active);
             _joystickBase.SetActive(false);
             _joystickPointer = NoPointer;
             _joystick = Vector2.zero;
@@ -144,7 +202,7 @@ namespace Football.Game
             _pause.Ui.SetVisible(true);
         }
 
-        private static void ReleaseControl(Control c)
+        private static void Release(Control c)
         {
             c.PointerId = NoPointer;
             c.Down = false;
@@ -285,8 +343,11 @@ namespace Football.Game
                 Pass = _pass.JustDown || kb.PassDown,
                 Through = _through.JustDown || kb.ThroughDown,
                 Cross = _cross.JustDown || kb.CrossDown,
-                Tackle = _tackle.JustDown || kb.TackleDown,
-                Switch = _switch.JustDown || kb.SwitchDown
+                Clear = _clear.JustDown || kb.ClearDown,
+                Slide = _slide.JustDown || kb.SlideDown,
+                Press = _press.Down || kb.PressHeld,
+                Switch = _switch.JustDown || kb.SwitchDown,
+                Keeper = _keeper.JustDown || kb.KeeperDown
             };
 
             // Tiro: se carga mientras se mantiene pulsado y se dispara al soltar.
@@ -296,8 +357,7 @@ namespace Football.Game
                 _shoot.Held += Time.unscaledDeltaTime;
             }
 
-            bool shootReleased = _shoot.JustUp || (_keyboardShootWasHeld && !keyboardHeld);
-            if (shootReleased)
+            if (_shoot.JustUp || (_keyboardShootWasHeld && !keyboardHeld))
             {
                 input.Shoot = true;
                 input.ShootPower = Mathf.Max(ShootMinPower, Mathf.Clamp01(_shoot.Held / ShootChargeSeconds));
@@ -306,7 +366,7 @@ namespace Football.Game
 
             _keyboardShootWasHeld = keyboardHeld;
 
-            if (input.Pass || input.Through || input.Cross || input.Shoot || input.Tackle || input.Switch)
+            if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear || input.Slide || input.Switch || input.Keeper)
             {
                 LastActionTime = realTime;
             }
@@ -314,15 +374,7 @@ namespace Football.Game
             return input;
         }
 
-        private bool _keyboardShootWasHeld;
-
         /// <summary>Carga del tiro de 0 a 1 (para dibujar una barra), 0 si no se está cargando.</summary>
         public float ShootCharge => _shoot.Down || _keyboardShootWasHeld ? Mathf.Clamp01(_shoot.Held / ShootChargeSeconds) : 0f;
-
-        /// <summary>Hay un tiro cargándose.</summary>
-        public bool IsCharging => _shoot.Down || _keyboardShootWasHeld;
-
-        /// <summary>Ancho útil de margen lateral, expuesto para que otras partes de la interfaz lo respeten.</summary>
-        public static float Margin => SideMargin;
     }
 }

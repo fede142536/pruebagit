@@ -168,6 +168,24 @@ namespace Football.Core.MatchCore
         public float TakerReach = 2.2f;
         /// <summary>Distancia mínima del rival en saques.</summary>
         public float SetPieceDistance = 9.15f;
+        /// <summary>Duración de una barrida (s).</summary>
+        public float SlideDuration = 0.55f;
+        /// <summary>Velocidad inicial de la barrida (m/s).</summary>
+        public float SlideSpeed = 7.5f;
+        /// <summary>Frenada durante la barrida (m/s²).</summary>
+        public float SlideDeceleration = 9f;
+        /// <summary>Alcance de la barrida (m); mayor que el de la entrada de pie.</summary>
+        public float SlideReach = 1.8f;
+        /// <summary>Tiempo en el suelo tras la barrida (s).</summary>
+        public float SlideRecovery = 0.6f;
+        /// <summary>Probabilidad extra de ganar el balón con una barrida.</summary>
+        public float SlideWinBonus = 0.15f;
+        /// <summary>Multiplicador de la probabilidad de falta de una barrida.</summary>
+        public float SlideFoulMultiplier = 2f;
+        /// <summary>Multiplicador de falta si la entrada es por detrás.</summary>
+        public float BehindFoulMultiplier = 1.5f;
+        /// <summary>Velocidad con la que sale el balón tras una barrida que lo toca (m/s).</summary>
+        public float SlideKnockSpeed = 6f;
         /// <summary>Alcance de una entrada.</summary>
         public float TackleRange = 1.3f;
         /// <summary>Tiempo entre entradas de un mismo jugador (s).</summary>

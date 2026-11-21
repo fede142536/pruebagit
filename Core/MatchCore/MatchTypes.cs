@@ -202,6 +202,14 @@ namespace Football.Core.MatchCore
         public bool Tackle;
         /// <summary>Cambiar de jugador.</summary>
         public bool Switch;
+        /// <summary>Barrida (impulso): más alcance que la entrada de pie, más riesgo de falta y el jugador queda en el suelo.</summary>
+        public bool Slide;
+        /// <summary>Despejar el balón (impulso, con el balón).</summary>
+        public bool Clear;
+        /// <summary>Presionar (mantenido): el jugador persigue al poseedor y entra de pie, sin barrer, al alcanzarlo.</summary>
+        public bool Press;
+        /// <summary>Tomar o soltar el control del arquero (impulso).</summary>
+        public bool Keeper;
     }
 
     /// <summary>Acción visible de un jugador, para elegir animación.</summary>

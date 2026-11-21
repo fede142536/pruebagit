@@ -50,8 +50,20 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    **Haz un clic dentro de la ventana Game** para que reciba el teclado.
    Tu jugador es el que tiene la **flecha amarilla** encima. Los demás de tu equipo (azul) los mueve la máquina; cuando el rival
    tiene el balón, la flecha pasa sola al jugador más cercano (o pulsa **Tab**).
-2. Controles de teclado: **WASD** mover · **J** pase · **K** tiro (mantén para cargar potencia y suelta) · **L** pase filtrado ·
-   **I** centro · **E** presionar (sin balón) · **Tab** cambiar de jugador · **Shift** esprint · **Esc** pausa.
+2. **Controles** (los botones cambian según tengas o no el balón):
+
+   | Situación | En el teléfono | En el ordenador |
+   |---|---|---|
+   | Mover | arrastrar en la mitad izquierda | WASD o flechas |
+   | Correr más | ESPRINT (mantener) | Shift |
+   | Con balón | PASE · TIRO (mantener y soltar) · DESPEJAR (en tu campo) | J · K · R |
+   | Opcionales | FILTRADO · CENTRO (se activan en Ajustes) | L · I |
+   | Sin balón | PRESIONAR (mantener: quita sin barrer) · BARRER · CAMBIAR | E · Q · Tab |
+   | Arquero | ARQUERO (tomar el control para salir, barrer, pasar o despejar); JUGADOR lo devuelve | G |
+   | Pausa | II | Esc |
+
+   En **Ajustes** eliges la **velocidad del juego** (lenta, normal o rápida), si quieres los botones de filtrado y centro y si
+   prefieres botones grandes. Ahí mismo hay una guía de controles.
 3. Consejo: en la pestaña *Game* elige una proporción 16:9 para ver la pantalla como en el móvil.
 
 ### Menús, equipos y alineación

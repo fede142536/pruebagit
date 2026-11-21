@@ -22,7 +22,7 @@ namespace Football.Game
         private readonly Text _match;
         private readonly UiButton[] _difficulties;
         private readonly UiButton[] _lengths;
-        private readonly UiButton _names, _back, _play;
+        private readonly UiButton _names, _speed, _back, _play;
 
         /// <summary>Acción pedida en este fotograma.</summary>
         public MatchSetupAction Action { get; private set; }
@@ -51,8 +51,10 @@ namespace Football.Game
                     TeamCatalog.HalfMinutes[i].ToString(), 36, UiTheme.Button);
             }
 
-            UiKit.Label(Root, "Nombres", new Vector2(960f, 380f), new Vector2(800f, 50f), "NOMBRES SOBRE LOS JUGADORES", 32, UiTheme.Accent);
-            _names = UiKit.Button(Root, "ModoNombres", new Vector2(960f, 300f), new Vector2(640f, 84f), string.Empty, 30, UiTheme.Button);
+            UiKit.Label(Root, "Nombres", new Vector2(640f, 380f), new Vector2(600f, 50f), "NOMBRES SOBRE LOS JUGADORES", 32, UiTheme.Accent);
+            _names = UiKit.Button(Root, "ModoNombres", new Vector2(640f, 300f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
+            UiKit.Label(Root, "Velocidad", new Vector2(1280f, 380f), new Vector2(600f, 50f), "VELOCIDAD DEL JUEGO", 32, UiTheme.Accent);
+            _speed = UiKit.Button(Root, "ModoVelocidad", new Vector2(1280f, 300f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
 
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
             _play = UiKit.Button(Root, "Jugar", new Vector2(1660f, 80f), new Vector2(440f, 120f), "JUGAR", 56, UiTheme.AccentDark);
@@ -80,6 +82,7 @@ namespace Football.Game
             }
 
             _names.Label.text = NameModeLabel(_settings.Names);
+            _speed.Label.text = GameSettings.SpeedLabels[_settings.Speed];
         }
 
         /// <summary>Texto de cada modo de nombres.</summary>
@@ -120,6 +123,10 @@ namespace Football.Game
                 {
                     _settings.Names = (NameMode)(((int)_settings.Names + 1) % 3);
                 }
+                else if (_speed.Contains(p))
+                {
+                    _settings.Speed = (_settings.Speed + 1) % GameSettings.Speeds.Length;
+                }
                 else if (_back.Contains(p))
                 {
                     Action = MatchSetupAction.Back;
@@ -135,11 +142,30 @@ namespace Football.Game
         }
     }
 
-    /// <summary>Ajustes generales: controles, nombres, FPS y panel de depuración.</summary>
+    /// <summary>Ajustes generales: velocidad del juego, botones, controles, nombres, FPS y panel de depuración, con una guía de controles.</summary>
     public sealed class SettingsScreen : MenuScreenBase
     {
+        private const float RowX = 560f;
+        private const float RowTop = 860f;
+        private const float RowStep = 92f;
+
+        private const string Guide =
+            "CONTROLES\n\n"
+            + "Mitad izquierda de la pantalla: arrastra para mover.\n"
+            + "ESPRINT: mantén pulsado para correr más.\n\n"
+            + "CON EL BALÓN\n"
+            + "PASE: al compañero hacia donde apuntas.\n"
+            + "TIRO: mantén para cargar y suelta para tirar.\n"
+            + "DESPEJAR: pelotazo largo y alto (en tu campo).\n"
+            + "FILTRADO y CENTRO: opcionales (actívalos aquí).\n\n"
+            + "SIN EL BALÓN\n"
+            + "PRESIONAR: mantén; persigue al rival y le quita\nla pelota sin barrerse.\n"
+            + "BARRER: llega más lejos, pero si fallas quedas\nen el suelo y puede ser falta (más por detrás).\n"
+            + "CAMBIAR: controla al compañero más cercano.\n"
+            + "ARQUERO: controla al arquero para salir, barrer,\npasar o despejar. JUGADOR lo devuelve.";
+
         private readonly GameSettings _settings;
-        private readonly UiButton _lefty, _names, _fps, _debug, _back;
+        private readonly UiButton _speed, _through, _cross, _big, _lefty, _names, _fps, _debug, _back;
 
         /// <summary>Se pidió volver al menú principal.</summary>
         public bool BackRequested { get; private set; }
@@ -149,14 +175,21 @@ namespace Football.Game
         {
             _settings = settings;
             Title("AJUSTES");
-            _lefty = UiKit.Button(Root, "Zurdo", new Vector2(960f, 760f), new Vector2(900f, 96f), string.Empty, 34, UiTheme.Button);
-            _names = UiKit.Button(Root, "Nombres", new Vector2(960f, 640f), new Vector2(900f, 96f), string.Empty, 34, UiTheme.Button);
-            _fps = UiKit.Button(Root, "Fps", new Vector2(960f, 520f), new Vector2(900f, 96f), string.Empty, 34, UiTheme.Button);
-            _debug = UiKit.Button(Root, "Depuracion", new Vector2(960f, 400f), new Vector2(900f, 96f), string.Empty, 34, UiTheme.Button);
-            UiKit.Label(Root, "Nota", new Vector2(960f, 290f), new Vector2(1500f, 40f),
-                "60 FPS se ve más fluido pero gasta más batería y puede calentar el teléfono.", 24, UiTheme.TextDim);
+            _speed = Row("Velocidad", 0);
+            _through = Row("Filtrado", 1);
+            _cross = Row("Centro", 2);
+            _big = Row("Tamano", 3);
+            _lefty = Row("Zurdo", 4);
+            _names = Row("Nombres", 5);
+            _fps = Row("Fps", 6);
+            _debug = Row("Depuracion", 7);
+            Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 520f), new Vector2(820f, 800f), UiTheme.Panel);
+            UiKit.Label(panel.transform, "Texto", new Vector2(410f, 400f), new Vector2(760f, 760f), Guide, 25, UiTheme.Text, TextAnchor.MiddleLeft);
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
         }
+
+        private UiButton Row(string name, int index) =>
+            UiKit.Button(Root, name, new Vector2(RowX, RowTop - index * RowStep), new Vector2(880f, 80f), string.Empty, 30, UiTheme.Button);
 
         /// <inheritdoc />
         public override void Show()
@@ -168,6 +201,10 @@ namespace Football.Game
 
         private void Refresh()
         {
+            _speed.Label.text = "VELOCIDAD DEL JUEGO: " + GameSettings.SpeedLabels[_settings.Speed];
+            _through.Label.text = "BOTÓN FILTRADO: " + (_settings.ShowThrough ? "SÍ" : "NO");
+            _cross.Label.text = "BOTÓN CENTRO: " + (_settings.ShowCross ? "SÍ" : "NO");
+            _big.Label.text = "TAMAÑO DE LOS BOTONES: " + (_settings.BigButtons ? "GRANDE" : "NORMAL");
             _lefty.Label.text = "CONTROLES PARA ZURDOS: " + (_settings.LeftHanded ? "SÍ" : "NO");
             _names.Label.text = "NOMBRES: " + MatchSetupScreen.NameModeLabel(_settings.Names);
             _fps.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
@@ -182,7 +219,23 @@ namespace Football.Game
             for (int t = 0; t < n; t++)
             {
                 Vector2 p = taps[t];
-                if (_lefty.Contains(p))
+                if (_speed.Contains(p))
+                {
+                    _settings.Speed = (_settings.Speed + 1) % GameSettings.Speeds.Length;
+                }
+                else if (_through.Contains(p))
+                {
+                    _settings.ShowThrough = !_settings.ShowThrough;
+                }
+                else if (_cross.Contains(p))
+                {
+                    _settings.ShowCross = !_settings.ShowCross;
+                }
+                else if (_big.Contains(p))
+                {
+                    _settings.BigButtons = !_settings.BigButtons;
+                }
+                else if (_lefty.Contains(p))
                 {
                     _settings.LeftHanded = !_settings.LeftHanded;
                 }

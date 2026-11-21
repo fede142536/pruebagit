@@ -28,7 +28,10 @@ namespace Football.Game
         public PointerPhase Phase;
     }
 
-    /// <summary>Estado del teclado para probar en el ordenador (WASD o flechas, J pase, K tiro, L filtrado, I centro, E entrada, Tab cambio).</summary>
+    /// <summary>
+    /// Estado del teclado para probar en el ordenador: WASD o flechas, Shift esprint, J pase, K tiro, L filtrado, I centro,
+    /// R despejar, Q barrer, E presionar (mantener), G arquero, Tab cambiar, Esc pausa.
+    /// </summary>
     public struct KeyboardState
     {
         /// <summary>Dirección de movimiento.</summary>
@@ -43,8 +46,14 @@ namespace Football.Game
         public bool CrossDown;
         /// <summary>Tiro mantenido.</summary>
         public bool ShootHeld;
-        /// <summary>Entrada pulsada en este fotograma.</summary>
-        public bool TackleDown;
+        /// <summary>Barrida pulsada en este fotograma.</summary>
+        public bool SlideDown;
+        /// <summary>Presión mantenida.</summary>
+        public bool PressHeld;
+        /// <summary>Despeje pulsado en este fotograma.</summary>
+        public bool ClearDown;
+        /// <summary>Control del arquero pulsado en este fotograma.</summary>
+        public bool KeeperDown;
         /// <summary>Cambio de jugador pulsado en este fotograma.</summary>
         public bool SwitchDown;
         /// <summary>Pausa pulsada en este fotograma.</summary>
@@ -169,7 +178,10 @@ namespace Football.Game
             Keyboard.ThroughDown = kb.lKey.wasPressedThisFrame;
             Keyboard.CrossDown = kb.iKey.wasPressedThisFrame;
             Keyboard.ShootHeld = kb.kKey.isPressed;
-            Keyboard.TackleDown = kb.eKey.wasPressedThisFrame;
+            Keyboard.SlideDown = kb.qKey.wasPressedThisFrame;
+            Keyboard.PressHeld = kb.eKey.isPressed;
+            Keyboard.ClearDown = kb.rKey.wasPressedThisFrame;
+            Keyboard.KeeperDown = kb.gKey.wasPressedThisFrame;
             Keyboard.SwitchDown = kb.tabKey.wasPressedThisFrame;
             Keyboard.PauseDown = kb.escapeKey.wasPressedThisFrame;
         }
@@ -233,7 +245,10 @@ namespace Football.Game
             Keyboard.ThroughDown = Input.GetKeyDown(KeyCode.L);
             Keyboard.CrossDown = Input.GetKeyDown(KeyCode.I);
             Keyboard.ShootHeld = Input.GetKey(KeyCode.K);
-            Keyboard.TackleDown = Input.GetKeyDown(KeyCode.E);
+            Keyboard.SlideDown = Input.GetKeyDown(KeyCode.Q);
+            Keyboard.PressHeld = Input.GetKey(KeyCode.E);
+            Keyboard.ClearDown = Input.GetKeyDown(KeyCode.R);
+            Keyboard.KeeperDown = Input.GetKeyDown(KeyCode.G);
             Keyboard.SwitchDown = Input.GetKeyDown(KeyCode.Tab);
             Keyboard.PauseDown = Input.GetKeyDown(KeyCode.Escape);
         }

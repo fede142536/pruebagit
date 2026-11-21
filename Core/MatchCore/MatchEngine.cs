@@ -172,6 +172,12 @@ namespace Football.Core.MatchCore
                 return;
             }
 
+            ResolveSlides();
+            if (Phase != MatchPhase.Playing)
+            {
+                return;
+            }
+
             CheckBoundaries();
             CountPossession();
         }
@@ -185,6 +191,18 @@ namespace Football.Core.MatchCore
                 p.KickTimer -= dt;
                 p.TackleTimer -= dt;
                 p.ActionDisplayTimer -= dt;
+                if (p.SlideTimer > 0f)
+                {
+                    p.SlideTimer -= dt;
+                    if (p.SlideTimer <= 0f)
+                    {
+                        p.RecoverTimer = Config.Rules.SlideRecovery;
+                    }
+                }
+                else
+                {
+                    p.RecoverTimer -= dt;
+                }
             }
         }
 
@@ -208,7 +226,19 @@ namespace Football.Core.MatchCore
                     continue;
                 }
 
-                PlayerMotion.Step(p, dt, Config.Player);
+                if (p.SlideTimer > 0f)
+                {
+                    SlideStep(p, dt);
+                }
+                else if (p.RecoverTimer > 0f)
+                {
+                    p.Speed = 0f; // levantándose tras la barrida
+                }
+                else
+                {
+                    PlayerMotion.Step(p, dt, Config.Player);
+                }
+
                 p.Pos = Pitch.Clamp(p.Pos, margin);
                 FaceTheBall(p, dt);
 
