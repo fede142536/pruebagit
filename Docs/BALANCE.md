@@ -96,6 +96,23 @@ Medición con `dotnet run -c Release --project Tools/HeadlessSim -- --indoor --m
 
 Las pruebas exigen entre 4 y 9 goles por partido, sin saques de banda, de esquina ni fueras de juego.
 
+### 1.6 Disparo de la IA en el área y saques (21/11/2026)
+
+**Problema medido** (60 partidos): el 22 % de las veces que la IA entraba al área con el balón se quedaba más de 1,5 s
+gambeteando (máximo 5,2 s) y el 36 % de esas jugadas terminaba sin tiro.
+
+**Reglas de la zona de disparo** (`ShootZoneDistance` 22 m; 10 m en la cancha cerrada), evaluadas antes que el resto de las
+opciones: la IA patea si tiene **línea limpia** (ningún jugador de campo a menos de `ShotLaneClearance` 1,2 m del trayecto), si
+un rival le llega a menos de `ShotPressureDistance` 2 m, o si lleva más de `MaxBoxSeconds` 1,5 s en el área. No patea desde
+ángulos imposibles (`ZoneShotMinXg`; el forzado por tiempo solo descarta ángulos nulos). La fuerza crece con la distancia
+(`ShotPowerClose` 0,7 a quemarropa). **Después:** ninguna jugada pasa de 3 s en el área y las de más de 1,5 s bajan a menos
+de 1 de cada 8 (prueba `AiNeverKeepsDribblingInsideTheBox`). Goles 11 contra 11: 2,35. Cancha cerrada: 7,0 → 6,0 tras
+`KeeperSaveSpeedPenalty` 0,02 → 0,015.
+
+**Saques:** esperas propias por tipo (`ThrowInDelay` 1,6 s, `GoalKickDelay` 2,0 s, `CornerDelay` 2,4 s) para que el equipo se
+acomode; en el lateral los dos compañeros más cercanos se acercan a pedirla. Los saques de la persona (lateral, arco, córner
+y tiro libre) esperan a que apunte y elija; si no hace nada en `HumanRestartTimeout` 8 s, saca la IA.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

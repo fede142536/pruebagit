@@ -552,7 +552,10 @@ namespace Football.Game
                     case MatchEventType.YellowCard: ShowPlate("AMARILLA", new Color(1f, 0.85f, 0.1f), e); break;
                     case MatchEventType.RedCard: ShowPlate("ROJA", new Color(0.9f, 0.15f, 0.15f), e); break;
                     case MatchEventType.Penalty: text = "¡PENAL!"; _audio.Whistle(); break;
-                    case MatchEventType.Corner: text = "CÓRNER"; break;
+                    case MatchEventType.Corner: text = "TIRO DE ESQUINA"; break;
+                    case MatchEventType.ThrowIn: text = "SAQUE LATERAL"; break;
+                    case MatchEventType.GoalKick: text = "SAQUE DE ARCO"; break;
+                    case MatchEventType.FreeKick: text = "TIRO LIBRE"; break;
                     case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; _audio.LongWhistle(); break;
                     case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; _audio.LongWhistle(); break;
                     case MatchEventType.Save: text = "¡PARADÓN!"; break;
@@ -617,8 +620,18 @@ namespace Football.Game
                 MatchPlayer holder = _engine.Owner ?? _engine.LastToucher;
                 bool hasBall = holder != null && holder.Team == 0;
                 bool ownHalf = _engine.Ball.Pos.X * _engine.Teams[0].AttackDirection < 0f;
+                bool ownRestart = _engine.Phase == MatchPhase.SetPiece && _engine.CurrentRestart.Team == 0;
+                RestartKind kind = _engine.CurrentRestart.Kind;
+                if (ownRestart)
+                {
+                    hasBall = true; // en tus saques, botones de ataque
+                    ownHalf = false;
+                }
+
                 _shownHasBall = hasBall;
-                _controls.SetContext(hasBall, ownHalf, _engine.Teams[0].KeeperLock);
+                bool crossRestart = ownRestart && (kind == RestartKind.Corner || kind == RestartKind.FreeKick);
+                _controls.SetContext(hasBall, ownHalf, _engine.Teams[0].KeeperLock, crossRestart);
+                ShowRestartHelp(kind);
             }
         }
 
@@ -666,6 +679,24 @@ namespace Football.Game
         }
 
         /// <summary>Repetición del gol: los últimos segundos en cámara lenta (el partido espera).</summary>
+        private bool _restartHelpShown;
+
+        /// <summary>Mientras tu saque espera, una línea de ayuda dice cómo sacar (sin crear textos por fotograma).</summary>
+        private void ShowRestartHelp(RestartKind kind)
+        {
+            bool waiting = _engine.AwaitingHumanRestart && !_replaying;
+            if (waiting == _restartHelpShown)
+            {
+                return;
+            }
+
+            _restartHelpShown = waiting;
+            _hint.text = !waiting ? string.Empty
+                : kind == RestartKind.Corner ? "Apunta con el joystick: PASE (corto o al área) · CENTRO al área"
+                : kind == RestartKind.FreeKick ? "Apunta con el joystick: PASE · CENTRO · TIRO (mantén) al arco"
+                : "Apunta con el joystick y toca PASE (mantén para más fuerza)";
+        }
+
         /// <summary>Placa de TV con el minuto, el jugador y el equipo de un evento.</summary>
         private void ShowPlate(string tag, Color tagColor, MatchEvent e)
         {

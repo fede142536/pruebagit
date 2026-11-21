@@ -99,8 +99,9 @@ namespace Football.Core.MatchCore
             Ball.PlaceAt(restart.Position);
             _prevBallPos = Ball.Pos;
             Phase = MatchPhase.SetPiece;
-            _phaseTimer = restart.Kind == RestartKind.Penalty ? Config.Rules.RestartDelay * PenaltyDelayFactor : Config.Rules.RestartDelay;
+            _phaseTimer = RestartDelayFor(restart.Kind);
             _takerTimeout = Config.Rules.TakerTimeout;
+            _humanRestartTimer = 0f;
 
             for (int i = 0; i < Players.Length; i++)
             {
@@ -110,6 +111,14 @@ namespace Football.Core.MatchCore
             }
 
             _taker = ChooseTaker(restart);
+            PickThrowSupport(restart);
+            TeamState takingTeam = Teams[restart.Team];
+            if (takingTeam.IsHuman && _taker != null)
+            {
+                takingTeam.Controlled = _taker; // la persona controla al que saca (se ve la flecha sobre él)
+                takingTeam.KeeperLock = false;
+            }
+
             MatchEventType type = MatchEventType.FreeKick;
             switch (restart.Kind)
             {
@@ -213,22 +222,113 @@ namespace Football.Core.MatchCore
                     _taker.Pos = _restart.Position - new Vec2(Teams[_taker.Team].AttackDirection * TakerOffset, 0f);
                 }
 
+                TeamState team = Teams[_taker.Team];
+                if (HumanTakes(team))
+                {
+                    // Saca la persona: apunta con el joystick y elige pase, centro o tiro. Si no hace nada, saca la IA.
+                    _humanRestartTimer += dt;
+                    MatchInput input = team.Input;
+                    if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
+                    {
+                        ExecuteHumanRestart(team, input);
+                        ConsumeKick(team);
+                        return;
+                    }
+
+                    if (_humanRestartTimer < Config.Rules.HumanRestartTimeout)
+                    {
+                        return;
+                    }
+                }
+
                 ExecuteRestart();
             }
         }
 
-        private void ExecuteRestart()
+        private float _humanRestartTimer;
+
+        /// <summary>El saque está listo y espera a que la persona elija (para mostrar la ayuda en pantalla).</summary>
+        public bool AwaitingHumanRestart =>
+            Phase == MatchPhase.SetPiece && _taker != null && HumanTakes(Teams[_taker.Team]) && _phaseTimer <= 0f
+            && Vec2.Distance(_taker.Pos, _restart.Position) <= Config.Rules.TakerReach;
+
+        private bool HumanTakes(TeamState team) =>
+            team.IsHuman && _restart.Kind != RestartKind.KickOff && _restart.Kind != RestartKind.Penalty;
+
+        private float RestartDelayFor(RestartKind kind)
+        {
+            RulesConfig r = Config.Rules;
+            switch (kind)
+            {
+                case RestartKind.ThrowIn: return r.ThrowInDelay;
+                case RestartKind.GoalKick: return r.GoalKickDelay;
+                case RestartKind.Corner: return r.CornerDelay;
+                case RestartKind.Penalty: return r.RestartDelay * PenaltyDelayFactor;
+                default: return r.RestartDelay;
+            }
+        }
+
+        private void BeginRestartKick(MatchPlayer t)
         {
             Phase = MatchPhase.Playing;
             _planTimer = 0f;
+            t.ActionTimer = 0f;
+            t.SpeedFactor = 0f;
+            _offsideExempt = _restart.Kind != RestartKind.FreeKick && _restart.Kind != RestartKind.Penalty;
+        }
+
+        /// <summary>Saque elegido por la persona: dirección con el joystick; pase, centro o (en tiro libre) disparo.</summary>
+        private void ExecuteHumanRestart(TeamState team, MatchInput input)
+        {
+            MatchPlayer t = _taker;
+            BeginRestartKick(t);
+            Vec2 at = _restart.Position;
+            RestartKind kind = _restart.Kind;
+            float scale = input.PassPower > 0f
+                ? MathUtil.Lerp(Config.Player.HumanPassPowerMin, Config.Player.HumanPassPowerMax, MathUtil.Clamp01(input.PassPower))
+                : 1f;
+
+            if (kind == RestartKind.FreeKick && input.Shoot)
+            {
+                KickShot(t, input.ShootPower > 0f ? input.ShootPower : FreeKickPower, true, HumanAimY(t, team, input));
+            }
+            else if (input.Cross && kind != RestartKind.ThrowIn)
+            {
+                HumanCross(t, team, input);
+            }
+            else
+            {
+                ChooseHumanTarget(t, team, input, input.Through, 0f, out Vec2 point, out MatchPlayer target);
+                if (kind == RestartKind.ThrowIn)
+                {
+                    Vec2 toPoint = point - at;
+                    if (toPoint.Length > ThrowInMaxDistance)
+                    {
+                        point = at + toPoint.Normalized * ThrowInMaxDistance;
+                        target = null;
+                    }
+
+                    KickPass(t, point, target, false, true, ThrowInMaxSpeed, scale);
+                }
+                else if (kind == RestartKind.Corner && Vec2.Distance(at, point) > Config.Rules.ShortCornerDistance)
+                {
+                    KickCross(t, point, true, at.Y > 0f ? -CornerSpin : CornerSpin); // córner al área, hacia donde apuntas
+                }
+                else
+                {
+                    KickPass(t, point, target, true, true, float.MaxValue, scale);
+                }
+            }
+
+            _offsideExempt = false;
+        }
+
+        private void ExecuteRestart()
+        {
             MatchPlayer t = _taker;
             TeamState team = Teams[t.Team];
             Vec2 at = _restart.Position;
-            t.ActionTimer = 0f;
-            t.SpeedFactor = 0f;
-
-            bool exempt = _restart.Kind != RestartKind.FreeKick && _restart.Kind != RestartKind.Penalty;
-            _offsideExempt = exempt;
+            BeginRestartKick(t);
             switch (_restart.Kind)
             {
                 case RestartKind.KickOff:

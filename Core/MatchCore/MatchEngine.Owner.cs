@@ -31,7 +31,6 @@ namespace Football.Core.MatchCore
         private const float SafeMarginToLine = 1.5f;
         private const float DirectnessWeight = 0.10f;
         private const float RiskBase = 1.5f;
-        private const float ShotPowerBase = 0.75f;
         private const float ShotPowerRange = 0.25f;
         private const float ShotMinHeight = 0.3f;
         private const float ShotMaxHeight = 1.9f;
@@ -242,6 +241,86 @@ namespace Football.Core.MatchCore
         private float DecisionNoise(MatchPlayer p) =>
             Config.Ai.DecisionNoise * (1.3f - p.Skill(AttributeId.Decisions)) * Teams[p.Team].Difficulty.DecisionNoiseScale;
 
+        private MatchPlayer _boxOwner;
+        private float _boxTime;
+
+        /// <summary>
+        /// Reglas de la zona de disparo (por delante de la evaluación de opciones): dentro de la zona, la IA patea si tiene
+        /// línea limpia al arco, si un rival le llega encima, o si ya lleva demasiado tiempo con el balón en el área (anti
+        /// bucle de regates). Nunca desde un ángulo imposible.
+        /// </summary>
+        private bool MustShoot(MatchPlayer p, Vec2 pos, Vec2 goal, float goalDistance, float opponentDistance)
+        {
+            AiConfig ai = Config.Ai;
+            TeamState team = Teams[p.Team];
+            if (Pitch.InPenaltyArea(team.AttackDirection, pos))
+            {
+                if (_boxOwner != p)
+                {
+                    _boxOwner = p;
+                    _boxTime = 0f;
+                }
+
+                _boxTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale;
+            }
+            else if (_boxOwner == p)
+            {
+                _boxOwner = null;
+            }
+
+            if (goalDistance > ai.ShootZoneDistance)
+            {
+                return false;
+            }
+
+            float xg = ExpectedGoal(p, pos, goalDistance, opponentDistance);
+            bool stalling = _boxOwner == p && _boxTime >= ai.MaxBoxSeconds;
+            if (stalling)
+            {
+                return xg >= ai.StallShotMinXg; // lleva demasiado en el área: patea salvo desde un ángulo nulo
+            }
+
+            if (xg < ai.ZoneShotMinXg)
+            {
+                return false; // ángulo cerrado o muy lejos: mejor otra opción
+            }
+
+            bool clearLine = FieldPlayerClearance(pos, goal, p.Team) > ai.ShotLaneClearance;
+            bool pressed = opponentDistance < ai.ShotPressureDistance;
+            return clearLine || pressed;
+        }
+
+        /// <summary>Distancia mínima de los jugadores de campo rivales (sin el arquero) al trayecto del tiro.</summary>
+        private float FieldPlayerClearance(Vec2 from, Vec2 to, int team)
+        {
+            TeamState opponents = Teams[1 - team];
+            float best = float.MaxValue;
+            for (int i = 1; i < opponents.Players.Length; i++)
+            {
+                MatchPlayer o = opponents.Players[i];
+                if (o.SentOff)
+                {
+                    continue;
+                }
+
+                float d = MathUtil.DistancePointSegment(o.Pos, from, to, out float t);
+                if (t > 0.02f && t < 0.98f && d < best)
+                {
+                    best = d;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>Fuerza del tiro de la IA: más colocado de cerca, más potente de lejos (con algo de variación).</summary>
+        private float ShotPower(float goalDistance)
+        {
+            AiConfig ai = Config.Ai;
+            float byDistance = MathUtil.Lerp(ai.ShotPowerClose, 1f, MathUtil.Clamp01(goalDistance / ai.ShootZoneDistance));
+            return MathUtil.Clamp01(byDistance + _rng.NextGaussian(0f, ShotPowerRange * 0.25f));
+        }
+
         private void OwnerDecide(MatchPlayer p)
         {
             AiConfig ai = Config.Ai;
@@ -260,6 +339,12 @@ namespace Football.Core.MatchCore
 
             Vec2 goal = Pitch.GoalCenter(dir);
             float goalDistance = Vec2.Distance(pos, goal);
+            if (MustShoot(p, pos, goal, goalDistance, opponentDistance))
+            {
+                KickShot(p, ShotPower(goalDistance), false);
+                return;
+            }
+
             if (goalDistance <= ai.ShootMaxRange)
             {
                 float xg = ExpectedGoal(p, pos, goalDistance, opponentDistance) * (0.75f + 0.5f * team.Style.Risk) * ai.ShotEagerness;
@@ -282,7 +367,7 @@ namespace Football.Core.MatchCore
             switch (o.Kind)
             {
                 case OptionKind.Shoot:
-                    KickShot(p, ShotPowerBase + ShotPowerRange * _rng.NextFloat(), false);
+                    KickShot(p, ShotPower(goalDistance), false);
                     break;
                 case OptionKind.Pass:
                     KickPass(p, o.Point, o.Target, true, false, float.MaxValue);

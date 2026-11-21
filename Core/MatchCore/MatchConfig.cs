@@ -198,8 +198,18 @@ namespace Football.Core.MatchCore
         public float HalfDuration = 180f;
         /// <summary>Minutos de partido que representa cada parte.</summary>
         public float MinutesPerHalf = 45f;
-        /// <summary>Espera antes de ejecutar un saque (s).</summary>
+        /// <summary>Espera antes de ejecutar un saque (s): tiro libre y otros.</summary>
         public float RestartDelay = 1.4f;
+        /// <summary>Espera antes de un saque lateral, para que los compañeros se acerquen (s).</summary>
+        public float ThrowInDelay = 1.6f;
+        /// <summary>Espera antes de un saque de arco, para que el equipo se abra (s).</summary>
+        public float GoalKickDelay = 2.0f;
+        /// <summary>Espera antes de un córner, para que todos entren al área (s).</summary>
+        public float CornerDelay = 2.4f;
+        /// <summary>Si la persona no saca en este tiempo, saca la IA por ella (s).</summary>
+        public float HumanRestartTimeout = 8f;
+        /// <summary>En un córner de la persona, un pase a un compañero a menos de esta distancia sale corto y raso (m).</summary>
+        public float ShortCornerDistance = 14f;
         /// <summary>Espera antes del saque inicial (s).</summary>
         public float KickoffDelay = 1.2f;
         /// <summary>Pausa tras un gol (s).</summary>
@@ -284,6 +294,21 @@ namespace Football.Core.MatchCore
         public float DecisionInterval = 0.18f;
         /// <summary>Intervalo entre decisiones del jugador con balón (s).</summary>
         public float OwnerDecisionInterval = 0.22f;
+
+        /// <summary>Zona de disparo: dentro de esta distancia al arco la IA prioriza patear sobre regatear (m).</summary>
+        public float ShootZoneDistance = 22f;
+        /// <summary>Un tiro tiene línea limpia si ningún jugador de campo rival está a menos de esta distancia del trayecto (m).</summary>
+        public float ShotLaneClearance = 1.2f;
+        /// <summary>En la zona de disparo, con un rival a menos de esta distancia, la IA patea antes de perder el balón (m).</summary>
+        public float ShotPressureDistance = 2f;
+        /// <summary>Tiempo máximo con el balón dentro del área rival antes de forzar el disparo (s).</summary>
+        public float MaxBoxSeconds = 1.5f;
+        /// <summary>Probabilidad de gol mínima para patear por las reglas de la zona (evita tirar desde un ángulo imposible).</summary>
+        public float ZoneShotMinXg = 0.025f;
+        /// <summary>Probabilidad de gol mínima para el disparo forzado por tiempo en el área (solo descarta ángulos nulos).</summary>
+        public float StallShotMinXg = 0.004f;
+        /// <summary>Fuerza del tiro de la IA a quemarropa; crece hasta 1 en el límite de la zona de disparo.</summary>
+        public float ShotPowerClose = 0.7f;
 
         /// <summary>Distancia máxima a portería para considerar un tiro (m).</summary>
         public float ShootMaxRange = 30f;
@@ -608,7 +633,7 @@ namespace Football.Core.MatchCore
             p.Walls = true;
 
             // De cerca, un tiro fuerte castiga menos al arquero que en cancha grande (portería de 3 m).
-            c.Player.KeeperSaveSpeedPenalty = 0.02f;
+            c.Player.KeeperSaveSpeedPenalty = 0.015f;
 
             RulesConfig r = c.Rules;
             r.MinutesPerHalf = 20f;
@@ -618,6 +643,7 @@ namespace Football.Core.MatchCore
 
             AiConfig a = c.Ai;
             a.ShootMaxRange = 13f;
+            a.ShootZoneDistance = 10f;
             a.XgDecay = 5f;
             a.ShotEagerness = 0.8f;
             a.ShotSpeedMax = 26f;

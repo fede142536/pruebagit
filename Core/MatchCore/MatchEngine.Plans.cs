@@ -679,6 +679,45 @@ namespace Football.Core.MatchCore
             }
         }
 
+        private MatchPlayer _throwSupportA, _throwSupportB;
+        private const float ThrowSupportAlong = 9f;
+        private const float ThrowSupportInward = 8f;
+
+        /// <summary>Los dos compañeros de campo más cercanos al lateral (sin el que saca ni el arquero).</summary>
+        private void PickThrowSupport(Restart r)
+        {
+            _throwSupportA = _throwSupportB = null;
+            if (r.Kind != RestartKind.ThrowIn)
+            {
+                return;
+            }
+
+            float bestA = float.MaxValue, bestB = float.MaxValue;
+            TeamState team = Teams[r.Team];
+            for (int i = 1; i < team.Players.Length; i++)
+            {
+                MatchPlayer p = team.Players[i];
+                if (p.SentOff || p == _taker)
+                {
+                    continue;
+                }
+
+                float d = Vec2.Distance(p.Pos, r.Position);
+                if (d < bestA)
+                {
+                    _throwSupportB = _throwSupportA;
+                    bestB = bestA;
+                    _throwSupportA = p;
+                    bestA = d;
+                }
+                else if (d < bestB)
+                {
+                    _throwSupportB = p;
+                    bestB = d;
+                }
+            }
+        }
+
         private void UpdateSetPieceTargetsCore()
         {
             Restart r = _restart;
@@ -702,6 +741,18 @@ namespace Football.Core.MatchCore
                 if (p == _taker)
                 {
                     p.Target = r.Position - new Vec2(dir * TakerOffset, 0f);
+                    continue;
+                }
+
+                if (taking && r.Kind == RestartKind.ThrowIn && (p == _throwSupportA || p == _throwSupportB))
+                {
+                    // Lateral: los dos más cercanos se acercan a pedirla, uno hacia adentro y otro a lo largo de la banda.
+                    float inward = r.Position.Y > 0f ? -1f : 1f;
+                    Vec2 offer = p == _throwSupportA
+                        ? new Vec2(dir * ThrowSupportAlong * 0.3f, inward * ThrowSupportInward)
+                        : new Vec2(dir * ThrowSupportAlong, inward * ThrowSupportInward * 0.4f);
+                    p.Target = Pitch.Clamp(r.Position + offer, TargetMargin);
+                    p.SpeedFactor = 1f;
                     continue;
                 }
 

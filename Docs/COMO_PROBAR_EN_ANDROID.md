@@ -79,6 +79,10 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    pasarías con CAMBIAR. Tras un gol hay una repetición en cámara lenta (toca para saltarla). En Ajustes se pueden apagar el
    sonido y la vibración.
 
+   **Saques (laterales, de arco, córners y tiros libres de tu equipo):** el juego espera a que el ejecutante llegue a la
+   pelota y a que el resto se acomode; después **apuntas con el joystick** y tocas PASE (mantén para más fuerza). En córners y
+   tiros libres aparece CENTRO, y en tiros libres también TIRO. Si no haces nada en 8 s, saca la máquina.
+
    **Mando físico** (Xbox, PlayStation o Bluetooth genérico; requiere el sistema de entrada nuevo): stick izquierdo mover,
    A/✕ pase (mantener = potencia), B/○ tiro (mantener) o barrida sin balón, X/□ filtrado, Y/△ centro, RB esprint, LB cambiar,
    RT presionar, LT despejar, Select arquero, Start pausa.

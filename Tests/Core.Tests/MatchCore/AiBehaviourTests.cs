@@ -191,5 +191,95 @@ namespace Football.Core.Tests.MatchCore
             Assert.That(Vec2.Distance(shooter.Pos, new Vec2(e.Pitch.HalfLength, e.Pitch.HalfWidth)), Is.LessThan(before - 2f), "corre al banderín");
             Assert.That(shooter.Action, Is.EqualTo(PlayerAction.Celebrate));
         }
+
+        /// <summary>
+        /// Pedido del usuario: la IA no debe quedarse gambeteando en el área. Medido en 60 partidos: antes, el 22 % de las
+        /// veces que entraba con el balón se quedaba más de 1,5 s y llegaba a 5,2 s; ahora casi nunca y nunca más de 3 s.
+        /// </summary>
+        [Test]
+        public void AiNeverKeepsDribblingInsideTheBox()
+        {
+            int entries = 0, longStays = 0, maxStay = 0;
+            for (ulong seed = 0; seed < 40; seed++)
+            {
+                MatchEngine e = MatchEngineTests.NewEngine(9000 + seed, (int)(seed % 5), (int)((seed + 1) % 5));
+                MatchPlayer inBox = null;
+                int stay = 0;
+                while (!e.IsFinished)
+                {
+                    e.Tick();
+                    MatchPlayer o = e.Owner;
+                    bool box = o != null && !o.IsKeeper && e.Pitch.InPenaltyArea(e.Teams[o.Team].AttackDirection, o.Pos);
+                    if (box)
+                    {
+                        if (o != inBox)
+                        {
+                            entries++;
+                            inBox = o;
+                            stay = 0;
+                        }
+
+                        stay++;
+                        maxStay = Math.Max(maxStay, stay);
+                    }
+                    else if (inBox != null)
+                    {
+                        longStays += stay > 90 ? 1 : 0;
+                        inBox = null;
+                    }
+                }
+            }
+
+            Assert.That(maxStay, Is.LessThan(180), $"nadie pasa 3 s con el balón en el área (máximo {maxStay / 60f:F1} s)");
+            Assert.That(longStays, Is.LessThan(entries / 8), $"más de 1,5 s en el área: {longStays} de {entries}");
+        }
+
+        [Test]
+        public void HumanThrowIn_WaitsForThePlayer_ThenGoesWhereTheStickPoints()
+        {
+            MatchEngine e = Isolated(6);
+            e.SetHuman(0, true);
+            MatchPlayer last = e.Teams[1].Players[4];
+            MatchPlayer mate = e.Teams[0].Players[7];
+            e.TestPlace(mate, new Vec2(5f, 20f));
+            e.TestPlaceBall(new Vec3(0f, 33f, 0f), new Vec3(0f, 8f, 0f), last); // sale por la banda tocada por el rival
+            for (int i = 0; i < 10 && e.Phase == MatchPhase.Playing; i++)
+            {
+                e.Tick();
+            }
+
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.SetPiece));
+            Assert.That(e.CurrentRestart.Kind, Is.EqualTo(RestartKind.ThrowIn));
+            Assert.That(e.CurrentRestart.Team, Is.EqualTo(0));
+
+            for (int i = 0; i < 60 * 6; i++)
+            {
+                e.Tick(); // mucho más que la espera: la IA no saca por la persona antes de tiempo
+            }
+
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.SetPiece), "espera a que la persona elija");
+            Assert.That(e.AwaitingHumanRestart, Is.True);
+
+            e.SetInput(0, new MatchInput { Pass = true, Move = new Vec2(1f, -1f).Normalized });
+            e.Tick();
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing));
+            Assert.That(e.Ball.Vel.X, Is.GreaterThan(0f), "sale hacia donde apunta el joystick");
+            Assert.That(e.Ball.Vel.Y, Is.LessThan(0f));
+        }
+
+        [Test]
+        public void HumanRestart_IsTakenByTheAi_IfThePlayerDoesNothing()
+        {
+            MatchEngine e = Isolated(7);
+            e.SetHuman(0, true);
+            e.TestPlaceBall(new Vec3(0f, 33f, 0f), new Vec3(0f, 8f, 0f), e.Teams[1].Players[4]);
+            int ticks = (int)((e.Config.Rules.ThrowInDelay + e.Config.Rules.TakerTimeout + e.Config.Rules.HumanRestartTimeout + 1f) * 60f);
+            for (int i = 0; i < ticks && e.Phase != MatchPhase.Playing || i < 10; i++)
+            {
+                e.Tick();
+            }
+
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing), "el partido no se queda trabado");
+        }
     }
 }

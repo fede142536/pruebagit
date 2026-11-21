@@ -177,6 +177,7 @@ namespace Football.Core.MatchCore
             CountPossessionChange(p.Team);
             Owner = p;
             _holder = null;
+            _boxOwner = null;
             Ball.Vel = Vec3.Zero;
             Ball.Spin = 0f;
             p.ActionTimer = Config.Player.ControlDelay;

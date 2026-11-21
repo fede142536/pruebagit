@@ -71,6 +71,7 @@ namespace Football.Game
         private bool _showThrough;
         private bool _showCross;
         private bool _keyboardShootWasHeld;
+        private bool _forceCross;
         private bool _keyboardPassWasHeld;
         private float _keyboardPassHeld;
         private RectTransform _passBar, _shootBar;
@@ -194,13 +195,15 @@ namespace Football.Game
         /// <param name="hasBall">Tu equipo tiene el balón.</param>
         /// <param name="ownHalf">El balón está en tu campo (se ofrece DESPEJAR en lugar de FILTRADO).</param>
         /// <param name="keeperLocked">Estás controlando al arquero.</param>
-        public void SetContext(bool hasBall, bool ownHalf, bool keeperLocked)
+        /// <param name="forceCross">Mostrar CENTRO aunque esté desactivado en Ajustes (córners y tiros libres propios).</param>
+        public void SetContext(bool hasBall, bool ownHalf, bool keeperLocked, bool forceCross = false)
         {
-            if (hasBall == _hasBall && ownHalf == _ownHalf && keeperLocked == _keeperLocked)
+            if (hasBall == _hasBall && ownHalf == _ownHalf && keeperLocked == _keeperLocked && forceCross == _forceCross)
             {
                 return;
             }
 
+            _forceCross = forceCross;
             _hasBall = hasBall;
             _ownHalf = ownHalf;
             _keeperLocked = keeperLocked;
@@ -216,7 +219,7 @@ namespace Football.Game
             _shoot.Ui.SetVisible(attack);
             _clear.Ui.SetVisible(attack && (_ownHalf || !_showThrough));
             _through.Ui.SetVisible(attack && !_ownHalf && _showThrough);
-            _cross.Ui.SetVisible(attack && _showCross);
+            _cross.Ui.SetVisible(attack && (_showCross || _forceCross));
             _slide.Ui.SetVisible(defense);
             _press.Ui.SetVisible(defense);
             _switch.Ui.SetVisible(defense);
