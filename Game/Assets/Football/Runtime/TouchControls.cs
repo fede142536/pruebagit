@@ -25,6 +25,7 @@ namespace Football.Game
         private const int NoPointer = -1;
 
         // Posiciones (para diestros) y tamaños de las cuatro casillas de acción y del esprint.
+        // Posiciones pensadas para un ancho de 1920: los botones se miden desde el borde derecho real (ver ToScreenEdge).
         private static readonly Vector2 SlotA = new Vector2(1560f, 250f);
         private static readonly Vector2 SlotB = new Vector2(1775f, 370f);
         private static readonly Vector2 SlotC = new Vector2(1585f, 490f);
@@ -65,6 +66,9 @@ namespace Football.Game
         private bool _showThrough;
         private bool _showCross;
         private bool _keyboardShootWasHeld;
+        private float _width = UiKit.Reference.x;
+        private int _layoutScreenWidth;
+        private const float PauseMargin = 75f;
 
         /// <summary>Dirección del joystick (longitud hasta 1) con la zona muerta ya aplicada.</summary>
         public Vector2 Stick { get; private set; }
@@ -90,10 +94,19 @@ namespace Football.Game
             _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, 0.8f), SlotC, SizeC);
             _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, 0.8f), SlotD, SizeD);
             _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, 0.8f), SprintSlot, SizeSprint);
-            _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x * 0.5f + 260f, UiKit.Reference.y - 60f), 90f);
+            _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 90f);
             _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _switch, _keeper, _sprint, _pause };
 
-            Image ring = UiKit.Panel(t, "JoystickBase", Vector2.zero, new Vector2(JoystickRadius * 2f, JoystickRadius * 2f),
+            // El joystick se mueve cada fotograma: va en su propio lienzo para no reconstruir los botones.
+            var joystickLayer = new GameObject("CapaJoystick", typeof(RectTransform));
+            joystickLayer.transform.SetParent(t, false);
+            var layerRect = (RectTransform)joystickLayer.transform;
+            layerRect.anchorMin = Vector2.zero;
+            layerRect.anchorMax = Vector2.one;
+            layerRect.offsetMin = Vector2.zero;
+            layerRect.offsetMax = Vector2.zero;
+            joystickLayer.AddComponent<Canvas>();
+            Image ring = UiKit.Panel(joystickLayer.transform, "JoystickBase", Vector2.zero, new Vector2(JoystickRadius * 2f, JoystickRadius * 2f),
                 new Color(1f, 1f, 1f, 0.18f), true);
             _joystickBase = ring.gameObject;
             _joystickBaseRect = (RectTransform)ring.transform;
@@ -121,6 +134,10 @@ namespace Football.Game
             _big = big;
             _showThrough = showThrough;
             _showCross = showCross;
+            _width = UiKit.CanvasWidth;
+            _layoutScreenWidth = Screen.width;
+            float pauseX = leftHanded ? PauseMargin : _width - PauseMargin;
+            _pause.Ui.Place(new Vector2(pauseX, UiKit.Reference.y - PauseMargin), new Vector2(_pause.Size, _pause.Size));
             for (int i = 0; i < _controls.Length; i++)
             {
                 Control c = _controls[i];
@@ -137,7 +154,10 @@ namespace Football.Game
                     slot = new Vector2(slot.x - 40f, slot.y + 20f);
                 }
 
-                c.Ui.Place(new Vector2(leftHanded ? UiKit.Reference.x - slot.x : slot.x, slot.y), new Vector2(size, size));
+                // Misma distancia al borde derecho que en 1920 de ancho, sea cual sea el ancho real de la pantalla.
+                float fromRight = UiKit.Reference.x - slot.x;
+                float x = leftHanded ? fromRight : _width - fromRight;
+                c.Ui.Place(new Vector2(x, slot.y), new Vector2(size, size));
             }
 
             ApplyVisibility();
@@ -211,7 +231,7 @@ namespace Football.Game
 
         private bool OnJoystickSide(Vector2 canvasPoint)
         {
-            float half = UiKit.Reference.x * 0.5f;
+            float half = _width * 0.5f;
             return _leftHanded ? canvasPoint.x > half : canvasPoint.x < half;
         }
 
@@ -224,11 +244,16 @@ namespace Football.Game
                 _controls[i].JustUp = false;
             }
 
-            float scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
+            if (Screen.width != _layoutScreenWidth)
+            {
+                Layout(_leftHanded, _big, _showThrough, _showCross); // cambió la pantalla (giro o ventana)
+            }
+
+            ReleaseVanishedPointers(pointers);
             for (int i = 0; i < pointers.Count; i++)
             {
                 PointerState p = pointers.Pointers[i];
-                Vector2 canvasPoint = p.Position / scale;
+                Vector2 canvasPoint = UiKit.ToCanvas(p.Position);
                 switch (p.Phase)
                 {
                     case PointerPhase.Began:
@@ -252,6 +277,57 @@ namespace Football.Game
             }
 
             return Compose(pointers.Keyboard, realTime);
+        }
+
+        /// <summary>
+        /// Suelta los botones y el joystick cuyo dedo ya no existe (Android puede no avisar del final de un toque si una
+        /// notificación o salir de la aplicación se lo lleva). Sin esto, el esprint quedaría pulsado para siempre.
+        /// </summary>
+        private void ReleaseVanishedPointers(PointerInput pointers)
+        {
+            if (_joystickPointer != NoPointer && !HasPointer(pointers, _joystickPointer))
+            {
+                _joystickPointer = NoPointer;
+                _joystick = Vector2.zero;
+                _joystickBase.SetActive(false);
+            }
+
+            for (int i = 0; i < _controls.Length; i++)
+            {
+                Control c = _controls[i];
+                if (c.PointerId != NoPointer && !HasPointer(pointers, c.PointerId))
+                {
+                    c.PointerId = NoPointer;
+                    c.Down = false;
+                    c.JustUp = c == _shoot; // un tiro cargado se suelta; el resto simplemente se libera
+                }
+            }
+        }
+
+        private static bool HasPointer(PointerInput pointers, int id)
+        {
+            for (int i = 0; i < pointers.Count; i++)
+            {
+                if (pointers.Pointers[i].Id == id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Suelta todo (al pausar o salir de la aplicación).</summary>
+        public void ReleaseAll()
+        {
+            for (int i = 0; i < _controls.Length; i++)
+            {
+                Release(_controls[i]);
+            }
+
+            _joystickPointer = NoPointer;
+            _joystick = Vector2.zero;
+            _joystickBase.SetActive(false);
         }
 
         private void OnBegan(int id, Vector2 canvasPoint)

@@ -91,6 +91,41 @@ namespace Football.Game
             return canvas;
         }
 
+        /// <summary>Unidades de lienzo por píxel: el lienzo mide siempre <see cref="Reference"/>.y de alto.</summary>
+        public static float Scale => Screen.height > 0 ? Screen.height / Reference.y : 1f;
+
+        /// <summary>Ancho real del lienzo en unidades (≈2408 en un teléfono 20:9, 1920 en 16:9).</summary>
+        public static float CanvasWidth => Screen.width / Scale;
+
+        /// <summary>Desplazamiento del área de diseño de 1920×1080, centrada en el lienzo real.</summary>
+        public static Vector2 AreaOffset => new Vector2((CanvasWidth - Reference.x) * 0.5f, 0f);
+
+        /// <summary>Convierte una posición de pantalla (píxeles) a unidades del lienzo real.</summary>
+        public static Vector2 ToCanvas(Vector2 screen) => screen / Scale;
+
+        /// <summary>Convierte una posición de pantalla (píxeles) a unidades del área de diseño centrada.</summary>
+        public static Vector2 ToArea(Vector2 screen) => screen / Scale - AreaOffset;
+
+        /// <summary>
+        /// Crea dentro del lienzo un área de 1920×1080 centrada: los menús se diseñan en ella y quedan centrados en pantallas
+        /// más anchas (20:9). Lo que debe pegarse a los bordes (controles táctiles) va directamente en el lienzo.
+        /// </summary>
+        public static RectTransform CreateArea(Canvas canvas)
+        {
+            var go = new GameObject("Area", typeof(RectTransform));
+            go.transform.SetParent(canvas.transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Reference;
+            return rect;
+        }
+
+        /// <summary>Tamaño de un fondo que cubre cualquier proporción de pantalla, centrado en el área de diseño.</summary>
+        public static Vector2 FullScreenSize => new Vector2(Reference.x * 2f, Reference.y);
+
         /// <summary>Fuente integrada de Unity.</summary>
         public static Font DefaultFont
         {

@@ -28,7 +28,7 @@ namespace Football.Game
         private readonly Canvas _canvas;
         private readonly TouchControls _controls;
         private readonly DebugPanel _debug;
-        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
+        private readonly Text _homeName, _awayName, _score, _clockMinutes, _clockSeconds, _banner, _hint, _warning;
         private readonly GameObject _pausePanel;
         private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle, _mentality, _pressing;
         private readonly NameTags _nameTags;
@@ -51,7 +51,8 @@ namespace Football.Game
         private int _frameCounter;
         private float _speed = 1f;
         private float _hintTimer;
-        private readonly StringBuilder _clockText = new StringBuilder(8);
+        private static readonly string[] TwoDigits = BuildTwoDigits();
+        private int _shownMinute = -1;
 
         /// <summary>El partido terminó y pasó la pausa final.</summary>
         public bool Finished { get; private set; }
@@ -66,14 +67,20 @@ namespace Football.Game
             _pointers = pointers;
             _settings = settings;
             _canvas = UiKit.CreateCanvas("PartidoUI", parent, 10);
-            Transform c = _canvas.transform;
+            // El marcador y los avisos van en un lienzo anidado: al cambiar el reloj no se reconstruye el resto de la interfaz.
+            RectTransform area = UiKit.CreateArea(_canvas);
+            area.gameObject.AddComponent<Canvas>();
+            Transform c = area;
 
             Color panel = new Color(0f, 0f, 0f, 0.55f);
             UiKit.Panel(c, "Marcador", new Vector2(960f, 1020f), new Vector2(760f, 100f), panel);
             _homeName = UiKit.Label(c, "Local", new Vector2(700f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleRight);
             _awayName = UiKit.Label(c, "Visitante", new Vector2(1220f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleLeft);
             _score = UiKit.Label(c, "Goles", new Vector2(960f, 1035f), new Vector2(160f, 70f), "0 - 0", 54, Color.white);
-            _clock = UiKit.Label(c, "Reloj", new Vector2(960f, 985f), new Vector2(200f, 40f), "00:00", 28, new Color(1f, 0.9f, 0.4f));
+            Color clockColor = new Color(1f, 0.9f, 0.4f);
+            _clockMinutes = UiKit.Label(c, "RelojMin", new Vector2(937f, 985f), new Vector2(60f, 40f), "00", 28, clockColor, TextAnchor.MiddleRight);
+            UiKit.Label(c, "RelojSep", new Vector2(960f, 987f), new Vector2(20f, 40f), ":", 28, clockColor);
+            _clockSeconds = UiKit.Label(c, "RelojSeg", new Vector2(983f, 985f), new Vector2(60f, 40f), "00", 28, clockColor, TextAnchor.MiddleLeft);
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
             _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
@@ -81,7 +88,7 @@ namespace Football.Game
             _controls = new TouchControls(_canvas);
             _debug = new DebugPanel(c);
 
-            Image dim = UiKit.Panel(c, "Pausa", new Vector2(960f, 540f), UiKit.Reference, new Color(0f, 0f, 0f, 0.7f));
+            Image dim = UiKit.Panel(c, "Pausa", new Vector2(960f, 540f), UiKit.FullScreenSize, new Color(0f, 0f, 0f, 0.7f));
             _pausePanel = dim.gameObject;
             UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
             Color option = new Color(0.3f, 0.3f, 0.4f);
@@ -169,7 +176,7 @@ namespace Football.Game
             _eventsSeen = 0;
             _bannerTimer = 0f;
             _endTimer = 0f;
-            _shownHome = _shownAway = _shownSecond = -1;
+            _shownHome = _shownAway = _shownSecond = _shownMinute = -1;
             _banner.text = string.Empty;
             _homeName.text = TeamCatalog.ScoreboardName(homeTeam);
             _awayName.text = TeamCatalog.ScoreboardName(awayTeam);
@@ -409,31 +416,27 @@ namespace Football.Game
                 _score.text = home + " - " + away;
             }
 
+            // Reloj sin crear textos nuevos: se eligen de una tabla "00".."99" ya preparada.
             int second = Mathf.FloorToInt(_engine.Minute * 60f);
             if (second != _shownSecond)
             {
                 _shownSecond = second;
-                int minutes = second / 60;
-                int seconds = second % 60;
-                _clockText.Length = 0;
-                if (minutes < 10)
+                int minutes = Math.Min(second / 60, TwoDigits.Length - 1);
+                if (minutes != _shownMinute)
                 {
-                    _clockText.Append('0');
+                    _shownMinute = minutes;
+                    _clockMinutes.text = TwoDigits[minutes];
                 }
 
-                _clockText.Append(minutes).Append(':');
-                if (seconds < 10)
-                {
-                    _clockText.Append('0');
-                }
-
-                _clockText.Append(seconds);
-                _clock.text = _clockText.ToString();
+                _clockSeconds.text = TwoDigits[second % 60];
             }
 
             if (!_benchmark)
             {
-                bool hasBall = _engine.Owner != null && _engine.Owner.Team == 0;
+                // Mientras viaja un pase propio el balón no tiene dueño: se mantienen los botones de ataque para que un toque
+                // rápido de PASE no caiga sobre BARRER.
+                MatchPlayer holder = _engine.Owner ?? _engine.LastToucher;
+                bool hasBall = holder != null && holder.Team == 0;
                 bool ownHalf = _engine.Ball.Pos.X * _engine.Teams[0].AttackDirection < 0f;
                 _shownHasBall = hasBall;
                 _controls.SetContext(hasBall, ownHalf, _engine.Teams[0].KeeperLock);
@@ -441,6 +444,26 @@ namespace Football.Game
         }
 
         // ---- Pausa -----------------------------------------------------------------------------------------------
+
+        private static string[] BuildTwoDigits()
+        {
+            var digits = new string[100];
+            for (int i = 0; i < digits.Length; i++)
+            {
+                digits[i] = i.ToString("00");
+            }
+
+            return digits;
+        }
+
+        /// <summary>Pausa el partido si está en juego (por ejemplo, al salir de la aplicación o con el botón atrás).</summary>
+        public void PauseIfPlaying()
+        {
+            if (_engine != null && !_paused && !_engine.IsFinished)
+            {
+                SetPaused(true);
+            }
+        }
 
         private void SetPaused(bool paused)
         {
@@ -486,7 +509,6 @@ namespace Football.Game
 
         private void HandlePauseInput()
         {
-            float scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
             for (int i = 0; i < _pointers.Count; i++)
             {
                 PointerState p = _pointers.Pointers[i];
@@ -495,7 +517,7 @@ namespace Football.Game
                     continue;
                 }
 
-                Vector2 point = p.Position / scale;
+                Vector2 point = UiKit.ToArea(p.Position);
                 if (_resume.Contains(point))
                 {
                     SetPaused(false);

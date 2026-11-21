@@ -63,6 +63,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.6b Menús por pantallas (estilo FC) | ⚠️ escrito, sin ejecutar en Unity: menú principal (amistoso; carrera y torneo «próximamente»), equipos en tarjetas, alineación (formación, titulares, suplentes, no convocados), ajustes del partido y ajustes generales |
 | 1.7 HUD, depuración y benchmark | ⚠️ escrito, **sin medir en el dispositivo** (marcador, pausa, panel de depuración, partido IA contra IA con semilla fija) |
 | 1.8 Jugabilidad del partido: entradas según posición y orientación, recortes, contención y cobertura de la IA, mantener el balón, táctica en vivo (mentalidad y presión) e IA que se adapta al marcador | ✅ núcleo hecho y probado (`DuelTests`, `TacticsTests`; métricas en `BALANCE.md` §1.1); ⚠️ botones de táctica en la pausa sin ejecutar en Unity |
+| 1.9 Revisión de calidad con agentes (motor, Unity, datos, pruebas): goles fantasma del arquero, autor del gol, fuera de juego, sacador expulsado, convocatorias guardadas, interfaz en pantallas 20:9, cámara única, toques colgados, pausa al salir de la app | ✅ núcleo corregido y probado (`EngineRegressionTests`); ⚠️ Unity compilado contra la simulación, sin ejecutar. Pendiente: reducir llamadas de dibujo (~300 por fotograma), zona segura de la muesca, ajustes de URP para gama baja, valores de ajuste aún escritos en código |
 
 ### Criterios de aceptación medibles
 

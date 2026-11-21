@@ -33,7 +33,7 @@ namespace Football.Game
         /// <summary>Fondo a pantalla completa con degradado vertical.</summary>
         public static void Background(Transform parent)
         {
-            Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.Reference, Color.white);
+            Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, Color.white);
             image.sprite = Gradient();
             // Líneas de cancha muy tenues como decoración.
             Color line = new Color(1f, 1f, 1f, 0.035f);
@@ -195,7 +195,7 @@ namespace Football.Game
         {
             Pointers = pointers;
             Canvas = UiKit.CreateCanvas(name, parent, 5);
-            Root = Canvas.transform;
+            Root = UiKit.CreateArea(Canvas);
             UiTheme.Background(Root);
             Canvas.gameObject.SetActive(false);
         }
@@ -215,17 +215,16 @@ namespace Football.Game
         /// <summary>Se pulsó "atrás" (Esc en el ordenador o el botón atrás de Android).</summary>
         protected bool BackKey => Pointers.Keyboard.PauseDown;
 
-        /// <summary>Toques que empezaron en este fotograma, en unidades de lienzo. Devuelve cuántos hay en <paramref name="taps"/>.</summary>
+        /// <summary>Toques que empezaron en este fotograma, en unidades del área de diseño. Devuelve cuántos hay en <paramref name="taps"/>.</summary>
         protected int Taps(out Vector2[] taps)
         {
             taps = _taps;
-            float scale = Canvas.scaleFactor > 0f ? Canvas.scaleFactor : 1f;
             int n = 0;
             for (int i = 0; i < Pointers.Count; i++)
             {
                 if (Pointers.Pointers[i].Phase == PointerPhase.Began)
                 {
-                    _taps[n++] = Pointers.Pointers[i].Position / scale;
+                    _taps[n++] = UiKit.ToArea(Pointers.Pointers[i].Position);
                 }
             }
 

@@ -134,4 +134,5 @@ encima de los 100 ms objetivo; si es así probaremos 60 FPS o ajustes.
 | Error rojo sobre *Input* (`InvalidOperationException`) | **Edit → Project Settings → Player → Other Settings → Active Input Handling → Both** y reinicia Unity |
 | Errores rojos al compilar | Copia el texto de la pestaña Console y mándamelo |
 | No aparece el menú "Football" | Espera a que termine de compilar; si persiste, revisa que copiaste `Football` dentro de `Assets` |
+| Al construir el APK dice que falta la escena `Assets/Football/Scenes/Main.unity` | Ya no se usa: la escena ahora se crea en `Assets/FootballGenerated`. Vuelve a ejecutar **Football → Construir APK** |
 | El APK no se genera | Comprueba que el módulo Android (con OpenJDK y SDK/NDK) está instalado y que cambiaste la plataforma a Android |

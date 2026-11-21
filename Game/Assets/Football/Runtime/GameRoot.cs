@@ -23,14 +23,22 @@ namespace Football.Game
         private State _state;
         private bool _lastWasBenchmark;
 
+        /// <summary>Cámara única del juego fuera del partido (menús); el partido la apaga mientras usa la suya.</summary>
+        public static Camera MenuCamera { get; private set; }
+
         private void Awake()
         {
             _settings = GameSettings.Load();
             _friendly = new FriendlySetup(_settings);
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = _settings.TargetFps;
-            Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            Screen.orientation = ScreenOrientation.LandscapeLeft;
+            // Horizontal hacia cualquiera de los dos lados (el teléfono puede girarse), nunca vertical.
+            Screen.autorotateToPortrait = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = true;
+            Screen.autorotateToLandscapeRight = true;
+            Screen.orientation = ScreenOrientation.AutoRotation;
+            PrepareScene();
 
             _mainMenu = new MainMenuScreen(transform, _pointers);
             _teams = new TeamSelectScreen(transform, _pointers, _friendly);
@@ -42,8 +50,56 @@ namespace Football.Game
             Go(State.MainMenu);
         }
 
+        /// <summary>
+        /// Apaga lo que trae la escena de plantilla (cámara con su AudioListener, sombras de las luces) y crea una cámara propia
+        /// que dibuja los menús con un color liso. Se hace una sola vez al arrancar.
+        /// </summary>
+        private void PrepareScene()
+        {
+            Camera[] existing = Camera.allCameras;
+            for (int i = 0; i < existing.Length; i++)
+            {
+                existing[i].gameObject.SetActive(false);
+            }
+
+            Light[] lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+            for (int i = 0; i < lights.Length; i++)
+            {
+                lights[i].shadows = LightShadows.None; // materiales sin iluminación: las sombras solo costarían GPU
+            }
+
+            var go = new GameObject("CamaraMenu");
+            go.transform.SetParent(transform, false);
+            go.tag = "MainCamera";
+            MenuCamera = go.AddComponent<Camera>();
+            MenuCamera.clearFlags = CameraClearFlags.SolidColor;
+            MenuCamera.backgroundColor = new Color(0.02f, 0.03f, 0.05f);
+            MenuCamera.cullingMask = 0; // los menús son interfaz superpuesta: la cámara solo limpia la pantalla
+            MenuCamera.allowHDR = false;
+            MenuCamera.allowMSAA = false;
+            go.AddComponent<AudioListener>();
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused && _state == State.Match)
+            {
+                _match.PauseIfPlaying(); // al volver, el partido espera en pausa
+            }
+        }
+
+        private void OnApplicationFocus(bool focused)
+        {
+            if (!focused && _state == State.Match)
+            {
+                _match.PauseIfPlaying();
+            }
+        }
+
         private void Go(State next)
         {
+            // La pantalla solo se mantiene encendida durante el partido.
+            Screen.sleepTimeout = next == State.Match ? SleepTimeout.NeverSleep : SleepTimeout.SystemSetting;
             _mainMenu.Hide();
             _teams.Hide();
             _lineup.Hide();
@@ -103,7 +159,11 @@ namespace Football.Game
             {
                 case State.MainMenu:
                     _mainMenu.Update();
-                    if (_mainMenu.Choice == MainMenuChoice.Friendly)
+                    if (_pointers.Keyboard.PauseDown)
+                    {
+                        Application.Quit(); // botón atrás de Android en el menú principal
+                    }
+                    else if (_mainMenu.Choice == MainMenuChoice.Friendly)
                     {
                         Go(State.Teams);
                     }
@@ -179,7 +239,11 @@ namespace Football.Game
 
                 case State.Result:
                     _result.Update();
-                    if (_result.AgainRequested)
+                    if (_pointers.Keyboard.PauseDown)
+                    {
+                        Go(State.MainMenu);
+                    }
+                    else if (_result.AgainRequested)
                     {
                         StartMatch(_lastWasBenchmark);
                     }

@@ -11,6 +11,7 @@ namespace Football.Game
     /// </summary>
     public sealed class MatchView
     {
+        private readonly List<Mesh> _meshes = new List<Mesh>();
         private const float LineWidth = 0.13f;
         private const float LineHeight = 0.02f;
         private const float StripeHeight = 0.01f;
@@ -96,11 +97,10 @@ namespace Football.Game
 
         private Camera CreateCamera()
         {
-            // Se apagan las cámaras que traiga la escena de plantilla.
-            Camera[] existing = Camera.allCameras;
-            for (int i = 0; i < existing.Length; i++)
+            // La cámara de los menús se apaga mientras dure el partido (la escena de plantilla ya se apagó al arrancar).
+            if (GameRoot.MenuCamera != null)
             {
-                existing[i].enabled = false;
+                GameRoot.MenuCamera.enabled = false;
             }
 
             var go = new GameObject("CamaraPartido");
@@ -114,8 +114,7 @@ namespace Football.Game
             cam.farClipPlane = 300f;
             cam.allowHDR = false;
             cam.allowMSAA = false;
-            go.AddComponent<AudioListener>();
-            return cam;
+            return cam; // el AudioListener único está en la cámara de los menús
         }
 
         private Transform Shape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale)
@@ -227,7 +226,9 @@ namespace Football.Game
         {
             var go = new GameObject(name);
             go.transform.SetParent(_root.transform, false);
-            go.AddComponent<MeshFilter>().sharedMesh = builder.ToMesh();
+            Mesh mesh = builder.ToMesh();
+            _meshes.Add(mesh);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = Materials.Get(color);
             renderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -442,6 +443,16 @@ namespace Football.Game
         public void Destroy()
         {
             Object.Destroy(_root);
+            for (int i = 0; i < _meshes.Count; i++)
+            {
+                Object.Destroy(_meshes[i]); // las mallas creadas por código no se liberan solas con el objeto
+            }
+
+            _meshes.Clear();
+            if (GameRoot.MenuCamera != null)
+            {
+                GameRoot.MenuCamera.enabled = true;
+            }
         }
 
         // ---- Malla procedural del campo ----------------------------------------------------------------------------
