@@ -76,6 +76,14 @@ marcador, siempre de forma visible (aviso en pantalla), nunca como ayuda oculta.
 **Consecuencias:** el estilo de cada equipo pasa a ser una copia propia dentro del partido (`TeamState.Style`) para poder ajustarlo
 sin tocar la configuración compartida.
 
+## D-14 · Modo 3 contra 3 en cancha cerrada — Aceptada (pedido del usuario)
+**Decisión:** el mismo motor (`MatchCore`) juega con equipos de cualquier tamaño; el modo cerrado es solo datos
+(`MatchConfig.CreateIndoor()`, guardado en `Data/balance/match_indoor.json`): campo de 40 × 20 m con paredes que devuelven el
+balón, porterías de 3 × 2 m, sin fuera de juego y distancias de la IA escaladas. Formación `3v3`: arquero, un jugador de
+apoyo y un delantero; se eligen automáticamente los mejores del plantel.
+**Por qué:** reutiliza física, reglas, IA y controles ya probados, y el modo se calibra con la misma herramienta.
+**Consecuencias:** no hay saques de banda, de esquina ni de puerta en ese modo; las faltas y los penales sí existen.
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 

@@ -56,7 +56,7 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    |---|---|---|
    | Mover | arrastrar en la mitad izquierda | WASD o flechas |
    | Correr más | ESPRINT (mantener) | Shift |
-   | Con balón | PASE · TIRO (mantener y soltar) · DESPEJAR (en tu campo) | J · K · R |
+   | Con balón | PASE (toque: automático · mantener: más potencia) · TIRO (mantener y soltar) · DESPEJAR (en tu campo) | J · K · R |
    | Opcionales | FILTRADO · CENTRO (se activan en Ajustes) | L · I |
    | Sin balón | PRESIONAR (mantener: quita sin barrer) · BARRER · CAMBIAR | E · Q · Tab |
    | Táctica | En la pausa: MENTALIDAD (muy defensiva … muy ofensiva) y PRESIÓN (baja, normal, alta) | Esc |

@@ -5,49 +5,53 @@ using UnityEngine;
 namespace Football.Game
 {
     /// <summary>
-    /// Carga el balance del partido desde <c>Resources/match.json</c> (copia de <c>Data/balance/match.json</c>), para que los
-    /// ajustes vivan en datos. Si el archivo falta o no es válido, se usan los valores por defecto del núcleo.
+    /// Carga el balance del partido desde <c>Resources/match.json</c> (o <c>match_indoor.json</c> para la cancha cerrada),
+    /// copias de <c>Data/balance</c>, para que los ajustes vivan en datos. Si el archivo falta o no es válido, se usan los
+    /// valores por defecto del núcleo.
     /// </summary>
     public static class BalanceConfig
     {
-        private const string ResourceName = "match";
         private const int ExpectedDifficulties = 5;
-        private static string _json;
-        private static bool _loaded;
+        private static readonly string[] ResourceNames = { "match", "match_indoor" };
+        private static readonly string[] Json = new string[2];
+        private static readonly bool[] Loaded = new bool[2];
 
         /// <summary>Motivo por el que no se usó el archivo, o null.</summary>
         public static string LoadError { get; private set; }
 
         /// <summary>Crea una configuración nueva (independiente en cada partido) a partir del archivo de balance.</summary>
-        public static MatchConfig Create()
+        /// <param name="indoor">Cancha cerrada 3 contra 3.</param>
+        public static MatchConfig Create(bool indoor = false)
         {
-            if (!_loaded)
+            int k = indoor ? 1 : 0;
+            if (!Loaded[k])
             {
-                _loaded = true;
-                TextAsset asset = Resources.Load<TextAsset>(ResourceName);
-                _json = asset != null ? asset.text : null;
-                if (_json == null)
+                Loaded[k] = true;
+                TextAsset asset = Resources.Load<TextAsset>(ResourceNames[k]);
+                Json[k] = asset != null ? asset.text : null;
+                if (Json[k] == null)
                 {
-                    LoadError = "no se encontró Resources/match.json; se usan los valores por defecto";
+                    LoadError = "no se encontró Resources/" + ResourceNames[k] + ".json; se usan los valores por defecto";
                 }
             }
 
-            var config = new MatchConfig();
-            if (_json == null)
+            MatchConfig config = Defaults(indoor);
+            string json = Json[k];
+            if (json == null)
             {
                 return config;
             }
 
             try
             {
-                JsonUtility.FromJsonOverwrite(_json, config);
+                JsonUtility.FromJsonOverwrite(json, config);
                 if (config.TickRate > 0 && config.Difficulties != null && config.Difficulties.Length == ExpectedDifficulties
                     && config.Styles != null && config.Styles.Length > 0)
                 {
                     return config;
                 }
 
-                LoadError = "Resources/match.json incompleto; se usan los valores por defecto";
+                LoadError = "Resources/" + ResourceNames[k] + ".json incompleto; se usan los valores por defecto";
             }
             catch (Exception e)
             {
@@ -55,8 +59,10 @@ namespace Football.Game
                 Debug.LogException(e);
             }
 
-            _json = null;
-            return new MatchConfig();
+            Json[k] = null;
+            return Defaults(indoor);
         }
+
+        private static MatchConfig Defaults(bool indoor) => indoor ? MatchConfig.CreateIndoor() : new MatchConfig();
     }
 }

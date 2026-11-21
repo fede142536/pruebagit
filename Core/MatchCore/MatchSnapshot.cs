@@ -6,8 +6,11 @@ namespace Football.Core.MatchCore
     /// </summary>
     public sealed class MatchSnapshot
     {
-        /// <summary>Número de jugadores.</summary>
+        /// <summary>Máximo de jugadores (11 contra 11); los buffers tienen este tamaño.</summary>
         public const int PlayerCount = 22;
+
+        /// <summary>Jugadores que hay en este partido (22, o 6 en la cancha cerrada).</summary>
+        public int Count;
 
         /// <summary>Posición X de cada jugador.</summary>
         public readonly float[] PlayerX = new float[PlayerCount];
@@ -51,7 +54,8 @@ namespace Football.Core.MatchCore
         /// <param name="engine">Motor de origen.</param>
         public void CopyFrom(MatchEngine engine)
         {
-            for (int i = 0; i < PlayerCount; i++)
+            Count = engine.Players.Length;
+            for (int i = 0; i < Count; i++)
             {
                 MatchPlayer p = engine.Players[i];
                 PlayerX[i] = p.Pos.X;

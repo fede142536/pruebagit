@@ -21,7 +21,7 @@ namespace Football.Core.MatchCore
         }
     }
 
-    /// <summary>Formación táctica: once puestos, el primero es siempre el portero.</summary>
+    /// <summary>Formación táctica: once puestos (tres en la cancha cerrada); el primero es siempre el portero.</summary>
     public sealed class Formation
     {
         /// <summary>Nombre, p. ej. "4-4-2".</summary>
@@ -40,6 +40,17 @@ namespace Football.Core.MatchCore
     /// <summary>Formaciones disponibles.</summary>
     public static class Formations
     {
+        /// <summary>Cancha cerrada, 3 contra 3: arquero, un jugador de apoyo atrás y un delantero, en diagonal.</summary>
+        public static readonly Formation Indoor3 = new Formation("3v3", new[]
+        {
+            new FormationSlot(Position.Goalkeeper, 0.05f, 0f),
+            new FormationSlot(Position.CentralMidfielder, 0.36f, 0.35f),
+            new FormationSlot(Position.Striker, 0.62f, -0.30f)
+        });
+
+        /// <summary>Formaciones de la cancha cerrada.</summary>
+        public static readonly Formation[] Indoor = { Indoor3 };
+
         /// <summary>4-4-2 clásico.</summary>
         public static readonly Formation F442 = new Formation("4-4-2", new[]
         {

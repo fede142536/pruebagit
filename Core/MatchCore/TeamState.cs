@@ -24,7 +24,7 @@ namespace Football.Core.MatchCore
         /// <summary>Dificultad de la IA de este equipo.</summary>
         public readonly DifficultyProfile Difficulty;
         /// <summary>Jugadores, en el orden de los puestos de la formación.</summary>
-        public readonly MatchPlayer[] Players = new MatchPlayer[11];
+        public readonly MatchPlayer[] Players;
         /// <summary>Estadísticas.</summary>
         public readonly TeamStats Stats = new TeamStats();
 
@@ -64,7 +64,7 @@ namespace Football.Core.MatchCore
         /// <summary>Extremo (+1/-1) cuya portería defiende el equipo.</summary>
         public float DefendedEnd => -AttackDirection;
 
-        /// <summary>Crea el equipo y sus once jugadores, que se añaden al arreglo global.</summary>
+        /// <summary>Crea el equipo y sus jugadores (uno por puesto de la formación), que se añaden al arreglo global.</summary>
         public TeamState(int index, float attackDirection, MatchTeamSetup setup, DifficultyProfile difficulty,
             PlayerConfig playerConfig, MatchPlayer[] allPlayers)
         {
@@ -75,6 +75,7 @@ namespace Football.Core.MatchCore
             BaseStyle = setup.Style.Clone();
             Style = setup.Style.Clone();
             Difficulty = difficulty;
+            Players = new MatchPlayer[setup.Players.Length];
             for (int slot = 0; slot < Players.Length; slot++)
             {
                 var player = new MatchPlayer(index * Players.Length + slot, index, slot, setup.Players[slot], playerConfig);

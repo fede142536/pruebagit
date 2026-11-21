@@ -38,7 +38,7 @@ namespace Football.Core.MatchCore
         private const float PenaltyWait = 2f;
         private const float SetPieceBoxMaxDistance = 28f;
 
-        private readonly bool[] _claimed = new bool[22];
+        private readonly bool[] _claimed;
 
         private void UpdateTeamPlans()
         {
@@ -55,7 +55,10 @@ namespace Football.Core.MatchCore
                     }
                 }
 
-                team.OffsideLine = Rules.OffsideLine(team.AttackDirection, _scratchX, count);
+                // Sin fuera de juego (cancha cerrada), la "línea" es el fondo rival: nadie queda adelantado.
+                team.OffsideLine = Config.Rules.Offside
+                    ? Rules.OffsideLine(team.AttackDirection, _scratchX, count)
+                    : team.AttackDirection * Pitch.HalfLength;
                 team.Chaser = null;
                 team.Presser = null;
                 team.Presser2 = null;
@@ -408,7 +411,7 @@ namespace Football.Core.MatchCore
                     continue;
                 }
 
-                float jitter = 0.9f + 0.02f * (p.Index % 11);
+                float jitter = 0.9f + 0.02f * (p.Index % PlayersPerTeam);
                 p.DecisionTimer = interval * team.Difficulty.ReactionScale * jitter;
                 DecideOffBall(p, team);
             }

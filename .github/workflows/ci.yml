@@ -27,4 +27,5 @@ jobs:
       - name: Simulación de humo (sin excepciones ni partidos colgados)
         run: |
           dotnet run -c Release --no-build --project Tools/HeadlessSim -- --matches 20 --seed 1
+          dotnet run -c Release --no-build --project Tools/HeadlessSim -- --indoor --matches 20 --seed 1
           dotnet run -c Release --no-build --project Tools/HeadlessSim -- --teams Data/teams/argentina.json --matches 1

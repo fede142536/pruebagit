@@ -30,8 +30,14 @@ namespace Football.Core.MatchCore
         public float CenterCircleRadius = 9.15f;
         /// <summary>Radio de los postes y del larguero.</summary>
         public float PostRadius = 0.06f;
-        /// <summary>Margen fuera de las líneas donde pueden moverse los jugadores.</summary>
+        /// <summary>Margen fuera de las líneas donde pueden moverse los jugadores (negativo = no llegan a la línea).</summary>
         public float PlayerMargin = 2.5f;
+        /// <summary>Mitad del ancho del área chica.</summary>
+        public float GoalAreaHalfWidth = 9.16f;
+        /// <summary>Cancha cerrada: paredes en las bandas y en el fondo (fuera de la portería) que devuelven el balón.</summary>
+        public bool Walls;
+        /// <summary>Fracción de la velocidad perpendicular que conserva el balón al rebotar en una pared.</summary>
+        public float WallRestitution = 0.6f;
     }
 
     /// <summary>Física del balón.</summary>
@@ -254,6 +260,8 @@ namespace Football.Core.MatchCore
         public float YellowAggressionSpread = 0.25f;
         /// <summary>Probabilidad de roja directa en una falta.</summary>
         public float RedBase = 0.008f;
+        /// <summary>Se aplica la regla del fuera de juego (no existe en el fútbol sala).</summary>
+        public bool Offside = true;
         /// <summary>Distancia máxima a portería para tirar una falta directa.</summary>
         public float FreeKickDirectMaxDistance = 30f;
     }
@@ -555,5 +563,67 @@ namespace Football.Core.MatchCore
 
         /// <summary>Duración de un paso de simulación (s).</summary>
         public float FixedDeltaTime() => 1f / TickRate;
+
+        /// <summary>
+        /// Configuración del modo cancha cerrada (3 contra 3): campo de 40 × 20 m con paredes, porterías de fútbol sala
+        /// (3 × 2 m), sin fuera de juego y con las distancias de la IA adaptadas al espacio reducido. Se guarda en
+        /// <c>Data/balance/match_indoor.json</c>.
+        /// </summary>
+        public static MatchConfig CreateIndoor()
+        {
+            var c = new MatchConfig();
+            PitchConfig p = c.Pitch;
+            p.Length = 40f;
+            p.Width = 20f;
+            p.GoalWidth = 3f;
+            p.GoalHeight = 2f;
+            p.PenaltyAreaDepth = 6f;
+            p.PenaltyAreaHalfWidth = 7f;
+            p.GoalAreaDepth = 0f;
+            p.GoalAreaHalfWidth = 0f;
+            p.PenaltySpotDistance = 6f;
+            p.CenterCircleRadius = 3f;
+            p.PlayerMargin = -0.4f;
+            p.Walls = true;
+
+            // De cerca, un tiro fuerte castiga menos al arquero que en cancha grande (portería de 3 m).
+            c.Player.KeeperSaveSpeedPenalty = 0.02f;
+
+            RulesConfig r = c.Rules;
+            r.MinutesPerHalf = 20f;
+            r.Offside = false;
+            r.SetPieceDistance = 5f;
+            r.FreeKickDirectMaxDistance = 14f;
+
+            AiConfig a = c.Ai;
+            a.ShootMaxRange = 13f;
+            a.XgDecay = 5f;
+            a.ShotEagerness = 0.8f;
+            a.ShotSpeedMax = 26f;
+            a.PassMinDistance = 2.5f;
+            a.PassMaxDistance = 28f;
+            a.PassDistanceScale = 20f;
+            a.LobPassDistance = 22f;
+            a.CrossMinProgress = 0.97f;
+            a.CrossWideDistance = 3f;
+            a.DribbleLookahead = 4f;
+            a.DribbleSafeDistance = 4f;
+            a.ClearancePressure = 2.5f;
+            a.OffsideMargin = 0f;
+            a.RunAhead = 5f;
+            a.MarkRadius = 9f;
+            a.MarkDistance = 1.5f;
+            a.PressTrigger = 9f;
+            a.PressSprintDistance = 5f;
+            a.CoverDepth = 4f;
+            a.CoverRadius = 10f;
+            a.KeeperMaxDepth = 3f;
+            a.InterceptHorizon = 2f;
+            a.HoldSafeDistance = 4f;
+            a.HoldRadius = 1.5f;
+            a.WalkDistance = 5f;
+            a.SupportSearchRadius = 5f;
+            return c;
+        }
     }
 }

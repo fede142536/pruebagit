@@ -33,7 +33,7 @@ namespace Football.Core.MatchCore
         private MatchPlayer _beatenKeeper;
         private int _offsideTeam;
         private MatchPlayer _passTarget;
-        private readonly bool[] _offsideFlag = new bool[22];
+        private readonly bool[] _offsideFlag;
         private bool _shotLive;
         private bool _saveRolled;
         private long _shotStartTick;
@@ -642,6 +642,65 @@ namespace Football.Core.MatchCore
             {
                 Teams[p.Team].Controlled = null;
             }
+        }
+
+        /// <summary>
+        /// Cancha cerrada: el balón rebota en las paredes de las bandas y del fondo; solo sale por la boca de la portería
+        /// (gol). Se comprueba antes de los límites, así nunca hay saques de banda, de esquina ni de puerta.
+        /// </summary>
+        private void BounceOffWalls()
+        {
+            PitchConfig c = Config.Pitch;
+            if (!c.Walls)
+            {
+                return;
+            }
+
+            float r = Config.Ball.Radius;
+            Vec3 pos = Ball.Pos;
+            Vec3 vel = Ball.Vel;
+            bool bounced = false;
+            float sideLimit = Pitch.HalfWidth - r;
+            if (MathF.Abs(pos.Y) > sideLimit)
+            {
+                float sign = MathF.Sign(pos.Y);
+                pos = new Vec3(pos.X, sign * sideLimit, pos.Z);
+                if (vel.Y * sign > 0f)
+                {
+                    vel = new Vec3(vel.X, -vel.Y * c.WallRestitution, vel.Z);
+                }
+
+                bounced = true;
+            }
+
+            float endLimit = Pitch.HalfLength - r;
+            bool inMouth = MathF.Abs(pos.Y) < Pitch.GoalHalfWidth - r && pos.Z < Pitch.GoalHeight - r;
+            if (MathF.Abs(pos.X) > endLimit && !inMouth)
+            {
+                float sign = MathF.Sign(pos.X);
+                pos = new Vec3(sign * endLimit, pos.Y, pos.Z);
+                if (vel.X * sign > 0f)
+                {
+                    vel = new Vec3(-vel.X * c.WallRestitution, vel.Y, vel.Z);
+                }
+
+                bounced = true;
+            }
+
+            if (!bounced)
+            {
+                return;
+            }
+
+            Ball.Pos = pos;
+            Ball.Vel = vel;
+            if (Owner != null)
+            {
+                // Conduciendo contra la pared: el balón queda pegado a ella y el jugador lo sigue teniendo.
+                Ball.Vel = Vec3.Zero;
+            }
+
+            _prevBallPos = pos; // el rebote no cuenta como cruce de línea
         }
 
         private void CheckBoundaries()

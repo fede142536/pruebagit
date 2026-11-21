@@ -125,13 +125,20 @@ namespace Football.Game
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
         /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
+        /// <param name="indoor">3 contra 3 en cancha cerrada (se juega con los tres mejores: arquero y dos de campo).</param>
         /// <returns>Verdadero si el partido arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
         public bool Begin(TeamDefinition home, TeamDefinition away, SquadSelection homeSquad, SquadSelection awaySquad,
-            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
+            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor = false)
         {
             try
             {
-                BeginUnsafe(home, away, homeSquad, awaySquad, homeKit, awayKit, difficulty, halfMinutes, benchmark);
+                if (indoor)
+                {
+                    homeSquad = SquadSelection.Auto(home, Formations.Indoor3, 0);
+                    awaySquad = SquadSelection.Auto(away, Formations.Indoor3, 0);
+                }
+
+                BeginUnsafe(home, away, homeSquad, awaySquad, homeKit, awayKit, difficulty, halfMinutes, benchmark, indoor);
                 LastError = null;
                 return true;
             }
@@ -149,7 +156,7 @@ namespace Football.Game
         public string LastError { get; private set; }
 
         private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, SquadSelection homeSquad, SquadSelection awaySquad,
-            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
+            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor)
         {
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
@@ -160,7 +167,7 @@ namespace Football.Game
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(true);
 
-            MatchConfig config = BalanceConfig.Create();
+            MatchConfig config = BalanceConfig.Create(indoor);
             // La velocidad del juego frena la simulación; la duración en tiempo de simulación se ajusta para que cada parte
             // siga durando los minutos reales elegidos.
             _speed = benchmark ? 1f : _settings.SpeedFactor;
@@ -174,7 +181,7 @@ namespace Football.Game
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam);
             _nameTags.Setup(_engine);
             _previous.CopyFrom(_engine);
             _current.CopyFrom(_engine);

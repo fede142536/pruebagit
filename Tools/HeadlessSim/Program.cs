@@ -12,13 +12,14 @@ namespace Football.Tools.HeadlessSim
     /// <summary>
     /// Simula partidos completos sin gráficos para medir el motor.
     /// Uso: dotnet run --project Tools/HeadlessSim -- --matches 1000 --seed 1 [--config Data/balance/match.json]
-    ///      [--difficulty 2] [--rating 65] [--dump-config Data/balance/match.json]
+    ///      [--difficulty 2] [--rating 65] [--dump-config Data/balance/match.json] [--indoor (cancha cerrada 3 contra 3)]
     /// </summary>
     public static class Program
     {
         private static readonly JsonSerializerOptions Json = new JsonSerializerOptions { IncludeFields = true, WriteIndented = true };
 
         private const int MaxTicksPerMatch = 200000;
+        private static Formation[] s_formations = Formations.All;
 
         /// <summary>Punto de entrada: interpreta las opciones y ejecuta la simulación pedida.</summary>
         public static int Main(string[] args)
@@ -33,9 +34,10 @@ namespace Football.Tools.HeadlessSim
             bool verbose = false;
             float asciiEvery = 0f;
             string teamsPath = null;
+            bool indoor = false;
             for (int i = 0; i < args.Length; i++)
             {
-                bool needsValue = args[i] != "--verbose";
+                bool needsValue = args[i] != "--verbose" && args[i] != "--indoor";
                 if (needsValue && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine($"Falta el valor de {args[i]}.");
@@ -52,6 +54,7 @@ namespace Football.Tools.HeadlessSim
                     case "--config": configPath = args[++i]; break;
                     case "--dump-config": dumpPath = args[++i]; break;
                     case "--verbose": verbose = true; break;
+                    case "--indoor": indoor = true; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                     default:
@@ -62,7 +65,8 @@ namespace Football.Tools.HeadlessSim
 
             MatchConfig config = configPath != null
                 ? JsonSerializer.Deserialize<MatchConfig>(File.ReadAllText(configPath), Json)
-                : new MatchConfig();
+                : indoor ? MatchConfig.CreateIndoor() : new MatchConfig();
+            s_formations = indoor ? Formations.Indoor : Formations.All;
 
             int levels = config.Difficulties.Length;
             if (difficulty < 0 || difficulty >= levels || awayDifficulty >= levels || matches <= 0)
@@ -107,8 +111,8 @@ namespace Football.Tools.HeadlessSim
                 IRandom teams = rng.Fork("teams");
                 TeamStyle homeStyle = config.Styles[teams.NextInt(0, config.Styles.Length)];
                 TeamStyle awayStyle = config.Styles[teams.NextInt(0, config.Styles.Length)];
-                Formation homeFormation = Formations.All[teams.NextInt(0, Formations.All.Length)];
-                Formation awayFormation = Formations.All[teams.NextInt(0, Formations.All.Length)];
+                Formation homeFormation = s_formations[teams.NextInt(0, s_formations.Length)];
+                Formation awayFormation = s_formations[teams.NextInt(0, s_formations.Length)];
                 MatchTeamSetup home = RosterFactory.CreateTeam(teams, "H", rating + teams.NextGaussian(0, 5), homeFormation, homeStyle);
                 MatchTeamSetup away = RosterFactory.CreateTeam(teams, "A", rating + teams.NextGaussian(0, 5), awayFormation, awayStyle);
 

@@ -10,6 +10,8 @@ namespace Football.Game
         None,
         /// <summary>Partido amistoso.</summary>
         Friendly,
+        /// <summary>3 contra 3 en cancha cerrada.</summary>
+        Indoor,
         /// <summary>Ajustes.</summary>
         Settings,
         /// <summary>Prueba de rendimiento.</summary>
@@ -32,6 +34,8 @@ namespace Football.Game
         {
             new Entry { Label = "PARTIDO AMISTOSO", Title = "Partido amistoso", Choice = MainMenuChoice.Friendly, Available = true,
                 Description = "Elige dos clubes, sus camisetas y tu alineación,\ny juega un partido suelto contra la máquina." },
+            new Entry { Label = "3 CONTRA 3", Title = "3 contra 3 · cancha cerrada", Choice = MainMenuChoice.Indoor, Available = true,
+                Description = "Cancha de 40 × 20 con paredes: el balón rebota y\nnunca sale. Arquero y dos jugadores por equipo." },
             new Entry { Label = "MODO CARRERA", Title = "Modo carrera", Choice = MainMenuChoice.None, Available = false,
                 Description = "Dirige un club temporada tras temporada: fichajes,\nfinanzas, estadio, cantera y directiva." },
             new Entry { Label = "TORNEO", Title = "Torneo", Choice = MainMenuChoice.None, Available = false,
@@ -103,7 +107,8 @@ namespace Football.Game
 
             _cardTitle.text = e.Title;
             _cardText.text = e.Description;
-            _action.Label.text = e.Available ? (e.Choice == MainMenuChoice.Friendly ? "JUGAR" : "ENTRAR") : "PRÓXIMAMENTE";
+            bool play = e.Choice == MainMenuChoice.Friendly || e.Choice == MainMenuChoice.Indoor;
+            _action.Label.text = e.Available ? (play ? "JUGAR" : "ENTRAR") : "PRÓXIMAMENTE";
             _action.Background.color = e.Available ? UiTheme.AccentDark : UiTheme.Button;
         }
 

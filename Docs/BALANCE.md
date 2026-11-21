@@ -75,6 +75,27 @@ depender más de la velocidad del tiro (`KeeperSaveBase` 0,58 → 0,85, `KeeperS
 `KeeperSaveSpeedPenalty` 0,012 → 0,045). Medición final (1.000 partidos, semilla 1): **2,34 goles por partido**, posesión 9,0 s,
 3,29 pases por posesión.
 
+### 1.4 Ajustes tras la prueba del usuario (21/11/2026)
+
+- **Recuperar el balón:** con PRESIONAR mantenido 8 s sobre un rival que conduce, los robos pasan de 48 % a 63 % y las faltas
+  de 28 % a 15 % (`HumanPressing_WinsTheBallMostOfTheTime_WithFewFouls`): `FoulBase` 0,30 → 0,16, entrada de frente con la mitad
+  de faltas (`FrontTackleFoulMultiplier` 0,5), ayuda de entrada para la persona (`HumanTackleBonus` 0,10) y menos espera entre
+  entradas (`HumanTackleCooldown` 0,6 s). `KeeperSaveBase` 0,85 → 0,90 para compensar (2,2 goles por partido).
+- **Pase:** un toque es automático; mantener PASE elige la potencia (`HumanPassPowerMin` 0,8 a `HumanPassPowerMax` 1,6 de la
+  velocidad asistida).
+
+### 1.5 Modo 3 contra 3 (cancha cerrada)
+
+Medición con `dotnet run -c Release --project Tools/HeadlessSim -- --indoor --matches 200 --seed 1` (`match_indoor.json`):
+
+| Ajuste | Goles por partido | Tiros por equipo |
+|---|---|---|
+| Valores de cancha grande escalados | 14,6 | 29,7 |
+| Menos ganas de tirar y alcance de tiro 13 m | 12,0 | 18,8 |
+| + el arquero sufre menos los tiros fuertes de cerca, tiro máx. 26 m/s | **5,9** | 20,9 |
+
+Las pruebas exigen entre 4 y 9 goles por partido, sin saques de banda, de esquina ni fueras de juego.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

@@ -29,6 +29,7 @@ namespace Football.Game
         private readonly Text[] _labels = new Text[MatchSnapshot.PlayerCount];
         private readonly RectTransform[] _rects = new RectTransform[MatchSnapshot.PlayerCount];
         private int _highlighted = -1;
+        private int _count;
 
         /// <summary>Crea las etiquetas (ocultas hasta <see cref="Setup"/>).</summary>
         public NameTags(Transform parent)
@@ -51,7 +52,13 @@ namespace Football.Game
         /// <summary>Pone los nombres de los jugadores del partido.</summary>
         public void Setup(MatchEngine engine)
         {
-            for (int i = 0; i < _labels.Length; i++)
+            _count = engine.Players.Length;
+            for (int i = _count; i < _labels.Length; i++)
+            {
+                _labels[i].gameObject.SetActive(false); // partidos con menos jugadores (cancha cerrada)
+            }
+
+            for (int i = 0; i < _count; i++)
             {
                 MatchPlayer p = engine.Players[i];
                 _labels[i].text = p.Name;
@@ -95,7 +102,7 @@ namespace Football.Game
             }
 
             float scale = UiKit.Scale;
-            for (int i = 0; i < _labels.Length; i++)
+            for (int i = 0; i < _count; i++)
             {
                 bool wanted = mode == NameMode.All || (mode == NameMode.Controlled && (i == controlled || i == owner));
                 Vector3 screen = default;

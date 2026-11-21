@@ -22,7 +22,10 @@ namespace Football.Game
         private const float CameraDistance = 30f;
         private const float CameraFollowX = 0.8f;
         private const float CameraFollowZ = 0.85f; // sigue casi del todo a lo ancho: así se ven las dos líneas laterales
-        private const float CameraMaxX = 34f;
+        private const float CameraEdgeMargin = 18.5f; // distancia al fondo donde la cámara deja de avanzar (cancha grande)
+        private const float FullPitchWidth = 68f;
+        private const float MinCameraScale = 0.45f;
+        private const float WallHeight = 1.1f;
         private const float CameraFollowSpeed = 3f;
         private const float CameraFov = 40f;
         private const float ArrowHeight = 2.7f;
@@ -48,9 +51,11 @@ namespace Football.Game
         private readonly Pitch _pitch;
         private const float NameHeight = 2.15f;
 
-        private readonly PlayerModel[] _players = new PlayerModel[MatchSnapshot.PlayerCount];
-        private readonly Vector3[] _heads = new Vector3[MatchSnapshot.PlayerCount];
-        private readonly bool[] _visible = new bool[MatchSnapshot.PlayerCount];
+        private readonly PlayerModel[] _players;
+        private readonly Vector3[] _heads;
+        private readonly bool[] _visible;
+        private readonly int _perTeam;
+        private readonly float _cameraScale;
         private Camera _camera;
         private Transform _ball;
         private Transform _ballShadow;
@@ -69,9 +74,16 @@ namespace Football.Game
         /// <param name="pitch">Geometría del campo.</param>
         /// <param name="homeKit">Equipación del local.</param>
         /// <param name="awayKit">Equipación del visitante.</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit)
+        /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam)
         {
             _pitch = pitch;
+            _perTeam = playersPerTeam;
+            _players = new PlayerModel[2 * playersPerTeam];
+            _heads = new Vector3[_players.Length];
+            _visible = new bool[_players.Length];
+            // En una cancha más chica la cámara se acerca en proporción (con un mínimo para ver todo el ancho).
+            _cameraScale = Mathf.Clamp(pitch.Width / FullPitchWidth, MinCameraScale, 1f);
             _root = new GameObject("MatchView");
             Safe("cámara", () => _camera = CreateCamera());
             Safe("campo", BuildPitch);
@@ -169,7 +181,11 @@ namespace Football.Game
                 float boxX = end * (halfL - _pitch.Config.GoalAreaDepth);
                 Rectangle(lines, Mathf.Min(goalLine, areaX), -_pitch.Config.PenaltyAreaHalfWidth,
                     Mathf.Max(goalLine, areaX), _pitch.Config.PenaltyAreaHalfWidth);
-                Rectangle(lines, Mathf.Min(goalLine, boxX), -9.16f, Mathf.Max(goalLine, boxX), 9.16f);
+                if (_pitch.Config.GoalAreaDepth > 0f)
+                {
+                    float boxY = _pitch.Config.GoalAreaHalfWidth;
+                    Rectangle(lines, Mathf.Min(goalLine, boxX), -boxY, Mathf.Max(goalLine, boxX), boxY);
+                }
                 float spotX = end * (halfL - _pitch.Config.PenaltySpotDistance);
                 lines.Quad(spotX - 0.15f, -0.15f, spotX + 0.15f, 0.15f, LineHeight);
             }
@@ -180,13 +196,20 @@ namespace Football.Game
 
         private void BuildStadium()
         {
-            float halfL = _pitch.HalfLength + BoardDistance;
-            float halfW = _pitch.HalfWidth + BoardDistance;
+            if (_pitch.Config.Walls)
+            {
+                BuildWalls();
+            }
+
+            bool walls = _pitch.Config.Walls;
+            float boardDistance = walls ? 0f : BoardDistance;
+            float halfL = _pitch.HalfLength + boardDistance;
+            float halfW = _pitch.HalfWidth + boardDistance;
             Color[] boards = { new Color(0.1f, 0.25f, 0.7f), new Color(0.85f, 0.85f, 0.88f), new Color(0.75f, 0.12f, 0.12f) };
 
             // Carteles publicitarios alrededor del campo.
             const int segments = 8;
-            for (int i = 0; i < segments; i++)
+            for (int i = 0; i < (walls ? 0 : segments); i++) // en la cancha cerrada las paredes hacen de carteles
             {
                 float x0 = -halfL + i * (2f * halfL / segments);
                 float length = 2f * halfL / segments - 0.3f;
@@ -204,6 +227,34 @@ namespace Football.Game
                 Shape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, 7f));
                 Shape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
                 Shape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
+            }
+        }
+
+        /// <summary>Cancha cerrada: tableros en el borde del campo (en el fondo, a los lados de la portería).</summary>
+        private void BuildWalls()
+        {
+            float halfL = _pitch.HalfLength;
+            float halfW = _pitch.HalfWidth;
+            const float thickness = 0.2f;
+            Color wall = new Color(0.85f, 0.87f, 0.9f);
+            Color trim = new Color(0.1f, 0.25f, 0.7f);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float z = side * (halfW + thickness * 0.5f);
+                Shape("Pared", MeshKit.Box, wall, new Vector3(0f, WallHeight * 0.5f, z), new Vector3(2f * halfL + 2f * thickness, WallHeight, thickness));
+                Shape("Franja", MeshKit.Box, trim, new Vector3(0f, WallHeight + 0.03f, z), new Vector3(2f * halfL + 2f * thickness, 0.06f, thickness + 0.02f));
+            }
+
+            float sideLength = halfW - _pitch.GoalHalfWidth;
+            for (int end = -1; end <= 1; end += 2)
+            {
+                float x = end * (halfL + thickness * 0.5f);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    float z = side * (_pitch.GoalHalfWidth + sideLength * 0.5f);
+                    Shape("Pared", MeshKit.Box, wall, new Vector3(x, WallHeight * 0.5f, z), new Vector3(thickness, WallHeight, sideLength));
+                    Shape("Franja", MeshKit.Box, trim, new Vector3(x, WallHeight + 0.03f, z), new Vector3(thickness + 0.02f, 0.06f, sideLength));
+                }
             }
         }
 
@@ -270,8 +321,8 @@ namespace Football.Game
         {
             for (int i = 0; i < _players.Length; i++)
             {
-                bool home = i < 11;
-                bool keeper = i % 11 == 0;
+                bool home = i < _perTeam;
+                bool keeper = i % _perTeam == 0;
                 KitColors kit = home ? homeKit : awayKit;
                 if (keeper)
                 {
@@ -424,10 +475,11 @@ namespace Football.Game
             }
 
             float follow = 1f - Mathf.Exp(-CameraFollowSpeed * deltaTime);
-            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp(ballX * CameraFollowX, -CameraMaxX, CameraMaxX), follow);
+            float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
+            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp(ballX * CameraFollowX, -maxX, maxX), follow);
             _cameraZ = Mathf.Lerp(_cameraZ, ballY * CameraFollowZ, follow);
             Transform t = _camera.transform;
-            t.localPosition = new Vector3(_cameraX, CameraHeight, _cameraZ - CameraDistance);
+            t.localPosition = new Vector3(_cameraX, CameraHeight * _cameraScale, _cameraZ - CameraDistance * _cameraScale);
             t.LookAt(new Vector3(_cameraX, 0f, _cameraZ + 2f));
         }
 

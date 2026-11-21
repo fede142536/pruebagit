@@ -11,7 +11,10 @@
     "PenaltySpotDistance": 11,
     "CenterCircleRadius": 9.15,
     "PostRadius": 0.06,
-    "PlayerMargin": 2.5
+    "PlayerMargin": 2.5,
+    "GoalAreaHalfWidth": 9.16,
+    "Walls": false,
+    "WallRestitution": 0.6
   },
   "Ball": {
     "Radius": 0.11,
@@ -119,6 +122,7 @@
     "YellowBase": 0.14,
     "YellowAggressionSpread": 0.25,
     "RedBase": 0.008,
+    "Offside": true,
     "FreeKickDirectMaxDistance": 30
   },
   "Ai": {

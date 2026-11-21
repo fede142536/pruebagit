@@ -620,7 +620,7 @@ namespace Football.Core.MatchCore
                 _offsideFlag[i] = false;
             }
 
-            if (_offsideExempt)
+            if (_offsideExempt || !Config.Rules.Offside)
             {
                 return;
             }

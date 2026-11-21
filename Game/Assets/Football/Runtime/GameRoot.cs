@@ -22,6 +22,7 @@ namespace Football.Game
         private ResultScreen _result;
         private State _state;
         private bool _lastWasBenchmark;
+        private bool _indoor;
 
         /// <summary>Cámara única del juego fuera del partido (menús); el partido la apaga mientras usa la suya.</summary>
         public static Camera MenuCamera { get; private set; }
@@ -148,7 +149,7 @@ namespace Football.Game
 
             Go(State.Match);
             if (_match.Begin(_friendly.Definition(0), _friendly.Definition(1), _friendly.Squad(0), _friendly.Squad(1),
-                    homeKit, awayKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
+                    homeKit, awayKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark, _indoor && !benchmark))
             {
                 _mainMenu.SetError(null);
                 return;
@@ -170,8 +171,9 @@ namespace Football.Game
                     {
                         Application.Quit(); // botón atrás de Android en el menú principal
                     }
-                    else if (_mainMenu.Choice == MainMenuChoice.Friendly)
+                    else if (_mainMenu.Choice == MainMenuChoice.Friendly || _mainMenu.Choice == MainMenuChoice.Indoor)
                     {
+                        _indoor = _mainMenu.Choice == MainMenuChoice.Indoor;
                         Go(State.Teams);
                     }
                     else if (_mainMenu.Choice == MainMenuChoice.Settings)

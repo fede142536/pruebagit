@@ -18,8 +18,10 @@ namespace Football.Core.MatchCore
         public readonly BallState Ball = new BallState();
         /// <summary>Equipos: 0 local, 1 visitante.</summary>
         public readonly TeamState[] Teams = new TeamState[2];
-        /// <summary>Los 22 jugadores: índice = equipo × 11 + puesto.</summary>
-        public readonly MatchPlayer[] Players = new MatchPlayer[22];
+        /// <summary>Todos los jugadores: índice = equipo × jugadores por equipo + puesto.</summary>
+        public readonly MatchPlayer[] Players;
+        /// <summary>Jugadores por equipo (11, o 3 en la cancha cerrada).</summary>
+        public readonly int PlayersPerTeam;
         /// <summary>Eventos del partido.</summary>
         public readonly MatchEventLog Events = new MatchEventLog();
 
@@ -46,7 +48,7 @@ namespace Football.Core.MatchCore
 
         private readonly IRandom _rng;
         private readonly float _dt;
-        private readonly float[] _scratchX = new float[11];
+        private readonly float[] _scratchX;
 
         private Restart _restart;
         private MatchPlayer _taker;
@@ -56,6 +58,7 @@ namespace Football.Core.MatchCore
         private Vec3 _prevBallPos;
         private float _planTimer;
         private float _adaptTimer;
+        private const float DecisionStagger = 0.011f;
         private const float PenaltyShotSeconds = 2f;
 
         /// <summary>Cambia la mentalidad y la presión de un equipo durante el partido.</summary>
@@ -122,6 +125,17 @@ namespace Football.Core.MatchCore
                 throw new ArgumentOutOfRangeException(nameof(homeDifficulty), "Dificultad inexistente en la configuración.");
             }
 
+            if (home == null || away == null || home.Players == null || away.Players == null
+                || home.Players.Length != away.Players.Length || home.Players.Length < 1)
+            {
+                throw new ArgumentException("Los dos equipos deben tener la misma cantidad de jugadores.", nameof(away));
+            }
+
+            PlayersPerTeam = home.Players.Length;
+            Players = new MatchPlayer[2 * PlayersPerTeam];
+            _scratchX = new float[PlayersPerTeam];
+            _offsideFlag = new bool[Players.Length];
+            _claimed = new bool[Players.Length];
             Pitch = new Pitch(config.Pitch);
             _dt = config.FixedDeltaTime();
             Teams[0] = new TeamState(0, 1f, home, config.Difficulties[homeDifficulty], config.Player, Players);
@@ -129,7 +143,7 @@ namespace Football.Core.MatchCore
 
             for (int i = 0; i < Players.Length; i++)
             {
-                Players[i].DecisionTimer = (i % 11) * 0.011f;
+                Players[i].DecisionTimer = (i % PlayersPerTeam) * DecisionStagger;
             }
 
             PlaceForKickoff(0);
@@ -251,6 +265,7 @@ namespace Football.Core.MatchCore
                 return;
             }
 
+            BounceOffWalls();
             TrackDribbleCut(dt);
             ResolveTackles();
             if (Phase != MatchPhase.Playing)
