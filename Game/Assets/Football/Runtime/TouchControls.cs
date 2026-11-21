@@ -34,7 +34,9 @@ namespace Football.Game
         private static readonly Vector2 SlotC = new Vector2(1585f, 490f);
         private static readonly Vector2 SlotD = new Vector2(1800f, 580f);
         private static readonly Vector2 SprintSlot = new Vector2(1345f, 160f);
-        private const float SizeA = 190f, SizeB = 175f, SizeC = 145f, SizeD = 135f, SizeSprint = 150f;
+        // Un 15 % más chicos que la primera versión y translúcidos para no tapar a los jugadores.
+        private const float SizeA = 160f, SizeB = 150f, SizeC = 124f, SizeD = 115f, SizeSprint = 128f;
+        private const float ButtonAlpha = 0.55f;
 
         private sealed class Control
         {
@@ -90,16 +92,16 @@ namespace Football.Game
         {
             _canvas = canvas;
             Transform t = canvas.transform;
-            _pass = Make(t, "Pase", "PASE", new Color(0.15f, 0.65f, 0.25f, 0.8f), SlotA, SizeA);
-            _shoot = Make(t, "Tiro", "TIRO", new Color(0.85f, 0.15f, 0.15f, 0.8f), SlotB, SizeB);
-            _clear = Make(t, "Despejar", "DESPEJAR", new Color(0.55f, 0.4f, 0.2f, 0.8f), SlotC, SizeC);
-            _through = Make(t, "Filtrado", "FILTRADO", new Color(0.9f, 0.75f, 0.1f, 0.8f), SlotC, SizeC);
-            _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, 0.8f), SlotD, SizeD);
-            _slide = Make(t, "Barrer", "BARRER", new Color(0.85f, 0.3f, 0.1f, 0.8f), SlotA, SizeA);
-            _press = Make(t, "Presionar", "PRESIONAR", new Color(0.2f, 0.55f, 0.85f, 0.8f), SlotB, SizeB);
-            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, 0.8f), SlotC, SizeC);
-            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, 0.8f), SlotD, SizeD);
-            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, 0.8f), SprintSlot, SizeSprint);
+            _pass = Make(t, "Pase", "PASE", new Color(0.15f, 0.65f, 0.25f, ButtonAlpha), SlotA, SizeA);
+            _shoot = Make(t, "Tiro", "TIRO", new Color(0.85f, 0.15f, 0.15f, ButtonAlpha), SlotB, SizeB);
+            _clear = Make(t, "Despejar", "DESPEJE", new Color(0.55f, 0.4f, 0.2f, ButtonAlpha), SlotC, SizeC);
+            _through = Make(t, "Filtrado", "FILTRO", new Color(0.9f, 0.75f, 0.1f, ButtonAlpha), SlotC, SizeC);
+            _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, ButtonAlpha), SlotD, SizeD);
+            _slide = Make(t, "Barrer", "BARRER", new Color(0.85f, 0.3f, 0.1f, ButtonAlpha), SlotA, SizeA);
+            _press = Make(t, "Presionar", "PRESIÓN", new Color(0.2f, 0.55f, 0.85f, ButtonAlpha), SlotB, SizeB);
+            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, ButtonAlpha), SlotC, SizeC);
+            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, ButtonAlpha), SlotD, SizeD);
+            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, ButtonAlpha), SprintSlot, SizeSprint);
             _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 90f);
             _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _switch, _keeper, _sprint, _pause };
             _passBar = ChargeBar(_pass);
@@ -144,7 +146,7 @@ namespace Football.Game
 
         private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size)
         {
-            UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size > 160f ? 34 : 26, color, true);
+            UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size >= 150f ? 30 : 24, color, true);
             return new Control { Ui = button, Slot = slot, Size = size };
         }
 

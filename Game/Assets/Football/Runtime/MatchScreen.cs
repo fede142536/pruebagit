@@ -20,7 +20,6 @@ namespace Football.Game
         private const float EndDelaySeconds = 2.5f;
         private const ulong BenchmarkSeed = 12345UL;
         private const float BenchmarkHalfSeconds = 150f;
-        private const float HintSeconds = 14f;
 
         private readonly Transform _parent;
         private readonly PointerInput _pointers;
@@ -28,7 +27,7 @@ namespace Football.Game
         private readonly Canvas _canvas;
         private readonly TouchControls _controls;
         private readonly DebugPanel _debug;
-        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
+        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning, _controlsHelp;
         private readonly GameObject _pausePanel;
         private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle, _mentality, _pressing;
         private readonly NameTags _nameTags;
@@ -76,13 +75,16 @@ namespace Football.Game
             area.gameObject.AddComponent<Canvas>();
             Transform c = area;
 
-            Color panel = new Color(0f, 0f, 0f, 0.55f);
-            UiKit.Panel(c, "Marcador", new Vector2(960f, 1020f), new Vector2(760f, 100f), panel);
-            _homeName = UiKit.Label(c, "Local", new Vector2(700f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleRight);
-            _awayName = UiKit.Label(c, "Visitante", new Vector2(1220f, 1030f), new Vector2(380f, 60f), string.Empty, 34, Color.white, TextAnchor.MiddleLeft);
-            _score = UiKit.Label(c, "Goles", new Vector2(960f, 1035f), new Vector2(160f, 70f), "0 - 0", 54, Color.white);
-            Color clockColor = new Color(1f, 0.9f, 0.4f);
-            _clock = UiKit.Label(c, "Reloj", new Vector2(960f, 985f), new Vector2(200f, 40f), "00:00", 28, clockColor);
+            // Marcador compacto arriba a la izquierda, estilo transmisión de TV: deja libre la vista del campo.
+            RectTransform board = ScoreboardRoot(_canvas.transform);
+            board.gameObject.AddComponent<Canvas>(); // lienzo propio: el reloj cambia seguido y no debe reconstruir el resto
+            Color dark = new Color(0.05f, 0.06f, 0.09f, 0.85f);
+            UiKit.Panel(board, "Fondo", new Vector2(ScoreboardWidth * 0.5f, ScoreboardHeight * 0.5f), new Vector2(ScoreboardWidth, ScoreboardHeight), dark);
+            UiKit.Panel(board, "FondoReloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, ScoreboardHeight), new Color(0.75f, 0.12f, 0.12f, 0.9f));
+            _homeName = UiKit.Label(board, "Local", new Vector2(70f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), string.Empty, 30, Color.white);
+            _score = UiKit.Label(board, "Goles", new Vector2(190f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "0 - 0", 34, Color.white);
+            _awayName = UiKit.Label(board, "Visitante", new Vector2(310f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), string.Empty, 30, Color.white);
+            _clock = UiKit.Label(board, "Reloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "00:00", 28, Color.white);
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
             _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
@@ -110,6 +112,9 @@ namespace Football.Game
             _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
+            UiKit.Label(dim.transform, "TituloControles", new Vector2(330f, 770f), new Vector2(520f, 70f), "CONTROLES", 44, Color.white);
+            _controlsHelp = UiKit.Label(dim.transform, "Controles", new Vector2(330f, 470f), new Vector2(520f, 520f), string.Empty, 22,
+                new Color(1f, 1f, 1f, 0.85f), TextAnchor.UpperLeft);
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
             _nameTags = new NameTags(parent);
@@ -134,8 +139,16 @@ namespace Football.Game
             {
                 if (indoor)
                 {
-                    homeSquad = SquadSelection.Auto(home, Formations.Indoor3, 0);
-                    awaySquad = SquadSelection.Auto(away, Formations.Indoor3, 0);
+                    // Por seguridad: en la cancha cerrada solo valen alineaciones de tres.
+                    if (homeSquad == null || homeSquad.Formation.Slots.Length != Formations.Indoor3.Slots.Length)
+                    {
+                        homeSquad = SquadSelection.Auto(home, Formations.Indoor3, 0);
+                    }
+
+                    if (awaySquad == null || awaySquad.Formation.Slots.Length != Formations.Indoor3.Slots.Length)
+                    {
+                        awaySquad = SquadSelection.Auto(away, Formations.Indoor3, 0);
+                    }
                 }
 
                 BeginUnsafe(home, away, homeSquad, awaySquad, homeKit, awayKit, difficulty, halfMinutes, benchmark, indoor);
@@ -194,16 +207,14 @@ namespace Football.Game
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
             _banner.text = string.Empty;
-            _homeName.text = TeamCatalog.ScoreboardName(homeTeam);
-            _awayName.text = TeamCatalog.ScoreboardName(awayTeam);
+            _homeName.text = ShortName(homeTeam);
+            _awayName.text = ShortName(awayTeam);
             _warning.text = _view.BuildErrors.Length > 0
                 ? "Algo no se pudo dibujar (manda una captura de esto):\n" + _view.BuildErrors
                 : string.Empty;
-            _hintTimer = benchmark ? 0f : HintSeconds;
-            _hint.text = benchmark
-                ? string.Empty
-                : "Tu jugador es el de la FLECHA AMARILLA. Mitad izquierda: mover. Con balón: PASE · TIRO (mantén y suelta) · DESPEJAR.\n"
-                  + "Sin balón: BARRER · PRESIONAR (mantén) · CAMBIAR · ARQUERO.  PC: WASD · J · K · R · Q · E · Tab · G · Shift";
+            // Sin texto permanente durante el juego: la guía de controles está en la pausa.
+            _hintTimer = 0f;
+            _hint.text = string.Empty;
 
             _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
             ApplyControlsVisibility();
@@ -511,6 +522,42 @@ namespace Football.Game
         private const int ClockMaxMinutes = 99;
 
         /// <summary>Todos los textos "mm:ss" preparados al arrancar: el reloj del partido no crea textos nuevos.</summary>
+        private const float ScoreboardWidth = 500f;
+        private const float ScoreboardHeight = 58f;
+        private const float ScoreboardMargin = 20f;
+
+        /// <summary>Contenedor del marcador anclado a la esquina superior izquierda de la pantalla real.</summary>
+        private static RectTransform ScoreboardRoot(Transform parent)
+        {
+            var go = new GameObject("Marcador", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.sizeDelta = new Vector2(ScoreboardWidth, ScoreboardHeight);
+            rect.anchoredPosition = new Vector2(ScoreboardMargin, -ScoreboardMargin);
+            return rect;
+        }
+
+        private static string ShortName(TeamDefinition team) => !string.IsNullOrEmpty(team.ShortName)
+            ? team.ShortName.ToUpperInvariant()
+            : team.Name.Substring(0, Math.Min(3, team.Name.Length)).ToUpperInvariant();
+
+        /// <summary>Guía de controles de la pausa, con las teclas asignadas en Ajustes.</summary>
+        private static string ControlsGuide()
+        {
+            string K(GameAction a) => KeyBindings.KeyName(KeyBindings.Get(a));
+            return "TÁCTIL: mitad izquierda para mover. Tu jugador\nes el de la flecha amarilla.\n\n"
+                   + "CON BALÓN\nPASE (toque: automático, mantener: potencia)\nTIRO (mantener y soltar) · DESPEJAR\n\n"
+                   + "SIN BALÓN\nPRESIONAR (mantener) · BARRER · CAMBIAR\nARQUERO (controlar al arquero)\n\n"
+                   + "TECLADO\nMover " + K(GameAction.Up) + " " + K(GameAction.Left) + " " + K(GameAction.Down) + " " + K(GameAction.Right)
+                   + " · Esprint " + K(GameAction.Sprint) + "\nPase " + K(GameAction.Pass) + " · Tiro " + K(GameAction.Shoot)
+                   + " · Despejar " + K(GameAction.Clear) + "\nPresionar " + K(GameAction.Press) + " · Barrer " + K(GameAction.Slide)
+                   + " · Cambiar " + K(GameAction.Switch) + "\nArquero " + K(GameAction.Keeper) + " · Pausa " + K(GameAction.Pause)
+                   + "\n(se cambian en Ajustes → Controles de teclado)";
+        }
+
         private static string[] BuildClockTexts()
         {
             var texts = new string[ClockMaxMinutes * 60 + 60];
@@ -536,6 +583,12 @@ namespace Football.Game
         private void SetPaused(bool paused)
         {
             _paused = paused;
+            if (paused)
+            {
+                _controlsHelp.text = ControlsGuide(); // solo al pausar: nunca durante el juego
+                _controls.ReleaseAll();
+            }
+
             _pausePanel.SetActive(paused);
             if (paused)
             {

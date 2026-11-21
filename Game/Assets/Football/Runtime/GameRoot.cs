@@ -8,7 +8,7 @@ namespace Football.Game
     /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
-        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Match, Result }
+        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Controls, Match, Result }
 
         private readonly PointerInput _pointers = new PointerInput();
         private GameSettings _settings;
@@ -18,6 +18,7 @@ namespace Football.Game
         private LineupScreen _lineup;
         private MatchSetupScreen _matchSetup;
         private SettingsScreen _settingsScreen;
+        private ControlsScreen _controlsScreen;
         private MatchScreen _match;
         private ResultScreen _result;
         private State _state;
@@ -40,12 +41,14 @@ namespace Football.Game
             Screen.autorotateToLandscapeRight = true;
             Screen.orientation = ScreenOrientation.AutoRotation;
             PrepareScene();
+            GraphicsQuality.SetAntialiasing(_settings.Antialias);
 
             _mainMenu = new MainMenuScreen(transform, _pointers);
             _teams = new TeamSelectScreen(transform, _pointers, _friendly);
             _lineup = new LineupScreen(transform, _pointers, _friendly);
             _matchSetup = new MatchSetupScreen(transform, _pointers, _settings, _friendly);
             _settingsScreen = new SettingsScreen(transform, _pointers, _settings);
+            _controlsScreen = new ControlsScreen(transform, _pointers);
             _match = new MatchScreen(transform, _pointers, _settings);
             _result = new ResultScreen(transform, _pointers);
             Go(State.MainMenu);
@@ -113,6 +116,7 @@ namespace Football.Game
             _lineup.Hide();
             _matchSetup.Hide();
             _settingsScreen.Hide();
+            _controlsScreen.Hide();
             _result.Hide();
             if (next != State.Match)
             {
@@ -126,6 +130,7 @@ namespace Football.Game
                 case State.Teams: _teams.Show(); break;
                 case State.MatchSetup: _matchSetup.Show(); break;
                 case State.Settings: _settingsScreen.Show(); break;
+                case State.Controls: _controlsScreen.Show(); break;
             }
         }
 
@@ -138,6 +143,12 @@ namespace Football.Game
         private void StartMatch(bool benchmark)
         {
             _lastWasBenchmark = benchmark;
+            if (benchmark)
+            {
+                _indoor = false; // la prueba de rendimiento es siempre 11 contra 11
+                _friendly.Indoor = false;
+            }
+
             KitColors homeKit = _friendly.KitOf(0);
             KitColors awayKit = _friendly.KitOf(1);
             if (_friendly.KitsClash)
@@ -174,6 +185,7 @@ namespace Football.Game
                     else if (_mainMenu.Choice == MainMenuChoice.Friendly || _mainMenu.Choice == MainMenuChoice.Indoor)
                     {
                         _indoor = _mainMenu.Choice == MainMenuChoice.Indoor;
+                        _friendly.Indoor = _indoor;
                         Go(State.Teams);
                     }
                     else if (_mainMenu.Choice == MainMenuChoice.Settings)
@@ -226,6 +238,19 @@ namespace Football.Game
                     if (_settingsScreen.BackRequested)
                     {
                         Go(State.MainMenu);
+                    }
+                    else if (_settingsScreen.KeysRequested)
+                    {
+                        Go(State.Controls);
+                    }
+
+                    break;
+
+                case State.Controls:
+                    _controlsScreen.Update();
+                    if (_controlsScreen.BackRequested)
+                    {
+                        Go(State.Settings);
                     }
 
                     break;

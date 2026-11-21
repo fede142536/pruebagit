@@ -19,6 +19,7 @@ namespace Football.Game
         private const string ThroughKey = "football.through";
         private const string CrossKey = "football.cross";
         private const string BigButtonsKey = "football.bigbuttons";
+        private const string AntialiasKey = "football.antialias";
 
         /// <summary>Velocidades del juego: fracción del tiempo real que avanza la simulación.</summary>
         public static readonly float[] Speeds = { 0.6f, 0.75f, 1f };
@@ -54,6 +55,8 @@ namespace Football.Game
         public bool ShowCross;
         /// <summary>Botones grandes.</summary>
         public bool BigButtons;
+        /// <summary>Suavizado de bordes (MSAA 2x): líneas del campo sin dientes de sierra.</summary>
+        public bool Antialias = true;
 
         /// <summary>Fracción del tiempo real que avanza la simulación.</summary>
         public float SpeedFactor => Speeds[Mathf.Clamp(Speed, 0, Speeds.Length - 1)];
@@ -77,7 +80,8 @@ namespace Football.Game
                 Speed = Mathf.Clamp(PlayerPrefs.GetInt(SpeedKey, 1), 0, Speeds.Length - 1),
                 ShowThrough = PlayerPrefs.GetInt(ThroughKey, 0) == 1,
                 ShowCross = PlayerPrefs.GetInt(CrossKey, 0) == 1,
-                BigButtons = PlayerPrefs.GetInt(BigButtonsKey, 0) == 1
+                BigButtons = PlayerPrefs.GetInt(BigButtonsKey, 0) == 1,
+                Antialias = PlayerPrefs.GetInt(AntialiasKey, 1) == 1
             };
 
             if (s.Opponent == s.HomeTeam)
@@ -105,6 +109,7 @@ namespace Football.Game
             PlayerPrefs.SetInt(ThroughKey, ShowThrough ? 1 : 0);
             PlayerPrefs.SetInt(CrossKey, ShowCross ? 1 : 0);
             PlayerPrefs.SetInt(BigButtonsKey, BigButtons ? 1 : 0);
+            PlayerPrefs.SetInt(AntialiasKey, Antialias ? 1 : 0);
             PlayerPrefs.Save();
         }
     }

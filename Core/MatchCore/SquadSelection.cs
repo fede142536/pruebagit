@@ -202,6 +202,14 @@ namespace Football.Core.MatchCore
                 }
             }
 
+            foreach (Formation f in Formations.Indoor)
+            {
+                if (f.Name == parts[0])
+                {
+                    formation = f;
+                }
+            }
+
             if (formation == null)
             {
                 return null;

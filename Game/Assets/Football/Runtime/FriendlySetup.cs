@@ -9,13 +9,36 @@ namespace Football.Game
     {
         private readonly GameSettings _settings;
         private readonly SquadSelection[] _squads = new SquadSelection[2];
+        private bool _indoor;
 
         /// <summary>Crea el estado a partir de los últimos ajustes guardados.</summary>
         public FriendlySetup(GameSettings settings)
         {
             _settings = settings;
-            _squads[0] = SquadStore.Load(settings.HomeTeam);
-            _squads[1] = SquadStore.Load(settings.Opponent);
+            ReloadSquads();
+        }
+
+        /// <summary>Modo cancha cerrada (3 contra 3): las alineaciones son de tres y se guardan aparte.</summary>
+        public bool Indoor
+        {
+            get => _indoor;
+            set
+            {
+                if (_indoor != value)
+                {
+                    _indoor = value;
+                    ReloadSquads();
+                }
+            }
+        }
+
+        /// <summary>Formaciones disponibles en el modo actual.</summary>
+        public Formation[] AvailableFormations => _indoor ? Formations.Indoor : Formations.All;
+
+        private void ReloadSquads()
+        {
+            _squads[0] = SquadStore.Load(_settings.HomeTeam, _indoor);
+            _squads[1] = SquadStore.Load(_settings.Opponent, _indoor);
         }
 
         /// <summary>Índice del equipo de un lado (0 el tuyo, 1 el rival).</summary>
@@ -58,7 +81,7 @@ namespace Football.Game
                 _settings.Opponent = next;
             }
 
-            _squads[side] = SquadStore.Load(next);
+            _squads[side] = SquadStore.Load(next, _indoor);
             _settings.Save();
         }
 
@@ -80,14 +103,13 @@ namespace Football.Game
         /// <summary>Guarda la convocatoria de un lado para la próxima vez.</summary>
         public void SaveSquad(int side)
         {
-            SquadStore.Save(Team(side), _squads[side]);
+            SquadStore.Save(Team(side), _squads[side], _indoor);
         }
 
         /// <summary>Vuelve a la convocatoria automática de un lado.</summary>
         public void ResetSquad(int side)
         {
-            TeamDefinition team = Definition(side);
-            _squads[side] = SquadSelection.Auto(team, TeamBuilder.ParseFormation(team.Formation));
+            _squads[side] = SquadStore.Auto(Definition(side), _indoor);
             SaveSquad(side);
         }
     }
@@ -96,20 +118,34 @@ namespace Football.Game
     public static class SquadStore
     {
         private const string Prefix = "football.squad.";
+        private const string IndoorSuffix = ".3v3";
+        private const int IndoorBench = 3;
 
-        /// <summary>Convocatoria guardada del club, o la automática si no hay o ya no es válida (por ejemplo, si cambió la plantilla).</summary>
-        public static SquadSelection Load(int teamIndex)
+        /// <summary>
+        /// Convocatoria guardada del club para el modo dado, o la automática si no hay o ya no es válida (por ejemplo, si
+        /// cambió la plantilla o se guardó para el otro modo).
+        /// </summary>
+        public static SquadSelection Load(int teamIndex, bool indoor)
         {
             TeamDefinition team = TeamCatalog.Teams[teamIndex];
-            SquadSelection saved = SquadSelection.Deserialize(team, PlayerPrefs.GetString(Prefix + team.Name, string.Empty));
-            return saved ?? SquadSelection.Auto(team, TeamBuilder.ParseFormation(team.Formation));
+            SquadSelection saved = SquadSelection.Deserialize(team, PlayerPrefs.GetString(Key(team, indoor), string.Empty));
+            bool rightSize = saved != null && (saved.Formation.Slots.Length == Formations.Indoor3.Slots.Length) == indoor;
+            return rightSize ? saved : Auto(team, indoor);
         }
 
-        /// <summary>Guarda la convocatoria del club.</summary>
-        public static void Save(int teamIndex, SquadSelection selection)
+        /// <summary>Convocatoria automática del modo dado.</summary>
+        public static SquadSelection Auto(TeamDefinition team, bool indoor) => indoor
+            ? SquadSelection.Auto(team, Formations.Indoor3, IndoorBench)
+            : SquadSelection.Auto(team, TeamBuilder.ParseFormation(team.Formation));
+
+        /// <summary>Guarda la convocatoria del club para el modo dado.</summary>
+        public static void Save(int teamIndex, SquadSelection selection, bool indoor)
         {
-            PlayerPrefs.SetString(Prefix + TeamCatalog.Teams[teamIndex].Name, selection.Serialize(TeamCatalog.Teams[teamIndex]));
+            TeamDefinition team = TeamCatalog.Teams[teamIndex];
+            PlayerPrefs.SetString(Key(team, indoor), selection.Serialize(team));
             PlayerPrefs.Save();
         }
+
+        private static string Key(TeamDefinition team, bool indoor) => Prefix + team.Name + (indoor ? IndoorSuffix : string.Empty);
     }
 }

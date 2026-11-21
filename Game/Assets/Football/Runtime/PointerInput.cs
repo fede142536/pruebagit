@@ -29,8 +29,9 @@ namespace Football.Game
     }
 
     /// <summary>
-    /// Estado del teclado para probar en el ordenador: WASD o flechas, Shift esprint, J pase, K tiro, L filtrado, I centro,
-    /// R despejar, Q barrer, E presionar (mantener), G arquero, Tab cambiar, Esc pausa.
+    /// Estado del teclado en el ordenador. Las teclas se eligen en Ajustes → Controles de teclado (ver <see cref="KeyBindings"/>);
+    /// por defecto: WASD, Shift esprint, J pase, K tiro, L filtrado, I centro, R despejar, Q barrer, E presionar (mantener),
+    /// G arquero, Tab cambiar, Esc pausa.
     /// </summary>
     public struct KeyboardState
     {
@@ -164,6 +165,93 @@ namespace Football.Game
             }
         }
 
+        private UnityEngine.InputSystem.Key[] _keys;
+        private UnityEngine.InputSystem.Key[] _assignableKeys;
+        private int _keysVersion = -1;
+
+        private static UnityEngine.InputSystem.Key ToKey(KeyCode code) =>
+            System.Enum.TryParse(KeyBindings.InputSystemName(code), out UnityEngine.InputSystem.Key key) ? key : UnityEngine.InputSystem.Key.None;
+
+        private void RefreshKeys()
+        {
+            if (_keys != null && _keysVersion == KeyBindings.Version)
+            {
+                return;
+            }
+
+            _keysVersion = KeyBindings.Version;
+            _keys = new UnityEngine.InputSystem.Key[KeyBindings.Count];
+            UnityEngine.InputSystem.Keyboard kb = UnityEngine.InputSystem.Keyboard.current;
+            for (int i = 0; i < _keys.Length; i++)
+            {
+                UnityEngine.InputSystem.Key k = ToKey(KeyBindings.Get((GameAction)i));
+                try
+                {
+                    _ = kb[k];
+                }
+                catch (System.Exception)
+                {
+                    k = UnityEngine.InputSystem.Key.None;
+                }
+
+                _keys[i] = k;
+            }
+        }
+
+        private bool Held(UnityEngine.InputSystem.Keyboard kb, GameAction a)
+        {
+            UnityEngine.InputSystem.Key k = _keys[(int)a];
+            return k != UnityEngine.InputSystem.Key.None && kb[k].isPressed;
+        }
+
+        private bool Pressed(UnityEngine.InputSystem.Keyboard kb, GameAction a)
+        {
+            UnityEngine.InputSystem.Key k = _keys[(int)a];
+            return k != UnityEngine.InputSystem.Key.None && kb[k].wasPressedThisFrame;
+        }
+
+        /// <summary>Tecla pulsada en este fotograma (para asignarla a una acción), si hay alguna.</summary>
+        public bool TryGetPressedKey(out KeyCode key)
+        {
+            key = KeyCode.None;
+            UnityEngine.InputSystem.Keyboard kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb == null)
+            {
+                return false;
+            }
+
+            var assignable = KeyBindings.Assignable;
+            if (_assignableKeys == null)
+            {
+                _assignableKeys = new UnityEngine.InputSystem.Key[assignable.Count];
+                for (int i = 0; i < _assignableKeys.Length; i++)
+                {
+                    UnityEngine.InputSystem.Key k = ToKey(assignable[i]);
+                    try
+                    {
+                        _ = kb[k]; // algunas teclas no existen en todos los teclados
+                    }
+                    catch (System.Exception)
+                    {
+                        k = UnityEngine.InputSystem.Key.None;
+                    }
+
+                    _assignableKeys[i] = k;
+                }
+            }
+
+            for (int i = 0; i < _assignableKeys.Length; i++)
+            {
+                if (_assignableKeys[i] != UnityEngine.InputSystem.Key.None && kb[_assignableKeys[i]].wasPressedThisFrame)
+                {
+                    key = assignable[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void ReadKeyboard()
         {
             UnityEngine.InputSystem.Keyboard kb = UnityEngine.InputSystem.Keyboard.current;
@@ -172,21 +260,22 @@ namespace Football.Game
                 return;
             }
 
-            float x = (kb.dKey.isPressed || kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || kb.leftArrowKey.isPressed ? 1f : 0f);
-            float y = (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f);
+            RefreshKeys();
+            float x = (Held(kb, GameAction.Right) ? 1f : 0f) - (Held(kb, GameAction.Left) ? 1f : 0f);
+            float y = (Held(kb, GameAction.Up) ? 1f : 0f) - (Held(kb, GameAction.Down) ? 1f : 0f);
             Keyboard.Move = new Vector2(x, y);
-            Keyboard.Sprint = kb.leftShiftKey.isPressed;
-            Keyboard.PassDown = kb.jKey.wasPressedThisFrame;
-            Keyboard.PassHeld = kb.jKey.isPressed;
-            Keyboard.ThroughDown = kb.lKey.wasPressedThisFrame;
-            Keyboard.CrossDown = kb.iKey.wasPressedThisFrame;
-            Keyboard.ShootHeld = kb.kKey.isPressed;
-            Keyboard.SlideDown = kb.qKey.wasPressedThisFrame;
-            Keyboard.PressHeld = kb.eKey.isPressed;
-            Keyboard.ClearDown = kb.rKey.wasPressedThisFrame;
-            Keyboard.KeeperDown = kb.gKey.wasPressedThisFrame;
-            Keyboard.SwitchDown = kb.tabKey.wasPressedThisFrame;
-            Keyboard.PauseDown = kb.escapeKey.wasPressedThisFrame;
+            Keyboard.Sprint = Held(kb, GameAction.Sprint);
+            Keyboard.PassDown = Pressed(kb, GameAction.Pass);
+            Keyboard.PassHeld = Held(kb, GameAction.Pass);
+            Keyboard.ThroughDown = Pressed(kb, GameAction.Through);
+            Keyboard.CrossDown = Pressed(kb, GameAction.Cross);
+            Keyboard.ShootHeld = Held(kb, GameAction.Shoot);
+            Keyboard.SlideDown = Pressed(kb, GameAction.Slide);
+            Keyboard.PressHeld = Held(kb, GameAction.Press);
+            Keyboard.ClearDown = Pressed(kb, GameAction.Clear);
+            Keyboard.KeeperDown = Pressed(kb, GameAction.Keeper);
+            Keyboard.SwitchDown = Pressed(kb, GameAction.Switch);
+            Keyboard.PauseDown = Pressed(kb, GameAction.Pause) || kb.escapeKey.wasPressedThisFrame;
         }
 #else
         private void ReadTouches()
@@ -236,25 +325,44 @@ namespace Football.Game
             }
         }
 
+        private static bool Held(GameAction a) => Input.GetKey(KeyBindings.Get(a));
+
+        private static bool Pressed(GameAction a) => Input.GetKeyDown(KeyBindings.Get(a));
+
+        /// <summary>Tecla pulsada en este fotograma (para asignarla a una acción), si hay alguna.</summary>
+        public bool TryGetPressedKey(out KeyCode key)
+        {
+            var assignable = KeyBindings.Assignable;
+            for (int i = 0; i < assignable.Count; i++)
+            {
+                if (Input.GetKeyDown(assignable[i]))
+                {
+                    key = assignable[i];
+                    return true;
+                }
+            }
+
+            key = KeyCode.None;
+            return false;
+        }
+
         private void ReadKeyboard()
         {
-            float x = (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1f : 0f)
-                      - (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
-            float y = (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) ? 1f : 0f)
-                      - (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
+            float x = (Held(GameAction.Right) ? 1f : 0f) - (Held(GameAction.Left) ? 1f : 0f);
+            float y = (Held(GameAction.Up) ? 1f : 0f) - (Held(GameAction.Down) ? 1f : 0f);
             Keyboard.Move = new Vector2(x, y);
-            Keyboard.Sprint = Input.GetKey(KeyCode.LeftShift);
-            Keyboard.PassDown = Input.GetKeyDown(KeyCode.J);
-            Keyboard.PassHeld = Input.GetKey(KeyCode.J);
-            Keyboard.ThroughDown = Input.GetKeyDown(KeyCode.L);
-            Keyboard.CrossDown = Input.GetKeyDown(KeyCode.I);
-            Keyboard.ShootHeld = Input.GetKey(KeyCode.K);
-            Keyboard.SlideDown = Input.GetKeyDown(KeyCode.Q);
-            Keyboard.PressHeld = Input.GetKey(KeyCode.E);
-            Keyboard.ClearDown = Input.GetKeyDown(KeyCode.R);
-            Keyboard.KeeperDown = Input.GetKeyDown(KeyCode.G);
-            Keyboard.SwitchDown = Input.GetKeyDown(KeyCode.Tab);
-            Keyboard.PauseDown = Input.GetKeyDown(KeyCode.Escape);
+            Keyboard.Sprint = Held(GameAction.Sprint);
+            Keyboard.PassDown = Pressed(GameAction.Pass);
+            Keyboard.PassHeld = Held(GameAction.Pass);
+            Keyboard.ThroughDown = Pressed(GameAction.Through);
+            Keyboard.CrossDown = Pressed(GameAction.Cross);
+            Keyboard.ShootHeld = Held(GameAction.Shoot);
+            Keyboard.SlideDown = Pressed(GameAction.Slide);
+            Keyboard.PressHeld = Held(GameAction.Press);
+            Keyboard.ClearDown = Pressed(GameAction.Clear);
+            Keyboard.KeeperDown = Pressed(GameAction.Keeper);
+            Keyboard.SwitchDown = Pressed(GameAction.Switch);
+            Keyboard.PauseDown = Pressed(GameAction.Pause) || Input.GetKeyDown(KeyCode.Escape);
         }
 #endif
     }

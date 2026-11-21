@@ -128,9 +128,19 @@ namespace Football.Game
             _formation.text = squad.Formation.Name;
 
             float sum = 0f;
+            int starters = squad.Formation.Slots.Length; // 11, o 3 en la cancha cerrada
             for (int i = 0; i < _tokens.Length; i++)
             {
                 Token token = _tokens[i];
+                bool used = i < starters;
+                token.Circle.SetVisible(used);
+                token.Role.gameObject.SetActive(used);
+                token.Name.gameObject.SetActive(used);
+                if (!used)
+                {
+                    continue;
+                }
+
                 PlayerDefinition p = team.Players[squad.Starters[i]];
                 FormationSlot slot = squad.Formation.Slots[i];
                 Vector2 pos = SlotPosition(slot);
@@ -146,7 +156,7 @@ namespace Football.Game
                 token.Name.text = TeamBuilder.DisplayName(p);
             }
 
-            _rating.text = "Media " + (sum / _tokens.Length).ToString("F1");
+            _rating.text = "Media " + (sum / starters).ToString("F1");
             FillRows(_bench, squad.Bench, SquadGroup.Bench, team);
             FillRows(_reserves, squad.Reserves, SquadGroup.Reserve, team);
             _reservesHeader.text = squad.Reserves.Count > MaxReserves ? "NO CONVOCADOS (" + squad.Reserves.Count + ")" : "NO CONVOCADOS";
@@ -212,9 +222,10 @@ namespace Football.Game
                 else if (_formationPrevious.Contains(p) || _formationNext.Contains(p))
                 {
                     int step = _formationNext.Contains(p) ? 1 : -1;
-                    int current = System.Array.IndexOf(Formations.All, squad.Formation);
-                    int next = (current + step + Formations.All.Length) % Formations.All.Length;
-                    squad.ChangeFormation(team, Formations.All[next]);
+                    Formation[] formations = _setup.AvailableFormations;
+                    int current = System.Array.IndexOf(formations, squad.Formation);
+                    int next = (current + step + formations.Length) % formations.Length;
+                    squad.ChangeFormation(team, formations[next]);
                     _selectedIndex = -1;
                 }
                 else

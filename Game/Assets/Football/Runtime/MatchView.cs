@@ -120,12 +120,12 @@ namespace Football.Game
             go.tag = "MainCamera";
             var cam = go.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.45f, 0.62f, 0.8f);
+            cam.backgroundColor = new Color(0.04f, 0.05f, 0.09f); // estadio de noche: sin el cielo plano que distraía
             cam.fieldOfView = CameraFov;
             cam.nearClipPlane = 0.5f;
             cam.farClipPlane = 300f;
             cam.allowHDR = false;
-            cam.allowMSAA = false;
+            cam.allowMSAA = true; // el suavizado se activa o no desde Ajustes (GraphicsQuality)
             return cam; // el AudioListener único está en la cámara de los menús
         }
 
@@ -219,7 +219,7 @@ namespace Football.Game
             }
 
             // Gradas escalonadas detrás de los carteles (tonos variados para sugerir público).
-            Color[] tiers = { new Color(0.22f, 0.24f, 0.3f), new Color(0.3f, 0.28f, 0.34f), new Color(0.26f, 0.3f, 0.38f) };
+            Color[] tiers = { new Color(0.32f, 0.12f, 0.14f), new Color(0.14f, 0.2f, 0.38f), new Color(0.3f, 0.3f, 0.34f) }; // tonos de público
             for (int t = 0; t < tiers.Length; t++)
             {
                 float offset = 6f + t * 7f;
@@ -481,6 +481,23 @@ namespace Football.Game
             Transform t = _camera.transform;
             t.localPosition = new Vector3(_cameraX, CameraHeight * _cameraScale, _cameraZ - CameraDistance * _cameraScale);
             t.LookAt(new Vector3(_cameraX, 0f, _cameraZ + 2f));
+        }
+
+        /// <summary>
+        /// Posición en pantalla (píxeles) a los pies de un jugador, para poner su nombre debajo (así no choca con la flecha
+        /// del jugador controlado); falso si no está visible.
+        /// </summary>
+        public bool FeetOnScreen(int player, out Vector3 screen)
+        {
+            screen = default;
+            if (_camera == null || !_visible[player])
+            {
+                return false;
+            }
+
+            Vector3 head = _heads[player];
+            screen = _camera.WorldToScreenPoint(new Vector3(head.x, 0f, head.z));
+            return screen.z > 0f;
         }
 
         /// <summary>Posición en pantalla (píxeles) sobre la cabeza de un jugador; falso si no está visible.</summary>

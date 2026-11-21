@@ -69,6 +69,13 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    | Arquero | ARQUERO (tomar el control para salir, barrer, pasar o despejar); JUGADOR lo devuelve | G |
    | Pausa | II | Esc |
 
+   **Teclado del ordenador:** las teclas se cambian en **Ajustes → Controles de teclado (ordenador)**: toca una acción y
+   pulsa la tecla nueva (si otra acción la usaba, se intercambian). En Unity, haz clic una vez dentro de la ventana *Game*
+   para que reciba el teclado. La guía de controles con tus teclas está en el menú de pausa.
+
+   **3 contra 3:** la alineación se elige igual que en el amistoso (Equipos → editar alineación), pero con tres titulares y
+   tres suplentes, y se guarda aparte de la de 11.
+
    En **Ajustes** eliges la **velocidad del juego** (lenta, normal o rápida), si quieres los botones de filtrado y centro y si
    prefieres botones grandes. Ahí mismo hay una guía de controles.
 3. Consejo: en la pestaña *Game* elige una proporción 16:9 para ver la pantalla como en el móvil.

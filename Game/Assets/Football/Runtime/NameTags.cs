@@ -19,6 +19,7 @@ namespace Football.Game
     public sealed class NameTags
     {
         private const int FontSize = 22;
+        private const float FeetOffset = 24f;
         private const int HighlightFontSize = 28;
 
         private static readonly Color HomeColor = new Color(1f, 1f, 1f, 0.95f);
@@ -106,7 +107,7 @@ namespace Football.Game
             {
                 bool wanted = mode == NameMode.All || (mode == NameMode.Controlled && (i == controlled || i == owner));
                 Vector3 screen = default;
-                bool show = wanted && view.HeadOnScreen(i, out screen);
+                bool show = wanted && view.FeetOnScreen(i, out screen);
                 GameObject go = _labels[i].gameObject;
                 if (go.activeSelf != show)
                 {
@@ -115,7 +116,8 @@ namespace Football.Game
 
                 if (show)
                 {
-                    _rects[i].anchoredPosition = new Vector2(screen.x / scale, screen.y / scale);
+                    // Debajo de los pies (y del anillo): no tapa al jugador ni choca con la flecha.
+                    _rects[i].anchoredPosition = new Vector2(screen.x / scale, screen.y / scale - FeetOffset);
                 }
             }
         }
