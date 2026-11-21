@@ -98,17 +98,20 @@ namespace Football.Game
         /// <summary>Empieza un partido nuevo.</summary>
         /// <param name="home">Equipo del jugador.</param>
         /// <param name="away">Rival.</param>
+        /// <param name="homeSquad">Convocatoria del jugador (null = automática).</param>
+        /// <param name="awaySquad">Convocatoria del rival (null = automática).</param>
         /// <param name="homeKit">Camiseta del jugador.</param>
         /// <param name="awayKit">Camiseta del rival.</param>
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
         /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
         /// <returns>Verdadero si el partido arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
-        public bool Begin(TeamDefinition home, TeamDefinition away, KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
+        public bool Begin(TeamDefinition home, TeamDefinition away, SquadSelection homeSquad, SquadSelection awaySquad,
+            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
         {
             try
             {
-                BeginUnsafe(home, away, homeKit, awayKit, difficulty, halfMinutes, benchmark);
+                BeginUnsafe(home, away, homeSquad, awaySquad, homeKit, awayKit, difficulty, halfMinutes, benchmark);
                 LastError = null;
                 return true;
             }
@@ -125,8 +128,8 @@ namespace Football.Game
         /// <summary>Motivo por el que no arrancó el último partido, o null.</summary>
         public string LastError { get; private set; }
 
-        private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, KitColors homeKit, KitColors awayKit,
-            int difficulty, int halfMinutes, bool benchmark)
+        private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, SquadSelection homeSquad, SquadSelection awaySquad,
+            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark)
         {
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
@@ -142,8 +145,8 @@ namespace Football.Game
             ulong seed = benchmark ? BenchmarkSeed : (ulong)DateTime.Now.Ticks;
             var rng = new SeededRandom(seed);
             IRandom teams = rng.Fork("teams");
-            MatchTeamSetup home = TeamBuilder.Build(homeTeam, config, teams.Fork("home"));
-            MatchTeamSetup away = TeamBuilder.Build(awayTeam, config, teams.Fork("away"));
+            MatchTeamSetup home = TeamBuilder.Build(homeTeam, config, teams.Fork("home"), homeSquad);
+            MatchTeamSetup away = TeamBuilder.Build(awayTeam, config, teams.Fork("away"), awaySquad);
             _engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, difficulty);
             _engine.SetHuman(0, !benchmark);
 

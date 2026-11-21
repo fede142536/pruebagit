@@ -26,10 +26,10 @@ namespace Football.Game
 
             var material = new Material(Template());
             material.color = color;
-            // Se dibujan ambas caras (las mallas generadas por código no dependen del orden de sus vértices) y se
-            // permite agrupar los dibujos iguales en una sola llamada (importante con 22 jugadores en gama baja).
+            // Se dibujan ambas caras (las mallas generadas por código no dependen del orden de sus vértices).
+            // No se activa el dibujo por instancias: exige variantes de shader que algunas tarjetas manejan mal
+            // (posible causa de la pantalla rosa en el PC del usuario); el agrupado SRP de URP ya reduce el coste.
             material.SetFloat("_Cull", 0f);
-            material.enableInstancing = true;
             Cache[key] = material;
             return material;
         }
@@ -42,11 +42,17 @@ namespace Football.Game
             }
 
             _template = Resources.Load<Material>(TemplateName);
+            if (_template != null && (_template.shader == null || !_template.shader.isSupported))
+            {
+                Debug.LogWarning("El shader del material base no es compatible con esta tarjeta de video; se usa uno de reserva.");
+                _template = null;
+            }
+
             if (_template == null)
             {
-                Debug.LogWarning("Falta Resources/" + TemplateName + ".mat: ejecuta el menú Football > Preparar proyecto.");
+                Debug.LogWarning("Se crea un material base de reserva (falta Resources/" + TemplateName + ".mat o no es compatible).");
                 Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-                if (shader == null)
+                if (shader == null || !shader.isSupported)
                 {
                     shader = Shader.Find("Unlit/Color");
                 }

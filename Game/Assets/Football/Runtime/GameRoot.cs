@@ -2,14 +2,22 @@ using UnityEngine;
 
 namespace Football.Game
 {
-    /// <summary>Raíz del juego: gestiona las pantallas (menú, partido, resultado) y los ajustes del dispositivo.</summary>
+    /// <summary>
+    /// Raíz del juego: recorrido entre pantallas (menú principal → equipos → alineación → ajustes → partido → resultado)
+    /// y ajustes del dispositivo.
+    /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
-        private enum State { Menu, Match, Result }
+        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Match, Result }
 
         private readonly PointerInput _pointers = new PointerInput();
         private GameSettings _settings;
-        private MenuScreen _menu;
+        private FriendlySetup _friendly;
+        private MainMenuScreen _mainMenu;
+        private TeamSelectScreen _teams;
+        private LineupScreen _lineup;
+        private MatchSetupScreen _matchSetup;
+        private SettingsScreen _settingsScreen;
         private MatchScreen _match;
         private ResultScreen _result;
         private State _state;
@@ -18,47 +26,74 @@ namespace Football.Game
         private void Awake()
         {
             _settings = GameSettings.Load();
+            _friendly = new FriendlySetup(_settings);
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = _settings.TargetFps;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Screen.orientation = ScreenOrientation.LandscapeLeft;
 
-            _menu = new MenuScreen(transform, _pointers, _settings);
+            _mainMenu = new MainMenuScreen(transform, _pointers);
+            _teams = new TeamSelectScreen(transform, _pointers, _friendly);
+            _lineup = new LineupScreen(transform, _pointers, _friendly);
+            _matchSetup = new MatchSetupScreen(transform, _pointers, _settings, _friendly);
+            _settingsScreen = new SettingsScreen(transform, _pointers, _settings);
             _match = new MatchScreen(transform, _pointers, _settings);
             _result = new ResultScreen(transform, _pointers);
-            ShowMenu();
+            Go(State.MainMenu);
         }
 
-        private void ShowMenu()
+        private void Go(State next)
         {
-            _match.End();
+            _mainMenu.Hide();
+            _teams.Hide();
+            _lineup.Hide();
+            _matchSetup.Hide();
+            _settingsScreen.Hide();
             _result.Hide();
-            _menu.Show();
-            _state = State.Menu;
+            if (next != State.Match)
+            {
+                _match.End();
+            }
+
+            _state = next;
+            switch (next)
+            {
+                case State.MainMenu: _mainMenu.Show(); break;
+                case State.Teams: _teams.Show(); break;
+                case State.MatchSetup: _matchSetup.Show(); break;
+                case State.Settings: _settingsScreen.Show(); break;
+            }
+        }
+
+        private void EditLineup(int side)
+        {
+            Go(State.Lineup);
+            _lineup.Show(side);
         }
 
         private void StartMatch(bool benchmark)
         {
             _lastWasBenchmark = benchmark;
-            _menu.Hide();
-            _result.Hide();
-            int awayKit = _settings.AwayKit;
-            if (_menu.KitsClash)
+            KitColors homeKit = _friendly.KitOf(0);
+            KitColors awayKit = _friendly.KitOf(1);
+            if (_friendly.KitsClash)
             {
-                awayKit = 1 - awayKit; // Si las camisetas se confunden, el rival usa la otra.
+                // Si las camisetas se confunden, el rival usa la otra.
+                Football.Core.Data.TeamDefinition rival = _friendly.Definition(1);
+                awayKit = KitColors.From(_friendly.Kit(1) == 0 ? rival.Away : rival.Home);
             }
 
-            if (_match.Begin(TeamCatalog.Teams[_settings.HomeTeam], TeamCatalog.Teams[_settings.Opponent],
-                    MenuScreen.Kit(_settings.HomeTeam, _settings.HomeKit), MenuScreen.Kit(_settings.Opponent, awayKit),
-                    _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
+            Go(State.Match);
+            if (_match.Begin(_friendly.Definition(0), _friendly.Definition(1), _friendly.Squad(0), _friendly.Squad(1),
+                    homeKit, awayKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length], benchmark))
             {
-                _state = State.Match;
+                _mainMenu.SetError(null);
                 return;
             }
 
-            // Si el partido no puede arrancar se vuelve al menú mostrando el motivo (antes se reintentaba en bucle).
-            ShowMenu();
-            _menu.SetError("No se pudo empezar el partido. Manda una captura de este mensaje:\n" + _match.LastError);
+            // Si el partido no puede arrancar se vuelve al menú mostrando el motivo.
+            Go(State.MainMenu);
+            _mainMenu.SetError("No se pudo empezar el partido. Manda una captura de este mensaje:\n" + _match.LastError);
         }
 
         private void Update()
@@ -66,15 +101,62 @@ namespace Football.Game
             _pointers.Update();
             switch (_state)
             {
-                case State.Menu:
-                    _menu.Update();
-                    if (_menu.PlayRequested)
+                case State.MainMenu:
+                    _mainMenu.Update();
+                    if (_mainMenu.Choice == MainMenuChoice.Friendly)
+                    {
+                        Go(State.Teams);
+                    }
+                    else if (_mainMenu.Choice == MainMenuChoice.Settings)
+                    {
+                        Go(State.Settings);
+                    }
+                    else if (_mainMenu.Choice == MainMenuChoice.Benchmark)
+                    {
+                        StartMatch(true);
+                    }
+
+                    break;
+
+                case State.Teams:
+                    _teams.Update();
+                    switch (_teams.Action)
+                    {
+                        case TeamSelectAction.Back: Go(State.MainMenu); break;
+                        case TeamSelectAction.Continue: Go(State.MatchSetup); break;
+                        case TeamSelectAction.EditHomeLineup: EditLineup(0); break;
+                        case TeamSelectAction.EditAwayLineup: EditLineup(1); break;
+                    }
+
+                    break;
+
+                case State.Lineup:
+                    _lineup.Update();
+                    if (_lineup.Done)
+                    {
+                        Go(State.Teams);
+                    }
+
+                    break;
+
+                case State.MatchSetup:
+                    _matchSetup.Update();
+                    if (_matchSetup.Action == MatchSetupAction.Back)
+                    {
+                        Go(State.Teams);
+                    }
+                    else if (_matchSetup.Action == MatchSetupAction.Play)
                     {
                         StartMatch(false);
                     }
-                    else if (_menu.BenchmarkRequested)
+
+                    break;
+
+                case State.Settings:
+                    _settingsScreen.Update();
+                    if (_settingsScreen.BackRequested)
                     {
-                        StartMatch(true);
+                        Go(State.MainMenu);
                     }
 
                     break;
@@ -83,13 +165,14 @@ namespace Football.Game
                     _match.Update(Time.unscaledDeltaTime);
                     if (_match.QuitRequested)
                     {
-                        ShowMenu();
+                        Go(State.MainMenu);
                     }
                     else if (_match.Finished)
                     {
-                        _result.Show(_match.BuildResultLine(), _match.BuildSummary());
-                        _match.End();
-                        _state = State.Result;
+                        string line = _match.BuildResultLine();
+                        string summary = _match.BuildSummary();
+                        Go(State.Result);
+                        _result.Show(line, summary);
                     }
 
                     break;
@@ -102,7 +185,7 @@ namespace Football.Game
                     }
                     else if (_result.MenuRequested)
                     {
-                        ShowMenu();
+                        Go(State.MainMenu);
                     }
 
                     break;

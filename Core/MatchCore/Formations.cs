@@ -72,7 +72,39 @@ namespace Football.Core.MatchCore
             new FormationSlot(Position.RightWinger, 0.66f, -0.75f)
         });
 
+        /// <summary>4-2-3-1: doble pivote, mediapunta y dos extremos.</summary>
+        public static readonly Formation F4231 = new Formation("4-2-3-1", new[]
+        {
+            new FormationSlot(Position.Goalkeeper, 0.03f, 0f),
+            new FormationSlot(Position.LeftBack, 0.21f, 0.80f),
+            new FormationSlot(Position.CenterBack, 0.17f, 0.28f),
+            new FormationSlot(Position.CenterBack, 0.17f, -0.28f),
+            new FormationSlot(Position.RightBack, 0.21f, -0.80f),
+            new FormationSlot(Position.DefensiveMidfielder, 0.34f, 0.22f),
+            new FormationSlot(Position.DefensiveMidfielder, 0.34f, -0.22f),
+            new FormationSlot(Position.LeftWinger, 0.56f, 0.72f),
+            new FormationSlot(Position.AttackingMidfielder, 0.54f, 0f),
+            new FormationSlot(Position.RightWinger, 0.56f, -0.72f),
+            new FormationSlot(Position.Striker, 0.70f, 0f)
+        });
+
+        /// <summary>3-5-2: tres centrales, carrileros y dos delanteros.</summary>
+        public static readonly Formation F352 = new Formation("3-5-2", new[]
+        {
+            new FormationSlot(Position.Goalkeeper, 0.03f, 0f),
+            new FormationSlot(Position.CenterBack, 0.17f, 0.45f),
+            new FormationSlot(Position.CenterBack, 0.15f, 0f),
+            new FormationSlot(Position.CenterBack, 0.17f, -0.45f),
+            new FormationSlot(Position.LeftMidfielder, 0.40f, 0.85f),
+            new FormationSlot(Position.DefensiveMidfielder, 0.33f, 0f),
+            new FormationSlot(Position.CentralMidfielder, 0.44f, 0.30f),
+            new FormationSlot(Position.CentralMidfielder, 0.44f, -0.30f),
+            new FormationSlot(Position.RightMidfielder, 0.40f, -0.85f),
+            new FormationSlot(Position.Striker, 0.66f, 0.18f),
+            new FormationSlot(Position.Striker, 0.66f, -0.18f)
+        });
+
         /// <summary>Todas las formaciones.</summary>
-        public static readonly Formation[] All = { F442, F433 };
+        public static readonly Formation[] All = { F442, F433, F4231, F352 };
     }
 }

@@ -112,6 +112,8 @@ namespace Football.Game
             cam.fieldOfView = CameraFov;
             cam.nearClipPlane = 0.5f;
             cam.farClipPlane = 300f;
+            cam.allowHDR = false;
+            cam.allowMSAA = false;
             go.AddComponent<AudioListener>();
             return cam;
         }
@@ -410,6 +412,11 @@ namespace Football.Game
 
         private void UpdateCamera(float ballX, float ballY, float deltaTime)
         {
+            if (float.IsNaN(ballX) || float.IsNaN(ballY) || float.IsInfinity(ballX) || float.IsInfinity(ballY))
+            {
+                return; // nunca mover la cámara a una posición inválida
+            }
+
             float follow = 1f - Mathf.Exp(-CameraFollowSpeed * deltaTime);
             _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp(ballX * CameraFollowX, -CameraMaxX, CameraMaxX), follow);
             _cameraZ = Mathf.Lerp(_cameraZ, ballY * CameraFollowZ, follow);

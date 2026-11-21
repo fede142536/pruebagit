@@ -153,10 +153,28 @@ namespace Football.Core.MatchCore
         /// centrales, laterales…) y coloca en cada uno al jugador con mayor media efectiva (media menos la penalización
         /// por puesto). Devuelve, para cada puesto de la formación, el índice del jugador en la plantilla.
         /// </summary>
-        public static int[] PickLineup(TeamDefinition team, Formation formation)
+        public static int[] PickLineup(TeamDefinition team, Formation formation) => PickLineup(team, formation, null);
+
+        /// <summary>Igual que <see cref="PickLineup(TeamDefinition, Formation)"/>, pero eligiendo solo entre los jugadores indicados.</summary>
+        /// <param name="team">Equipo.</param>
+        /// <param name="formation">Formación.</param>
+        /// <param name="candidates">Índices de la plantilla que pueden jugar, o null para todos.</param>
+        public static int[] PickLineup(TeamDefinition team, Formation formation, System.Collections.Generic.IReadOnlyList<int> candidates)
         {
             var lineup = new int[formation.Slots.Length];
             var used = new bool[team.Players.Length];
+            if (candidates != null)
+            {
+                for (int i = 0; i < used.Length; i++)
+                {
+                    used[i] = true;
+                }
+
+                for (int i = 0; i < candidates.Count; i++)
+                {
+                    used[candidates[i]] = false;
+                }
+            }
             for (int i = 0; i < lineup.Length; i++)
             {
                 lineup[i] = -1;
@@ -250,15 +268,27 @@ namespace Football.Core.MatchCore
         /// <param name="team">Definición del equipo.</param>
         /// <param name="config">Configuración del partido (para el estilo).</param>
         /// <param name="rng">Fuente de azar para la variación individual de atributos.</param>
-        public static MatchTeamSetup Build(TeamDefinition team, MatchConfig config, IRandom rng)
+        public static MatchTeamSetup Build(TeamDefinition team, MatchConfig config, IRandom rng) => Build(team, config, rng, null);
+
+        /// <summary>Construye el equipo con la convocatoria elegida por el usuario (o la automática si es null o no es válida).</summary>
+        /// <param name="team">Definición del equipo.</param>
+        /// <param name="config">Configuración del partido.</param>
+        /// <param name="rng">Fuente de azar.</param>
+        /// <param name="selection">Formación y titulares elegidos.</param>
+        public static MatchTeamSetup Build(TeamDefinition team, MatchConfig config, IRandom rng, SquadSelection selection)
         {
             if (team.Players == null || team.Players.Length < 11)
             {
                 throw new ArgumentException($"El equipo {team.Name} necesita al menos 11 jugadores.", nameof(team));
             }
 
-            Formation formation = ParseFormation(team.Formation);
-            int[] lineup = PickLineup(team, formation);
+            if (selection == null || !selection.IsValid(team))
+            {
+                selection = SquadSelection.Auto(team, ParseFormation(team.Formation));
+            }
+
+            Formation formation = selection.Formation;
+            int[] lineup = selection.Starters.ToArray();
             var players = new PlayerMatchView[formation.Slots.Length];
             for (int slot = 0; slot < players.Length; slot++)
             {

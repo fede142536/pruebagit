@@ -54,16 +54,21 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    **I** centro · **E** presionar (sin balón) · **Tab** cambiar de jugador · **Shift** esprint · **Esc** pausa.
 3. Consejo: en la pestaña *Game* elige una proporción 16:9 para ver la pantalla como en el móvil.
 
-### Equipos, camisetas y nombres
+### Menús, equipos y alineación
 
-- En el menú elige **TU EQUIPO** (columna izquierda) y el **RIVAL** (columna central). Al lado de cada club ves su media y su estilo.
-- Debajo de cada lista, el botón **CAMISETA** alterna entre **titular** y **alternativa** (el cuadrado de color muestra cómo es).
-  Si las dos camisetas se parecen demasiado, el rival usa automáticamente la otra.
-- Los nombres aparecen sobre los jugadores; el tuyo, en amarillo. En **Pausa → NOMBRES** eliges entre todos, solo el tuyo y el que
-  lleva el balón, o ninguno.
-- Los planteles están en `Data/teams/argentina.json` (en Unity, `Assets/Football/Resources/teams.json`). Puedes abrirlo con el
-  Bloc de notas para corregir jugadores, posiciones (POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC) o medias.
-  **Las medias son estimaciones mías**, no oficiales, y los planteles pueden tener algún error porque las fuentes no coincidían del todo.
+1. **Menú principal:** toca **PARTIDO AMISTOSO** (Modo carrera y Torneo aparecen como «próximamente»). En **AJUSTES** están los
+   controles para zurdos, los nombres sobre los jugadores, los FPS y el panel de depuración.
+2. **Equipos:** una tarjeta para **TU EQUIPO** y otra para el **RIVAL**. Con **<** y **>** cambias de club y de camiseta
+   (titular o alternativa). Cada tarjeta muestra estrellas, media, estilo, formación y la figura del equipo.
+3. **EDITAR ALINEACIÓN** (en cada tarjeta): eliges la formación (4-4-2, 4-3-3, 4-2-3-1 o 3-5-2) con **<** y **>**, y para
+   cambiar jugadores tocas uno y luego otro: titulares en la cancha, **suplentes** y **no convocados** a la derecha. Si alguien
+   juega fuera de su posición, su media aparece en naranja y más baja. **AUTOMÁTICA** vuelve al mejor once. La alineación queda
+   guardada para la próxima vez.
+4. **CONTINUAR** → ajustes del partido (dificultad, minutos, nombres) → **JUGAR**.
+
+Los planteles están en `Data/teams/argentina.json` (en Unity, `Assets/Football/Resources/teams.json`); puedes abrirlo con el Bloc
+de notas para corregir jugadores, posiciones (POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC) o medias. **Las medias son
+estimaciones mías**, no oficiales.
 
 ## 5. Generar la aplicación para el móvil
 
@@ -105,6 +110,7 @@ encima de los 100 ms objetivo; si es así probaremos 60 FPS o ajustes.
 | Síntoma | Qué hacer |
 |---|---|
 | Objetos rosados o negros | Menú **Football → Preparar proyecto** y vuelve a probar |
+| Toda la pantalla se vuelve rosa durante el partido | Mira la Console en ese momento y mándame los mensajes, y dime qué tarjeta de video tiene tu PC (Administrador de dispositivos → Adaptadores de pantalla) |
 | Error rojo sobre *Input* (`InvalidOperationException`) | **Edit → Project Settings → Player → Other Settings → Active Input Handling → Both** y reinicia Unity |
 | Errores rojos al compilar | Copia el texto de la pestaña Console y mándamelo |
 | No aparece el menú "Football" | Espera a que termine de compilar; si persiste, revisa que copiaste `Football` dentro de `Assets` |

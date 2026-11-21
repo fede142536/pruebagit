@@ -60,6 +60,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.4 IA con varios rivales y estilos | ✅ hecho: 5 estilos y 5 dificultades en datos; portero con paradas |
 | 1.5 Adaptador Unity (render, cámara) — 1.ª prueba del usuario: arrancaba en bucle sin dibujar el campo; corregido (errores visibles en pantalla), figuras humanas animadas, estadio y cámara más cercana | ⚠️ escrito, compila contra una simulación de la API de Unity; **sin ejecutar en Unity** (`MatchView`, `MatchScreen`) |
 | 1.6 Controles táctiles | ⚠️ escrito, **sin probar en el dispositivo** (`TouchControls`: joystick flotante, botones contextuales, zurdos, pase asistido con vista previa, tiro con carga; teclado para probar en PC) |
+| 1.6b Menús por pantallas (estilo FC) | ⚠️ escrito, sin ejecutar en Unity: menú principal (amistoso; carrera y torneo «próximamente»), equipos en tarjetas, alineación (formación, titulares, suplentes, no convocados), ajustes del partido y ajustes generales |
 | 1.7 HUD, depuración y benchmark | ⚠️ escrito, **sin medir en el dispositivo** (marcador, pausa, panel de depuración, partido IA contra IA con semilla fija) |
 
 ### Criterios de aceptación medibles
