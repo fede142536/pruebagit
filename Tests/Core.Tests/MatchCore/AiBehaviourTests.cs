@@ -281,5 +281,74 @@ namespace Football.Core.Tests.MatchCore
 
             Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing), "el partido no se queda trabado");
         }
+
+        [Test]
+        public void HumanKickOff_WaitsForThePlayer_AndAimIsForwardOrSideways()
+        {
+            MatchEngine e = MatchEngineTests.NewEngine(11);
+            e.SetHuman(0, true);
+            for (int i = 0; i < 60 * 6; i++)
+            {
+                e.Tick();
+            }
+
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.SetPiece), "sin pase automático: el saque del medio espera");
+            e.SetInput(0, new MatchInput { Move = new Vec2(-1f, 0f) }); // intenta sacar hacia atrás
+            Assert.That(e.TryGetRestartAim(0, out _, out Vec2 aim), Is.True);
+            float fromForward = MathF.Acos(Vec2.Dot(aim, new Vec2(e.Teams[0].AttackDirection, 0f))) * 180f / MathF.PI;
+            Assert.That(fromForward, Is.LessThanOrEqualTo(e.Config.Rules.KickoffAimDeg + 0.5f));
+
+            e.SetInput(0, new MatchInput { Pass = true, Move = new Vec2(0f, 1f) });
+            e.Tick();
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing));
+        }
+
+        [Test]
+        public void ThrowInAim_AlwaysPointsIntoThePitch()
+        {
+            MatchEngine e = Isolated(12);
+            e.SetHuman(0, true);
+            e.TestPlaceBall(new Vec3(0f, 33f, 0f), new Vec3(0f, 8f, 0f), e.Teams[1].Players[4]);
+            for (int i = 0; i < 60 * 6; i++)
+            {
+                e.Tick();
+            }
+
+            foreach (Vec2 stick in new[] { new Vec2(0f, 1f), new Vec2(1f, 0.2f), new Vec2(-1f, 0.5f), new Vec2(0f, -1f) })
+            {
+                e.SetInput(0, new MatchInput { Move = stick });
+                Assert.That(e.TryGetRestartAim(0, out _, out Vec2 aim), Is.True);
+                Assert.That(aim.Y, Is.LessThan(0f), $"con el joystick en {stick.X},{stick.Y} apunta hacia adentro");
+            }
+        }
+
+        [Test]
+        public void ChargedCrossFromACorner_GoesFartherThanAShortOne()
+        {
+            float Landing(float power)
+            {
+                MatchEngine e = Isolated(13);
+                e.SetHuman(0, true);
+                float end = e.Teams[0].AttackDirection;
+                e.TestPlaceBall(new Vec3(end * 52f, 20f, 0f), new Vec3(end * 15f, 0f, 0f), e.Teams[1].Players[4]);
+                for (int i = 0; i < 60 * 7 && !e.AwaitingHumanRestart; i++)
+                {
+                    e.Tick();
+                }
+
+                Assert.That(e.CurrentRestart.Kind, Is.EqualTo(RestartKind.Corner));
+                e.SetInput(0, new MatchInput { Cross = true, CrossPower = power });
+                e.Tick();
+                Vec2 from = e.CurrentRestart.Position;
+                for (int i = 0; i < 300 && e.Ball.Pos.Z > 0.2f || i < 5; i++)
+                {
+                    e.Tick();
+                }
+
+                return Vec2.Distance(e.Ball.Pos.Horizontal, from);
+            }
+
+            Assert.That(Landing(1f), Is.GreaterThan(Landing(0.05f) + 10f));
+        }
     }
 }

@@ -252,8 +252,7 @@ namespace Football.Core.MatchCore
             Phase == MatchPhase.SetPiece && _taker != null && HumanTakes(Teams[_taker.Team]) && _phaseTimer <= 0f
             && Vec2.Distance(_taker.Pos, _restart.Position) <= Config.Rules.TakerReach;
 
-        private bool HumanTakes(TeamState team) =>
-            team.IsHuman && _restart.Kind != RestartKind.KickOff && _restart.Kind != RestartKind.Penalty;
+        private bool HumanTakes(TeamState team) => team.IsHuman && _restart.Kind != RestartKind.Penalty;
 
         private float RestartDelayFor(RestartKind kind)
         {
@@ -277,24 +276,120 @@ namespace Football.Core.MatchCore
             _offsideExempt = _restart.Kind != RestartKind.FreeKick && _restart.Kind != RestartKind.Penalty;
         }
 
-        /// <summary>Saque elegido por la persona: dirección con el joystick; pase, centro o (en tiro libre) disparo.</summary>
+        /// <summary>
+        /// Dirección en la que apunta el saque de la persona: la del joystick, limitada a las direcciones válidas (hacia
+        /// adelante o al costado en el saque del medio, hacia adentro en laterales y córners); sin joystick, una por defecto.
+        /// </summary>
+        /// <param name="team">Equipo de la persona.</param>
+        /// <param name="from">Punto del saque.</param>
+        /// <param name="direction">Dirección unitaria.</param>
+        /// <returns>Falso si no hay un saque de la persona esperando.</returns>
+        public bool TryGetRestartAim(int team, out Vec2 from, out Vec2 direction)
+        {
+            from = _restart.Position;
+            direction = Vec2.Zero;
+            if (!AwaitingHumanRestart || _taker.Team != team)
+            {
+                return false;
+            }
+
+            direction = RestartAim(Teams[team].Input.Move);
+            return true;
+        }
+
+        private const float AimDeadZone = 0.2f;
+
+        private Vec2 RestartAim(Vec2 stick)
+        {
+            RulesConfig r = Config.Rules;
+            Vec2 at = _restart.Position;
+            TeamState team = Teams[_restart.Team];
+            var forward = new Vec2(team.AttackDirection, 0f);
+            Vec2 center;
+            float limit;
+            switch (_restart.Kind)
+            {
+                case RestartKind.KickOff:
+                    center = forward;
+                    limit = r.KickoffAimDeg;
+                    break;
+                case RestartKind.ThrowIn:
+                    center = new Vec2(0f, at.Y > 0f ? -1f : 1f);
+                    limit = r.ThrowInAimDeg;
+                    break;
+                case RestartKind.Corner:
+                    center = new Vec2(at.X > 0f ? -1f : 1f, at.Y > 0f ? -1f : 1f).Normalized;
+                    limit = r.CornerAimDeg;
+                    break;
+                case RestartKind.GoalKick:
+                    center = forward;
+                    limit = r.GoalKickAimDeg;
+                    break;
+                default:
+                    center = (Pitch.GoalCenter(team.AttackDirection) - at).Normalized;
+                    limit = 180f;
+                    break;
+            }
+
+            if (stick.Length < AimDeadZone)
+            {
+                // Sin joystick: córner al punto penal; el resto, al centro del cono.
+                return _restart.Kind == RestartKind.Corner ? (Pitch.PenaltySpot(team.AttackDirection) - at).Normalized : center;
+            }
+
+            float diff = MathUtil.AngleDiff(stick.Angle, center.Angle);
+            float max = limit * MathUtil.Deg2Rad;
+            return Vec2.FromAngle(center.Angle + MathUtil.Clamp(diff, -max, max));
+        }
+
+        /// <summary>
+        /// Saque de la persona, en la dirección apuntada y con la fuerza cargada: PASE raso (asistido hacia el compañero que
+        /// está en esa dirección), CENTRO elevado a una distancia según la carga, TIRO al arco en tiros libres o pelotazo
+        /// largo en el resto. Nunca hay un pase automático: solo se ejecuta al soltar un botón.
+        /// </summary>
         private void ExecuteHumanRestart(TeamState team, MatchInput input)
         {
             MatchPlayer t = _taker;
+            RulesConfig r = Config.Rules;
+            Vec2 aim = RestartAim(input.Move);
+            input.Move = aim; // la asistencia de pase busca compañeros en la dirección permitida
             BeginRestartKick(t);
             Vec2 at = _restart.Position;
             RestartKind kind = _restart.Kind;
-            float scale = input.PassPower > 0f
+            float passScale = input.PassPower > 0f
                 ? MathUtil.Lerp(Config.Player.HumanPassPowerMin, Config.Player.HumanPassPowerMax, MathUtil.Clamp01(input.PassPower))
                 : 1f;
 
-            if (kind == RestartKind.FreeKick && input.Shoot)
+            if (input.Shoot && kind == RestartKind.FreeKick)
             {
                 KickShot(t, input.ShootPower > 0f ? input.ShootPower : FreeKickPower, true, HumanAimY(t, team, input));
             }
-            else if (input.Cross && kind != RestartKind.ThrowIn)
+            else if (input.Shoot || input.Clear)
             {
-                HumanCross(t, team, input);
+                float power = input.Shoot ? MathUtil.Clamp01(input.ShootPower) : 1f;
+                Vec2 point = Pitch.Clamp(at + aim * MathUtil.Lerp(r.SetPieceLongMin, r.SetPieceLongMax, power), -SafeMarginToLine);
+                if (kind == RestartKind.ThrowIn)
+                {
+                    KickPass(t, at + aim * ThrowInMaxDistance, null, false, true, ThrowInMaxSpeed);
+                }
+                else
+                {
+                    KickCross(t, point, true, 0f, KickKind.Clearance);
+                }
+            }
+            else if (input.Cross)
+            {
+                float power = input.CrossPower > 0f ? MathUtil.Clamp01(input.CrossPower) : 0.5f;
+                float distance = MathUtil.Lerp(r.SetPieceCrossMin, r.SetPieceCrossMax, power);
+                if (kind == RestartKind.ThrowIn)
+                {
+                    KickPass(t, at + aim * MathF.Min(distance, ThrowInMaxDistance), null, false, true, ThrowInMaxSpeed);
+                }
+                else
+                {
+                    float spin = kind == RestartKind.Corner ? (at.Y > 0f ? -CornerSpin : CornerSpin) : 0f;
+                    KickCross(t, Pitch.Clamp(at + aim * distance, -SafeMarginToLine), true, spin);
+                }
             }
             else
             {
@@ -308,15 +403,11 @@ namespace Football.Core.MatchCore
                         target = null;
                     }
 
-                    KickPass(t, point, target, false, true, ThrowInMaxSpeed, scale);
-                }
-                else if (kind == RestartKind.Corner && Vec2.Distance(at, point) > Config.Rules.ShortCornerDistance)
-                {
-                    KickCross(t, point, true, at.Y > 0f ? -CornerSpin : CornerSpin); // córner al área, hacia donde apuntas
+                    KickPass(t, point, target, false, true, ThrowInMaxSpeed, passScale);
                 }
                 else
                 {
-                    KickPass(t, point, target, true, true, float.MaxValue, scale);
+                    KickPass(t, point, target, kind != RestartKind.KickOff, true, float.MaxValue, passScale);
                 }
             }
 

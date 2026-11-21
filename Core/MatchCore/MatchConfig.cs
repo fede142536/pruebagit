@@ -206,6 +206,22 @@ namespace Football.Core.MatchCore
         public float GoalKickDelay = 2.0f;
         /// <summary>Espera antes de un córner, para que todos entren al área (s).</summary>
         public float CornerDelay = 2.4f;
+        /// <summary>Ángulo máximo del saque del medio respecto del frente (grados): hacia delante o al costado.</summary>
+        public float KickoffAimDeg = 100f;
+        /// <summary>Ángulo máximo del lateral respecto de la perpendicular a la banda (grados): siempre hacia adentro.</summary>
+        public float ThrowInAimDeg = 80f;
+        /// <summary>Ángulo máximo del córner respecto de la diagonal hacia el campo (grados).</summary>
+        public float CornerAimDeg = 45f;
+        /// <summary>Ángulo máximo del saque de arco respecto del frente (grados).</summary>
+        public float GoalKickAimDeg = 100f;
+        /// <summary>Distancia de un centro de pelota parada con potencia mínima y máxima (m).</summary>
+        public float SetPieceCrossMin = 12f;
+        /// <summary>Distancia de un centro de pelota parada con potencia máxima (m).</summary>
+        public float SetPieceCrossMax = 45f;
+        /// <summary>Distancia de un pelotazo largo (botón TIRO en saques que no son tiro libre) con potencia mínima (m).</summary>
+        public float SetPieceLongMin = 30f;
+        /// <summary>Distancia de ese pelotazo con potencia máxima (m).</summary>
+        public float SetPieceLongMax = 62f;
         /// <summary>Si la persona no saca en este tiempo, saca la IA por ella (s).</summary>
         public float HumanRestartTimeout = 8f;
         /// <summary>En un córner de la persona, un pase a un compañero a menos de esta distancia sale corto y raso (m).</summary>

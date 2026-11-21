@@ -47,6 +47,8 @@ namespace Football.Game
         public bool ThroughDown;
         /// <summary>Centro pulsado en este fotograma.</summary>
         public bool CrossDown;
+        /// <summary>Centro mantenido (para cargar la distancia en los saques).</summary>
+        public bool CrossHeld;
         /// <summary>Tiro mantenido.</summary>
         public bool ShootHeld;
         /// <summary>Barrida pulsada en este fotograma.</summary>
@@ -272,6 +274,7 @@ namespace Football.Game
             Keyboard.PassHeld = Held(kb, GameAction.Pass);
             Keyboard.ThroughDown = Pressed(kb, GameAction.Through);
             Keyboard.CrossDown = Pressed(kb, GameAction.Cross);
+            Keyboard.CrossHeld = Held(kb, GameAction.Cross);
             Keyboard.ShootHeld = Held(kb, GameAction.Shoot);
             Keyboard.SlideDown = Pressed(kb, GameAction.Slide);
             Keyboard.PressHeld = Held(kb, GameAction.Press);
@@ -309,6 +312,7 @@ namespace Football.Game
             Keyboard.SlideDown |= pad.buttonEast.wasPressedThisFrame;
             Keyboard.ThroughDown |= pad.buttonWest.wasPressedThisFrame;
             Keyboard.CrossDown |= pad.buttonNorth.wasPressedThisFrame;
+            Keyboard.CrossHeld |= pad.buttonNorth.isPressed;
             Keyboard.SwitchDown |= pad.leftShoulder.wasPressedThisFrame;
             Keyboard.PressHeld |= pad.rightTrigger.isPressed;
             Keyboard.ClearDown |= pad.leftTrigger.wasPressedThisFrame;
@@ -394,6 +398,7 @@ namespace Football.Game
             Keyboard.PassHeld = Held(GameAction.Pass);
             Keyboard.ThroughDown = Pressed(GameAction.Through);
             Keyboard.CrossDown = Pressed(GameAction.Cross);
+            Keyboard.CrossHeld = Held(GameAction.Cross);
             Keyboard.ShootHeld = Held(GameAction.Shoot);
             Keyboard.SlideDown = Pressed(GameAction.Slide);
             Keyboard.PressHeld = Held(GameAction.Press);

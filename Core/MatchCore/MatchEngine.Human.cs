@@ -52,6 +52,11 @@ namespace Football.Core.MatchCore
             {
                 current.PassPower = input.PassPower;
             }
+
+            if (input.Cross)
+            {
+                current.CrossPower = input.CrossPower;
+            }
             current.Pass |= input.Pass;
             current.Through |= input.Through;
             current.Cross |= input.Cross;

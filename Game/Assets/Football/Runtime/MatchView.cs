@@ -63,6 +63,16 @@ namespace Football.Game
         private Transform _controlRing;
         private Transform _targetRing;
         private Transform _switchRing;
+        private Transform _aimShaft, _aimHead;
+        private Renderer _aimShaftRenderer, _aimHeadRenderer;
+        private readonly Material[] _aimMaterials = new Material[3];
+        private bool _setPieceView;
+        private float _setPieceX, _setPieceY;
+        private const float AimBaseLength = 3f;
+        private const float AimChargeLength = 9f;
+        private const float AimWidth = 0.35f;
+        private const float SetPieceLookAhead = 12f;
+        private const float SetPieceZoom = 1.25f;
         private TrailRenderer _trail;
         private readonly Transform[] _netBack = new Transform[2];
         private readonly Vector3[] _netRest = new Vector3[2];
@@ -425,6 +435,17 @@ namespace Football.Game
             _targetRing = Shape("AroDestino", MeshKit.Disc, Color.white, Vector3.zero, new Vector3(1.4f, 1f, 1.4f));
             // Aro tenue: el jugador que tomarías al pulsar CAMBIAR.
             _switchRing = Shape("AroCambio", MeshKit.Disc, new Color(0.55f, 0.5f, 0.2f), Vector3.zero, new Vector3(1.3f, 1f, 1.3f));
+
+            // Flecha de apuntado en el césped para los saques (verde → amarillo → rojo según la carga).
+            _aimMaterials[0] = Materials.Get(new Color(0.3f, 0.9f, 0.35f));
+            _aimMaterials[1] = Materials.Get(new Color(1f, 0.85f, 0.2f));
+            _aimMaterials[2] = Materials.Get(new Color(0.95f, 0.3f, 0.2f));
+            _aimShaft = Shape("FlechaSaque", MeshKit.Box, Color.white, Vector3.zero, Vector3.one);
+            _aimHead = Shape("PuntaSaque", MeshKit.Box, Color.white, Vector3.zero, Vector3.one);
+            _aimShaftRenderer = _aimShaft.GetComponent<Renderer>();
+            _aimHeadRenderer = _aimHead.GetComponent<Renderer>();
+            _aimShaft.gameObject.SetActive(false);
+            _aimHead.gameObject.SetActive(false);
         }
 
         // ---- Dibujo por fotograma ---------------------------------------------------------------------------------
@@ -559,10 +580,17 @@ namespace Football.Game
                 ballY = ToEngineY(_heads[_focusPlayer]);
             }
 
+            if (_setPieceView)
+            {
+                // Saque de la persona: la cámara mira entre el balón y hacia donde apunta, un poco más abierta.
+                ballX = _setPieceX;
+                ballY = _setPieceY;
+            }
+
             float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
             _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + _lookAheadX) * CameraFollowX, -maxX, maxX), follow);
             _cameraZ = Mathf.Lerp(_cameraZ, (ballY + _lookAheadZ) * CameraFollowZ, follow);
-            float zoom = Mathf.Lerp(_zoom, FocusZoom, _focusPlayer >= 0 ? 1f : 0f);
+            float zoom = _focusPlayer >= 0 ? FocusZoom : _setPieceView ? SetPieceZoom : _zoom;
             float scale = _cameraScale * zoom;
             Transform t = _camera.transform;
             var position = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
@@ -584,6 +612,51 @@ namespace Football.Game
 
             t.localPosition = position;
             t.LookAt(lookAt);
+        }
+
+        /// <summary>
+        /// Flecha de apuntado de un saque sobre el césped, desde el balón hacia la dirección elegida; su largo y color
+        /// muestran la carga. La cámara se abre y mira hacia donde apunta para ver a los compañeros.
+        /// </summary>
+        /// <param name="show">Mostrar u ocultar.</param>
+        /// <param name="x">Balón, X del motor.</param>
+        /// <param name="y">Balón, Y del motor.</param>
+        /// <param name="dirX">Dirección, X del motor.</param>
+        /// <param name="dirY">Dirección, Y del motor.</param>
+        /// <param name="charge">Carga de 0 a 1.</param>
+        public void SetAim(bool show, float x, float y, float dirX, float dirY, float charge)
+        {
+            _setPieceView = show;
+            if (_aimShaft == null)
+            {
+                return;
+            }
+
+            if (_aimShaft.gameObject.activeSelf != show)
+            {
+                _aimShaft.gameObject.SetActive(show);
+                _aimHead.gameObject.SetActive(show);
+            }
+
+            if (!show)
+            {
+                return;
+            }
+
+            float length = AimBaseLength + AimChargeLength * Mathf.Clamp01(charge);
+            float yaw = 90f - Mathf.Atan2(dirY, dirX) * Mathf.Rad2Deg;
+            var rotation = Quaternion.Euler(0f, yaw, 0f);
+            _aimShaft.localRotation = rotation;
+            _aimShaft.localScale = new Vector3(AimWidth, 0.02f, length);
+            _aimShaft.localPosition = ToUnity(x + dirX * length * 0.5f, y + dirY * length * 0.5f, 0.05f);
+            _aimHead.localRotation = rotation * Quaternion.Euler(0f, 45f, 0f);
+            _aimHead.localScale = new Vector3(AimWidth * 2.2f, 0.02f, AimWidth * 2.2f);
+            _aimHead.localPosition = ToUnity(x + dirX * length, y + dirY * length, 0.05f);
+            Material m = _aimMaterials[charge < 0.34f ? 0 : charge < 0.67f ? 1 : 2];
+            _aimShaftRenderer.sharedMaterial = m;
+            _aimHeadRenderer.sharedMaterial = m;
+            _setPieceX = x + dirX * SetPieceLookAhead;
+            _setPieceY = y + dirY * SetPieceLookAhead;
         }
 
         /// <summary>Empieza la presentación: plano aéreo del estadio que baja hasta la cámara de transmisión.</summary>

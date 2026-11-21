@@ -444,13 +444,23 @@ namespace Football.Game
                 target = preview != null ? preview.Index : -1;
             }
 
+            if (!_benchmark && _engine.TryGetRestartAim(0, out Vec2 aimFrom, out Vec2 aimDir))
+            {
+                float aimCharge = Mathf.Max(_controls.PassCharge, Mathf.Max(_controls.CrossCharge, _controls.ShootCharge));
+                _view.SetAim(true, aimFrom.X, aimFrom.Y, aimDir.X, aimDir.Y, aimCharge);
+            }
+            else
+            {
+                _view.SetAim(false, 0f, 0f, 0f, 0f, 0f);
+            }
+
             MatchPlayer next = _benchmark ? null : _engine.PreviewSwitchTarget(0);
             _view.Render(_previous, _current, alpha, controlled, target, deltaTime, next != null ? next.Index : -1);
             MatchPlayer holder = _engine.Owner ?? _engine.LastToucher;
             _radar.Update(_current, _view, controlled, holder != null && holder.Team == 0);
             if (!_benchmark)
             {
-                float charge = Mathf.Max(_controls.ShootCharge, _controls.PassCharge);
+                float charge = Mathf.Max(_controls.ShootCharge, Mathf.Max(_controls.PassCharge, _controls.CrossCharge));
                 float stamina = controlled >= 0 ? _engine.Players[controlled].Stamina : 1f;
                 _playerHud.Update(_view, controlled, charge, stamina);
             }
