@@ -29,11 +29,13 @@ namespace Football.Game
         public static readonly Color Gold = new Color(1f, 0.82f, 0.25f);
 
         private static Sprite _gradient;
+        private const float BackgroundAlpha = 0.82f;
 
         /// <summary>Fondo a pantalla completa con degradado vertical.</summary>
         public static void Background(Transform parent)
         {
-            Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, Color.white);
+            // Semitransparente: detrás se ve el partido de fondo del menú (MenuBackdrop).
+            Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(1f, 1f, 1f, BackgroundAlpha));
             image.sprite = Gradient();
             // Líneas de cancha muy tenues como decoración.
             Color line = new Color(1f, 1f, 1f, 0.035f);

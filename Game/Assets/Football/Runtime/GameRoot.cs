@@ -25,6 +25,7 @@ namespace Football.Game
         private bool _lastWasBenchmark;
         private bool _indoor;
         private GameAudio _audio;
+        private readonly MenuBackdrop _backdrop = new MenuBackdrop();
 
         /// <summary>Cámara única del juego fuera del partido (menús); el partido la apaga mientras usa la suya.</summary>
         public static Camera MenuCamera { get; private set; }
@@ -42,7 +43,7 @@ namespace Football.Game
             Screen.autorotateToLandscapeRight = true;
             Screen.orientation = ScreenOrientation.AutoRotation;
             PrepareScene();
-            GraphicsQuality.SetAntialiasing(_settings.Antialias);
+            GraphicsQuality.Apply(_settings.Quality);
 
             _mainMenu = new MainMenuScreen(transform, _pointers);
             _teams = new TeamSelectScreen(transform, _pointers, _friendly);
@@ -114,6 +115,10 @@ namespace Football.Game
         {
             // La pantalla solo se mantiene encendida durante el partido.
             Screen.sleepTimeout = next == State.Match ? SleepTimeout.NeverSleep : SleepTimeout.SystemSetting;
+            if (next == State.Match)
+            {
+                _backdrop.Stop(); // el partido usa la cámara y la CPU
+            }
             _mainMenu.Hide();
             _teams.Hide();
             _lineup.Hide();
@@ -177,6 +182,16 @@ namespace Football.Game
         private void Update()
         {
             _pointers.Update();
+            if (_state != State.Match)
+            {
+                if (_match.IsIdle)
+                {
+                    _backdrop.Start();
+                }
+
+                _backdrop.Update(Time.unscaledDeltaTime);
+            }
+
             switch (_state)
             {
                 case State.MainMenu:

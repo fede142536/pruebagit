@@ -32,6 +32,9 @@ namespace Football.Game
     /// </summary>
     public sealed class PlayerModel
     {
+        private const float StumbleLean = 28f;
+        private const float StumbleRoll = 12f;
+        private const float StumbleArms = 60f;
         private const float HipHeight = 0.92f;
         private const float ThighLength = 0.44f;
         private const float ShinLength = 0.42f;
@@ -228,6 +231,22 @@ namespace Football.Game
                 roll = diveRight ? -DiveRoll : DiveRoll;
                 lift = DiveLift;
                 lean = 0f;
+            }
+            else if (action == PlayerAction.Stumble)
+            {
+                // Pierde el equilibrio: se inclina hacia delante y se bambolea, con los brazos abiertos.
+                lean = StumbleLean;
+                roll = Mathf.Sin(_phase * 2f) * StumbleRoll;
+                _armL.localRotation = Quaternion.Euler(-30f, 0f, -StumbleArms);
+                _armR.localRotation = Quaternion.Euler(-30f, 0f, StumbleArms);
+            }
+            else if (action == PlayerAction.Celebrate)
+            {
+                // Festejo: brazos en alto agitándose.
+                float wave = Mathf.Sin(_phase * 1.5f) * 15f;
+                _armL.localRotation = Quaternion.Euler(-170f + wave, 0f, -20f);
+                _armR.localRotation = Quaternion.Euler(-170f - wave, 0f, 20f);
+                lean = -5f;
             }
 
             _body.localPosition = new Vector3(0f, lift, 0f);

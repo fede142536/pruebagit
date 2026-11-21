@@ -5,20 +5,21 @@ using UnityEngine.Rendering;
 namespace Football.Game
 {
     /// <summary>
-    /// Ajustes gráficos que dependen del proyecto. El suavizado de bordes (MSAA) en URP vive en el asset del pipeline; se
-    /// cambia por reflexión para no depender en tiempo de compilación del paquete URP (el juego funciona con cualquier
-    /// plantilla). En las GPU de teléfono (por mosaicos) el MSAA 2x es barato.
+    /// Perfiles gráficos. En URP la resolución de render y el suavizado (MSAA) viven en el asset del pipeline; se cambian por
+    /// reflexión para no depender en tiempo de compilación del paquete URP (el juego funciona con cualquier plantilla).
+    /// Bajo: 70 % de resolución sin suavizado (teléfonos de gama baja como el A13). Medio: 85 % y MSAA 2x. Alto: 100 % y 4x.
     /// </summary>
     public static class GraphicsQuality
     {
-        private const int SamplesOn = 2;
-        private const int SamplesOff = 1;
+        private static readonly float[] RenderScale = { 0.7f, 0.85f, 1f };
+        private static readonly int[] MsaaSamples = { 1, 2, 4 };
 
-        /// <summary>Activa o desactiva el suavizado de bordes.</summary>
-        public static void SetAntialiasing(bool on)
+        /// <summary>Aplica un perfil (0 bajo, 1 medio, 2 alto).</summary>
+        public static void Apply(int level)
         {
-            int samples = on ? SamplesOn : SamplesOff;
-            QualitySettings.antiAliasing = on ? SamplesOn : 0; // pipeline integrado
+            level = Mathf.Clamp(level, 0, RenderScale.Length - 1);
+            int samples = MsaaSamples[level];
+            QualitySettings.antiAliasing = samples > 1 ? samples : 0; // pipeline integrado
             try
             {
                 RenderPipelineAsset pipeline = QualitySettings.renderPipeline != null ? QualitySettings.renderPipeline : GraphicsSettings.defaultRenderPipeline;
@@ -27,15 +28,21 @@ namespace Football.Game
                     return;
                 }
 
-                PropertyInfo property = pipeline.GetType().GetProperty("msaaSampleCount", BindingFlags.Public | BindingFlags.Instance);
-                if (property != null && property.CanWrite)
-                {
-                    property.SetValue(pipeline, samples);
-                }
+                SetProperty(pipeline, "msaaSampleCount", samples);
+                SetProperty(pipeline, "renderScale", RenderScale[level]);
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning("Football: no se pudo cambiar el suavizado de bordes (" + e.Message + ")");
+                Debug.LogWarning("Football: no se pudo aplicar el perfil gráfico (" + e.Message + ")");
+            }
+        }
+
+        private static void SetProperty(object target, string name, object value)
+        {
+            PropertyInfo property = target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(target, value);
             }
         }
     }

@@ -101,6 +101,9 @@ namespace Football.Game
             ReadTouches();
             ReadMouse();
             ReadKeyboard();
+#if ENABLE_INPUT_SYSTEM
+            ReadGamepad();
+#endif
         }
 
         private void Add(int id, Vector2 position, PointerPhase phase)
@@ -276,6 +279,41 @@ namespace Football.Game
             Keyboard.KeeperDown = Pressed(kb, GameAction.Keeper);
             Keyboard.SwitchDown = Pressed(kb, GameAction.Switch);
             Keyboard.PauseDown = Pressed(kb, GameAction.Pause) || kb.escapeKey.wasPressedThisFrame;
+        }
+
+        private const float StickDeadZone = 0.2f;
+
+        /// <summary>
+        /// Mando físico (Xbox, PlayStation o genérico por Bluetooth): stick izquierdo mover; A/✕ pase (mantener = potencia);
+        /// B/○ tiro (mantener) o barrida sin balón; X/□ filtrado; Y/△ centro; RB esprint; LB cambiar; RT presionar;
+        /// LT despejar; Select arquero; Start pausa. Se suma al teclado.
+        /// </summary>
+        private void ReadGamepad()
+        {
+            UnityEngine.InputSystem.Gamepad pad = UnityEngine.InputSystem.Gamepad.current;
+            if (pad == null)
+            {
+                return;
+            }
+
+            Vector2 stick = pad.leftStick.ReadValue();
+            if (stick.sqrMagnitude > StickDeadZone * StickDeadZone)
+            {
+                Keyboard.Move = stick;
+            }
+
+            Keyboard.Sprint |= pad.rightShoulder.isPressed;
+            Keyboard.PassDown |= pad.buttonSouth.wasPressedThisFrame;
+            Keyboard.PassHeld |= pad.buttonSouth.isPressed;
+            Keyboard.ShootHeld |= pad.buttonEast.isPressed;
+            Keyboard.SlideDown |= pad.buttonEast.wasPressedThisFrame;
+            Keyboard.ThroughDown |= pad.buttonWest.wasPressedThisFrame;
+            Keyboard.CrossDown |= pad.buttonNorth.wasPressedThisFrame;
+            Keyboard.SwitchDown |= pad.leftShoulder.wasPressedThisFrame;
+            Keyboard.PressHeld |= pad.rightTrigger.isPressed;
+            Keyboard.ClearDown |= pad.leftTrigger.wasPressedThisFrame;
+            Keyboard.KeeperDown |= pad.selectButton.wasPressedThisFrame;
+            Keyboard.PauseDown |= pad.startButton.wasPressedThisFrame;
         }
 #else
         private void ReadTouches()

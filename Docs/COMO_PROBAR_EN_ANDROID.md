@@ -79,6 +79,12 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    pasarías con CAMBIAR. Tras un gol hay una repetición en cámara lenta (toca para saltarla). En Ajustes se pueden apagar el
    sonido y la vibración.
 
+   **Mando físico** (Xbox, PlayStation o Bluetooth genérico; requiere el sistema de entrada nuevo): stick izquierdo mover,
+   A/✕ pase (mantener = potencia), B/○ tiro (mantener) o barrida sin balón, X/□ filtrado, Y/△ centro, RB esprint, LB cambiar,
+   RT presionar, LT despejar, Select arquero, Start pausa.
+
+   **Calidad gráfica** (Ajustes): BAJA (70 % de resolución, sin suavizado; recomendada para el A13), MEDIA o ALTA.
+
    **3 contra 3:** la alineación se elige igual que en el amistoso (Equipos → editar alineación), pero con tres titulares y
    tres suplentes, y se guarda aparte de la de 11.
 

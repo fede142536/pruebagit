@@ -210,7 +210,7 @@ namespace Football.Game
         private void Refresh()
         {
             _keys.Label.text = "CONTROLES DE TECLADO (ORDENADOR) ›";
-            _antialias.Label.text = "SUAVIZADO DE BORDES: " + (_settings.Antialias ? "SÍ" : "NO");
+            _antialias.Label.text = "CALIDAD GRÁFICA: " + GameSettings.QualityLabels[_settings.Quality] + " (BAJA PARA EL A13)";
             _vibration.Label.text = "VIBRACIÓN (GOLES Y PALOS): " + (_settings.Vibration ? "SÍ" : "NO");
             _sound.Label.text = "SONIDO: " + (_settings.Sound ? "SÍ" : "NO");
             _speed.Label.text = "VELOCIDAD DEL JUEGO: " + GameSettings.SpeedLabels[_settings.Speed];
@@ -279,8 +279,8 @@ namespace Football.Game
                 }
                 else if (_antialias.Contains(p))
                 {
-                    _settings.Antialias = !_settings.Antialias;
-                    GraphicsQuality.SetAntialiasing(_settings.Antialias);
+                    _settings.Quality = (_settings.Quality + 1) % GameSettings.QualityLabels.Length;
+                    GraphicsQuality.Apply(_settings.Quality);
                 }
                 else if (_back.Contains(p))
                 {

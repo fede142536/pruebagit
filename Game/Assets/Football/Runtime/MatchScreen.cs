@@ -96,6 +96,8 @@ namespace Football.Game
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
             _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
 
+            _plate = new LowerThird(_canvas.transform);
+            BuildLineupCard(c);
             _controls = new TouchControls(_canvas);
             _debug = new DebugPanel(c);
 
@@ -216,6 +218,18 @@ namespace Football.Game
             _lastTick = -1;
             _historyHead = _historyCount = 0;
             _replaying = false;
+            _celebrationTimer = 0f;
+            _homeKit = homeKit;
+            _awayKit = awayKit;
+            _plate.Hide();
+            _introTimer = benchmark ? 0f : IntroSeconds;
+            if (!benchmark)
+            {
+                FillLineupCard();
+                _view.PlayIntro(IntroSeconds);
+            }
+
+            _lineupCard.SetActive(!benchmark);
             _lastBallSpeed = 0f;
             AudioListener.pause = false;
             _audio.StartCrowd();
@@ -287,6 +301,9 @@ namespace Football.Game
             return seconds > 0f ? _frameCounter / seconds : 0f;
         }
 
+        /// <summary>No hay escena de partido creada (se puede mostrar el fondo vivo de los menús).</summary>
+        public bool IsIdle => _view == null;
+
         /// <summary>Oculta la interfaz y libera la escena del partido.</summary>
         public void End()
         {
@@ -296,6 +313,10 @@ namespace Football.Game
             _audio.StopCrowd();
             AudioListener.pause = false;
             _replaying = false;
+            _celebrationTimer = 0f;
+            _introTimer = 0f;
+            _plate.Hide();
+            _lineupCard.SetActive(false);
             _playerHud.SetVisible(false);
             _view?.Destroy();
             _view = null;
@@ -376,10 +397,37 @@ namespace Football.Game
             }
 
             _frameCounter++;
+            _plate.Update(deltaTime);
+            if (_introTimer > 0f)
+            {
+                // Presentación: plano aéreo y alineaciones; el partido espera (toca para saltar).
+                _introTimer -= deltaTime;
+                if (_introTimer <= 0f || input.Pass || input.Shoot || TappedThisFrame())
+                {
+                    _introTimer = 0f;
+                    _lineupCard.SetActive(false);
+                    _view.SkipIntro();
+                }
+
+                _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
+                return;
+            }
+
             if (_replaying)
             {
                 PlayReplay(deltaTime, input);
                 return;
+            }
+
+            if (_celebrationTimer > 0f)
+            {
+                _celebrationTimer -= deltaTime;
+                if (_celebrationTimer <= 0f || TappedThisFrame())
+                {
+                    _celebrationTimer = 0f;
+                    _view.Focus(-1);
+                    StartReplay();
+                }
             }
 
             int steps = Step(deltaTime, input);
@@ -483,21 +531,26 @@ namespace Football.Game
                     case MatchEventType.Goal:
                         Haptics.Pulse(_settings.Vibration);
                         _audio.Goal();
+                        _view.BulgeNet(e.X >= 0f ? 1f : -1f);
                         if (!_benchmark)
                         {
-                            StartReplay();
+                            // Festejo con la cámara sobre el goleador y después la repetición (que termina en el gol).
+                            _goalHead = _historyHead;
+                            MatchPlayer celebrator = _engine.Celebrator;
+                            _view.Focus(celebrator != null ? celebrator.Index : -1);
+                            _celebrationTimer = CelebrationSeconds;
+                            ShowPlate("GOL", new Color(1f, 0.85f, 0.2f), e);
                         }
 
-                        string scorer = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Name : string.Empty;
                         bool ownGoal = e.PlayerIndex >= 0 && _engine.Players[e.PlayerIndex].Team != e.Team;
-                        text = "¡GOL DE " + (e.Team == 0 ? _homeTeam.Name : _awayTeam.Name).ToUpperInvariant() + "!\n"
-                               + (ownGoal ? "en contra de " + scorer : scorer);
+                        // El detalle (minuto, jugador, equipo) va en la placa; el aviso grande solo celebra.
+                        text = ownGoal ? "¡GOL EN CONTRA!" : "¡GOOOL!";
                         break;
                     case MatchEventType.Offside: text = "FUERA DE JUEGO"; _audio.Whistle(); break;
                     case MatchEventType.Foul: text = "FALTA"; _audio.Whistle(); break;
                     case MatchEventType.KickOff: _audio.Whistle(); break;
-                    case MatchEventType.YellowCard: text = "TARJETA AMARILLA"; break;
-                    case MatchEventType.RedCard: text = "TARJETA ROJA"; break;
+                    case MatchEventType.YellowCard: ShowPlate("AMARILLA", new Color(1f, 0.85f, 0.1f), e); break;
+                    case MatchEventType.RedCard: ShowPlate("ROJA", new Color(0.9f, 0.15f, 0.15f), e); break;
                     case MatchEventType.Penalty: text = "¡PENAL!"; _audio.Whistle(); break;
                     case MatchEventType.Corner: text = "CÓRNER"; break;
                     case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; _audio.LongWhistle(); break;
@@ -506,6 +559,7 @@ namespace Football.Game
                     case MatchEventType.Woodwork:
                         text = "¡AL PALO!";
                         Haptics.Pulse(_settings.Vibration);
+                        _view.Shake(PostShake);
                         _audio.Post();
                         break;
                     case MatchEventType.TacticsChanged:
@@ -574,6 +628,19 @@ namespace Football.Game
 
         /// <summary>Todos los textos "mm:ss" preparados al arrancar: el reloj del partido no crea textos nuevos.</summary>
         private const int RadarTeamSize = 11;
+        private const float IntroSeconds = 3.5f;
+        private const float CelebrationSeconds = 2.2f;
+        private const float PostShake = 0.25f;
+        private const int LineupRows = 11;
+        private LowerThird _plate;
+        private GameObject _lineupCard;
+        private readonly Text[] _lineupHome = new Text[LineupRows];
+        private readonly Text[] _lineupAway = new Text[LineupRows];
+        private Text _lineupHomeTitle, _lineupAwayTitle;
+        private float _introTimer;
+        private float _celebrationTimer;
+        private int _goalHead;
+        private KitColors _homeKit, _awayKit;
         private const float ReplaySeconds = 4f;
         private const float ReplaySpeed = 0.5f;
         private const int HistoryLength = 300; // 5 s a 60 pasos por segundo
@@ -599,6 +666,45 @@ namespace Football.Game
         }
 
         /// <summary>Repetición del gol: los últimos segundos en cámara lenta (el partido espera).</summary>
+        /// <summary>Placa de TV con el minuto, el jugador y el equipo de un evento.</summary>
+        private void ShowPlate(string tag, Color tagColor, MatchEvent e)
+        {
+            string player = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Name : string.Empty;
+            int team = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Team : e.Team;
+            string teamName = ShortName(team == 0 ? _homeTeam : _awayTeam);
+            _plate.Show(tag, tagColor, ((int)e.Minute + 1) + "'   " + player.ToUpperInvariant() + "  ·  " + teamName,
+                team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
+        }
+
+        /// <summary>Cartel de alineaciones de la presentación: dos columnas con los titulares.</summary>
+        private void BuildLineupCard(Transform parent)
+        {
+            Image card = UiKit.Panel(parent, "Alineaciones", new Vector2(960f, 520f), new Vector2(1100f, 760f), new Color(0.04f, 0.05f, 0.08f, 0.88f));
+            _lineupCard = card.gameObject;
+            _lineupHomeTitle = UiKit.Label(card.transform, "Local", new Vector2(280f, 700f), new Vector2(500f, 60f), string.Empty, 40, Color.white);
+            _lineupAwayTitle = UiKit.Label(card.transform, "Visitante", new Vector2(820f, 700f), new Vector2(500f, 60f), string.Empty, 40, Color.white);
+            for (int i = 0; i < LineupRows; i++)
+            {
+                float y = 620f - i * 54f;
+                _lineupHome[i] = UiKit.Label(card.transform, "L" + i, new Vector2(280f, y), new Vector2(500f, 48f), string.Empty, 28, new Color(0.9f, 0.92f, 0.95f));
+                _lineupAway[i] = UiKit.Label(card.transform, "V" + i, new Vector2(820f, y), new Vector2(500f, 48f), string.Empty, 28, new Color(0.9f, 0.92f, 0.95f));
+            }
+
+            _lineupCard.SetActive(false);
+        }
+
+        private void FillLineupCard()
+        {
+            _lineupHomeTitle.text = _homeTeam.Name.ToUpperInvariant();
+            _lineupAwayTitle.text = _awayTeam.Name.ToUpperInvariant();
+            int perTeam = _engine.PlayersPerTeam;
+            for (int i = 0; i < LineupRows; i++)
+            {
+                _lineupHome[i].text = i < perTeam ? _engine.Teams[0].Players[i].Number + "  " + _engine.Teams[0].Players[i].Name : string.Empty;
+                _lineupAway[i].text = i < perTeam ? _engine.Teams[1].Players[i].Number + "  " + _engine.Teams[1].Players[i].Name : string.Empty;
+            }
+        }
+
         private void StartReplay()
         {
             int wanted = (int)(ReplaySeconds * _engine.Config.TickRate);
@@ -608,7 +714,16 @@ namespace Football.Game
                 return;
             }
 
-            _replayStart = (_historyHead - _replayLength + _history.Length) % _history.Length;
+            // La repetición termina en el momento del gol (no en el festejo que vino después).
+            int end = _goalHead;
+            int sinceGoal = (_historyHead - end + _history.Length) % _history.Length;
+            _replayLength = Math.Min(_replayLength, _historyCount - sinceGoal);
+            if (_replayLength < 2)
+            {
+                return;
+            }
+
+            _replayStart = (end - _replayLength + _history.Length) % _history.Length;
             _replayCursor = 0f;
             _replaying = true;
             _hint.text = "REPETICIÓN  ·  toca para saltar";

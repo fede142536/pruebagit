@@ -64,6 +64,21 @@ namespace Football.Game
         private Transform _targetRing;
         private Transform _switchRing;
         private TrailRenderer _trail;
+        private readonly Transform[] _netBack = new Transform[2];
+        private readonly Vector3[] _netRest = new Vector3[2];
+        private readonly float[] _netBulge = new float[2];
+        private readonly float[] _netVelocity = new float[2];
+        private float _shake;
+        private float _introTime = float.MaxValue, _introDuration;
+        private int _focusPlayer = -1;
+
+        private const float NetBulgeDepth = 0.7f;
+        private const float NetSpring = 18f;
+        private const float NetDamping = 4f;
+        private const float ShakeDecay = 6f;
+        private const float ShakeFrequency = 37f;
+        private const float IntroHeight = 70f;
+        private const float FocusZoom = 0.55f;
         private Confetti _confetti;
         private float _zoom = 1f;
         private float _lookAheadX;
@@ -169,6 +184,10 @@ namespace Football.Game
         }
 
         private static Vector3 ToUnity(float x, float y, float height) => new Vector3(x, height, y);
+
+        private static float ToEngineX(Vector3 unity) => unity.x;
+
+        private static float ToEngineY(Vector3 unity) => unity.z;
 
         // ---- Campo y estadio ---------------------------------------------------------------------------------------
 
@@ -336,7 +355,10 @@ namespace Football.Game
                 Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, -halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
                 Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
                 Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height * 0.995f, 0f), new Vector3(GoalDepth, 0.02f, halfGoal * 2f));
-                Shape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, 0f), new Vector3(0.02f, height * 0.8f, halfGoal * 2f));
+                Transform backNet = Shape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, 0f), new Vector3(0.02f, height * 0.8f, halfGoal * 2f));
+                int k = end < 0 ? 0 : 1;
+                _netBack[k] = backNet;
+                _netRest[k] = backNet.localPosition;
             }
         }
 
@@ -420,6 +442,7 @@ namespace Football.Game
         {
             _clock += deltaTime;
             _confetti?.Update(deltaTime);
+            AnimateNets(deltaTime);
             float bx = Mathf.Lerp(previous.BallX, current.BallX, alpha);
             float by = Mathf.Lerp(previous.BallY, current.BallY, alpha);
             float bz = Mathf.Lerp(previous.BallZ, current.BallZ, alpha);
@@ -529,13 +552,89 @@ namespace Football.Game
             }
 
             float follow = 1f - Mathf.Exp(-CameraFollowSpeed * deltaTime);
+            if (_focusPlayer >= 0 && _focusPlayer < _heads.Length && _visible[_focusPlayer])
+            {
+                // Cinemática de festejo: la cámara se acerca al goleador y lo sigue.
+                ballX = ToEngineX(_heads[_focusPlayer]);
+                ballY = ToEngineY(_heads[_focusPlayer]);
+            }
+
             float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
             _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + _lookAheadX) * CameraFollowX, -maxX, maxX), follow);
             _cameraZ = Mathf.Lerp(_cameraZ, (ballY + _lookAheadZ) * CameraFollowZ, follow);
-            float scale = _cameraScale * _zoom;
+            float zoom = Mathf.Lerp(_zoom, FocusZoom, _focusPlayer >= 0 ? 1f : 0f);
+            float scale = _cameraScale * zoom;
             Transform t = _camera.transform;
-            t.localPosition = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
-            t.LookAt(new Vector3(_cameraX, 0f, _cameraZ + 2f));
+            var position = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
+            var lookAt = new Vector3(_cameraX, 0f, _cameraZ + 2f);
+            if (_introTime < _introDuration)
+            {
+                // Presentación: el estadio desde arriba y la cámara baja hasta su sitio de transmisión.
+                _introTime += deltaTime;
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_introTime / _introDuration));
+                position = Vector3.Lerp(new Vector3(0f, IntroHeight * _cameraScale, -IntroHeight * 0.35f * _cameraScale), position, u);
+                lookAt = Vector3.Lerp(Vector3.zero, lookAt, u);
+            }
+
+            if (_shake > 0.001f)
+            {
+                _shake *= Mathf.Exp(-ShakeDecay * deltaTime);
+                position += new Vector3(Mathf.Sin(_clock * ShakeFrequency), Mathf.Sin(_clock * ShakeFrequency * 1.3f + 1f), 0f) * _shake;
+            }
+
+            t.localPosition = position;
+            t.LookAt(lookAt);
+        }
+
+        /// <summary>Empieza la presentación: plano aéreo del estadio que baja hasta la cámara de transmisión.</summary>
+        /// <param name="seconds">Duración.</param>
+        public void PlayIntro(float seconds)
+        {
+            _introDuration = seconds;
+            _introTime = 0f;
+        }
+
+        /// <summary>Termina la presentación ya (si la persona la salta).</summary>
+        public void SkipIntro()
+        {
+            _introTime = float.MaxValue;
+        }
+
+        /// <summary>La cámara sigue de cerca a un jugador (festejo de gol); -1 vuelve al balón.</summary>
+        public void Focus(int player)
+        {
+            _focusPlayer = player;
+        }
+
+        /// <summary>Temblor de cámara sutil (balón al palo).</summary>
+        /// <param name="amount">Amplitud en metros.</param>
+        public void Shake(float amount)
+        {
+            _shake = Mathf.Max(_shake, amount);
+        }
+
+        /// <summary>La red de la portería indicada se infla hacia atrás y vuelve, como al recibir el balón.</summary>
+        /// <param name="endSign">Extremo de la portería (+1 o -1 en X del motor).</param>
+        public void BulgeNet(float endSign)
+        {
+            _netBulge[endSign < 0f ? 0 : 1] = 1f;
+        }
+
+        private void AnimateNets(float deltaTime)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                if (_netBack[k] == null)
+                {
+                    continue;
+                }
+
+                // Muelle amortiguado: se estira y vuelve con un pequeño rebote.
+                _netVelocity[k] += (-NetSpring * _netBulge[k] - NetDamping * _netVelocity[k]) * deltaTime;
+                _netBulge[k] += _netVelocity[k] * deltaTime;
+                float end = k == 0 ? -1f : 1f;
+                _netBack[k].localPosition = _netRest[k] + new Vector3(end * NetBulgeDepth * Mathf.Max(0f, _netBulge[k]), 0f, 0f);
+            }
         }
 
         /// <summary>

@@ -19,7 +19,7 @@ namespace Football.Game
         private const string ThroughKey = "football.through";
         private const string CrossKey = "football.cross";
         private const string BigButtonsKey = "football.bigbuttons";
-        private const string AntialiasKey = "football.antialias";
+        private const string QualityKey = "football.quality";
         private const string VibrationKey = "football.vibration";
         private const string SoundKey = "football.sound";
 
@@ -57,8 +57,11 @@ namespace Football.Game
         public bool ShowCross;
         /// <summary>Botones grandes.</summary>
         public bool BigButtons;
-        /// <summary>Suavizado de bordes (MSAA 2x): líneas del campo sin dientes de sierra.</summary>
-        public bool Antialias = true;
+        /// <summary>Perfil gráfico: 0 bajo, 1 medio, 2 alto (ver <see cref="GraphicsQuality"/>).</summary>
+        public int Quality = 1;
+
+        /// <summary>Nombres de los perfiles gráficos.</summary>
+        public static readonly string[] QualityLabels = { "BAJA", "MEDIA", "ALTA" };
         /// <summary>Vibración en goles y palos (solo teléfono).</summary>
         public bool Vibration = true;
         /// <summary>Sonido (hinchada, silbato, golpeos).</summary>
@@ -87,7 +90,7 @@ namespace Football.Game
                 ShowThrough = PlayerPrefs.GetInt(ThroughKey, 0) == 1,
                 ShowCross = PlayerPrefs.GetInt(CrossKey, 0) == 1,
                 BigButtons = PlayerPrefs.GetInt(BigButtonsKey, 0) == 1,
-                Antialias = PlayerPrefs.GetInt(AntialiasKey, 1) == 1,
+                Quality = Mathf.Clamp(PlayerPrefs.GetInt(QualityKey, 1), 0, QualityLabels.Length - 1),
                 Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1,
                 Sound = PlayerPrefs.GetInt(SoundKey, 1) == 1
             };
@@ -117,7 +120,7 @@ namespace Football.Game
             PlayerPrefs.SetInt(ThroughKey, ShowThrough ? 1 : 0);
             PlayerPrefs.SetInt(CrossKey, ShowCross ? 1 : 0);
             PlayerPrefs.SetInt(BigButtonsKey, BigButtons ? 1 : 0);
-            PlayerPrefs.SetInt(AntialiasKey, Antialias ? 1 : 0);
+            PlayerPrefs.SetInt(QualityKey, Quality);
             PlayerPrefs.SetInt(VibrationKey, Vibration ? 1 : 0);
             PlayerPrefs.SetInt(SoundKey, Sound ? 1 : 0);
             PlayerPrefs.Save();
