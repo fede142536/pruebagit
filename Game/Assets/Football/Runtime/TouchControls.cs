@@ -498,8 +498,9 @@ namespace Football.Game
             }
 
             _keyboardPassWasHeld = kb.PassHeld;
-            float passCharge = _pass.Down ? _pass.Held : _keyboardPassHeld;
-            ShowCharge(_passBar, _pass, passCharge < PassTapSeconds ? 0f : Mathf.Clamp01((passCharge - PassTapSeconds) / PassChargeSeconds));
+            float heldNow = _pass.Down ? _pass.Held : _keyboardPassHeld;
+            PassCharge = heldNow < PassTapSeconds ? 0f : Mathf.Clamp01((heldNow - PassTapSeconds) / PassChargeSeconds);
+            ShowCharge(_passBar, _pass, PassCharge);
             ShowCharge(_shootBar, _shoot, ShootCharge);
 
             if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear || input.Slide || input.Switch || input.Keeper)
@@ -509,6 +510,9 @@ namespace Football.Game
 
             return input;
         }
+
+        /// <summary>Carga del pase de 0 a 1 (para dibujar una barra), 0 si es un toque o no se está pulsando.</summary>
+        public float PassCharge { get; private set; }
 
         /// <summary>Carga del tiro de 0 a 1 (para dibujar una barra), 0 si no se está cargando.</summary>
         public float ShootCharge => _shoot.Down || _keyboardShootWasHeld ? Mathf.Clamp01(_shoot.Held / ShootChargeSeconds) : 0f;

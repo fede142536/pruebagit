@@ -73,6 +73,12 @@ solo copia las carpetas del juego; puedes abrirlo con el Bloc de notas para verl
    pulsa la tecla nueva (si otra acción la usaba, se intercambian). En Unity, haz clic una vez dentro de la ventana *Game*
    para que reciba el teclado. La guía de controles con tus teclas está en el menú de pausa.
 
+   **Durante el partido:** abajo al centro hay un radar (solo en 11 contra 11); cuando tu equipo tiene la pelota, los
+   compañeros que quedan fuera de cámara aparecen como fichas con su dorsal en el borde. Bajo tu jugador se ve la barra de
+   potencia al mantener PASE o TIRO (verde → amarillo → rojo) y la de resistencia cuando se cansa. El aro tenue marca a quién
+   pasarías con CAMBIAR. Tras un gol hay una repetición en cámara lenta (toca para saltarla). En Ajustes se pueden apagar el
+   sonido y la vibración.
+
    **3 contra 3:** la alineación se elige igual que en el amistoso (Equipos → editar alineación), pero con tres titulares y
    tres suplentes, y se guarda aparte de la de 11.
 

@@ -64,8 +64,15 @@ namespace Football.Game
         public bool QuitRequested { get; private set; }
 
         /// <summary>Crea la pantalla (los objetos de interfaz se construyen una sola vez).</summary>
-        public MatchScreen(Transform parent, PointerInput pointers, GameSettings settings)
+        /// <param name="audio">Sonido del juego.</param>
+        public MatchScreen(Transform parent, PointerInput pointers, GameSettings settings, GameAudio audio)
         {
+            _audio = audio;
+            for (int i = 0; i < _history.Length; i++)
+            {
+                _history[i] = new MatchSnapshot(); // búfer de la repetición, creado una sola vez
+            }
+
             _parent = parent;
             _pointers = pointers;
             _settings = settings;
@@ -118,6 +125,8 @@ namespace Football.Game
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
             _nameTags = new NameTags(parent);
+            _radar = new Radar(parent);
+            _playerHud = new PlayerHud(parent);
         }
 
         /// <summary>Empieza un partido nuevo.</summary>
@@ -194,8 +203,10 @@ namespace Football.Game
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate);
             _nameTags.Setup(_engine);
+            _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize); // en 3 contra 3 no hace falta
+            _playerHud.SetVisible(!benchmark);
             _previous.CopyFrom(_engine);
             _current.CopyFrom(_engine);
             _accumulator = 0f;
@@ -203,6 +214,11 @@ namespace Football.Game
             _errorsShown = 0;
             _stalledSeconds = 0f;
             _lastTick = -1;
+            _historyHead = _historyCount = 0;
+            _replaying = false;
+            _lastBallSpeed = 0f;
+            AudioListener.pause = false;
+            _audio.StartCrowd();
             _bannerTimer = 0f;
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
@@ -276,6 +292,11 @@ namespace Football.Game
         {
             _canvas.gameObject.SetActive(false);
             _nameTags.Hide();
+            _radar.Hide();
+            _audio.StopCrowd();
+            AudioListener.pause = false;
+            _replaying = false;
+            _playerHud.SetVisible(false);
             _view?.Destroy();
             _view = null;
         }
@@ -355,9 +376,16 @@ namespace Football.Game
             }
 
             _frameCounter++;
+            if (_replaying)
+            {
+                PlayReplay(deltaTime, input);
+                return;
+            }
+
             int steps = Step(deltaTime, input);
             HandleEvents();
             UpdateHud();
+            _audio.UpdateCrowd(Mathf.Abs(_engine.Ball.Pos.X) / _engine.Pitch.HalfLength, deltaTime);
 
             float alpha = Mathf.Clamp01(_accumulator * _engine.Config.TickRate);
             int controlled = _engine.Teams[0].Controlled != null ? _engine.Teams[0].Controlled.Index : -1;
@@ -368,7 +396,17 @@ namespace Football.Game
                 target = preview != null ? preview.Index : -1;
             }
 
-            _view.Render(_previous, _current, alpha, controlled, target, deltaTime);
+            MatchPlayer next = _benchmark ? null : _engine.PreviewSwitchTarget(0);
+            _view.Render(_previous, _current, alpha, controlled, target, deltaTime, next != null ? next.Index : -1);
+            MatchPlayer holder = _engine.Owner ?? _engine.LastToucher;
+            _radar.Update(_current, _view, controlled, holder != null && holder.Team == 0);
+            if (!_benchmark)
+            {
+                float charge = Mathf.Max(_controls.ShootCharge, _controls.PassCharge);
+                float stamina = controlled >= 0 ? _engine.Players[controlled].Stamina : 1f;
+                _playerHud.Update(_view, controlled, charge, stamina);
+            }
+
             _nameTags.Update(_view, _settings.Names, controlled, _engine.Owner != null ? _engine.Owner.Index : -1, _engine.Teams[0].Players.Length);
             UpdateHint(deltaTime, input);
             _debug.Frame(deltaTime, steps);
@@ -417,6 +455,7 @@ namespace Football.Game
                 _current.CopyFrom(_engine);
                 _accumulator -= tick;
                 steps++;
+                Record();
             }
 
             if (_engine.IsFinished)
@@ -442,21 +481,33 @@ namespace Football.Game
                 switch (e.Type)
                 {
                     case MatchEventType.Goal:
+                        Haptics.Pulse(_settings.Vibration);
+                        _audio.Goal();
+                        if (!_benchmark)
+                        {
+                            StartReplay();
+                        }
+
                         string scorer = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Name : string.Empty;
                         bool ownGoal = e.PlayerIndex >= 0 && _engine.Players[e.PlayerIndex].Team != e.Team;
                         text = "¡GOL DE " + (e.Team == 0 ? _homeTeam.Name : _awayTeam.Name).ToUpperInvariant() + "!\n"
                                + (ownGoal ? "en contra de " + scorer : scorer);
                         break;
-                    case MatchEventType.Offside: text = "FUERA DE JUEGO"; break;
-                    case MatchEventType.Foul: text = "FALTA"; break;
+                    case MatchEventType.Offside: text = "FUERA DE JUEGO"; _audio.Whistle(); break;
+                    case MatchEventType.Foul: text = "FALTA"; _audio.Whistle(); break;
+                    case MatchEventType.KickOff: _audio.Whistle(); break;
                     case MatchEventType.YellowCard: text = "TARJETA AMARILLA"; break;
                     case MatchEventType.RedCard: text = "TARJETA ROJA"; break;
-                    case MatchEventType.Penalty: text = "¡PENAL!"; break;
+                    case MatchEventType.Penalty: text = "¡PENAL!"; _audio.Whistle(); break;
                     case MatchEventType.Corner: text = "CÓRNER"; break;
-                    case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; break;
-                    case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; break;
+                    case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; _audio.LongWhistle(); break;
+                    case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; _audio.LongWhistle(); break;
                     case MatchEventType.Save: text = "¡PARADÓN!"; break;
-                    case MatchEventType.Woodwork: text = "¡AL PALO!"; break;
+                    case MatchEventType.Woodwork:
+                        text = "¡AL PALO!";
+                        Haptics.Pulse(_settings.Vibration);
+                        _audio.Post();
+                        break;
                     case MatchEventType.TacticsChanged:
                         // Solo se anuncia el cambio del rival (el propio lo elige la persona en la pausa) y sin tapar otro aviso.
                         if (e.Team == 1 && _bannerTimer <= 0f)
@@ -522,6 +573,80 @@ namespace Football.Game
         private const int ClockMaxMinutes = 99;
 
         /// <summary>Todos los textos "mm:ss" preparados al arrancar: el reloj del partido no crea textos nuevos.</summary>
+        private const int RadarTeamSize = 11;
+        private const float ReplaySeconds = 4f;
+        private const float ReplaySpeed = 0.5f;
+        private const int HistoryLength = 300; // 5 s a 60 pasos por segundo
+        private readonly MatchSnapshot[] _history = new MatchSnapshot[HistoryLength];
+        private readonly GameAudio _audio;
+        private int _historyHead, _historyCount;
+        private bool _replaying;
+        private float _replayCursor;
+        private int _replayStart, _replayLength;
+        private float _lastBallSpeed;
+        private Radar _radar;
+        private PlayerHud _playerHud;
+        /// <summary>Guarda el paso actual en el búfer de la repetición y hace sonar los golpeos de balón.</summary>
+        private void Record()
+        {
+            _history[_historyHead].CopyFrom(_engine);
+            _historyHead = (_historyHead + 1) % _history.Length;
+            _historyCount = Math.Min(_historyCount + 1, _history.Length);
+
+            float speed = _engine.Ball.Vel.Length;
+            _audio.Kick(speed - _lastBallSpeed);
+            _lastBallSpeed = speed;
+        }
+
+        /// <summary>Repetición del gol: los últimos segundos en cámara lenta (el partido espera).</summary>
+        private void StartReplay()
+        {
+            int wanted = (int)(ReplaySeconds * _engine.Config.TickRate);
+            _replayLength = Math.Min(wanted, _historyCount);
+            if (_replayLength < 2)
+            {
+                return;
+            }
+
+            _replayStart = (_historyHead - _replayLength + _history.Length) % _history.Length;
+            _replayCursor = 0f;
+            _replaying = true;
+            _hint.text = "REPETICIÓN  ·  toca para saltar";
+            _playerHud.SetVisible(false);
+        }
+
+        private void PlayReplay(float deltaTime, MatchInput input)
+        {
+            bool skip = input.Pass || input.Shoot || input.Slide || input.Switch || input.Clear || TappedThisFrame();
+            _replayCursor += deltaTime * _engine.Config.TickRate * ReplaySpeed;
+            int i = (int)_replayCursor;
+            if (skip || i >= _replayLength - 1)
+            {
+                _replaying = false;
+                _hint.text = string.Empty;
+                _playerHud.SetVisible(true);
+                return;
+            }
+
+            MatchSnapshot a = _history[(_replayStart + i) % _history.Length];
+            MatchSnapshot b = _history[(_replayStart + i + 1) % _history.Length];
+            _view.Render(a, b, _replayCursor - i, -1, -1, deltaTime * ReplaySpeed);
+            _audio.UpdateCrowd(1f, deltaTime);
+        }
+
+        private bool TappedThisFrame()
+        {
+            for (int i = 0; i < _pointers.Count; i++)
+            {
+                if (_pointers.Pointers[i].Phase == PointerPhase.Began)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private const float ScoreboardWidth = 500f;
         private const float ScoreboardHeight = 58f;
         private const float ScoreboardMargin = 20f;
@@ -583,6 +708,7 @@ namespace Football.Game
         private void SetPaused(bool paused)
         {
             _paused = paused;
+            AudioListener.pause = paused;
             if (paused)
             {
                 _controlsHelp.text = ControlsGuide(); // solo al pausar: nunca durante el juego

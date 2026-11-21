@@ -24,6 +24,7 @@ namespace Football.Game
         private State _state;
         private bool _lastWasBenchmark;
         private bool _indoor;
+        private GameAudio _audio;
 
         /// <summary>Cámara única del juego fuera del partido (menús); el partido la apaga mientras usa la suya.</summary>
         public static Camera MenuCamera { get; private set; }
@@ -49,7 +50,9 @@ namespace Football.Game
             _matchSetup = new MatchSetupScreen(transform, _pointers, _settings, _friendly);
             _settingsScreen = new SettingsScreen(transform, _pointers, _settings);
             _controlsScreen = new ControlsScreen(transform, _pointers);
-            _match = new MatchScreen(transform, _pointers, _settings);
+            _audio = new GameAudio(gameObject);
+            AudioListener.volume = _settings.Sound ? 1f : 0f;
+            _match = new MatchScreen(transform, _pointers, _settings, _audio);
             _result = new ResultScreen(transform, _pointers);
             Go(State.MainMenu);
         }

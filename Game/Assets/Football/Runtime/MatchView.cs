@@ -62,6 +62,27 @@ namespace Football.Game
         private Transform _controlArrow;
         private Transform _controlRing;
         private Transform _targetRing;
+        private Transform _switchRing;
+        private TrailRenderer _trail;
+        private Confetti _confetti;
+        private float _zoom = 1f;
+        private float _lookAheadX;
+        private float _lookAheadZ;
+        private float _ballSpeed;
+        private readonly float _tickRate;
+
+        private const float RingPulseSpeed = 5f;
+        private const float RingPulseAmount = 0.12f;
+        private const float RingSpinDegrees = 60f;
+        private const float TrailMinSpeed = 14f;      // m/s: solo los balones rápidos dejan estela
+        private const float TrailSeconds = 0.18f;
+        private const float ZoomOut = 1.15f;           // balón largo o en el medio: se ve más campo
+        private const float ZoomIn = 0.88f;            // en el último tercio: más cerca para definir
+        private const float ZoomLongBallSpeed = 15f;
+        private const float ZoomSpeed = 1.5f;
+        private const float LookAheadSeconds = 0.7f;   // la cámara se adelanta hacia donde corre el poseedor
+        private const float LookAheadMax = 6f;
+
         private float _cameraX;
         private float _cameraZ;
         private float _clock;
@@ -75,9 +96,11 @@ namespace Football.Game
         /// <param name="homeKit">Equipación del local.</param>
         /// <param name="awayKit">Equipación del visitante.</param>
         /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam)
+        /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate)
         {
             _pitch = pitch;
+            _tickRate = tickRate;
             _perTeam = playersPerTeam;
             _players = new PlayerModel[2 * playersPerTeam];
             _heads = new Vector3[_players.Length];
@@ -92,6 +115,8 @@ namespace Football.Game
             Safe("jugadores", () => BuildPlayers(homeKit, awayKit));
             Safe("balón", BuildBall);
             Safe("indicadores", BuildIndicators);
+            Safe("papelitos", () => _confetti = new Confetti(_root.transform, pitch.HalfLength, pitch.HalfWidth,
+                new[] { homeKit.Shirt, awayKit.Shirt, Color.white }, _meshes));
         }
 
         private void Safe(string step, System.Action action)
@@ -359,6 +384,16 @@ namespace Football.Game
             }
 
             _ballShadow = Shape("SombraBalon", MeshKit.Disc, new Color(0.03f, 0.14f, 0.05f), Vector3.zero, new Vector3(0.5f, 1f, 0.5f));
+
+            // Estela blanca sutil cuando el balón va muy rápido (tiros y pases fuertes).
+            _trail = _ball.gameObject.AddComponent<TrailRenderer>();
+            _trail.time = TrailSeconds;
+            _trail.startWidth = BallVisualSize * 0.8f;
+            _trail.endWidth = 0f;
+            _trail.sharedMaterial = Materials.Get(new Color(0.95f, 0.95f, 0.95f));
+            _trail.shadowCastingMode = ShadowCastingMode.Off;
+            _trail.receiveShadows = false;
+            _trail.emitting = false;
         }
 
         private void BuildIndicators()
@@ -366,6 +401,8 @@ namespace Football.Game
             _controlArrow = Shape("FlechaControl", MeshKit.Arrow, new Color(1f, 0.85f, 0.05f), Vector3.zero, new Vector3(0.55f, 0.6f, 0.55f));
             _controlRing = Shape("AroControl", MeshKit.Disc, new Color(1f, 0.85f, 0.05f), Vector3.zero, new Vector3(1.6f, 1f, 1.6f));
             _targetRing = Shape("AroDestino", MeshKit.Disc, Color.white, Vector3.zero, new Vector3(1.4f, 1f, 1.4f));
+            // Aro tenue: el jugador que tomarías al pulsar CAMBIAR.
+            _switchRing = Shape("AroCambio", MeshKit.Disc, new Color(0.55f, 0.5f, 0.2f), Vector3.zero, new Vector3(1.3f, 1f, 1.3f));
         }
 
         // ---- Dibujo por fotograma ---------------------------------------------------------------------------------
@@ -377,9 +414,12 @@ namespace Football.Game
         /// <param name="controlled">Índice del jugador controlado, o -1.</param>
         /// <param name="passTarget">Índice del receptor previsto del pase, o -1.</param>
         /// <param name="deltaTime">Tiempo del fotograma.</param>
-        public void Render(MatchSnapshot previous, MatchSnapshot current, float alpha, int controlled, int passTarget, float deltaTime)
+        /// <param name="switchTarget">Jugador que tomarías con CAMBIAR, o -1.</param>
+        public void Render(MatchSnapshot previous, MatchSnapshot current, float alpha, int controlled, int passTarget, float deltaTime,
+            int switchTarget = -1)
         {
             _clock += deltaTime;
+            _confetti?.Update(deltaTime);
             float bx = Mathf.Lerp(previous.BallX, current.BallX, alpha);
             float by = Mathf.Lerp(previous.BallY, current.BallY, alpha);
             float bz = Mathf.Lerp(previous.BallZ, current.BallZ, alpha);
@@ -427,10 +467,24 @@ namespace Football.Game
                 PlaceIndicator(_controlArrow, previous, current, alpha, controlled, ArrowHeight + Mathf.Sin(_clock * 5f) * ArrowBob);
                 PlaceIndicator(_controlRing, previous, current, alpha, controlled, 0.035f);
                 PlaceIndicator(_targetRing, previous, current, alpha, passTarget, 0.04f);
+                PlaceIndicator(_switchRing, previous, current, alpha, switchTarget != controlled ? switchTarget : -1, 0.03f);
+                // El aro del jugador controlado late y gira despacio para encontrarlo de un vistazo.
+                float pulse = 1.6f * (1f + RingPulseAmount * Mathf.Sin(_clock * RingPulseSpeed));
+                _controlRing.localScale = new Vector3(pulse, 1f, pulse);
+                _controlRing.localRotation = Quaternion.Euler(0f, _clock * RingSpinDegrees, 0f);
+            }
+
+            if (_trail != null)
+            {
+                float vx = (current.BallX - previous.BallX) * _tickRate;
+                float vy = (current.BallY - previous.BallY) * _tickRate;
+                _ballSpeed = Mathf.Sqrt(vx * vx + vy * vy);
+                _trail.emitting = _ballSpeed > TrailMinSpeed;
             }
 
             if (_camera != null)
             {
+                UpdateLookAhead(current, deltaTime);
                 UpdateCamera(bx, by, deltaTime);
             }
         }
@@ -476,11 +530,37 @@ namespace Football.Game
 
             float follow = 1f - Mathf.Exp(-CameraFollowSpeed * deltaTime);
             float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
-            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp(ballX * CameraFollowX, -maxX, maxX), follow);
-            _cameraZ = Mathf.Lerp(_cameraZ, ballY * CameraFollowZ, follow);
+            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + _lookAheadX) * CameraFollowX, -maxX, maxX), follow);
+            _cameraZ = Mathf.Lerp(_cameraZ, (ballY + _lookAheadZ) * CameraFollowZ, follow);
+            float scale = _cameraScale * _zoom;
             Transform t = _camera.transform;
-            t.localPosition = new Vector3(_cameraX, CameraHeight * _cameraScale, _cameraZ - CameraDistance * _cameraScale);
+            t.localPosition = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
             t.LookAt(new Vector3(_cameraX, 0f, _cameraZ + 2f));
+        }
+
+        /// <summary>
+        /// Cámara dinámica: se aleja con balones largos o en el medio del campo (para ver opciones de pase), se acerca en el
+        /// último tercio (para definir) y se adelanta hacia donde corre el jugador con el balón.
+        /// </summary>
+        private void UpdateLookAhead(MatchSnapshot s, float deltaTime)
+        {
+            float targetX = 0f, targetZ = 0f;
+            if (s.OwnerIndex >= 0 && s.OwnerIndex < _players.Length)
+            {
+                float heading = s.PlayerHeading[s.OwnerIndex];
+                float run = s.PlayerSpeed[s.OwnerIndex] * LookAheadSeconds;
+                targetX = Mathf.Clamp(Mathf.Cos(heading) * run, -LookAheadMax, LookAheadMax);
+                targetZ = Mathf.Clamp(Mathf.Sin(heading) * run, -LookAheadMax, LookAheadMax);
+            }
+
+            float blend = 1f - Mathf.Exp(-ZoomSpeed * deltaTime);
+            _lookAheadX = Mathf.Lerp(_lookAheadX, targetX, blend);
+            _lookAheadZ = Mathf.Lerp(_lookAheadZ, targetZ, blend);
+
+            float progress = Mathf.Abs(s.BallX) / Mathf.Max(1f, _pitch.HalfLength); // 0 en el medio, 1 en un arco
+            bool longBall = s.OwnerIndex < 0 && _ballSpeed > ZoomLongBallSpeed;
+            float zoom = longBall ? ZoomOut : Mathf.Lerp(ZoomOut, ZoomIn, Mathf.Clamp01((progress - 0.35f) / 0.4f));
+            _zoom = Mathf.Lerp(_zoom, zoom, blend);
         }
 
         /// <summary>

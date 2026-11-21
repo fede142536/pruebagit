@@ -147,7 +147,7 @@ namespace Football.Game
     {
         private const float RowX = 560f;
         private const float RowTop = 860f;
-        private const float RowStep = 84f;
+        private const float RowStep = 72f;
 
         private const string Guide =
             "CONTROLES\n\n"
@@ -165,7 +165,7 @@ namespace Football.Game
             + "ARQUERO: controla al arquero para salir, barrer,\npasar o despejar. JUGADOR lo devuelve.";
 
         private readonly GameSettings _settings;
-        private readonly UiButton _speed, _through, _cross, _big, _lefty, _names, _fps, _debug, _keys, _antialias, _back;
+        private readonly UiButton _speed, _through, _cross, _big, _lefty, _names, _fps, _debug, _keys, _antialias, _vibration, _sound, _back;
 
         /// <summary>Se pidió volver al menú principal.</summary>
         public bool BackRequested { get; private set; }
@@ -187,14 +187,16 @@ namespace Football.Game
             _fps = Row("Fps", 6);
             _debug = Row("Depuracion", 7);
             _antialias = Row("Suavizado", 8);
-            _keys = Row("Teclas", 9);
+            _vibration = Row("Vibracion", 9);
+            _sound = Row("Sonido", 10);
+            _keys = Row("Teclas", 11);
             Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 520f), new Vector2(820f, 800f), UiTheme.Panel);
             UiKit.Label(panel.transform, "Texto", new Vector2(410f, 400f), new Vector2(760f, 760f), Guide, 25, UiTheme.Text, TextAnchor.MiddleLeft);
             _back = UiKit.Button(Root, "Atras", new Vector2(1440f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
         }
 
         private UiButton Row(string name, int index) =>
-            UiKit.Button(Root, name, new Vector2(RowX, RowTop - index * RowStep), new Vector2(880f, 80f), string.Empty, 30, UiTheme.Button);
+            UiKit.Button(Root, name, new Vector2(RowX, RowTop - index * RowStep), new Vector2(880f, 64f), string.Empty, 28, UiTheme.Button);
 
         /// <inheritdoc />
         public override void Show()
@@ -209,6 +211,8 @@ namespace Football.Game
         {
             _keys.Label.text = "CONTROLES DE TECLADO (ORDENADOR) ›";
             _antialias.Label.text = "SUAVIZADO DE BORDES: " + (_settings.Antialias ? "SÍ" : "NO");
+            _vibration.Label.text = "VIBRACIÓN (GOLES Y PALOS): " + (_settings.Vibration ? "SÍ" : "NO");
+            _sound.Label.text = "SONIDO: " + (_settings.Sound ? "SÍ" : "NO");
             _speed.Label.text = "VELOCIDAD DEL JUEGO: " + GameSettings.SpeedLabels[_settings.Speed];
             _through.Label.text = "BOTÓN FILTRADO: " + (_settings.ShowThrough ? "SÍ" : "NO");
             _cross.Label.text = "BOTÓN CENTRO: " + (_settings.ShowCross ? "SÍ" : "NO");
@@ -263,6 +267,15 @@ namespace Football.Game
                 else if (_keys.Contains(p))
                 {
                     KeysRequested = true;
+                }
+                else if (_vibration.Contains(p))
+                {
+                    _settings.Vibration = !_settings.Vibration;
+                }
+                else if (_sound.Contains(p))
+                {
+                    _settings.Sound = !_settings.Sound;
+                    AudioListener.volume = _settings.Sound ? 1f : 0f;
                 }
                 else if (_antialias.Contains(p))
                 {
