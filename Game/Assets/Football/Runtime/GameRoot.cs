@@ -62,10 +62,17 @@ namespace Football.Game
                 existing[i].gameObject.SetActive(false);
             }
 
-            Light[] lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
-            for (int i = 0; i < lights.Length; i++)
+            try
             {
-                lights[i].shadows = LightShadows.None; // materiales sin iluminación: las sombras solo costarían GPU
+                Light[] lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+                for (int i = 0; lights != null && i < lights.Length; i++)
+                {
+                    lights[i].shadows = LightShadows.None; // materiales sin iluminación: las sombras solo costarían GPU
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("Football: no se pudieron apagar las sombras de la escena (" + e.Message + ")");
             }
 
             var go = new GameObject("CamaraMenu");
@@ -260,17 +267,28 @@ namespace Football.Game
     /// <summary>Arranque automático: crea el juego al cargar cualquier escena, sin tener que montar nada a mano.</summary>
     public static class Bootstrap
     {
+        // Se recuerda el juego creado en lugar de buscarlo en la escena: la búsqueda de Unity (FindFirstObjectByType)
+        // falló con NullReferenceException al arrancar en el editor del usuario.
+        private static GameObject _instance;
+
+        /// <summary>Olvida la instancia al entrar en modo de juego (por si el editor no recarga los scripts entre partidas).</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _instance = null;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Init()
         {
-            if (Object.FindFirstObjectByType<GameRoot>() != null)
+            if (_instance != null)
             {
                 return;
             }
 
-            var go = new GameObject("FootballGame");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<GameRoot>();
+            _instance = new GameObject("FootballGame");
+            Object.DontDestroyOnLoad(_instance);
+            _instance.AddComponent<GameRoot>();
         }
     }
 }
