@@ -882,6 +882,16 @@ namespace Football.Core.MatchCore
                     target.X = -dir * KickoffOwnHalfLimit;
                 }
 
+                if (r.Kind == RestartKind.KickOff && taking && p != _taker)
+                {
+                    // Compañeros del ejecutante: fuera del círculo central, en su campo, listos para recibir el pase atrás.
+                    float clear = Config.Pitch.CenterCircleRadius + KickoffCircleClearance;
+                    if (target.Length < clear)
+                    {
+                        target = new Vec2(-dir * clear, target.Y);
+                    }
+                }
+
                 if (!taking && r.Kind != RestartKind.Penalty)
                 {
                     Vec2 fromBall = target - r.Position;

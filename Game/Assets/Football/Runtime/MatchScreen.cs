@@ -104,6 +104,7 @@ namespace Football.Game
 
             _plate = new LowerThird(_canvas.transform);
             BuildLineupCard(c);
+            _presentation = new TacticalPresentation(c);
             _controls = new TouchControls(_canvas);
             _debug = new DebugPanel(c);
 
@@ -285,14 +286,22 @@ namespace Football.Game
             _homeKit = homeKit;
             _awayKit = awayKit;
             _plate.Hide();
-            _introTimer = benchmark ? 0f : IntroSeconds;
-            if (!benchmark)
+            _homeSetup = home;
+            _awaySetup = away;
+            bool presentation = !benchmark && _engine.PlayersPerTeam == FullTeam;
+            _introTimer = benchmark || presentation ? 0f : IntroSeconds;
+            if (presentation)
+            {
+                // 11 contra 11: presentación táctica de TV (local y visitante) y después la bajada de cámara.
+                _presentation.Begin(_engine, _view, home, away, homeTeam, awayTeam, homeKit, awayKit);
+            }
+            else if (!benchmark)
             {
                 FillLineupCard();
                 _view.PlayIntro(IntroSeconds);
             }
 
-            _lineupCard.SetActive(!benchmark);
+            _lineupCard.SetActive(!benchmark && !presentation);
             _lastBallSpeed = 0f;
             AudioListener.pause = false;
             _audio.StartCrowd();
@@ -379,6 +388,7 @@ namespace Football.Game
             _view?.SetReplayAngle(-1, 0f);
             _celebrationTimer = 0f;
             _introTimer = 0f;
+            _presentation.Stop();
             _plate.Hide();
             _lineupCard.SetActive(false);
             _playerHud.SetVisible(false);
@@ -424,7 +434,7 @@ namespace Football.Game
         {
             bool advanced = _engine.TickCount != _lastTick;
             _lastTick = _engine.TickCount;
-            bool activePlay = !_paused && !_engine.IsFinished && _introTimer <= 0f && !_replaying && _celebrationTimer <= 0f
+            bool activePlay = !_paused && !_engine.IsFinished && _introTimer <= 0f && !_presentation.Running && !_replaying && _celebrationTimer <= 0f
                               && _engine.Phase == MatchPhase.Playing;
             if (advanced || !activePlay)
             {
@@ -477,6 +487,20 @@ namespace Football.Game
 
             _frameCounter++;
             _plate.Update(deltaTime);
+            if (_presentation.Running)
+            {
+                // Presentación táctica: el partido espera; SALTAR (o PASE) la termina y sigue la bajada de cámara.
+                if (input.Pass || !_presentation.Update(deltaTime, FirstTap()))
+                {
+                    _presentation.Stop();
+                    _introTimer = AfterPresentationSeconds;
+                    _view.PlayIntro(AfterPresentationSeconds);
+                }
+
+                _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
+                return;
+            }
+
             if (_introTimer > 0f)
             {
                 // Presentación: plano aéreo y alineaciones; el partido espera (toca para saltar).
@@ -763,6 +787,10 @@ namespace Football.Game
         private static readonly string[] TalkLabels = { "CALMADO", "APASIONADO", "EXIGENTE" };
         private TacticsPanel _tacticsPanel;
         private const float IntroSeconds = 3.5f;
+        private const float AfterPresentationSeconds = 2f;
+        private const int FullTeam = 11;
+        private TacticalPresentation _presentation;
+        private MatchTeamSetup _homeSetup, _awaySetup;
         private const float CelebrationSeconds = 2.2f;
         private const float PostShake = 0.25f;
         private const int LineupRows = 11;
@@ -917,6 +945,20 @@ namespace Football.Game
             MatchSnapshot b = _history[(_replayStart + i + 1) % _history.Length];
             _view.Render(a, b, _replayCursor - i, -1, -1, deltaTime * ReplaySpeed);
             _audio.UpdateCrowd(1f, deltaTime);
+        }
+
+        /// <summary>Primer toque de este fotograma en el área de diseño, o null.</summary>
+        private Vector2? FirstTap()
+        {
+            for (int i = 0; i < _pointers.Count; i++)
+            {
+                if (_pointers.Pointers[i].Phase == PointerPhase.Began)
+                {
+                    return UiKit.ToArea(_pointers.Pointers[i].Position);
+                }
+            }
+
+            return null;
         }
 
         private bool TappedThisFrame()

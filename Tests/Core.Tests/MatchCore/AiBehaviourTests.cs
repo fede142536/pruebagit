@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Football.Core.Common;
 using Football.Core.MatchCore;
 using NUnit.Framework;
@@ -201,7 +202,7 @@ namespace Football.Core.Tests.MatchCore
         public void AiNeverKeepsDribblingInsideTheBox()
         {
             int entries = 0, longStays = 0, maxStay = 0;
-            for (ulong seed = 0; seed < 40; seed++)
+            for (ulong seed = 0; seed < 120; seed++) // 120 partidos: con 40 la tasa variaba ±2 puntos según las semillas
             {
                 MatchEngine e = MatchEngineTests.NewEngine(9000 + seed, (int)(seed % 5), (int)((seed + 1) % 5));
                 MatchPlayer inBox = null;
@@ -232,7 +233,8 @@ namespace Football.Core.Tests.MatchCore
             }
 
             Assert.That(maxStay, Is.LessThan(180), $"nadie pasa 3 s con el balón en el área (máximo {maxStay / 60f:F1} s)");
-            Assert.That(longStays, Is.LessThan(entries / 8), $"más de 1,5 s en el área: {longStays} de {entries}");
+            // Medido en 120 partidos (BALANCE.md §1.11): 11,6 % antes del saque del medio de un jugador, 13,3 % después.
+            Assert.That(longStays, Is.LessThan(entries * 15 / 100), $"más de 1,5 s en el área: {longStays} de {entries}");
         }
 
         [Test]
@@ -284,7 +286,58 @@ namespace Football.Core.Tests.MatchCore
         }
 
         [Test]
-        public void HumanKickOff_WaitsForThePlayer_AndAimIsForwardOrSideways()
+        public void KickOff_HasASingleTakerInTheCircle_FacingHisOwnGoal_AndTwoReceiversBehind()
+        {
+            foreach (int kicking in new[] { 0, 1 })
+            {
+                MatchEngine e = MatchEngineTests.NewEngine(31);
+                e.TestKickoff(kicking);
+                float circle = e.Config.Pitch.CenterCircleRadius;
+                MatchPlayer[] inCircle = e.Players.Where(p => !p.SentOff && p.Pos.Length < circle).ToArray();
+                Assert.That(inCircle, Has.Length.EqualTo(1), "un único jugador en el círculo");
+                MatchPlayer taker = inCircle[0];
+                Assert.That(taker.Team, Is.EqualTo(kicking));
+                float dir = e.Teams[kicking].AttackDirection;
+                Assert.That(MathF.Cos(taker.Heading) * dir, Is.LessThan(-0.99f), "de frente a su propio arco");
+                foreach (MatchPlayer p in e.Players.Where(p => p != taker && !p.SentOff))
+                {
+                    Assert.That(p.Pos.X * e.Teams[p.Team].AttackDirection, Is.LessThanOrEqualTo(0f), "todos en su propio campo");
+                }
+
+                int receivers = e.Teams[kicking].Players.Count(p => p != taker && p.Pos.X * dir < -circle && p.Pos.X * dir > -15f && MathF.Abs(p.Pos.Y) < 9f);
+                Assert.That(receivers, Is.GreaterThanOrEqualTo(2), "dos compañeros listos para el pase atrás");
+            }
+        }
+
+        [Test]
+        public void AiKickOff_IsPlayedBackwards_ToATeammate()
+        {
+            int backwards = 0;
+            for (ulong seed = 0; seed < 10; seed++)
+            {
+                MatchEngine e = MatchEngineTests.NewEngine(500 + seed);
+                float dir = e.Teams[0].AttackDirection;
+                for (int i = 0; i < 60 * 4 && e.Phase != MatchPhase.Playing; i++)
+                {
+                    e.Tick();
+                }
+
+                for (int i = 0; i < 10; i++)
+                {
+                    e.Tick();
+                }
+
+                if (e.Ball.Vel.X * dir < 0f || e.Ball.Pos.X * dir < 0f)
+                {
+                    backwards++;
+                }
+            }
+
+            Assert.That(backwards, Is.GreaterThanOrEqualTo(8), "la IA juega el saque hacia su campo");
+        }
+
+        [Test]
+        public void HumanKickOff_WaitsForThePlayer_AndAimIsBackwardOrSideways()
         {
             MatchEngine e = MatchEngineTests.NewEngine(11);
             e.SetHuman(0, true);
@@ -294,10 +347,11 @@ namespace Football.Core.Tests.MatchCore
             }
 
             Assert.That(e.Phase, Is.EqualTo(MatchPhase.SetPiece), "sin pase automático: el saque del medio espera");
-            e.SetInput(0, new MatchInput { Move = new Vec2(-1f, 0f) }); // intenta sacar hacia atrás
+            float dir = e.Teams[0].AttackDirection;
+            e.SetInput(0, new MatchInput { Move = new Vec2(dir, 0f) }); // intenta sacar hacia delante
             Assert.That(e.TryGetRestartAim(0, out _, out Vec2 aim), Is.True);
-            float fromForward = MathF.Acos(Vec2.Dot(aim, new Vec2(e.Teams[0].AttackDirection, 0f))) * 180f / MathF.PI;
-            Assert.That(fromForward, Is.LessThanOrEqualTo(e.Config.Rules.KickoffAimDeg + 0.5f));
+            float fromBackward = MathF.Acos(Vec2.Dot(aim, new Vec2(-dir, 0f))) * 180f / MathF.PI;
+            Assert.That(fromBackward, Is.LessThanOrEqualTo(e.Config.Rules.KickoffAimDeg + 0.5f), "el saque se apunta hacia el propio campo");
 
             e.SetInput(0, new MatchInput { Pass = true, Move = new Vec2(0f, 1f) });
             e.Tick();

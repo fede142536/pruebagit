@@ -901,7 +901,19 @@ namespace Football.Game
             CameraTuning c = ViewTuning.Current.Camera;
             Transform t = _camera.transform;
             Vector3 position, lookAt;
-            if (_replayAngle == ReplayBehindGoal)
+            if (!float.IsNaN(_presentationX))
+            {
+                // Presentación táctica: toma panorámica alta desde el lateral sobre la mitad del equipo que se presenta.
+                position = new Vector3(_presentationX, PresentationHeight * _cameraScale, -PresentationDistance * _cameraScale);
+                lookAt = new Vector3(_presentationX, 0f, PresentationLookAhead * _cameraScale);
+                float blend = 1f - Mathf.Exp(-c.TransitionSpeed * deltaTime);
+                _camPosition = _camReady ? Vector3.Lerp(_camPosition, position, blend) : position;
+                _camLook = _camReady ? Vector3.Lerp(_camLook, lookAt, blend) : lookAt;
+                _camReady = true;
+                position = _camPosition;
+                lookAt = _camLook;
+            }
+            else if (_replayAngle == ReplayBehindGoal)
             {
                 // Repetición: a ras del césped, detrás del arco donde entró el gol, mirando hacia el balón (corte seco).
                 position = new Vector3(_replayGoalEnd * (_pitch.HalfLength + c.GoalCamBehind), c.GoalCamHeight, 0f);
@@ -1169,9 +1181,121 @@ namespace Football.Game
             return screen.z > 0f;
         }
 
+        private const float PresentationHeight = 30f;
+        private const float PresentationDistance = 34f;
+        private const float PresentationLookAhead = 4f;
+        private const float TacticsBoardHeight = 0.03f;
+        private const float TacticsLineWidth = 0.18f;
+        private const float TacticsBoardMargin = 3f;
+        private static readonly Color TacticsBoardColor = new Color(0.04f, 0.16f, 0.1f);
+        private static readonly Color TacticsLineColor = new Color(0.92f, 0.96f, 1f);
+        private float _presentationX = float.NaN;
+        private GameObject _board;
+        private readonly List<Mesh> _boardMeshes = new List<Mesh>();
+
+        /// <summary>Toma panorámica de la presentación táctica centrada en una X del motor (NaN la quita).</summary>
+        /// <param name="engineX">Centro de la mitad del equipo que se presenta.</param>
+        public void SetPresentationShot(float engineX)
+        {
+            _presentationX = engineX;
+            if (float.IsNaN(engineX))
+            {
+                _camReady = false; // la transmisión retoma desde su propia toma, sin arrastre
+            }
+        }
+
+        /// <summary>
+        /// Pizarra táctica sobre el césped: un tablero oscuro bajo la mitad del equipo con líneas blancas que unen a los
+        /// jugadores de cada línea (defensa, medio, ataque), como en los gráficos de la televisión. Reemplaza la anterior.
+        /// </summary>
+        /// <param name="minX">Extremo de la pizarra (X del motor).</param>
+        /// <param name="maxX">Otro extremo.</param>
+        /// <param name="players">Jugadores (X e Y del motor).</param>
+        /// <param name="lineOf">Línea de cada jugador (0 arquero, 1 defensa, 2 medio, 3 ataque).</param>
+        public void ShowFormationBoard(float minX, float maxX, Vector2[] players, int[] lineOf)
+        {
+            HideFormationBoard();
+            _board = new GameObject("Pizarra");
+            _board.transform.SetParent(_root.transform, false);
+            var board = new MeshMerge();
+            var lines = new MeshMerge();
+            float centerX = (minX + maxX) * 0.5f, length = Mathf.Abs(maxX - minX);
+            board.Add(MeshKit.Box, ToUnity(centerX, 0f, TacticsBoardHeight), Quaternion.identity,
+                new Vector3(length, 0.02f, _pitch.Width - TacticsBoardMargin), TacticsBoardColor);
+            for (int line = 1; line <= 3; line++)
+            {
+                for (int i = 0; i < players.Length; i++)
+                {
+                    if (lineOf[i] != line)
+                    {
+                        continue;
+                    }
+
+                    // Une a cada jugador con el siguiente de su línea (de un costado al otro).
+                    int next = -1;
+                    for (int j = 0; j < players.Length; j++)
+                    {
+                        if (lineOf[j] == line && players[j].y > players[i].y && (next < 0 || players[j].y < players[next].y))
+                        {
+                            next = j;
+                        }
+                    }
+
+                    if (next >= 0)
+                    {
+                        Vector3 a = ToUnity(players[i].x, players[i].y, TacticsBoardHeight * 2f), b = ToUnity(players[next].x, players[next].y, TacticsBoardHeight * 2f);
+                        Vector3 d = b - a;
+                        lines.Add(MeshKit.Box, (a + b) * 0.5f, Quaternion.LookRotation(d.normalized, Vector3.up), new Vector3(TacticsLineWidth, 0.02f, d.magnitude),
+                            TacticsLineColor);
+                    }
+
+                    lines.Add(MeshKit.Disc, ToUnity(players[i].x, players[i].y, TacticsBoardHeight * 2.5f), Quaternion.identity, new Vector3(1.6f, 1f, 1.6f), TacticsLineColor);
+                }
+            }
+
+            AddBoardPart(board, TacticsBoardColor);
+            AddBoardPart(lines, TacticsLineColor);
+        }
+
+        private void AddBoardPart(MeshMerge merge, Color color)
+        {
+            if (merge.IsEmpty)
+            {
+                return;
+            }
+
+            Mesh mesh = merge.Build();
+            _boardMeshes.Add(mesh);
+            var go = new GameObject("PizarraParte");
+            go.transform.SetParent(_board.transform, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = Materials.Get(color);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        /// <summary>Quita la pizarra táctica.</summary>
+        public void HideFormationBoard()
+        {
+            if (_board != null)
+            {
+                Object.Destroy(_board);
+                _board = null;
+            }
+
+            for (int i = 0; i < _boardMeshes.Count; i++)
+            {
+                Object.Destroy(_boardMeshes[i]);
+            }
+
+            _boardMeshes.Clear();
+        }
+
         /// <summary>Elimina todo lo creado.</summary>
         public void Destroy()
         {
+            HideFormationBoard();
             Object.Destroy(_root);
             for (int i = 0; i < _meshes.Count; i++)
             {

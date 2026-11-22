@@ -122,14 +122,15 @@ namespace Football.Core.Tests.MatchCore
             }
 
             hurt.Stamina = 0.95f;
+            int before = e.Teams[1].Departed.Count; // cambios que la IA ya hubiera hecho antes de la lesión
             e.TestInjure(hurt); // el mismo camino que una lesión del partido (el árbitro para el juego)
-            while (!e.IsFinished && e.Teams[1].Departed.Count == 0 && guard++ < 100000)
+            while (!e.IsFinished && e.Teams[1].Departed.Count == before && guard++ < 100000)
             {
                 e.Tick();
             }
 
-            Assert.That(e.Teams[1].Departed.Count, Is.GreaterThan(0), "la IA hizo un cambio");
-            Assert.That(e.Teams[1].Departed[0], Is.SameAs(hurt), "el primero en salir es el lesionado");
+            Assert.That(e.Teams[1].Departed.Count, Is.GreaterThan(before), "la IA hizo un cambio");
+            Assert.That(e.Teams[1].Departed[before], Is.SameAs(hurt), "el primero en salir después de la lesión es el lesionado");
         }
     }
 }

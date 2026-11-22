@@ -121,6 +121,10 @@ namespace Football.Core.Domain
         public Position Role;
         /// <summary>Atributos efectivos.</summary>
         public AttributeSet Attributes = new AttributeSet();
+        /// <summary>Forma reciente (nota de 1 a 10; 6 = normal). Solo informativa: la presentación la muestra con una flecha.</summary>
+        public float Form = 6f;
+        /// <summary>Moral (0–100; 50 = normal). Solo informativa.</summary>
+        public float Morale = 50f;
     }
 
     /// <summary>Equipo preparado para jugar un partido.</summary>

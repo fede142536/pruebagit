@@ -828,24 +828,7 @@ namespace Football.Game
 
         private static string ShortName(Player p) => string.IsNullOrEmpty(p.FirstName) ? p.LastName : p.FirstName[0] + ". " + p.LastName;
 
-        private static string PositionCode(Position p)
-        {
-            switch (p)
-            {
-                case Position.Goalkeeper: return "POR";
-                case Position.LeftBack: return "LI";
-                case Position.RightBack: return "LD";
-                case Position.CenterBack: return "DFC";
-                case Position.DefensiveMidfielder: return "MCD";
-                case Position.CentralMidfielder: return "MC";
-                case Position.AttackingMidfielder: return "MCO";
-                case Position.LeftMidfielder: return "MI";
-                case Position.RightMidfielder: return "MD";
-                case Position.LeftWinger: return "EI";
-                case Position.RightWinger: return "ED";
-                default: return "DC";
-            }
-        }
+        private static string PositionCode(Position p) => PlayerLabels.Code(p);
 
         private static string Money(long amount) => "$" + (amount / Million).ToString("N0", CultureInfo.InvariantCulture) + " M";
 

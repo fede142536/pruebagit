@@ -13,6 +13,8 @@ namespace Football.Core.MatchCore
         private const float ThrowInMaxSpeed = 14f;
         private const float ThrowInMaxDistance = 25f;
         private const float KickoffMaxDistance = 20f;
+        private const float KickoffReceiverDepth = 11f;  // los dos receptores del pase atrás, a esta distancia de la línea
+        private const float KickoffReceiverWidth = 7f;
         private const float GoalKickShortDistance = 22f;
         private const float GoalKickLongDistance = 55f;
         private const float CornerTargetDepth = 9f;
@@ -51,7 +53,8 @@ namespace Football.Core.MatchCore
 
                     FormationSlot slot = team.Formation.Slots[s];
                     var a = new Vec2(dir * MathUtil.Lerp(-Pitch.HalfLength, Pitch.HalfLength, slot.X), slot.Y * dir * Pitch.HalfWidth * 0.92f);
-                    float limit = (t != kickingTeam && MathF.Abs(a.Y) < circle) ? -(circle + KickoffCircleClearance) : -KickoffOwnHalfLimit;
+                    // Regla IFAB actual: solo el ejecutante entra al círculo; nadie más (de ningún equipo) queda dentro.
+                    float limit = MathF.Abs(a.Y) < circle ? -(circle + KickoffCircleClearance) : -KickoffOwnHalfLimit;
                     if (dir * a.X > limit)
                     {
                         a.X = dir * limit;
@@ -73,8 +76,12 @@ namespace Football.Core.MatchCore
 
             TeamState kicking = Teams[kickingTeam];
             _taker = KickoffTaker(kicking);
-            _taker.Pos = new Vec2(-kicking.AttackDirection * TakerOffset, 0f);
+            // Un único ejecutante, del lado rival del balón y de frente a su propio arco: el pase atrás sale sin girar.
+            float kdir = kicking.AttackDirection;
+            _taker.Pos = new Vec2(kdir * TakerOffset, 0f);
             _taker.Target = _taker.Pos;
+            _taker.Heading = kdir > 0f ? MathF.PI : 0f;
+            PlaceKickoffReceivers(kicking, circle);
 
             _restart = new Restart(RestartKind.KickOff, kickingTeam, Vec2.Zero);
             Phase = MatchPhase.SetPiece;
@@ -82,6 +89,42 @@ namespace Football.Core.MatchCore
             _takerTimeout = Config.Rules.TakerTimeout;
             _planTimer = 0f;
             AddEvent(MatchEventType.KickOff, kickingTeam, -1, Vec2.Zero);
+        }
+
+        /// <summary>
+        /// Los dos compañeros más cercanos a los lugares de recepción se ofrecen para el pase atrás, uno a cada lado, en su
+        /// propio campo y fuera del círculo.
+        /// </summary>
+        private void PlaceKickoffReceivers(TeamState team, float circle)
+        {
+            float dir = team.AttackDirection;
+            float depth = MathF.Max(KickoffReceiverDepth, circle + KickoffCircleClearance);
+            float width = MathF.Min(KickoffReceiverWidth, Pitch.HalfWidth * 0.5f);
+            MatchPlayer first = null;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var spot = new Vec2(-dir * depth, side * width);
+                MatchPlayer best = null;
+                float bestDistance = float.MaxValue;
+                for (int i = team.FirstOutfield; i < team.Players.Length; i++)
+                {
+                    MatchPlayer p = team.Players[i];
+                    float d = Vec2.Distance(p.Pos, spot);
+                    if (!p.SentOff && p != _taker && p != first && d < bestDistance)
+                    {
+                        best = p;
+                        bestDistance = d;
+                    }
+                }
+
+                if (best != null)
+                {
+                    best.Pos = spot;
+                    best.Target = spot;
+                    best.Heading = dir > 0f ? 0f : MathF.PI;
+                    first = best;
+                }
+            }
         }
 
         private void StartSetPiece(Restart restart)
@@ -322,7 +365,7 @@ namespace Football.Core.MatchCore
             switch (_restart.Kind)
             {
                 case RestartKind.KickOff:
-                    center = forward;
+                    center = -forward; // el ejecutante mira a su arco: el saque natural es hacia atrás
                     limit = r.KickoffAimDeg;
                     break;
                 case RestartKind.ThrowIn:
