@@ -575,6 +575,7 @@ namespace Football.Game
                         Haptics.Pulse(_settings.Vibration);
                         _audio.Goal();
                         _view.BulgeNet(e.X >= 0f ? 1f : -1f);
+                        _view.Cheer(GoalCheerSeconds); // la hinchada salta
                         if (!_benchmark)
                         {
                             // Festejo con la cámara sobre el goleador y después la repetición (que termina en el gol).
@@ -715,6 +716,7 @@ namespace Football.Game
         private int _goalHead;
         private KitColors _homeKit, _awayKit;
         private const float ReplaySeconds = 4f;
+        private const float GoalCheerSeconds = 3.5f;
         private const float ReplaySpeed = 0.5f;
         private const int HistoryLength = 300; // 5 s a 60 pasos por segundo
         private readonly MatchSnapshot[] _history = new MatchSnapshot[HistoryLength];

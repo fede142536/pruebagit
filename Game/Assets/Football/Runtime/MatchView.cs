@@ -91,6 +91,7 @@ namespace Football.Game
         private const float IntroHeight = 70f;
         private static float FocusZoom => ViewTuning.Current.Camera.FocusZoom;
         private Confetti _confetti;
+        private readonly KitColors _homeKit, _awayKit;
         private GrassBurst _grass;
         private const int HairStyles = 5;
         private const int BeardEvery = 4;
@@ -134,6 +135,9 @@ namespace Football.Game
         {
             _pitch = pitch;
             _tickRate = tickRate;
+            _homeKit = homeKit;
+            _awayKit = awayKit;
+            _ledColors = new[] { homeKit.Shirt, new Color(0.95f, 0.95f, 0.95f), awayKit.Shirt, new Color(0.1f, 0.6f, 0.95f), homeKit.Secondary };
             _perTeam = playersPerTeam;
             _players = new PlayerModel[2 * playersPerTeam];
             _heads = new Vector3[_players.Length];
@@ -193,7 +197,10 @@ namespace Football.Game
         private readonly Dictionary<Color, MeshMerge> _static = new Dictionary<Color, MeshMerge>();
 
         /// <summary>Anota una pieza que nunca se mueve; se dibuja junto con las demás del mismo color.</summary>
-        private void StaticShape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale)
+        private void StaticShape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale) =>
+            StaticShape(name, mesh, color, position, scale, Quaternion.identity);
+
+        private void StaticShape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale, Quaternion rotation)
         {
             if (!_static.TryGetValue(color, out MeshMerge batch))
             {
@@ -201,7 +208,7 @@ namespace Football.Game
                 _static[color] = batch;
             }
 
-            batch.Add(mesh, position, Quaternion.identity, scale, color);
+            batch.Add(mesh, position, rotation, scale, color);
         }
 
         /// <summary>Crea un objeto por color con todas las piezas fijas: de unas 40 llamadas de dibujo a menos de 10.</summary>
@@ -319,6 +326,17 @@ namespace Football.Game
 
             lines.Quad(-0.15f, -0.15f, 0.15f, 0.15f, LineHeight);
             AddMesh("Lineas", lines, new Color(0.95f, 0.97f, 0.95f));
+
+            // Zonas gastadas: el área chica de cada arco y el círculo central (césped más pálido y terroso).
+            Color worn = new Color(0.27f, 0.36f, 0.16f);
+            float wornHeight = StripeHeight + 0.004f;
+            for (int end = -1; end <= 1; end += 2)
+            {
+                StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(end * (halfL - 2.2f), wornHeight, 0f), new Vector3(3.6f, 1f, 6f));
+                StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(end * (halfL - 11f), wornHeight, 0f), new Vector3(1.6f, 1f, 1.6f));
+            }
+
+            StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(0f, wornHeight, 0f), new Vector3(2.4f, 1f, 2.4f));
         }
 
         private void BuildStadium()
@@ -332,17 +350,9 @@ namespace Football.Game
             float boardDistance = walls ? 0f : BoardDistance;
             float halfL = _pitch.HalfLength + boardDistance;
             float halfW = _pitch.HalfWidth + boardDistance;
-            Color[] boards = { new Color(0.1f, 0.25f, 0.7f), new Color(0.85f, 0.85f, 0.88f), new Color(0.75f, 0.12f, 0.12f) };
-
-            // Carteles publicitarios alrededor del campo.
-            const int segments = 8;
-            for (int i = 0; i < (walls ? 0 : segments); i++) // en la cancha cerrada las paredes hacen de carteles
+            if (!walls)
             {
-                float x0 = -halfL + i * (2f * halfL / segments);
-                float length = 2f * halfL / segments - 0.3f;
-                Color c = boards[i % boards.Length];
-                StaticShape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, -halfW), new Vector3(length, BoardHeight, 0.15f));
-                StaticShape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, halfW), new Vector3(length, BoardHeight, 0.15f));
+                BuildLedBoards(halfL, halfW); // en la cancha cerrada las paredes hacen de carteles
             }
 
             // Gradas escalonadas detrás de los carteles (tonos variados para sugerir público).
@@ -355,6 +365,176 @@ namespace Football.Game
                 StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
                 StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
             }
+
+            if (!walls)
+            {
+                BuildCrowd(halfL, halfW, tiers.Length);
+            }
+        }
+
+        // ---- Carteles LED ---------------------------------------------------------------------------------------------
+
+        private const int LedSegments = 8;
+        private const float LedCycleSeconds = 5f;
+        private Material _ledMaterial;
+        private float _ledClock;
+        private Color[] _ledColors;
+
+        /// <summary>
+        /// Carteles LED alrededor del campo (laterales y detrás de los arcos): una sola malla con un material propio cuyo color
+        /// va cambiando (como las pantallas publicitarias). Se cambia el color del material, no un MaterialPropertyBlock (D-15).
+        /// </summary>
+        private void BuildLedBoards(float halfL, float halfW)
+        {
+            var merge = new MeshMerge();
+            Color frame = new Color(0.08f, 0.08f, 0.1f);
+            for (int i = 0; i < LedSegments; i++)
+            {
+                float x0 = -halfL + i * (2f * halfL / LedSegments);
+                float length = 2f * halfL / LedSegments - 0.3f;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    merge.Add(MeshKit.Box, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, side * halfW), Quaternion.identity,
+                        new Vector3(length, BoardHeight, 0.15f), Color.white);
+                }
+            }
+
+            for (int end = -1; end <= 1; end += 2)
+            {
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    float z = side * (halfW * 0.55f);
+                    merge.Add(MeshKit.Box, new Vector3(end * (halfL + 1f), BoardHeight * 0.5f, z), Quaternion.identity,
+                        new Vector3(0.15f, BoardHeight, halfW * 0.8f), Color.white);
+                }
+            }
+
+            Mesh mesh = merge.Build();
+            _meshes.Add(mesh);
+            var go = new GameObject("CartelesLED");
+            go.transform.SetParent(_root.transform, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            _ledMaterial = new Material(Materials.Get(Color.white)); // material propio: su color se anima
+            renderer.sharedMaterial = _ledMaterial;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            StaticShape("MarcoLED", MeshKit.Box, frame, new Vector3(0f, 0.04f, halfW + 0.1f), new Vector3(2f * halfL, 0.08f, 0.05f));
+        }
+
+        private void UpdateLedBoards(float deltaTime)
+        {
+            if (_ledMaterial == null || _ledColors == null)
+            {
+                return;
+            }
+
+            _ledClock += deltaTime;
+            float position = _ledClock / LedCycleSeconds;
+            int index = (int)position;
+            float blend = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((position - index) * 4f - 3f)); // fundido al final de cada aviso
+            Color from = _ledColors[index % _ledColors.Length];
+            Color to = _ledColors[(index + 1) % _ledColors.Length];
+            _ledMaterial.color = Color.Lerp(from, to, blend);
+        }
+
+        // ---- Público ----------------------------------------------------------------------------------------------------
+
+        private static readonly float[] CrowdSpacing = { 2.2f, 1.4f, 0.95f }; // por perfil gráfico: bajo, medio, alto
+        private const int CrowdRowsPerTier = 2;
+        private const float CheerHeight = 0.35f;
+        private const float CheerFrequency = 11f;
+        private Transform _crowd;
+        private float _cheerTimer;
+
+        /// <summary>
+        /// Público en las tribunas: figuras simples (torso y cabeza) con colores de los dos equipos y ropa variada,
+        /// agrupadas en una malla por tribuna. La densidad depende del perfil gráfico.
+        /// </summary>
+        private void BuildCrowd(float halfL, float halfW, int tiers)
+        {
+            _crowd = new GameObject("Publico").transform;
+            _crowd.SetParent(_root.transform, false);
+            float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
+            Color[] palette =
+            {
+                _homeKit.Shirt, _homeKit.Shirt, _homeKit.Secondary, _homeKit.Shirt, _awayKit.Shirt, new Color(0.9f, 0.9f, 0.9f),
+                new Color(0.15f, 0.15f, 0.18f), new Color(0.55f, 0.4f, 0.3f)
+            };
+            int seed = 0;
+            for (int t = 0; t < tiers; t++)
+            {
+                float offset = 6f + t * 7f;
+                float top = 2.5f + t * 4f;
+                // Tribuna lateral (enfrente de la cámara) y las dos cabeceras.
+                CrowdBlock(new Vector3(0f, top, halfW + offset), 2f * halfL + 26f, true, spacing, palette, ref seed);
+                CrowdBlock(new Vector3(-halfL - offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed);
+                CrowdBlock(new Vector3(halfL + offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed);
+            }
+        }
+
+        private void CrowdBlock(Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed)
+        {
+            bool merged = Materials.PlayerShaderAvailable;
+            var merge = new MeshMerge();
+            int count = (int)(length / spacing);
+            for (int row = 0; row < CrowdRowsPerTier; row++)
+            {
+                float depth = (row - 0.5f) * 2.4f;
+                for (int k = 0; k < count; k++)
+                {
+                    seed++;
+                    float along = -length * 0.5f + (k + 0.5f) * spacing + ((seed * 7) % 5 - 2) * 0.08f;
+                    Vector3 p = alongX ? new Vector3(along, 0f, depth) : new Vector3(depth, 0f, along);
+                    Color shirt = palette[(seed * 13 + row * 5) % palette.Length];
+                    Color skin = SkinTones[(seed * 3) % SkinTones.Length];
+                    Vector3 body = center + p + new Vector3(0f, 0.38f, 0f);
+                    Vector3 head = center + p + new Vector3(0f, 0.86f, 0f);
+                    if (merged)
+                    {
+                        merge.Add(MeshKit.Box, body, Quaternion.identity, new Vector3(0.45f, 0.62f, 0.32f), shirt);
+                        merge.Add(MeshKit.Box, head, Quaternion.identity, new Vector3(0.24f, 0.26f, 0.24f), skin);
+                    }
+                    else
+                    {
+                        StaticShape("Hincha", MeshKit.Box, shirt, body, new Vector3(0.45f, 0.62f, 0.32f));
+                    }
+                }
+            }
+
+            if (!merged)
+            {
+                return;
+            }
+
+            Mesh mesh = merge.Build();
+            _meshes.Add(mesh);
+            var go = new GameObject("Hinchas");
+            go.transform.SetParent(_crowd, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = Materials.GetPlayer(Color.white); // colores por vértice, un solo material
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+        }
+
+        /// <summary>La hinchada salta (por ejemplo, tras un gol).</summary>
+        /// <param name="seconds">Duración.</param>
+        public void Cheer(float seconds)
+        {
+            _cheerTimer = seconds;
+        }
+
+        private void UpdateCrowd(float deltaTime)
+        {
+            if (_crowd == null)
+            {
+                return;
+            }
+
+            _cheerTimer = Mathf.Max(0f, _cheerTimer - deltaTime);
+            float jump = _cheerTimer > 0f ? Mathf.Abs(Mathf.Sin(_cheerTimer * CheerFrequency)) * CheerHeight : 0f;
+            _crowd.localPosition = new Vector3(0f, jump, 0f);
         }
 
         /// <summary>Cancha cerrada: tableros en el borde del campo (en el fondo, a los lados de la portería).</summary>
@@ -429,9 +609,11 @@ namespace Football.Game
             {
                 float x = end * _pitch.HalfLength;
                 float back = x + end * GoalDepth;
-                StaticShape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, -halfGoal), new Vector3(post, height, post));
-                StaticShape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, halfGoal), new Vector3(post, height, post));
-                StaticShape("Larguero", MeshKit.Box, white, new Vector3(x, height, 0f), new Vector3(post, post, halfGoal * 2f + post));
+                // Postes y travesaño cilíndricos (con brillo por la luz de borde del material).
+                StaticShape("Poste", MeshKit.Cylinder, white, new Vector3(x, height * 0.5f, -halfGoal), new Vector3(post, height, post));
+                StaticShape("Poste", MeshKit.Cylinder, white, new Vector3(x, height * 0.5f, halfGoal), new Vector3(post, height, post));
+                StaticShape("Larguero", MeshKit.Cylinder, white, new Vector3(x, height, 0f), new Vector3(post, halfGoal * 2f + post, post),
+                    Quaternion.Euler(90f, 0f, 0f));
                 // Armazón de la red.
                 StaticShape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, -halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
                 StaticShape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
@@ -553,6 +735,8 @@ namespace Football.Game
             _clock += deltaTime;
             _confetti?.Update(deltaTime);
             _grass?.Update(deltaTime);
+            UpdateLedBoards(deltaTime);
+            UpdateCrowd(deltaTime);
             AnimateNets(deltaTime);
             float bx = Mathf.Lerp(previous.BallX, current.BallX, alpha);
             float by = Mathf.Lerp(previous.BallY, current.BallY, alpha);
@@ -897,6 +1081,11 @@ namespace Football.Game
             }
 
             _meshes.Clear();
+            if (_ledMaterial != null)
+            {
+                Object.Destroy(_ledMaterial);
+                _ledMaterial = null;
+            }
             if (GameRoot.MenuCamera != null)
             {
                 GameRoot.MenuCamera.enabled = true;

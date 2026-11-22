@@ -16,12 +16,16 @@ namespace Football.Game
 
         private static readonly float[] ResolutionOverride = { -1f, 0.75f, 1f };
 
+        /// <summary>Perfil en uso (0 bajo, 1 medio, 2 alto): la escena del partido lo usa para la cantidad de público.</summary>
+        public static int Level { get; private set; } = 1;
+
         /// <summary>Aplica un perfil (0 bajo, 1 medio, 2 alto) y, si se eligió, una escala de resolución propia.</summary>
         /// <param name="level">Perfil.</param>
         /// <param name="resolution">0 la del perfil, 1 75 %, 2 100 %.</param>
         public static void Apply(int level, int resolution = 0)
         {
             level = Mathf.Clamp(level, 0, RenderScale.Length - 1);
+            Level = level;
             int samples = MsaaSamples[level];
             QualitySettings.antiAliasing = samples > 1 ? samples : 0; // pipeline integrado
             try

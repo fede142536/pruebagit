@@ -100,6 +100,12 @@ apoyo y un delantero; se eligen automáticamente los mejores del plantel.
   que los pruebe `dotnet test`. La pizarra para arrastrar jugadores se reemplaza por tocar dos jugadores para intercambiarlos.
 - Ajustes: catálogo único (`SettingsCatalog`) que marca cuáles se cambian en vivo; la pausa muestra solo esos.
 **Consecuencias:** no hay volumen de «relatos» (no hay relator) ni calidad de sombras (no hay sombras reales).
+**Ampliación (23/11/2026):** estadio con público (figuras simples agrupadas por tribuna con colores por vértice; densidad según
+el perfil gráfico) que salta en los goles, carteles LED (una malla con un material propio cuyo color se anima), postes y
+travesaño cilíndricos, zonas de césped gastado y luz direccional suave en el shader de jugadores (medio Lambert, apagada en
+calidad BAJA). **No hay sombras proyectadas en tiempo real**: los materiales son sin iluminación (decisión de rendimiento
+para el A13) y una sombra real exigiría materiales iluminados de URP y otra pasada de dibujo; se mantienen las sombras de
+contacto (discos) que se achican con la altura. Se puede reconsiderar para el perfil ALTO cuando haya mediciones en el teléfono.
 
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.

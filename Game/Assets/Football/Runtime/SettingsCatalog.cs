@@ -83,6 +83,7 @@ namespace Football.Game
             Application.targetFrameRate = s.TargetFps;
             GraphicsQuality.Apply(s.Quality, s.Resolution);
             Materials.SetRim(s.Quality > 0); // en calidad BAJA, jugadores sin luz de borde
+            Materials.SetLighting(s.Quality > 0); // ni volumen de luz direccional
             AudioListener.volume = GameSettings.Volume(s.MasterVolume);
         }
     }

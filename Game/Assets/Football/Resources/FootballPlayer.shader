@@ -43,6 +43,8 @@ Shader "Football/Player"
             // Globales (fuera del CBUFFER: no rompen el agrupado SRP).
             half _FootballRim;
             half _FootballDirt;
+            half4 _FootballLightDir;   // dirección hacia la luz principal (focos del estadio), normalizada
+            half _FootballLightAmount; // 0 = sin sombreado (calidad baja), 1 = volumen completo
 
             struct Attributes
             {
@@ -57,6 +59,7 @@ Shader "Football/Player"
                 half rim : TEXCOORD0;
                 half dirt : TEXCOORD1;
                 half3 color : TEXCOORD2;
+                half light : TEXCOORD3;
             };
 
             Varyings Vert(Attributes input)
@@ -76,12 +79,15 @@ Shader "Football/Player"
                 half noise = frac(sin(dot(floor(positionWS.xz * 7.0), float2(12.9898, 78.233))) * 43758.5453);
                 output.dirt = saturate(low * low * _FootballDirt * (0.6h + 0.4h * noise));
                 output.color = input.color.rgb * _BaseColor.rgb;
+                // Luz direccional suave (medio Lambert): da volumen sin luces reales ni sombras, apto para gama baja.
+                half lambert = saturate(dot(normalWS, _FootballLightDir.xyz)) * 0.5h + 0.5h;
+                output.light = lerp(1.0h, lambert * 1.2h, _FootballLightAmount);
                 return output;
             }
 
             half4 Frag(Varyings input) : SV_Target
             {
-                half3 color = lerp(input.color, _DirtColor.rgb, input.dirt);
+                half3 color = lerp(input.color, _DirtColor.rgb, input.dirt) * input.light;
                 color += _RimColor.rgb * input.rim;
                 return half4(color, 1.0h);
             }

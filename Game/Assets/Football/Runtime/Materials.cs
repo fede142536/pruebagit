@@ -79,6 +79,18 @@ namespace Football.Game
             Shader.SetGlobalFloat(RimId, enabled ? 1f : 0f);
         }
 
+        private static readonly int LightDirId = Shader.PropertyToID("_FootballLightDir");
+        private static readonly int LightAmountId = Shader.PropertyToID("_FootballLightAmount");
+
+        /// <summary>Luz direccional de los focos sobre jugadores y público (volumen sin luces reales).</summary>
+        /// <param name="enabled">Falso en calidad baja (colores planos).</param>
+        public static void SetLighting(bool enabled)
+        {
+            Vector3 toLight = new Vector3(-0.35f, 0.85f, -0.4f).normalized; // focos altos, desde el lado de la cámara
+            Shader.SetGlobalVector(LightDirId, new Vector4(toLight.x, toLight.y, toLight.z, 0f));
+            Shader.SetGlobalFloat(LightAmountId, enabled ? 1f : 0f);
+        }
+
         /// <summary>Cuánta suciedad muestran botines y medias (0 limpio, 1 muy sucio).</summary>
         /// <param name="amount">Cantidad entre 0 y 1.</param>
         public static void SetDirt(float amount)
