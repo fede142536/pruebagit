@@ -20,8 +20,15 @@ namespace Football.Game
         private const string CrossKey = "football.cross";
         private const string BigButtonsKey = "football.bigbuttons";
         private const string QualityKey = "football.quality";
+        private const string MasterKey = "football.vol.master";
+        private const string StadiumKey = "football.vol.stadium";
+        private const string EffectsKey = "football.vol.effects";
+        private const string ResolutionKey = "football.resolution";
+        private const string FixedJoystickKey = "football.fixedjoystick";
+        private const string OpacityKey = "football.opacity";
+        private const string AssistKey = "football.assist";
+        private const string CameraKey = "football.camera";
         private const string VibrationKey = "football.vibration";
-        private const string SoundKey = "football.sound";
 
         /// <summary>Velocidades del juego: fracción del tiempo real que avanza la simulación.</summary>
         public static readonly float[] Speeds = { 0.6f, 0.75f, 1f };
@@ -60,12 +67,45 @@ namespace Football.Game
         /// <summary>Perfil gráfico: 0 bajo, 1 medio, 2 alto (ver <see cref="GraphicsQuality"/>).</summary>
         public int Quality = 1;
 
+        /// <summary>Volumen general (0..4 = 0 %, 25 %, 50 %, 75 %, 100 %).</summary>
+        public int MasterVolume = 4;
+        /// <summary>Volumen del ambiente de estadio (hinchada).</summary>
+        public int StadiumVolume = 3;
+        /// <summary>Volumen de los efectos (balón, silbato, red, palo).</summary>
+        public int EffectsVolume = 4;
+        /// <summary>Escala de resolución: 0 la del perfil gráfico, 1 75 %, 2 100 %.</summary>
+        public int Resolution;
+        /// <summary>Joystick fijo (siempre en el mismo lugar) en lugar de flotante.</summary>
+        public bool FixedJoystick;
+        /// <summary>Opacidad de los botones táctiles: 0 40 %, 1 55 %, 2 75 %.</summary>
+        public int ButtonOpacity = 1;
+        /// <summary>Asistencia de pase: 0 según la dificultad, 1 baja, 2 media, 3 alta.</summary>
+        public int PassAssist;
+        /// <summary>Cámara: 0 transmisión de TV (fija), 1 dinámica, 2 cercana.</summary>
+        public int CameraMode = 1;
+
+        /// <summary>Etiquetas de volumen.</summary>
+        public static readonly string[] VolumeLabels = { "0 %", "25 %", "50 %", "75 %", "100 %" };
+        /// <summary>Etiquetas de escala de resolución.</summary>
+        public static readonly string[] ResolutionLabels = { "SEGÚN CALIDAD", "75 %", "100 %" };
+        /// <summary>Etiquetas de opacidad.</summary>
+        public static readonly string[] OpacityLabels = { "40 %", "55 %", "75 %" };
+        /// <summary>Opacidad de cada nivel.</summary>
+        public static readonly float[] Opacities = { 0.4f, 0.55f, 0.75f };
+        /// <summary>Etiquetas de la asistencia de pase.</summary>
+        public static readonly string[] AssistLabels = { "SEGÚN DIFICULTAD", "BAJA", "MEDIA", "ALTA" };
+        /// <summary>Valor de la asistencia de cada nivel (el 0 usa la dificultad).</summary>
+        public static readonly float[] AssistValues = { -1f, 0.2f, 0.55f, 0.9f };
+        /// <summary>Etiquetas de los tipos de cámara.</summary>
+        public static readonly string[] CameraLabels = { "TRANSMISIÓN TV", "DINÁMICA", "CERCANA" };
+
+        /// <summary>Volumen de 0 a 1 de un nivel.</summary>
+        public static float Volume(int level) => Mathf.Clamp01(level / 4f);
+
         /// <summary>Nombres de los perfiles gráficos.</summary>
         public static readonly string[] QualityLabels = { "BAJA", "MEDIA", "ALTA" };
         /// <summary>Vibración en goles y palos (solo teléfono).</summary>
         public bool Vibration = true;
-        /// <summary>Sonido (hinchada, silbato, golpeos).</summary>
-        public bool Sound = true;
 
         /// <summary>Fracción del tiempo real que avanza la simulación.</summary>
         public float SpeedFactor => Speeds[Mathf.Clamp(Speed, 0, Speeds.Length - 1)];
@@ -91,8 +131,15 @@ namespace Football.Game
                 ShowCross = PlayerPrefs.GetInt(CrossKey, 0) == 1,
                 BigButtons = PlayerPrefs.GetInt(BigButtonsKey, 0) == 1,
                 Quality = Mathf.Clamp(PlayerPrefs.GetInt(QualityKey, 1), 0, QualityLabels.Length - 1),
-                Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1,
-                Sound = PlayerPrefs.GetInt(SoundKey, 1) == 1
+                MasterVolume = Mathf.Clamp(PlayerPrefs.GetInt(MasterKey, 4), 0, 4),
+                StadiumVolume = Mathf.Clamp(PlayerPrefs.GetInt(StadiumKey, 3), 0, 4),
+                EffectsVolume = Mathf.Clamp(PlayerPrefs.GetInt(EffectsKey, 4), 0, 4),
+                Resolution = Mathf.Clamp(PlayerPrefs.GetInt(ResolutionKey, 0), 0, 2),
+                FixedJoystick = PlayerPrefs.GetInt(FixedJoystickKey, 0) == 1,
+                ButtonOpacity = Mathf.Clamp(PlayerPrefs.GetInt(OpacityKey, 1), 0, 2),
+                PassAssist = Mathf.Clamp(PlayerPrefs.GetInt(AssistKey, 0), 0, 3),
+                CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 1), 0, 2),
+                Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1
             };
 
             if (s.Opponent == s.HomeTeam)
@@ -121,8 +168,15 @@ namespace Football.Game
             PlayerPrefs.SetInt(CrossKey, ShowCross ? 1 : 0);
             PlayerPrefs.SetInt(BigButtonsKey, BigButtons ? 1 : 0);
             PlayerPrefs.SetInt(QualityKey, Quality);
+            PlayerPrefs.SetInt(MasterKey, MasterVolume);
+            PlayerPrefs.SetInt(StadiumKey, StadiumVolume);
+            PlayerPrefs.SetInt(EffectsKey, EffectsVolume);
+            PlayerPrefs.SetInt(ResolutionKey, Resolution);
+            PlayerPrefs.SetInt(FixedJoystickKey, FixedJoystick ? 1 : 0);
+            PlayerPrefs.SetInt(OpacityKey, ButtonOpacity);
+            PlayerPrefs.SetInt(AssistKey, PassAssist);
+            PlayerPrefs.SetInt(CameraKey, CameraMode);
             PlayerPrefs.SetInt(VibrationKey, Vibration ? 1 : 0);
-            PlayerPrefs.SetInt(SoundKey, Sound ? 1 : 0);
             PlayerPrefs.Save();
         }
     }

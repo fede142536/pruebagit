@@ -142,30 +142,32 @@ namespace Football.Game
         }
     }
 
-    /// <summary>Ajustes generales: velocidad del juego, botones, controles, nombres, FPS y panel de depuración, con una guía de controles.</summary>
+    /// <summary>
+    /// Ajustes completos del menú principal, por secciones (gráficos, audio, controles y cámara, reglas), con acceso a las
+    /// teclas del ordenador. Durante el partido, la pausa ofrece solo los ajustes que se pueden cambiar en vivo.
+    /// </summary>
     public sealed class SettingsScreen : MenuScreenBase
     {
-        private const float RowX = 560f;
-        private const float RowTop = 860f;
-        private const float RowStep = 72f;
-
         private const string Guide =
             "CONTROLES\n\n"
-            + "Mitad izquierda de la pantalla: arrastra para mover.\n"
+            + "Mitad izquierda de la pantalla: mover (joystick\nflotante o fijo, según Ajustes).\n"
             + "ESPRINT: mantén pulsado para correr más.\n\n"
             + "CON EL BALÓN\n"
-            + "PASE: al compañero hacia donde apuntas.\n"
+            + "PASE: toque = automático; mantén = más fuerza.\n"
             + "TIRO: mantén para cargar y suelta para tirar.\n"
-            + "DESPEJAR: pelotazo largo y alto (en tu campo).\n"
-            + "FILTRADO y CENTRO: opcionales (actívalos aquí).\n\n"
+            + "DESPEJE: pelotazo largo y alto (en tu campo).\n\n"
             + "SIN EL BALÓN\n"
-            + "PRESIONAR: mantén; persigue al rival y le quita\nla pelota sin barrerse.\n"
-            + "BARRER: llega más lejos, pero si fallas quedas\nen el suelo y puede ser falta (más por detrás).\n"
-            + "CAMBIAR: controla al compañero más cercano.\n"
-            + "ARQUERO: controla al arquero para salir, barrer,\npasar o despejar. JUGADOR lo devuelve.";
+            + "PRESIÓN: mantén; le quita la pelota sin barrerse.\n"
+            + "BARRER: llega más lejos; por detrás es falta.\n"
+            + "CAMBIAR: el aro tenue marca a quién pasas.\n"
+            + "ARQUERO: controla al arquero; JUGADOR lo devuelve.\n\n"
+            + "SAQUES: apunta con el joystick y suelta PASE,\nCENTRO o TIRO (mantén para más fuerza).";
 
         private readonly GameSettings _settings;
-        private readonly UiButton _speed, _through, _cross, _big, _lefty, _names, _fps, _debug, _keys, _antialias, _vibration, _sound, _back;
+        private readonly UiButton[] _tabs = new UiButton[SettingsCatalog.CategoryLabels.Length];
+        private readonly SettingsList _list;
+        private readonly UiButton _keys, _back;
+        private SettingCategory _category;
 
         /// <summary>Se pidió volver al menú principal.</summary>
         public bool BackRequested { get; private set; }
@@ -178,25 +180,18 @@ namespace Football.Game
         {
             _settings = settings;
             Title("AJUSTES");
-            _speed = Row("Velocidad", 0);
-            _through = Row("Filtrado", 1);
-            _cross = Row("Centro", 2);
-            _big = Row("Tamano", 3);
-            _lefty = Row("Zurdo", 4);
-            _names = Row("Nombres", 5);
-            _fps = Row("Fps", 6);
-            _debug = Row("Depuracion", 7);
-            _antialias = Row("Suavizado", 8);
-            _vibration = Row("Vibracion", 9);
-            _sound = Row("Sonido", 10);
-            _keys = Row("Teclas", 11);
-            Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 520f), new Vector2(820f, 800f), UiTheme.Panel);
-            UiKit.Label(panel.transform, "Texto", new Vector2(410f, 400f), new Vector2(760f, 760f), Guide, 25, UiTheme.Text, TextAnchor.MiddleLeft);
+            for (int i = 0; i < _tabs.Length; i++)
+            {
+                _tabs[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(330f + i * 420f, 900f), new Vector2(400f, 64f),
+                    SettingsCatalog.CategoryLabels[i], 28, UiTheme.Button);
+            }
+
+            _list = new SettingsList(Root, new Vector2(560f, 800f), new Vector2(880f, 64f), 74f, 9, 0f, 1);
+            Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 500f), new Vector2(820f, 700f), UiTheme.Panel);
+            UiKit.Label(panel.transform, "Texto", new Vector2(410f, 350f), new Vector2(760f, 660f), Guide, 24, UiTheme.Text, TextAnchor.MiddleLeft);
+            _keys = UiKit.Button(Root, "Teclas", new Vector2(560f, 100f), new Vector2(880f, 64f), "CONTROLES DE TECLADO (ORDENADOR) ›", 26, UiTheme.Button);
             _back = UiKit.Button(Root, "Atras", new Vector2(1440f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
         }
-
-        private UiButton Row(string name, int index) =>
-            UiKit.Button(Root, name, new Vector2(RowX, RowTop - index * RowStep), new Vector2(880f, 64f), string.Empty, 28, UiTheme.Button);
 
         /// <inheritdoc />
         public override void Show()
@@ -204,23 +199,18 @@ namespace Football.Game
             BackRequested = false;
             KeysRequested = false;
             base.Show();
-            Refresh();
+            SelectCategory(_category);
         }
 
-        private void Refresh()
+        private void SelectCategory(SettingCategory category)
         {
-            _keys.Label.text = "CONTROLES DE TECLADO (ORDENADOR) ›";
-            _antialias.Label.text = "CALIDAD GRÁFICA: " + GameSettings.QualityLabels[_settings.Quality] + " (BAJA PARA EL A13)";
-            _vibration.Label.text = "VIBRACIÓN (GOLES Y PALOS): " + (_settings.Vibration ? "SÍ" : "NO");
-            _sound.Label.text = "SONIDO: " + (_settings.Sound ? "SÍ" : "NO");
-            _speed.Label.text = "VELOCIDAD DEL JUEGO: " + GameSettings.SpeedLabels[_settings.Speed];
-            _through.Label.text = "BOTÓN FILTRADO: " + (_settings.ShowThrough ? "SÍ" : "NO");
-            _cross.Label.text = "BOTÓN CENTRO: " + (_settings.ShowCross ? "SÍ" : "NO");
-            _big.Label.text = "TAMAÑO DE LOS BOTONES: " + (_settings.BigButtons ? "GRANDE" : "NORMAL");
-            _lefty.Label.text = "CONTROLES PARA ZURDOS: " + (_settings.LeftHanded ? "SÍ" : "NO");
-            _names.Label.text = "NOMBRES: " + MatchSetupScreen.NameModeLabel(_settings.Names);
-            _fps.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
-            _debug.Label.text = "PANEL DE DEPURACIÓN: " + (_settings.ShowDebug ? "SÍ" : "NO");
+            _category = category;
+            for (int i = 0; i < _tabs.Length; i++)
+            {
+                _tabs[i].Background.color = i == (int)category ? UiTheme.Selected : UiTheme.Button;
+            }
+
+            _list.Show(_settings, category, false);
         }
 
         /// <summary>Procesa los toques del fotograma.</summary>
@@ -231,64 +221,26 @@ namespace Football.Game
             for (int t = 0; t < n; t++)
             {
                 Vector2 p = taps[t];
-                if (_speed.Contains(p))
+                for (int i = 0; i < _tabs.Length; i++)
                 {
-                    _settings.Speed = (_settings.Speed + 1) % GameSettings.Speeds.Length;
+                    if (_tabs[i].Contains(p))
+                    {
+                        SelectCategory((SettingCategory)i);
+                    }
                 }
-                else if (_through.Contains(p))
+
+                if (_list.Tap(p, _settings))
                 {
-                    _settings.ShowThrough = !_settings.ShowThrough;
-                }
-                else if (_cross.Contains(p))
-                {
-                    _settings.ShowCross = !_settings.ShowCross;
-                }
-                else if (_big.Contains(p))
-                {
-                    _settings.BigButtons = !_settings.BigButtons;
-                }
-                else if (_lefty.Contains(p))
-                {
-                    _settings.LeftHanded = !_settings.LeftHanded;
-                }
-                else if (_names.Contains(p))
-                {
-                    _settings.Names = (NameMode)(((int)_settings.Names + 1) % 3);
-                }
-                else if (_fps.Contains(p))
-                {
-                    _settings.TargetFps = _settings.TargetFps == 30 ? 60 : 30;
-                    Application.targetFrameRate = _settings.TargetFps;
-                }
-                else if (_debug.Contains(p))
-                {
-                    _settings.ShowDebug = !_settings.ShowDebug;
+                    SettingsCatalog.Apply(_settings);
                 }
                 else if (_keys.Contains(p))
                 {
                     KeysRequested = true;
                 }
-                else if (_vibration.Contains(p))
-                {
-                    _settings.Vibration = !_settings.Vibration;
-                }
-                else if (_sound.Contains(p))
-                {
-                    _settings.Sound = !_settings.Sound;
-                    AudioListener.volume = _settings.Sound ? 1f : 0f;
-                }
-                else if (_antialias.Contains(p))
-                {
-                    _settings.Quality = (_settings.Quality + 1) % GameSettings.QualityLabels.Length;
-                    GraphicsQuality.Apply(_settings.Quality);
-                }
                 else if (_back.Contains(p))
                 {
                     BackRequested = true;
                 }
-
-                _settings.Save();
-                Refresh();
             }
         }
     }

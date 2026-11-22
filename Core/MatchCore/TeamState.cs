@@ -51,6 +51,8 @@ namespace Football.Core.MatchCore
         public float KickBufferTimer;
         /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
         public float SwitchTimer;
+        /// <summary>Asistencia de pase elegida por la persona (0..1), o negativa para usar la de la dificultad.</summary>
+        public float HumanPassAssist = -1f;
         /// <summary>La persona controla al arquero hasta que lo suelte (o el arquero juegue el balón).</summary>
         public bool KeeperLock;
 

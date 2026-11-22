@@ -588,9 +588,12 @@ namespace Football.Game
             }
 
             float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
-            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + _lookAheadX) * CameraFollowX, -maxX, maxX), follow);
-            _cameraZ = Mathf.Lerp(_cameraZ, (ballY + _lookAheadZ) * CameraFollowZ, follow);
-            float zoom = _focusPlayer >= 0 ? FocusZoom : _setPieceView ? SetPieceZoom : _zoom;
+            float aheadX = _cameraMode == 0 ? 0f : _lookAheadX; // la transmisión de TV no se adelanta
+            float aheadZ = _cameraMode == 0 ? 0f : _lookAheadZ;
+            _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + aheadX) * CameraFollowX, -maxX, maxX), follow);
+            _cameraZ = Mathf.Lerp(_cameraZ, (ballY + aheadZ) * CameraFollowZ, follow);
+            float baseZoom = _cameraMode == 0 ? 1f : _cameraMode == 2 ? _zoom * CloseZoom : _zoom;
+            float zoom = _focusPlayer >= 0 ? FocusZoom : _setPieceView ? SetPieceZoom : baseZoom;
             float scale = _cameraScale * zoom;
             Transform t = _camera.transform;
             var position = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
@@ -657,6 +660,15 @@ namespace Football.Game
             _aimHeadRenderer.sharedMaterial = m;
             _setPieceX = x + dirX * SetPieceLookAhead;
             _setPieceY = y + dirY * SetPieceLookAhead;
+        }
+
+        private int _cameraMode = 1;
+        private const float CloseZoom = 0.75f;
+
+        /// <summary>Tipo de cámara: 0 transmisión de TV (fija, sin zoom ni anticipación), 1 dinámica, 2 cercana.</summary>
+        public void SetCameraMode(int mode)
+        {
+            _cameraMode = mode;
         }
 
         /// <summary>Empieza la presentación: plano aéreo del estadio que baja hasta la cámara de transmisión.</summary>

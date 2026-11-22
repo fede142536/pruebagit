@@ -29,7 +29,9 @@ namespace Football.Game
         private readonly DebugPanel _debug;
         private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning, _controlsHelp;
         private readonly GameObject _pausePanel;
-        private readonly UiButton _resume, _quit, _lefty, _names, _debugToggle, _fpsToggle, _mentality, _pressing;
+        private readonly UiButton _resume, _quit, _quick, _quickBack, _mentality, _pressing;
+        private readonly GameObject _quickPanel;
+        private readonly SettingsList _quickList;
         private readonly NameTags _nameTags;
 
         private MatchEngine _engine;
@@ -110,10 +112,16 @@ namespace Football.Game
             UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
             Color option = new Color(0.3f, 0.3f, 0.4f);
             _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 770f), new Vector2(620f, 100f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
-            _names = UiKit.Button(dim.transform, "Nombres", new Vector2(960f, 660f), new Vector2(620f, 92f), string.Empty, 34, option);
-            _lefty = UiKit.Button(dim.transform, "Zurdo", new Vector2(960f, 556f), new Vector2(620f, 92f), string.Empty, 34, option);
-            _debugToggle = UiKit.Button(dim.transform, "Depuracion", new Vector2(960f, 452f), new Vector2(620f, 92f), string.Empty, 34, option);
-            _fpsToggle = UiKit.Button(dim.transform, "Fps", new Vector2(960f, 348f), new Vector2(620f, 92f), string.Empty, 34, option);
+            _quick = UiKit.Button(dim.transform, "AjustesRapidos", new Vector2(960f, 556f), new Vector2(620f, 92f), "AJUSTES RÁPIDOS ›", 34, option);
+            // Ajustes rápidos: solo lo que se puede cambiar en vivo (audio, cámara, controles, calidad); las reglas, no.
+            Image quick = UiKit.Panel(dim.transform, "PanelAjustes", UiKit.Reference * 0.5f, UiKit.Reference, new Color(0.03f, 0.04f, 0.07f, 0.97f));
+            _quickPanel = quick.gameObject;
+            UiKit.Label(quick.transform, "Titulo", new Vector2(960f, 1000f), new Vector2(1200f, 70f), "AJUSTES RÁPIDOS", 46, Color.white);
+            UiKit.Label(quick.transform, "Nota", new Vector2(960f, 945f), new Vector2(1500f, 40f),
+                "Las reglas del partido (duración, dificultad, velocidad) se cambian desde el menú principal.", 24, UiTheme.TextDim);
+            _quickList = new SettingsList(quick.transform, new Vector2(520f, 870f), new Vector2(820f, 62f), 72f, 9, 880f, 2);
+            _quickBack = UiKit.Button(quick.transform, "Volver", new Vector2(1700f, 70f), new Vector2(300f, 80f), "VOLVER", 34, UiTheme.AccentDark);
+            _quickPanel.SetActive(false);
             _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 225f), new Vector2(620f, 100f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
             Color tactic = new Color(0.2f, 0.35f, 0.55f);
             UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
@@ -248,7 +256,7 @@ namespace Football.Game
             _hintTimer = 0f;
             _hint.text = string.Empty;
 
-            _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
+            ApplyLiveSettings();
             ApplyControlsVisibility();
             _controls.SetContext(true, true, false);
             _shownHasBall = true;
@@ -880,6 +888,7 @@ namespace Football.Game
             if (!paused)
             {
                 _tacticsPanel.Hide();
+                _quickPanel.SetActive(false);
             }
 
             _paused = paused;
@@ -917,10 +926,6 @@ namespace Football.Game
 
         private void RefreshPauseLabels()
         {
-            _lefty.Label.text = "CONTROLES PARA ZURDOS: " + (_settings.LeftHanded ? "SÍ" : "NO");
-            _names.Label.text = "NOMBRES: " + (_settings.Names == NameMode.All ? "TODOS" : _settings.Names == NameMode.Controlled ? "SOLO EL TUYO Y EL BALÓN" : "NINGUNO");
-            _debugToggle.Label.text = "PANEL DE DEPURACIÓN: " + (_settings.ShowDebug ? "SÍ" : "NO");
-            _fpsToggle.Label.text = "FPS OBJETIVO: " + _settings.TargetFps;
             if (_engine != null)
             {
                 TeamState own = _engine.Teams[0];
@@ -952,7 +957,26 @@ namespace Football.Game
                     continue;
                 }
 
-                if (_squadButton.Contains(point) && _engine != null)
+                if (_quickPanel.activeSelf)
+                {
+                    if (_quickBack.Contains(point))
+                    {
+                        _quickPanel.SetActive(false);
+                    }
+                    else if (_quickList.Tap(point, _settings))
+                    {
+                        ApplyLiveSettings();
+                    }
+
+                    continue;
+                }
+
+                if (_quick.Contains(point))
+                {
+                    _quickPanel.SetActive(true);
+                    _quickList.Show(_settings, SettingCategory.Graphics, true);
+                }
+                else if (_squadButton.Contains(point) && _engine != null)
                 {
                     _tacticsPanel.Show(_engine);
                 }
@@ -964,26 +988,6 @@ namespace Football.Game
                 {
                     SetPaused(false);
                     QuitRequested = true;
-                }
-                else if (_names.Contains(point))
-                {
-                    _settings.Names = (NameMode)(((int)_settings.Names + 1) % 3);
-                    _settings.Save();
-                    RefreshPauseLabels();
-                }
-                else if (_lefty.Contains(point))
-                {
-                    _settings.LeftHanded = !_settings.LeftHanded;
-                    _settings.Save();
-                    _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
-                    RefreshPauseLabels();
-                }
-                else if (_debugToggle.Contains(point))
-                {
-                    _settings.ShowDebug = !_settings.ShowDebug;
-                    _settings.Save();
-                    _debug.SetVisible(_settings.ShowDebug);
-                    RefreshPauseLabels();
                 }
                 else if (_mentality.Contains(point) && _engine != null)
                 {
@@ -999,14 +1003,22 @@ namespace Football.Game
                     _engine.SetTactics(0, own.Mentality, (PressLevel)next);
                     RefreshPauseLabels();
                 }
-                else if (_fpsToggle.Contains(point))
-                {
-                    _settings.TargetFps = _settings.TargetFps == 30 ? 60 : 30;
-                    _settings.Save();
-                    Application.targetFrameRate = _settings.TargetFps;
-                    RefreshPauseLabels();
-                }
             }
+        }
+
+        /// <summary>Aplica los ajustes que se pueden cambiar sin salir del partido.</summary>
+        private void ApplyLiveSettings()
+        {
+            SettingsCatalog.Apply(_settings);
+            _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
+            _controls.SetStyle(GameSettings.Opacities[_settings.ButtonOpacity], _settings.FixedJoystick);
+            _debug.SetVisible(_settings.ShowDebug || _benchmark);
+            if (_engine != null)
+            {
+                _engine.Teams[0].HumanPassAssist = GameSettings.AssistValues[_settings.PassAssist];
+            }
+
+            _view?.SetCameraMode(_settings.CameraMode);
         }
     }
 }

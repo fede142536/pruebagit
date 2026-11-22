@@ -18,14 +18,21 @@ namespace Football.Game
         private const float KickFullSpeed = 28f;
         private const ulong NoiseSeed = 7;
 
+        private readonly GameSettings _settings;
         private readonly AudioSource _crowd;
         private readonly AudioSource _effects;
         private readonly AudioClip _kick, _whistle, _longWhistle, _post, _net, _cheer;
         private float _crowdTarget = CrowdBase;
+        private float _crowdLevel;
+
+        private float Fx => GameSettings.Volume(_settings.EffectsVolume);
 
         /// <summary>Crea las fuentes de sonido bajo el objeto indicado y genera los clips.</summary>
-        public GameAudio(GameObject owner)
+        /// <param name="owner">Objeto que lleva las fuentes de sonido.</param>
+        /// <param name="settings">Ajustes (volumen del ambiente y de los efectos).</param>
+        public GameAudio(GameObject owner, GameSettings settings)
         {
+            _settings = settings;
             var rng = new SeededRandom(NoiseSeed);
             _crowd = owner.AddComponent<AudioSource>();
             _crowd.loop = true;
@@ -64,7 +71,8 @@ namespace Football.Game
         {
             float target = CrowdBase + CrowdNearGoal * Mathf.Clamp01((closenessToGoal - 0.55f) / 0.45f);
             _crowdTarget = Mathf.Max(target, _crowdTarget - deltaTime * 0.3f); // tras un gol, el estruendo baja despacio
-            _crowd.volume = Mathf.Lerp(_crowd.volume, _crowdTarget, 1f - Mathf.Exp(-CrowdFade * deltaTime));
+            _crowdLevel = Mathf.Lerp(_crowdLevel, _crowdTarget, 1f - Mathf.Exp(-CrowdFade * deltaTime));
+            _crowd.volume = _crowdLevel * GameSettings.Volume(_settings.StadiumVolume);
         }
 
         /// <summary>Golpeo del balón; el volumen depende de la fuerza.</summary>
@@ -72,28 +80,28 @@ namespace Football.Game
         {
             if (speedChange >= KickMinSpeed)
             {
-                _effects.PlayOneShot(_kick, Mathf.Clamp01(0.25f + speedChange / KickFullSpeed));
+                _effects.PlayOneShot(_kick, Mathf.Clamp01(0.25f + speedChange / KickFullSpeed) * Fx);
             }
         }
 
         /// <summary>Silbato corto (saque, falta, fuera de juego).</summary>
-        public void Whistle() => _effects.PlayOneShot(_whistle, 0.6f);
+        public void Whistle() => _effects.PlayOneShot(_whistle, 0.6f * Fx);
 
         /// <summary>Silbato largo (fin de un tiempo).</summary>
-        public void LongWhistle() => _effects.PlayOneShot(_longWhistle, 0.7f);
+        public void LongWhistle() => _effects.PlayOneShot(_longWhistle, 0.7f * Fx);
 
         /// <summary>Balón al palo: golpe metálico y lamento de la hinchada.</summary>
         public void Post()
         {
-            _effects.PlayOneShot(_post, 0.8f);
+            _effects.PlayOneShot(_post, 0.8f * Fx);
             _crowdTarget = Mathf.Max(_crowdTarget, CrowdBase + CrowdNearGoal);
         }
 
         /// <summary>Gol: red y estallido de la hinchada.</summary>
         public void Goal()
         {
-            _effects.PlayOneShot(_net, 0.7f);
-            _effects.PlayOneShot(_cheer, 1f);
+            _effects.PlayOneShot(_net, 0.7f * Fx);
+            _effects.PlayOneShot(_cheer, GameSettings.Volume(_settings.StadiumVolume));
             _crowdTarget = 1f;
         }
 

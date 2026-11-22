@@ -389,7 +389,7 @@ namespace Football.Core.MatchCore
             Vec2 origin = Ball.Pos.Horizontal;
             float dir = team.AttackDirection;
             Vec2 stick = input.Move.Length > HumanMoveDeadZone ? input.Move.Normalized : Vec2.FromAngle(p.Heading);
-            float assist = team.Difficulty.PassAssist;
+            float assist = team.HumanPassAssist >= 0f ? team.HumanPassAssist : team.Difficulty.PassAssist;
             float maxAngle = (HumanAssistBaseAngle + HumanAssistAngleRange * assist) * MathUtil.Deg2Rad;
 
             point = origin + stick * HumanBlindDistance;

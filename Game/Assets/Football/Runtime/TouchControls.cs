@@ -48,6 +48,7 @@ namespace Football.Game
             public float Held;
             public Vector2 Slot;
             public float Size;
+            public Color BaseColor;
         }
 
         private readonly Canvas _canvas;
@@ -126,7 +127,7 @@ namespace Football.Game
             Image knob = UiKit.Panel(ring.transform, "Knob", new Vector2(JoystickRadius, JoystickRadius), new Vector2(110f, 110f),
                 new Color(1f, 1f, 1f, 0.5f), true);
             _joystickKnob = (RectTransform)knob.transform;
-            _joystickBase.SetActive(false);
+            HideJoystick();
             Layout(false, false, false, false);
         }
 
@@ -150,7 +151,7 @@ namespace Football.Game
         private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size)
         {
             UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size >= 150f ? 30 : 24, color, true);
-            return new Control { Ui = button, Slot = slot, Size = size };
+            return new Control { Ui = button, Slot = slot, Size = size, BaseColor = color }; // color base: para cambiar la opacidad
         }
 
         /// <summary>Coloca los botones según las preferencias.</summary>
@@ -188,6 +189,11 @@ namespace Football.Game
                 float fromRight = UiKit.Reference.x - slot.x;
                 float x = leftHanded ? fromRight : _width - fromRight;
                 c.Ui.Place(new Vector2(x, slot.y), new Vector2(size, size));
+            }
+
+            if (_joystickPointer == NoPointer)
+            {
+                HideJoystick(); // el joystick fijo se recoloca (zurdos o cambio de pantalla)
             }
 
             ApplyVisibility();
@@ -236,13 +242,59 @@ namespace Football.Game
             }
         }
 
+        private const float FixedJoystickMargin = 250f;
+        private const float FixedCatchFactor = 1.8f;
+        private bool _fixedJoystick;
+        private float _opacity = 0.55f;
+
+        private Vector2 FixedCenter => new Vector2(_leftHanded ? _width - FixedJoystickMargin : FixedJoystickMargin, FixedJoystickMargin);
+
+        /// <summary>Estilo de los controles: opacidad de los botones y joystick fijo o flotante.</summary>
+        /// <param name="opacity">Opacidad de 0 a 1.</param>
+        /// <param name="fixedJoystick">Joystick fijo (siempre visible en la esquina) en lugar de flotante.</param>
+        public void SetStyle(float opacity, bool fixedJoystick)
+        {
+            _opacity = opacity;
+            _fixedJoystick = fixedJoystick;
+            for (int i = 0; i < _controls.Length; i++)
+            {
+                Control c = _controls[i];
+                if (c == _pause)
+                {
+                    continue;
+                }
+
+                Color color = c.BaseColor;
+                color.a = opacity;
+                c.Ui.Background.color = color;
+            }
+
+            HideJoystick();
+        }
+
+        /// <summary>Joystick en reposo: el flotante desaparece; el fijo queda visible en su lugar con la palanca centrada.</summary>
+        private void HideJoystick()
+        {
+            bool showFixed = _fixedJoystick && _enabled;
+            if (_joystickBase.activeSelf != showFixed)
+            {
+                _joystickBase.SetActive(showFixed);
+            }
+
+            if (showFixed)
+            {
+                _joystickBaseRect.anchoredPosition = FixedCenter;
+                _joystickKnob.anchoredPosition = new Vector2(JoystickRadius, JoystickRadius);
+            }
+        }
+
         /// <summary>Muestra u oculta todos los controles (por ejemplo durante la pausa).</summary>
         public void SetActive(bool active)
         {
             _enabled = active;
             ApplyVisibility();
             _pause.Ui.SetVisible(active);
-            _joystickBase.SetActive(false);
+            HideJoystick();
             _joystickPointer = NoPointer;
             _joystick = Vector2.zero;
         }
@@ -321,7 +373,7 @@ namespace Football.Game
             {
                 _joystickPointer = NoPointer;
                 _joystick = Vector2.zero;
-                _joystickBase.SetActive(false);
+                HideJoystick();
             }
 
             for (int i = 0; i < _controls.Length; i++)
@@ -359,7 +411,7 @@ namespace Football.Game
 
             _joystickPointer = NoPointer;
             _joystick = Vector2.zero;
-            _joystickBase.SetActive(false);
+            HideJoystick();
         }
 
         private void OnBegan(int id, Vector2 canvasPoint)
@@ -375,6 +427,20 @@ namespace Football.Game
                     c.Held = 0f;
                     return;
                 }
+            }
+
+            if (_joystickPointer == NoPointer && _fixedJoystick && _enabled)
+            {
+                // Joystick fijo: solo responde si el dedo apoya sobre él (o muy cerca); su centro no se mueve.
+                if ((canvasPoint - FixedCenter).magnitude <= JoystickRadius * FixedCatchFactor)
+                {
+                    _joystickPointer = id;
+                    _joystickOrigin = FixedCenter;
+                    _joystick = Vector2.zero;
+                    OnHeld(id, canvasPoint);
+                }
+
+                return;
             }
 
             if (_joystickPointer == NoPointer && OnJoystickSide(canvasPoint))
@@ -396,7 +462,11 @@ namespace Football.Game
             }
 
             Vector2 offset = canvasPoint - _joystickOrigin;
-            if (offset.magnitude > JoystickRadius)
+            if (_fixedJoystick && offset.magnitude > JoystickRadius)
+            {
+                offset = offset.normalized * JoystickRadius; // el fijo no sigue al dedo
+            }
+            else if (offset.magnitude > JoystickRadius)
             {
                 // El joystick flotante sigue al dedo cuando se sale del círculo.
                 _joystickOrigin = canvasPoint - offset.normalized * JoystickRadius;
@@ -414,7 +484,7 @@ namespace Football.Game
             {
                 _joystickPointer = NoPointer;
                 _joystick = Vector2.zero;
-                _joystickBase.SetActive(false);
+                HideJoystick();
                 return;
             }
 

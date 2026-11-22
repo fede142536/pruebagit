@@ -43,7 +43,7 @@ namespace Football.Game
             Screen.autorotateToLandscapeRight = true;
             Screen.orientation = ScreenOrientation.AutoRotation;
             PrepareScene();
-            GraphicsQuality.Apply(_settings.Quality);
+            SettingsCatalog.Apply(_settings);
 
             _mainMenu = new MainMenuScreen(transform, _pointers);
             _teams = new TeamSelectScreen(transform, _pointers, _friendly);
@@ -51,8 +51,7 @@ namespace Football.Game
             _matchSetup = new MatchSetupScreen(transform, _pointers, _settings, _friendly);
             _settingsScreen = new SettingsScreen(transform, _pointers, _settings);
             _controlsScreen = new ControlsScreen(transform, _pointers);
-            _audio = new GameAudio(gameObject);
-            AudioListener.volume = _settings.Sound ? 1f : 0f;
+            _audio = new GameAudio(gameObject, _settings);
             _match = new MatchScreen(transform, _pointers, _settings, _audio);
             _result = new ResultScreen(transform, _pointers);
             Go(State.MainMenu);

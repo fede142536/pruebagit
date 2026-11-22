@@ -14,8 +14,12 @@ namespace Football.Game
         private static readonly float[] RenderScale = { 0.7f, 0.85f, 1f };
         private static readonly int[] MsaaSamples = { 1, 2, 4 };
 
-        /// <summary>Aplica un perfil (0 bajo, 1 medio, 2 alto).</summary>
-        public static void Apply(int level)
+        private static readonly float[] ResolutionOverride = { -1f, 0.75f, 1f };
+
+        /// <summary>Aplica un perfil (0 bajo, 1 medio, 2 alto) y, si se eligió, una escala de resolución propia.</summary>
+        /// <param name="level">Perfil.</param>
+        /// <param name="resolution">0 la del perfil, 1 75 %, 2 100 %.</param>
+        public static void Apply(int level, int resolution = 0)
         {
             level = Mathf.Clamp(level, 0, RenderScale.Length - 1);
             int samples = MsaaSamples[level];
@@ -29,7 +33,8 @@ namespace Football.Game
                 }
 
                 SetProperty(pipeline, "msaaSampleCount", samples);
-                SetProperty(pipeline, "renderScale", RenderScale[level]);
+                float scale = ResolutionOverride[Mathf.Clamp(resolution, 0, ResolutionOverride.Length - 1)];
+                SetProperty(pipeline, "renderScale", scale > 0f ? scale : RenderScale[level]);
             }
             catch (System.Exception e)
             {
