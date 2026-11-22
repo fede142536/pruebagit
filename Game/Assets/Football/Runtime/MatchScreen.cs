@@ -28,7 +28,9 @@ namespace Football.Game
         private readonly Canvas _canvas;
         private readonly TouchControls _controls;
         private readonly DebugPanel _debug;
-        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning, _controlsHelp;
+        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
+        private readonly GameObject[] _pauseBase;
+        private bool _stallShown;
         private readonly GameObject _pausePanel;
         private readonly UiButton _resume, _quit, _quick, _quickBack, _mentality, _pressing;
         private readonly GameObject _quickPanel;
@@ -111,7 +113,7 @@ namespace Football.Game
             UiKit.Panel(pauseRoot.transform, "Oscurecer", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(0f, 0f, 0f, 0.7f));
             Image dim = pauseRoot;
             _pausePanel = dim.gameObject;
-            UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
+            Text pauseTitle = UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
             Color option = new Color(0.3f, 0.3f, 0.4f);
             _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 770f), new Vector2(620f, 100f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
             _quick = UiKit.Button(dim.transform, "AjustesRapidos", new Vector2(960f, 556f), new Vector2(620f, 92f), "AJUSTES RÁPIDOS ›", 34, option);
@@ -126,16 +128,20 @@ namespace Football.Game
             _quickPanel.SetActive(false);
             _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 225f), new Vector2(620f, 100f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
             Color tactic = new Color(0.2f, 0.35f, 0.55f);
-            UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
+            Text tacticTitle = UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
             _mentality = UiKit.Button(dim.transform, "Mentalidad", new Vector2(1600f, 660f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             _squadButton = UiKit.Button(dim.transform, "Plantel", new Vector2(1600f, 300f), new Vector2(520f, 92f), "PLANTEL Y TÁCTICA ›", 30, UiTheme.AccentDark);
             _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
-            UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
+            Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
-            UiKit.Label(dim.transform, "TituloControles", new Vector2(330f, 770f), new Vector2(520f, 70f), "CONTROLES", 44, Color.white);
-            _controlsHelp = UiKit.Label(dim.transform, "Controles", new Vector2(330f, 470f), new Vector2(520f, 520f), string.Empty, 22,
-                new Color(1f, 1f, 1f, 0.85f), TextAnchor.UpperLeft);
+            // Elementos de la pantalla base de la pausa: se ocultan al abrir un submenú para que nada quede detrás de sus listas.
+            // (La guía de controles ya no está aquí: vive en Ajustes → Controles.)
+            _pauseBase = new[]
+            {
+                pauseTitle.gameObject, _resume.Root, _quick.Root, _quit.Root, tacticTitle.gameObject, _mentality.Root, _pressing.Root,
+                _squadButton.Root, tacticHelp.gameObject
+            };
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
             _nameTags = new NameTags(parent);
@@ -363,19 +369,33 @@ namespace Football.Game
             }
         }
 
-        /// <summary>Avisa si el reloj del partido deja de avanzar sin estar en pausa (el partido "se tildó").</summary>
+        /// <summary>
+        /// Avisa si el motor deja de avanzar en juego activo (el partido "se tildó"). Solo cuenta cuando el motor debería
+        /// avanzar: en juego, sin pausa, sin presentación, repetición ni festejo, y fuera de saques y goles. En cuanto los
+        /// pasos vuelven, el aviso desaparece; nunca se muestra durante la pausa.
+        /// </summary>
         private void WatchProgress(float deltaTime)
         {
-            if (_paused || _engine.IsFinished || _engine.TickCount != _lastTick)
+            bool advanced = _engine.TickCount != _lastTick;
+            _lastTick = _engine.TickCount;
+            bool activePlay = !_paused && !_engine.IsFinished && _introTimer <= 0f && !_replaying && _celebrationTimer <= 0f
+                              && _engine.Phase == MatchPhase.Playing;
+            if (advanced || !activePlay)
             {
-                _lastTick = _engine.TickCount;
                 _stalledSeconds = 0f;
+                if (_stallShown && (advanced || _paused))
+                {
+                    _stallShown = false;
+                    _warning.text = string.Empty;
+                }
+
                 return;
             }
 
             _stalledSeconds += deltaTime;
-            if (_stalledSeconds >= StallSeconds)
+            if (_stalledSeconds >= StallSeconds && !_stallShown)
             {
+                _stallShown = true;
                 _warning.text = "EL PARTIDO DEJÓ DE AVANZAR (manda una captura de esto)\nMinuto " + _engine.Minute.ToString("F1")
                                 + " · fase " + _engine.Phase + " · saque " + _engine.CurrentRestart.Kind
                                 + " · paso de tiempo " + deltaTime.ToString("F3") + " s · acumulado " + _accumulator.ToString("F3");
@@ -798,6 +818,7 @@ namespace Football.Game
             _replayCursor = 0f;
             _replaying = true;
             _hint.text = "REPETICIÓN  ·  toca para saltar";
+            _controls.SetActive(false); // repetición limpia, como en la televisión: sin botones táctiles
             _playerHud.SetVisible(false);
         }
 
@@ -811,6 +832,7 @@ namespace Football.Game
                 _replaying = false;
                 _hint.text = string.Empty;
                 _playerHud.SetVisible(true);
+                ApplyControlsVisibility(); // vuelven los botones táctiles
                 return;
             }
 
@@ -870,20 +892,6 @@ namespace Football.Game
             ? team.ShortName.ToUpperInvariant()
             : team.Name.Substring(0, Math.Min(3, team.Name.Length)).ToUpperInvariant();
 
-        /// <summary>Guía de controles de la pausa, con las teclas asignadas en Ajustes.</summary>
-        private static string ControlsGuide()
-        {
-            string K(GameAction a) => KeyBindings.KeyName(KeyBindings.Get(a));
-            return "TÁCTIL: mitad izquierda para mover. Tu jugador\nes el de la flecha amarilla.\n\n"
-                   + "CON BALÓN\nPASE (toque: automático, mantener: potencia)\nTIRO (mantener y soltar) · DESPEJAR\n\n"
-                   + "SIN BALÓN\nPRESIONAR y 2ª MARCA (mantener) · BARRER · CAMBIAR\nARQUERO (controlar al arquero)\n\n"
-                   + "TECLADO\nMover " + K(GameAction.Up) + " " + K(GameAction.Left) + " " + K(GameAction.Down) + " " + K(GameAction.Right)
-                   + " · Esprint " + K(GameAction.Sprint) + "\nPase " + K(GameAction.Pass) + " · Tiro " + K(GameAction.Shoot)
-                   + " · Despejar " + K(GameAction.Clear) + "\nPresionar " + K(GameAction.Press) + " · Barrer " + K(GameAction.Slide)
-                   + " · 2ª marca " + K(GameAction.SecondPress) + " · Cambiar " + K(GameAction.Switch) + "\nArquero " + K(GameAction.Keeper) + " · Pausa " + K(GameAction.Pause)
-                   + "\n(se cambian en Ajustes → Controles de teclado)";
-        }
-
         private static string[] BuildClockTexts()
         {
             var texts = new string[ClockMaxMinutes * 60 + 60];
@@ -918,14 +926,20 @@ namespace Football.Game
             AudioListener.pause = paused;
             if (paused)
             {
-                _controlsHelp.text = ControlsGuide(); // solo al pausar: nunca durante el juego
                 _controls.ReleaseAll();
             }
 
             _pausePanel.SetActive(paused);
-            if (paused)
+            SetPauseBaseVisible(true);
+            if (paused && _stallShown)
             {
-                _controls.SetActive(false);
+                _stallShown = false;
+                _warning.text = string.Empty; // el aviso nunca queda dibujado sobre la pausa
+            }
+
+            if (paused || _replaying)
+            {
+                _controls.SetActive(false); // al salir de la pausa en plena repetición, los botones siguen ocultos
             }
             else
             {
@@ -933,6 +947,17 @@ namespace Football.Game
             }
 
             RefreshPauseLabels();
+        }
+
+        private void SetPauseBaseVisible(bool visible)
+        {
+            for (int i = 0; i < _pauseBase.Length; i++)
+            {
+                if (_pauseBase[i].activeSelf != visible)
+                {
+                    _pauseBase[i].SetActive(visible);
+                }
+            }
         }
 
         private void ApplyControlsVisibility()
@@ -980,6 +1005,8 @@ namespace Football.Game
                     continue;
                 }
 
+                bool submenu = _quickPanel.activeSelf || _tacticsPanel.Visible;
+                SetPauseBaseVisible(!submenu);
                 if (_quickPanel.activeSelf)
                 {
                     if (_quickBack.Contains(point))
@@ -997,11 +1024,13 @@ namespace Football.Game
                 if (_quick.Contains(point))
                 {
                     _quickPanel.SetActive(true);
+                    SetPauseBaseVisible(false);
                     _quickList.Show(_settings, SettingCategory.Graphics, true);
                 }
                 else if (_squadButton.Contains(point) && _engine != null)
                 {
                     _tacticsPanel.Show(_engine);
+                    SetPauseBaseVisible(false);
                 }
                 else if (_resume.Contains(point))
                 {

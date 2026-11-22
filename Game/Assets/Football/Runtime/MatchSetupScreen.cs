@@ -148,25 +148,13 @@ namespace Football.Game
     /// </summary>
     public sealed class SettingsScreen : MenuScreenBase
     {
-        private const string Guide =
-            "CONTROLES\n\n"
-            + "Mitad izquierda de la pantalla: mover (joystick\nflotante o fijo, según Ajustes).\n"
-            + "ESPRINT: mantén pulsado para correr más.\n\n"
-            + "CON EL BALÓN\n"
-            + "PASE: toque = automático; mantén = más fuerza.\n"
-            + "TIRO: mantén para cargar y suelta para tirar.\n"
-            + "DESPEJE: pelotazo largo y alto (en tu campo).\n\n"
-            + "SIN EL BALÓN\n"
-            + "PRESIÓN: mantén; le quita la pelota sin barrerse.\n"
-            + "BARRER: llega más lejos; por detrás es falta.\n"
-            + "CAMBIAR: el aro tenue marca a quién pasas.\n"
-            + "ARQUERO: controla al arquero; JUGADOR lo devuelve.\n\n"
-            + "SAQUES: apunta con el joystick y suelta PASE,\nCENTRO o TIRO (mantén para más fuerza).";
 
         private readonly GameSettings _settings;
         private readonly UiButton[] _tabs = new UiButton[SettingsCatalog.CategoryLabels.Length];
         private readonly SettingsList _list;
         private readonly UiButton _keys, _back;
+        private readonly GameObject _guidePanel;
+        private readonly Text _guide;
         private SettingCategory _category;
 
         /// <summary>Se pidió volver al menú principal.</summary>
@@ -187,8 +175,12 @@ namespace Football.Game
             }
 
             _list = new SettingsList(Root, new Vector2(560f, 800f), new Vector2(880f, 60f), 68f, 10, 0f, 1);
-            Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 500f), new Vector2(820f, 700f), UiTheme.Panel);
-            UiKit.Label(panel.transform, "Texto", new Vector2(410f, 350f), new Vector2(760f, 660f), Guide, 24, UiTheme.Text, TextAnchor.MiddleLeft);
+            // Guía de controles: solo en la pestaña de controles, sobre un panel opaco para que se lea bien.
+            Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 500f), new Vector2(820f, 700f), new Color(0.07f, 0.09f, 0.13f, 1f));
+            _guidePanel = panel.gameObject;
+            UiKit.Label(panel.transform, "TituloGuia", new Vector2(410f, 655f), new Vector2(760f, 50f), "CONTROLES", 34, Color.white);
+            _guide = UiKit.Label(panel.transform, "Texto", new Vector2(410f, 320f), new Vector2(760f, 600f), string.Empty, 23, UiTheme.Text,
+                TextAnchor.UpperLeft);
             _keys = UiKit.Button(Root, "Teclas", new Vector2(560f, 100f), new Vector2(880f, 64f), "CONTROLES DE TECLADO (ORDENADOR) ›", 26, UiTheme.Button);
             _back = UiKit.Button(Root, "Atras", new Vector2(1440f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
         }
@@ -211,6 +203,12 @@ namespace Football.Game
             }
 
             _list.Show(_settings, category, false);
+            bool controls = category == SettingCategory.Controls;
+            _guidePanel.SetActive(controls);
+            if (controls)
+            {
+                _guide.text = ControlsHelp.Text(); // con las teclas asignadas ahora
+            }
         }
 
         /// <summary>Procesa los toques del fotograma.</summary>
