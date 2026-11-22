@@ -12,8 +12,10 @@ namespace Football.Core.MatchCore
         public readonly int Team;
         /// <summary>Puesto en la formación (0 = portero).</summary>
         public readonly int Slot;
-        /// <summary>Posición asignada.</summary>
-        public readonly Position Role;
+        /// <summary>Posición que ocupa ahora (cambia al cambiar de formación o intercambiar puestos).</summary>
+        public Position Role;
+        /// <summary>Puesto táctico actual: índice en los puestos de la formación (0 = arquero). Empieza igual a <see cref="Slot"/>.</summary>
+        public int Spot;
         /// <summary>Atributos efectivos.</summary>
         public readonly AttributeSet Attr;
         /// <summary>Nombre para mostrar.</summary>
@@ -94,6 +96,7 @@ namespace Football.Core.MatchCore
             Index = index;
             Team = team;
             Slot = slot;
+            Spot = slot;
             Role = view.Role;
             Attr = view.Attributes;
             Name = view.Name;

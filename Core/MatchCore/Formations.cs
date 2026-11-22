@@ -99,6 +99,22 @@ namespace Football.Core.MatchCore
             new FormationSlot(Position.Striker, 0.70f, 0f)
         });
 
+        /// <summary>4-3-1-2: tres mediocampistas, un enganche y dos delanteros.</summary>
+        public static readonly Formation F4312 = new Formation("4-3-1-2", new[]
+        {
+            new FormationSlot(Position.Goalkeeper, 0.03f, 0f),
+            new FormationSlot(Position.LeftBack, 0.21f, 0.80f),
+            new FormationSlot(Position.CenterBack, 0.17f, 0.28f),
+            new FormationSlot(Position.CenterBack, 0.17f, -0.28f),
+            new FormationSlot(Position.RightBack, 0.21f, -0.80f),
+            new FormationSlot(Position.CentralMidfielder, 0.40f, 0.45f),
+            new FormationSlot(Position.DefensiveMidfielder, 0.34f, 0f),
+            new FormationSlot(Position.CentralMidfielder, 0.40f, -0.45f),
+            new FormationSlot(Position.AttackingMidfielder, 0.55f, 0f),
+            new FormationSlot(Position.Striker, 0.68f, 0.22f),
+            new FormationSlot(Position.Striker, 0.68f, -0.22f)
+        });
+
         /// <summary>3-5-2: tres centrales, carrileros y dos delanteros.</summary>
         public static readonly Formation F352 = new Formation("3-5-2", new[]
         {
@@ -116,6 +132,6 @@ namespace Football.Core.MatchCore
         });
 
         /// <summary>Todas las formaciones.</summary>
-        public static readonly Formation[] All = { F442, F433, F4231, F352 };
+        public static readonly Formation[] All = { F442, F433, F4231, F352, F4312 };
     }
 }

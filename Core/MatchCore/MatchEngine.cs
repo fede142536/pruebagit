@@ -180,6 +180,7 @@ namespace Football.Core.MatchCore
                 }
             }
 
+            UpdateSubstitutionWindows();
             TickCount++;
             ClearInputImpulses();
         }
@@ -248,6 +249,7 @@ namespace Football.Core.MatchCore
         {
             TickTimers(dt);
             AdaptTactics(dt);
+            AiSubstitutions(dt);
             UpdateHumanControl(dt);
             _planTimer -= dt;
             if (_planTimer <= 0f)
@@ -474,6 +476,7 @@ namespace Football.Core.MatchCore
 
         private void EndHalf()
         {
+            _halfTimeBreak = Half == 1; // en el descanso los cambios no gastan ventana
             AddEvent(Half == 1 ? MatchEventType.HalfTime : MatchEventType.FullTime, -1, -1, Vec2.Zero);
             if (Half == 2)
             {

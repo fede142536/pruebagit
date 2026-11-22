@@ -89,7 +89,9 @@ namespace Football.Core.MatchCore
         /// <summary>Fin del partido.</summary>
         FullTime,
         /// <summary>Un equipo cambió su mentalidad o su presión.</summary>
-        TacticsChanged
+        TacticsChanged,
+        /// <summary>Cambio de jugador (PlayerIndex = puesto del que entra; el nombre del que sale queda en el equipo).</summary>
+        Substitution
     }
 
     /// <summary>Evento registrado durante el partido.</summary>
@@ -271,5 +273,7 @@ namespace Football.Core.MatchCore
         public TeamStyle Style;
         /// <summary>Once jugadores, en el mismo orden que los puestos de la formación (el primero es el portero).</summary>
         public PlayerMatchView[] Players;
+        /// <summary>Suplentes (opcional): pueden entrar con <see cref="MatchEngine.RequestSubstitution"/>.</summary>
+        public PlayerMatchView[] Bench;
     }
 }

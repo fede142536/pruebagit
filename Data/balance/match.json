@@ -140,6 +140,12 @@
     "YellowBase": 0.14,
     "YellowAggressionSpread": 0.25,
     "RedBase": 0.008,
+    "MaxSubstitutions": 5,
+    "MaxSubstitutionWindows": 3,
+    "AiSubstitutionMinute": 58,
+    "AiSubstitutionStamina": 0.6,
+    "AiRotationMinute": 65,
+    "AiRotationSubstitutions": 3,
     "Offside": true,
     "FreeKickDirectMaxDistance": 30
   },

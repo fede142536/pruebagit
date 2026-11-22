@@ -99,7 +99,7 @@ namespace Football.Core.MatchCore
             AiConfig ai = Config.Ai;
             TeamState team = Teams[p.Team];
             TeamStyle style = team.Style;
-            FormationSlot slot = team.Formation.Slots[p.Slot];
+            FormationSlot slot = team.Formation.Slots[p.Spot];
             float dir = team.AttackDirection;
 
             float ballProgress = Pitch.Progress(dir, Ball.Pos.X);

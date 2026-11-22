@@ -296,6 +296,18 @@ namespace Football.Core.MatchCore
         public float YellowAggressionSpread = 0.25f;
         /// <summary>Probabilidad de roja directa en una falta.</summary>
         public float RedBase = 0.008f;
+        /// <summary>Cambios máximos por equipo (reglamento: 5).</summary>
+        public int MaxSubstitutions = 5;
+        /// <summary>Ventanas de cambios durante el juego (reglamento: 3; los del entretiempo no cuentan).</summary>
+        public int MaxSubstitutionWindows = 3;
+        /// <summary>Minuto desde el que la IA hace cambios para refrescar a los cansados.</summary>
+        public float AiSubstitutionMinute = 58f;
+        /// <summary>La IA cambia a un jugador cuya resistencia baje de este valor.</summary>
+        public float AiSubstitutionStamina = 0.6f;
+        /// <summary>Minuto desde el que la IA rota jugadores aunque nadie esté agotado (como un técnico real).</summary>
+        public float AiRotationMinute = 65f;
+        /// <summary>Cambios que la IA hace por rotación (los más cansados primero).</summary>
+        public int AiRotationSubstitutions = 3;
         /// <summary>Se aplica la regla del fuera de juego (no existe en el fútbol sala).</summary>
         public bool Offside = true;
         /// <summary>Distancia máxima a portería para tirar una falta directa.</summary>

@@ -9,8 +9,18 @@ namespace Football.Core.MatchCore
         public readonly int Index;
         /// <summary>Nombre.</summary>
         public readonly string Name;
-        /// <summary>Formación.</summary>
-        public readonly Formation Formation;
+        /// <summary>Formación (se puede cambiar durante el partido con <see cref="MatchEngine.SetFormation"/>).</summary>
+        public Formation Formation;
+        /// <summary>Suplentes disponibles al empezar (vista inmutable; los ya usados se marcan en <see cref="BenchUsed"/>).</summary>
+        public readonly PlayerMatchView[] Bench;
+        /// <summary>Suplente ya ingresado o pedido: no puede volver a usarse.</summary>
+        public readonly bool[] BenchUsed;
+        /// <summary>Jugadores que salieron sustituidos (no pueden volver a entrar).</summary>
+        public readonly System.Collections.Generic.List<string> SubstitutedOut = new System.Collections.Generic.List<string>();
+        /// <summary>Cambios ya hechos.</summary>
+        public int SubstitutionsUsed;
+        /// <summary>Ventanas de cambios ya usadas (fuera del entretiempo).</summary>
+        public int WindowsUsed;
         /// <summary>Estilo de juego efectivo (el base con los ajustes tácticos aplicados).</summary>
         public readonly TeamStyle Style;
         /// <summary>Estilo con el que el equipo empezó el partido.</summary>
@@ -76,6 +86,8 @@ namespace Football.Core.MatchCore
             Style = setup.Style.Clone();
             Difficulty = difficulty;
             Players = new MatchPlayer[setup.Players.Length];
+            Bench = setup.Bench ?? new PlayerMatchView[0];
+            BenchUsed = new bool[Bench.Length];
             for (int slot = 0; slot < Players.Length; slot++)
             {
                 var player = new MatchPlayer(index * Players.Length + slot, index, slot, setup.Players[slot], playerConfig);

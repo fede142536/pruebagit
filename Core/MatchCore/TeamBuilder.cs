@@ -359,7 +359,28 @@ namespace Football.Core.MatchCore
                 players[slot] = view;
             }
 
-            return new MatchTeamSetup { Name = team.Name, Formation = formation, Style = ParseStyle(team.Style, config), Players = players };
+            // Suplentes: con su posición natural y su media (entran al puesto del que sale, con la resistencia llena).
+            var bench = new PlayerMatchView[selection.Bench.Count];
+            for (int i = 0; i < bench.Length; i++)
+            {
+                int index = selection.Bench[i];
+                PlayerDefinition def = team.Players[index];
+                Position natural = ParsePosition(def.Position);
+                var view = new PlayerMatchView
+                {
+                    Id = index + 1,
+                    Name = DisplayName(def),
+                    Number = def.Number > 0 ? def.Number : index + 1,
+                    Role = natural
+                };
+                RosterFactory.FillAttributes(rng, def.Rating, natural, view.Attributes);
+                bench[i] = view;
+            }
+
+            return new MatchTeamSetup
+            {
+                Name = team.Name, Formation = formation, Style = ParseStyle(team.Style, config), Players = players, Bench = bench
+            };
         }
     }
 }
