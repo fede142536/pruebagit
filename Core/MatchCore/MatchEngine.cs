@@ -250,6 +250,13 @@ namespace Football.Core.MatchCore
             TickTimers(dt);
             AdaptTactics(dt);
             AiSubstitutions(dt);
+            CheckInjuries();
+            StopForInjury();
+            if (Phase != MatchPhase.Playing)
+            {
+                return;
+            }
+
             UpdateHumanControl(dt);
             _planTimer -= dt;
             if (_planTimer <= 0f)

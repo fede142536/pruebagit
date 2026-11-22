@@ -249,9 +249,79 @@ namespace Football.Core.MatchCore
             }
         }
 
+        private float _nextInjuryCheck;
+        private bool _injuryStop;
+
         /// <summary>
-        /// Cambios de la IA: desde cierto minuto, saca al jugador de campo más cansado y mete al suplente mejor valorado de su
-        /// misma zona (o el mejor disponible), respetando cupos y ventanas.
+        /// Lesiones leves por cansancio: desde <see cref="PlayerConfig.InjuryStartMinute"/>, una tirada por jugador de campo y
+        /// minuto de juego, con probabilidad que crece con el cuadrado del cansancio. El lesionado sigue más lento hasta que lo
+        /// cambien (la IA lo cambia en cuanto puede; la persona, desde PLANTEL Y TÁCTICA).
+        /// </summary>
+        private void CheckInjuries()
+        {
+            PlayerConfig c = Config.Player;
+            if (Minute < _nextInjuryCheck)
+            {
+                return;
+            }
+
+            _nextInjuryCheck = MathF.Floor(Minute) + 1f;
+            if (Minute < c.InjuryStartMinute)
+            {
+                return;
+            }
+
+            for (int i = 0; i < Players.Length; i++)
+            {
+                MatchPlayer p = Players[i];
+                if (p.SentOff || p.Injured || p.IsKeeper)
+                {
+                    continue;
+                }
+
+                float fatigue = p.Fatigue;
+                float chance = c.InjuryBaseRate * (1f + c.InjuryFatigueWeight * fatigue * fatigue);
+                if (_rng.NextFloat() < chance)
+                {
+                    p.Injured = true;
+                    p.Stats.Injured = true;
+                    Teams[p.Team].Stats.Injuries++;
+                    AddEvent(MatchEventType.Injury, p.Team, p.Index, p.Pos);
+                    _injuryStop = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tras una lesión, el árbitro detiene el juego en cuanto no hay un remate en curso y lo reanuda con balón a tierra
+        /// para el equipo que tenía la posesión (en un área, para el que la defiende). Así hay un parón para hacer el cambio.
+        /// </summary>
+        private void StopForInjury()
+        {
+            if (!_injuryStop || Phase != MatchPhase.Playing || _shotLive)
+            {
+                return;
+            }
+
+            _injuryStop = false;
+            Vec2 at = Pitch.Clamp(Ball.Pos.Horizontal, InjuryRestartMargin);
+            int team = _ballTeam >= 0 ? _ballTeam : 0;
+            for (int t = 0; t < 2; t++)
+            {
+                if (Pitch.InPenaltyArea(Teams[t].DefendedEnd, at))
+                {
+                    team = t;
+                }
+            }
+
+            StartSetPiece(new Restart(RestartKind.FreeKick, team, at));
+        }
+
+        private const float InjuryRestartMargin = 1f;
+
+        /// <summary>
+        /// Cambios de la IA: desde cierto minuto, saca al jugador de campo más cansado (o al lesionado) y mete al suplente
+        /// mejor valorado de su misma zona (o el mejor disponible), respetando cupos y ventanas.
         /// </summary>
         private void AiSubstitutions(float dt)
         {
@@ -285,13 +355,24 @@ namespace Football.Core.MatchCore
                 for (int i = 1; i < t.Players.Length; i++)
                 {
                     MatchPlayer p = t.Players[i];
-                    if (!p.SentOff && !IsPendingOut(team, p.Index) && (tired == null || p.Stamina < tired.Stamina))
+                    if (p.SentOff || IsPendingOut(team, p.Index))
+                    {
+                        continue;
+                    }
+
+                    if (p.Injured)
+                    {
+                        tired = p; // un lesionado sale antes que nadie
+                        break;
+                    }
+
+                    if (tired == null || p.Stamina < tired.Stamina)
                     {
                         tired = p;
                     }
                 }
 
-                bool exhausted = tired != null && tired.Stamina < r.AiSubstitutionStamina;
+                bool exhausted = tired != null && (tired.Injured || tired.Stamina < r.AiSubstitutionStamina);
                 bool rotation = Minute >= r.AiRotationMinute && t.SubstitutionsUsed < r.AiRotationSubstitutions;
                 int bench = tired != null && (exhausted || rotation) ? BestBenchFor(t, tired.Role) : -1;
                 if (bench >= 0)

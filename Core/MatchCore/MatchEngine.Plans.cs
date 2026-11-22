@@ -398,7 +398,7 @@ namespace Football.Core.MatchCore
                     p.OwnerTimer -= dt;
                     if (p.ActionTimer <= 0f && p.OwnerTimer <= 0f)
                     {
-                        p.OwnerTimer = Config.Ai.OwnerDecisionInterval * team.Difficulty.ReactionScale;
+                        p.OwnerTimer = Config.Ai.OwnerDecisionInterval * team.Difficulty.ReactionScale * FatigueReaction(p);
                         OwnerDecide(p);
                     }
 
@@ -413,7 +413,7 @@ namespace Football.Core.MatchCore
                 }
 
                 float jitter = 0.9f + 0.02f * (p.Index % PlayersPerTeam);
-                p.DecisionTimer = interval * team.Difficulty.ReactionScale * jitter;
+                p.DecisionTimer = interval * team.Difficulty.ReactionScale * jitter * FatigueReaction(p);
                 DecideOffBall(p, team);
             }
         }

@@ -102,7 +102,7 @@ namespace Football.Tools.HeadlessSim
             bool printReport)
         {
             var total = new double[2, Columns];
-            double assists = 0, scoredGoals = 0;
+            double assists = 0, scoredGoals = 0, staminaSum = 0, staminaCount = 0, staminaMin = 0, subsUsed = 0;
             MatchReport last = null;
             int failures = 0, unfinished = 0, homeWins = 0, draws = 0, awayWins = 0, outOfBounds = 0;
             double goals = 0, maxMs = 0, totalMs = 0;
@@ -146,12 +146,27 @@ namespace Football.Tools.HeadlessSim
                     MatchReport report = engine.BuildReport();
                     Accumulate(total, report);
                     last = report;
+                    for (int t = 0; t < 2; t++)
+                    {
+                        staminaMin += engine.Teams[t].Players.Min(p => p.Stamina);
+                    }
+
                     foreach (TeamReport tr in report.Teams)
                     {
                         foreach (PlayerReport pr in tr.Players)
                         {
                             assists += pr.Stats.Assists;
                             scoredGoals += pr.Stats.Goals;
+                            if (pr.Started && pr.Minutes >= 1.98f * config.Rules.MinutesPerHalf && pr.Role != Football.Core.Domain.Position.Goalkeeper)
+                            {
+                                staminaSum += pr.StaminaLeft;
+                                staminaCount++;
+                            }
+
+                            if (!pr.Started)
+                            {
+                                subsUsed++;
+                            }
                         }
                     }
                     int g0 = engine.Teams[0].Stats.Goals, g1 = engine.Teams[1].Stats.Goals;
@@ -202,6 +217,8 @@ namespace Football.Tools.HeadlessSim
             Console.WriteLine($"  Goles / xG                     {(total[0, 0] + total[1, 0]) / Math.Max(0.01, total[0, 17] + total[1, 17]),6:F2}");
             Console.WriteLine($"  Remates al arco                {100.0 * (total[0, 2] + total[1, 2]) / Math.Max(1.0, total[0, 1] + total[1, 1]),6:F1}% de los tiros");
             Console.WriteLine($"  Goles con asistencia           {100.0 * assists / Math.Max(1.0, scoredGoals),6:F1}%");
+            Console.WriteLine($"  Resistencia al final           {100.0 * staminaSum / Math.Max(1.0, staminaCount),6:F1}% (jugadores de campo que jugaron todo el partido); la más baja del equipo {100.0 * staminaMin / (2.0 * ok),5:F1}%");
+            Console.WriteLine($"  Cambios por equipo             {subsUsed / (2.0 * ok),6:F2}");
             if (printReport && last != null)
             {
                 PrintReport(last);

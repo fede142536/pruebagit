@@ -95,15 +95,29 @@ namespace Football.Core.MatchCore
         /// <summary>Fracción de la velocidad punta al trotar.</summary>
         public float JogFraction = 0.6f;
         /// <summary>Gasto de resistencia por segundo a máxima velocidad.</summary>
-        public float StaminaDrainSprint = 0.010f;
+        public float StaminaDrainSprint = 0.022f;
         /// <summary>Gasto de resistencia por segundo al trotar.</summary>
-        public float StaminaDrainJog = 0.0012f;
+        public float StaminaDrainJog = 0.00264f;
         /// <summary>Recuperación de resistencia por segundo parado.</summary>
         public float StaminaRecovery = 0.003f;
         /// <summary>Fracción de la velocidad que se conserva con la resistencia agotada.</summary>
         public float StaminaSpeedFloor = 0.82f;
         /// <summary>Variación del gasto de resistencia según el atributo Stamina (±).</summary>
         public float StaminaAttributeSpread = 0.5f;
+        /// <summary>Fracción de la aceleración que se conserva con la resistencia agotada.</summary>
+        public float StaminaAccelerationFloor = 0.8f;
+        /// <summary>Aumento del error de pase, centro y tiro con la resistencia agotada (×(1 + este valor × cansancio)).</summary>
+        public float FatigueErrorWeight = 0.6f;
+        /// <summary>Aumento del tiempo de reacción (decisiones) con la resistencia agotada (×(1 + este valor × cansancio)).</summary>
+        public float FatigueReactionWeight = 0.5f;
+        /// <summary>Minuto a partir del cual puede haber lesiones por cansancio.</summary>
+        public float InjuryStartMinute = 70f;
+        /// <summary>Probabilidad de lesión leve por jugador y minuto de juego, descansado.</summary>
+        public float InjuryBaseRate = 0.0002f;
+        /// <summary>Cuánto multiplica el cansancio esa probabilidad (×(1 + este valor × cansancio²)).</summary>
+        public float InjuryFatigueWeight = 25f;
+        /// <summary>Fracción de la velocidad punta de un jugador lesionado que sigue en el campo.</summary>
+        public float InjurySpeedFactor = 0.7f;
         /// <summary>Distancia mínima entre jugadores.</summary>
         public float SeparationDistance = 0.8f;
         /// <summary>Velocidad de choque entre rivales a partir de la cual el más débil trastabilla (m/s).</summary>
@@ -198,7 +212,7 @@ namespace Football.Core.MatchCore
         /// <summary>Altura del centro de la esfera de alcance del portero (m).</summary>
         public float KeeperReachHeight = 1.0f;
         /// <summary>Probabilidad base de parada cuando el balón entra en el alcance.</summary>
-        public float KeeperSaveBase = 0.90f;
+        public float KeeperSaveBase = 0.80f;
         /// <summary>Variación de la parada según la habilidad del portero (±).</summary>
         public float KeeperSaveSkillSpread = 0.30f;
         /// <summary>Velocidad de tiro a partir de la cual la parada se vuelve más difícil (m/s).</summary>
@@ -708,6 +722,9 @@ namespace Football.Core.MatchCore
         /// <summary>Duración de un paso de simulación (s).</summary>
         public float FixedDeltaTime() => 1f / TickRate;
 
+        /// <summary>Fracción del gasto de resistencia de la cancha grande que se usa en la cancha cerrada.</summary>
+        public const float IndoorStaminaDrainFactor = 0.4f;
+
         /// <summary>
         /// Configuración del modo cancha cerrada (3 contra 3): campo de 40 × 20 m con paredes, porterías de fútbol sala
         /// (3 × 2 m), sin fuera de juego y con las distancias de la IA adaptadas al espacio reducido. Se guarda en
@@ -732,6 +749,9 @@ namespace Football.Core.MatchCore
 
             // De cerca, un tiro fuerte castiga menos al arquero que en cancha grande (portería de 3 m).
             c.Player.KeeperSaveSpeedPenalty = 0.015f;
+            // Tres jugadores que corren todo el partido: gastan menos por segundo para terminar cansados, no agotados.
+            c.Player.StaminaDrainSprint *= IndoorStaminaDrainFactor;
+            c.Player.StaminaDrainJog *= IndoorStaminaDrainFactor;
 
             RulesConfig r = c.Rules;
             r.MinutesPerHalf = 20f;

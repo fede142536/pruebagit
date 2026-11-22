@@ -91,7 +91,9 @@ namespace Football.Core.MatchCore
         /// <summary>Un equipo cambió su mentalidad o su presión.</summary>
         TacticsChanged,
         /// <summary>Cambio de jugador (PlayerIndex = puesto del que entra; el nombre del que sale queda en el equipo).</summary>
-        Substitution
+        Substitution,
+        /// <summary>Un jugador se lesionó (lesión leve: puede seguir, más lento, hasta que lo cambien).</summary>
+        Injury
     }
 
     /// <summary>Evento registrado durante el partido.</summary>

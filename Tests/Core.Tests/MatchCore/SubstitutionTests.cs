@@ -12,7 +12,7 @@ namespace Football.Core.Tests.MatchCore
         private static readonly string[] Positions =
             { "POR", "LI", "DFC", "DFC", "LD", "MC", "MC", "MCO", "EI", "ED", "DC", "POR", "DFC", "MC", "MC", "DC", "ED", "LD", "MCD", "DC" };
 
-        private static MatchEngine NewMatch(ulong seed = 1)
+        internal static MatchEngine NewMatch(ulong seed = 1)
         {
             var config = new MatchConfig();
             TeamDefinition Team(string name) => new TeamDefinition

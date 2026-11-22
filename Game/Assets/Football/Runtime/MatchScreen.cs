@@ -597,6 +597,11 @@ namespace Football.Game
                             ((int)e.Minute + 1) + "'   ENTRA " + _engine.Players[e.PlayerIndex].Name.ToUpperInvariant() + "  ·  SALE " + left.ToUpperInvariant(),
                             e.Team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
                         break;
+                    case MatchEventType.Injury:
+                        // Lesión leve: el árbitro para el juego para que se pueda hacer el cambio.
+                        _plate.Show("LESIÓN", new Color(1f, 0.55f, 0.2f), _engine.Players[e.PlayerIndex].Name.ToUpperInvariant()
+                            + (e.Team == 0 ? "  ·  CÁMBIALO DESDE PLANTEL Y TÁCTICA" : string.Empty), e.Team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
+                        break;
                     case MatchEventType.TacticsChanged:
                         // Solo se anuncia el cambio del rival (el propio lo elige la persona en la pausa) y sin tapar otro aviso.
                         if (e.Team == 1 && _bannerTimer <= 0f)

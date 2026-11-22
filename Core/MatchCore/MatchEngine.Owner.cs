@@ -261,7 +261,7 @@ namespace Football.Core.MatchCore
                     _boxTime = 0f;
                 }
 
-                _boxTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale;
+                _boxTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale * FatigueReaction(p);
             }
             else if (_boxOwner == p)
             {
@@ -393,7 +393,7 @@ namespace Football.Core.MatchCore
                     _holdTime = 0f;
                 }
 
-                _holdTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale;
+                _holdTime += ai.OwnerDecisionInterval * team.Difficulty.ReactionScale * FatigueReaction(p);
             }
             else
             {
@@ -553,6 +553,12 @@ namespace Football.Core.MatchCore
             KickPass(p, point, nearest, false, false, maxSpeed);
         }
 
+        /// <summary>Multiplicador del error de golpeo por cansancio.</summary>
+        private float FatigueError(MatchPlayer p) => 1f + Config.Player.FatigueErrorWeight * p.Fatigue;
+
+        /// <summary>Multiplicador del tiempo de reacción por cansancio.</summary>
+        private float FatigueReaction(MatchPlayer p) => 1f + Config.Player.FatigueReactionWeight * p.Fatigue;
+
         private void KickPass(MatchPlayer p, Vec2 point, MatchPlayer target, bool allowLob, bool human, float maxSpeed, float powerScale = 1f)
         {
             AiConfig ai = Config.Ai;
@@ -563,7 +569,8 @@ namespace Football.Core.MatchCore
             DifficultyProfile diff = Teams[p.Team].Difficulty;
             float pressure = 1f + 0.6f * (1f - MathUtil.Clamp01(NearestOpponentDistance(origin, p.Team) / PressureRange));
             float errorScale = human ? diff.PlayerErrorScale : diff.PassErrorScale;
-            float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.8f * skill) * (1f + distance / 40f) * pressure * errorScale;
+            float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.8f * skill) * (1f + distance / 40f) * pressure * errorScale
+                          * FatigueError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
 
             float loft = 0f;
@@ -607,7 +614,8 @@ namespace Football.Core.MatchCore
             DifficultyProfile diff = team.Difficulty;
             float errorScale = human ? diff.PlayerErrorScale : diff.ShotErrorScale;
             float pressure = 1f + ShotPressureWeight * (1f - MathUtil.Clamp01(NearestOpponentDistance(origin, p.Team) / PressureRange));
-            float sigma = ai.ShotAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.7f * finishing) * pressure * errorScale * (1f + distance / 40f);
+            float sigma = ai.ShotAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.7f * finishing) * pressure * errorScale * (1f + distance / 40f)
+                          * FatigueError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
 
             float speed = MathUtil.Lerp(ai.ShotSpeedMin, ai.ShotSpeedMax, MathUtil.Clamp01(power * (0.55f + 0.45f * p.Skill(AttributeId.Shooting))));
@@ -630,7 +638,8 @@ namespace Football.Core.MatchCore
             float skill = p.Skill(AttributeId.Crossing);
             DifficultyProfile diff = Teams[p.Team].Difficulty;
             float errorScale = human ? diff.PlayerErrorScale : diff.PassErrorScale;
-            float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - CrossErrorSkill * skill) * (1f + distance / 30f) * errorScale;
+            float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - CrossErrorSkill * skill) * (1f + distance / 30f) * errorScale
+                          * FatigueError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
             float loft = ai.CrossLoftDeg * MathUtil.Deg2Rad;
             float speed = Ballistics.LobSpeed(distance, loft, Config.Ball);

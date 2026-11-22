@@ -187,7 +187,7 @@ namespace Football.Game
                 MatchPlayer p = team.Players[i];
                 bool pending = _engine.IsPendingOut(0, p.Index);
                 _field[i].Label.text = "  " + p.Number + "  " + p.Name + "   ·   " + UiTheme.Code(p.Role) + "   ·   resistencia "
-                                       + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "   (SALE)" : string.Empty) + (p.SentOff ? "   (EXPULSADO)" : string.Empty);
+                                       + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "   (SALE)" : string.Empty) + (p.SentOff ? "   (EXPULSADO)" : string.Empty) + (p.Injured ? "   (LESIONADO)" : string.Empty);
                 _field[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : RowColor;
             }
 

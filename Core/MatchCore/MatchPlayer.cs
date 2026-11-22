@@ -91,6 +91,12 @@ namespace Football.Core.MatchCore
         /// <summary>Tiempo hasta la próxima medición del giro (s).</summary>
         public float CutSampleTimer;
 
+        /// <summary>Se lesionó en este partido (sigue en el campo, más lento, hasta que lo cambien).</summary>
+        public bool Injured;
+
+        /// <summary>Cansancio: 0 descansado, 1 sin resistencia.</summary>
+        public float Fatigue => 1f - Stamina;
+
         /// <summary>Tarjetas amarillas recibidas.</summary>
         public int Yellows;
         /// <summary>Expulsado.</summary>

@@ -18,10 +18,11 @@ namespace Football.Core.MatchCore
             Vec2 toTarget = p.Target - p.Pos;
             float distance = toTarget.Length;
 
+            // El cansancio resta velocidad punta y aceleración; una lesión leve, más velocidad.
             float staminaFactor = MathUtil.Lerp(c.StaminaSpeedFloor, 1f, p.Stamina);
-            float topSpeed = p.TopSpeed * staminaFactor;
+            float topSpeed = p.TopSpeed * staminaFactor * (p.Injured ? c.InjurySpeedFactor : 1f);
             float desiredSpeed = topSpeed * MathUtil.Clamp01(p.SpeedFactor);
-            float acceleration = p.Acceleration;
+            float acceleration = p.Acceleration * MathUtil.Lerp(c.StaminaAccelerationFloor, 1f, p.Stamina);
 
             if (p.Diving)
             {
