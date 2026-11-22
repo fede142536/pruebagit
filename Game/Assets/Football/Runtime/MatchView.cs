@@ -18,6 +18,10 @@ namespace Football.Game
         private const float StripeHeight = 0.02f;
         private const int CircleSegments = 40;
         private const int StripeCount = 14;
+        private const float GrassMargin = 2.5f;
+        private static readonly Color TrackColor = new Color(0.07f, 0.3f, 0.78f);   // pista azul vivo
+        private static readonly Color GrassColor = new Color(0.13f, 0.55f, 0.17f);  // verde brillante
+        private static readonly Color StripeColor = new Color(0.2f, 0.67f, 0.25f);  // franjas de corte bien marcadas
         private const float BallVisualSize = 0.3f;
         private static float CameraHeight => ViewTuning.Current.Camera.Height;
         private static float CameraDistance => ViewTuning.Current.Camera.Distance;
@@ -287,14 +291,15 @@ namespace Football.Game
             float halfL = _pitch.HalfLength;
             float halfW = _pitch.HalfWidth;
 
-            // Fuera del campo, un verde más oscuro: el límite se distingue aunque la línea quede lejos.
+            // Pista perimetral azul vivo alrededor del césped (como en los estadios de TV) y una franja de césped hasta las
+            // líneas: el límite del campo se lee al instante aunque la cámara esté lejos.
             var apron = new MeshBuilder();
             apron.Quad(-halfL - 12f, -halfW - 10f, halfL + 12f, halfW + 10f, 0f);
-            AddMesh("Contorno", apron, new Color(0.07f, 0.27f, 0.1f));
+            AddMesh("Pista", apron, TrackColor);
 
             var grass = new MeshBuilder();
-            grass.Quad(-halfL, -halfW, halfL, halfW, StripeHeight * 0.5f);
-            AddMesh("Cesped", grass, new Color(0.11f, 0.42f, 0.15f));
+            grass.Quad(-halfL - GrassMargin, -halfW - GrassMargin, halfL + GrassMargin, halfW + GrassMargin, StripeHeight * 0.5f);
+            AddMesh("Cesped", grass, GrassColor);
 
             var stripes = new MeshBuilder();
             float band = _pitch.Length / StripeCount;
@@ -303,7 +308,7 @@ namespace Football.Game
                 stripes.Quad(-halfL + i * band, -halfW, -halfL + (i + 1) * band, halfW, StripeHeight);
             }
 
-            AddMesh("Franjas", stripes, new Color(0.14f, 0.5f, 0.19f));
+            AddMesh("Franjas", stripes, StripeColor);
 
             var lines = new MeshBuilder();
             Rectangle(lines, -halfL, -halfW, halfL, halfW);
@@ -360,22 +365,24 @@ namespace Football.Game
             Color[] tiers = { new Color(0.32f, 0.12f, 0.14f), new Color(0.14f, 0.2f, 0.38f), new Color(0.3f, 0.3f, 0.34f) }; // tonos de público
             for (int t = 0; t < tiers.Length; t++)
             {
-                float offset = 6f + t * 7f;
+                float offset = TierOffset(t);
                 float height = 2.5f + t * 4f;
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, 7f));
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, TierDepth));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(TierDepth, height, 2f * halfW + 20f));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(TierDepth, height, 2f * halfW + 20f));
             }
 
             if (!walls)
             {
                 BuildCrowd(halfL, halfW, tiers.Length);
+                BuildBenchesAndPhotographers(_pitch.HalfLength, _pitch.HalfWidth);
             }
         }
 
         // ---- Carteles LED ---------------------------------------------------------------------------------------------
 
         private const int LedSegments = 8;
+        private const float GoalGapMargin = 2.5f;
         private const float LedCycleSeconds = 5f;
         private Material _ledMaterial;
         private float _ledClock;
@@ -392,7 +399,7 @@ namespace Football.Game
             for (int i = 0; i < LedSegments; i++)
             {
                 float x0 = -halfL + i * (2f * halfL / LedSegments);
-                float length = 2f * halfL / LedSegments - 0.3f;
+                float length = 2f * halfL / LedSegments; // tramos pegados: una sola cinta continua
                 for (int side = -1; side <= 1; side += 2)
                 {
                     merge.Add(MeshKit.Box, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, side * halfW), Quaternion.identity,
@@ -400,13 +407,15 @@ namespace Football.Game
                 }
             }
 
+            // Detrás de cada arco, también continuos de banda a banda (solo se abre el hueco de la red).
+            float gap = _pitch.GoalHalfWidth + GoalGapMargin;
             for (int end = -1; end <= 1; end += 2)
             {
                 for (int side = -1; side <= 1; side += 2)
                 {
-                    float z = side * (halfW * 0.55f);
+                    float z = side * (gap + halfW) * 0.5f;
                     merge.Add(MeshKit.Box, new Vector3(end * (halfL + 1f), BoardHeight * 0.5f, z), Quaternion.identity,
-                        new Vector3(0.15f, BoardHeight, halfW * 0.8f), Color.white);
+                        new Vector3(0.15f, BoardHeight, halfW - gap), Color.white);
                 }
             }
 
@@ -457,15 +466,17 @@ namespace Football.Game
             _crowd = new GameObject("Publico").transform;
             _crowd.SetParent(_root.transform, false);
             float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
+            // Público multicolor: mayoría con los colores del local, algo del visitante y ropa de todos los días.
             Color[] palette =
             {
-                _homeKit.Shirt, _homeKit.Shirt, _homeKit.Secondary, _homeKit.Shirt, _awayKit.Shirt, new Color(0.9f, 0.9f, 0.9f),
-                new Color(0.15f, 0.15f, 0.18f), new Color(0.55f, 0.4f, 0.3f)
+                _homeKit.Shirt, _homeKit.Shirt, _homeKit.Secondary, _homeKit.Shirt, _awayKit.Shirt, _awayKit.Secondary,
+                new Color(0.92f, 0.92f, 0.92f), new Color(0.15f, 0.15f, 0.18f), new Color(0.55f, 0.4f, 0.3f), new Color(0.85f, 0.2f, 0.2f),
+                new Color(0.2f, 0.45f, 0.85f), new Color(0.95f, 0.8f, 0.2f), new Color(0.3f, 0.65f, 0.35f), new Color(0.9f, 0.5f, 0.2f)
             };
             int seed = 0;
             for (int t = 0; t < tiers; t++)
             {
-                float offset = 6f + t * 7f;
+                float offset = TierOffset(t);
                 float top = 2.5f + t * 4f;
                 // Tribuna lateral (enfrente de la cámara) y las dos cabeceras.
                 CrowdBlock(new Vector3(0f, top, halfW + offset), 2f * halfL + 26f, true, spacing, palette, ref seed);
@@ -473,6 +484,57 @@ namespace Football.Game
                 CrowdBlock(new Vector3(halfL + offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed);
             }
         }
+
+        private const float TierDepth = 5.5f;
+
+        /// <summary>Distancia de cada anillo de tribuna al borde del campo (tribunas cercanas, al estilo de las canchas argentinas).</summary>
+        private static float TierOffset(int tier) => 3.5f + tier * 5.5f;
+
+        /// <summary>
+        /// Lateral de abajo (el de la cámara): bancos de suplentes techados a los dos lados de la mitad de la cancha, con
+        /// suplentes sentados con la camiseta de su equipo, y fotógrafos agachados junto a cada línea de fondo.
+        /// </summary>
+        private void BuildBenchesAndPhotographers(float halfL, float halfW)
+        {
+            float z = -(halfW + BoardDistance + 1.6f);
+            Color roof = new Color(0.08f, 0.16f, 0.4f), back = new Color(0.12f, 0.13f, 0.16f), seat = new Color(0.75f, 0.75f, 0.78f);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = side * BenchOffset;
+                StaticShape("Banco", MeshKit.Box, back, new Vector3(x, 1f, z - 0.9f), new Vector3(BenchLength, 2f, 0.2f));
+                StaticShape("Banco", MeshKit.Box, roof, new Vector3(x, 2.05f, z - 0.2f), new Vector3(BenchLength + 0.4f, 0.12f, 1.8f));
+                StaticShape("Banco", MeshKit.Box, back, new Vector3(x - side * BenchLength * 0.5f, 1f, z - 0.2f), new Vector3(0.15f, 2f, 1.6f));
+                StaticShape("Banco", MeshKit.Box, seat, new Vector3(x, 0.45f, z - 0.55f), new Vector3(BenchLength - 0.4f, 0.12f, 0.5f));
+                Color shirt = side < 0 ? _homeKit.Shirt : _awayKit.Shirt;
+                for (int k = 0; k < BenchPlayers; k++)
+                {
+                    float px = x - BenchLength * 0.4f + k * (BenchLength * 0.8f / (BenchPlayers - 1));
+                    StaticShape("Suplente", MeshKit.Capsule, shirt, new Vector3(px, 0.85f, z - 0.55f), new Vector3(0.42f, 0.62f, 0.32f));
+                    StaticShape("Suplente", MeshKit.Sphere, SkinTones[(k * 3 + side + 4) % SkinTones.Length], new Vector3(px, 1.3f, z - 0.5f),
+                        new Vector3(0.22f, 0.26f, 0.24f));
+                }
+            }
+
+            Color vest = new Color(0.95f, 0.75f, 0.1f), camera = new Color(0.05f, 0.05f, 0.06f);
+            for (int end = -1; end <= 1; end += 2)
+            {
+                for (int k = 0; k < PhotographersPerEnd; k++)
+                {
+                    float pz = -halfW * (0.25f + 0.2f * k);
+                    float px = end * (halfL + 2.6f);
+                    StaticShape("Fotografo", MeshKit.Capsule, vest, new Vector3(px, 0.45f, pz), new Vector3(0.45f, 0.7f, 0.4f));
+                    StaticShape("Fotografo", MeshKit.Sphere, SkinTones[(k + 2) % SkinTones.Length], new Vector3(px, 0.95f, pz), new Vector3(0.22f, 0.25f, 0.22f));
+                    StaticShape("Camara", MeshKit.Box, camera, new Vector3(px - end * 0.3f, 0.95f, pz), new Vector3(0.3f, 0.18f, 0.18f));
+                    StaticShape("Teleobjetivo", MeshKit.Cylinder, camera, new Vector3(px - end * 0.55f, 0.95f, pz), new Vector3(0.12f, 0.35f, 0.12f),
+                        Quaternion.Euler(0f, 0f, 90f));
+                }
+            }
+        }
+
+        private const float BenchOffset = 9f;
+        private const float BenchLength = 6f;
+        private const int BenchPlayers = 5;
+        private const int PhotographersPerEnd = 3;
 
         private void CrowdBlock(Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed)
         {

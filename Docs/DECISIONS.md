@@ -209,3 +209,23 @@ simula. Los seguimientos de ojeadores en curso y las ofertas recibidas sin respo
 **Por qué:** cerrar el ciclo jugable de la carrera sin dependencias nativas nuevas.
 **Consecuencias:** `career.json` nuevo en `Data/balance`; `build-core.sh` copia a `Resources` también `career`, `finance`,
 `management`, `matchsim` y las noticias.
+
+## D-21 · Saque IFAB, ficha del jugador, selector con escudos y controles en arco — Aceptada (pedido del usuario)
+**Decisión:**
+- **Saque del medio:** un solo ejecutante en el círculo, de frente a su arco, y dos receptores atrás (ver `BALANCE.md` §1.11).
+- **Atributos fijos por jugador:** la variación individual de los atributos de los jugadores del archivo se genera con su
+  nombre como semilla (`PlayerCards.RandomFor`), no con la del partido, para que la ficha muestre lo mismo que se juega.
+  Pierna hábil, altura y edad (que `teams.json` no trae) se estiman igual, de forma determinista (D-12).
+- **Ficha:** carta (OVR, puesto, pierna, altura, edad y RIT/TIR/PAS/REG/DEF/FÍS), atributos destacados, mapa de puestos
+  compatibles, físico y moral, y estadísticas (temporada en la carrera; el partido en curso en la pausa; ninguna en el
+  amistoso). Se abre manteniendo presionado un jugador en la alineación y en la pausa, y tocándolo en el Plantel de la
+  carrera. Las estadísticas de temporada se guardan (migración 9 y archivo de partida versión 2; la versión 1 se sigue leyendo).
+- **Escudo procedural** (`ClubCrest`): silueta de escudo, diseño de la camiseta titular, colores y siglas; ningún escudo real.
+- **Presentación previa** (solo 11v11): toma panorámica de cada mitad, pizarra táctica sobre el césped con las líneas del
+  dibujo y fichas flotando sobre los titulares (silueta, OVR, puesto, flecha de forma y apellido); placa con escudo; SALTAR.
+- **Controles:** arco de 4 botones abajo a la derecha (PASE, FILTRADO, TIRO/DESPEJE, ESPRINT); sin balón, las mismas casillas
+  son PRESIÓN, 2ª MARCA y BARRER. CAMBIAR, CENTRO y ARQUERO quedan como botones chicos sobre el arco. El FILTRADO ya no es
+  opcional en Ajustes (siempre está en el arco). DESPEJE reemplaza a TIRO en el campo propio.
+- **Estadio:** pista perimetral azul, césped más vivo, LED continuos, tribunas más cerca, bancos de suplentes y fotógrafos
+  en el lateral de la cámara. **Figura:** cabeza al 85 % y cuello más largo (≈7,5 cabezas), cejas, boca y franja en las medias.
+**Consecuencias:** los partidos amistosos con equipos del archivo ya no varían los atributos de un partido a otro.

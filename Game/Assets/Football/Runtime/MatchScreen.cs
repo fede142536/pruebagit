@@ -94,9 +94,12 @@ namespace Football.Game
             Color dark = new Color(0.05f, 0.06f, 0.09f, 0.85f);
             UiKit.Panel(board, "Fondo", new Vector2(ScoreboardWidth * 0.5f, ScoreboardHeight * 0.5f), new Vector2(ScoreboardWidth, ScoreboardHeight), dark);
             UiKit.Panel(board, "FondoReloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, ScoreboardHeight), new Color(0.75f, 0.12f, 0.12f, 0.9f));
-            _homeName = UiKit.Label(board, "Local", new Vector2(70f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), string.Empty, 30, Color.white);
-            _score = UiKit.Label(board, "Goles", new Vector2(190f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "0 - 0", 34, Color.white);
-            _awayName = UiKit.Label(board, "Visitante", new Vector2(310f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), string.Empty, 30, Color.white);
+            // Marcador compacto: escudo, sigla, goles, sigla, escudo y reloj.
+            _homeCrest = new ClubCrest(board, new Vector2(30f, ScoreboardHeight * 0.5f), ScoreboardHeight - 8f);
+            _homeName = UiKit.Label(board, "Local", new Vector2(115f, ScoreboardHeight * 0.5f), new Vector2(110f, 50f), string.Empty, 30, Color.white);
+            _score = UiKit.Label(board, "Goles", new Vector2(240f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "0 - 0", 34, Color.white);
+            _awayName = UiKit.Label(board, "Visitante", new Vector2(365f, ScoreboardHeight * 0.5f), new Vector2(110f, 50f), string.Empty, 30, Color.white);
+            _awayCrest = new ClubCrest(board, new Vector2(450f, ScoreboardHeight * 0.5f), ScoreboardHeight - 8f);
             _clock = UiKit.Label(board, "Reloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "00:00", 28, Color.white);
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
@@ -312,6 +315,8 @@ namespace Football.Game
             _banner.text = string.Empty;
             _homeName.text = ShortName(homeTeam);
             _awayName.text = ShortName(awayTeam);
+            _homeCrest.Set(homeTeam);
+            _awayCrest.Set(awayTeam);
             _warning.text = _view.BuildErrors.Length > 0
                 ? "Algo no se pudo dibujar (manda una captura de esto):\n" + _view.BuildErrors
                 : string.Empty;
@@ -978,7 +983,8 @@ namespace Football.Game
             return false;
         }
 
-        private const float ScoreboardWidth = 500f;
+        private const float ScoreboardWidth = 600f;
+        private ClubCrest _homeCrest, _awayCrest;
         private const float ScoreboardHeight = 58f;
         private static float ScoreboardMargin => ViewTuning.Current.Hud.ScoreboardMargin;
 

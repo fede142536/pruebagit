@@ -35,17 +35,20 @@ namespace Football.Game
         private static float BigScale => ViewTuning.Current.Controls.BigScale;
         private const int NoPointer = -1;
 
-        // Posiciones (para diestros) y tamaños de las cuatro casillas de acción y del esprint.
-        // Posiciones pensadas para un ancho de 1920: los botones se miden desde el borde derecho real (ver ToScreenEdge).
-        private static readonly Vector2 SlotA = new Vector2(1560f, 250f);
-        private static readonly Vector2 SlotB = new Vector2(1775f, 370f);
-        private static readonly Vector2 SlotC = new Vector2(1585f, 490f);
-        private static readonly Vector2 SlotD = new Vector2(1800f, 580f);
-        private static readonly Vector2 SprintSlot = new Vector2(1345f, 160f);
-        private static readonly Vector2 SlotE = new Vector2(1610f, 700f); // segunda marca, sobre los botones de defensa
-        // Un 15 % más chicos que la primera versión y translúcidos para no tapar a los jugadores.
-        private const float SizeA = 160f, SizeB = 150f, SizeC = 124f, SizeD = 115f, SizeSprint = 128f;
-        private const float ButtonAlpha = 0.55f;
+        // Arco de cuatro botones abajo a la derecha, estilo eFootball (para diestros; los zurdos lo ven en espejo):
+        // ESPRINT abajo a la izquierda del arco, PASE, FILTRADO arriba y TIRO/DESPEJE en la esquina. Sin balón, las mismas
+        // casillas son PRESIÓN, 2ª MARCA y BARRER. CAMBIAR, CENTRO y ARQUERO son botones chicos por encima del arco.
+        // Posiciones pensadas para un ancho de 1920: los botones se miden desde el borde derecho real.
+        private static readonly Vector2 SlotA = new Vector2(1600f, 175f);     // PASE / PRESIÓN
+        private static readonly Vector2 SlotB = new Vector2(1790f, 265f);     // TIRO o DESPEJE / BARRER
+        private static readonly Vector2 SlotC = new Vector2(1660f, 395f);     // FILTRADO / 2ª MARCA
+        private static readonly Vector2 SlotD = new Vector2(1835f, 470f);     // CENTRO / CAMBIAR
+        private static readonly Vector2 SprintSlot = new Vector2(1430f, 110f); // ESPRINT
+        private static readonly Vector2 SlotE = new Vector2(1840f, 590f);     // ARQUERO
+        private const float SizeA = 150f, SizeB = 150f, SizeC = 122f, SizeD = 96f, SizeSprint = 116f, SizeE = 86f;
+        private const float ButtonAlpha = 0.85f;      // opacidad del borde luminoso (el interior es translúcido)
+        private const float InnerAlpha = 0.32f;
+        private const float RingWidth = 7f;
 
         private sealed class Control
         {
@@ -106,18 +109,18 @@ namespace Football.Game
         {
             _canvas = canvas;
             Transform t = canvas.transform;
-            _pass = Make(t, "Pase", "PASE", new Color(0.15f, 0.65f, 0.25f, ButtonAlpha), SlotA, SizeA);
-            _shoot = Make(t, "Tiro", "TIRO", new Color(0.85f, 0.15f, 0.15f, ButtonAlpha), SlotB, SizeB);
-            _clear = Make(t, "Despejar", "DESPEJE", new Color(0.55f, 0.4f, 0.2f, ButtonAlpha), SlotC, SizeC);
-            _through = Make(t, "Filtrado", "FILTRO", new Color(0.9f, 0.75f, 0.1f, ButtonAlpha), SlotC, SizeC);
-            _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, ButtonAlpha), SlotD, SizeD);
-            _slide = Make(t, "Barrer", "BARRER", new Color(0.85f, 0.3f, 0.1f, ButtonAlpha), SlotA, SizeA);
-            _press = Make(t, "Presionar", "PRESIÓN", new Color(0.2f, 0.55f, 0.85f, ButtonAlpha), SlotB, SizeB);
-            _secondPress = Make(t, "SegundaMarca", "2ª MARCA", new Color(0.15f, 0.4f, 0.65f, ButtonAlpha), SlotE, SizeD);
-            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, ButtonAlpha), SlotC, SizeC);
-            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, ButtonAlpha), SlotD, SizeD);
-            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, ButtonAlpha), SprintSlot, SizeSprint);
-            _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 90f);
+            _pass = Make(t, "Pase", "PASE", new Color(0.3f, 0.95f, 0.45f, ButtonAlpha), SlotA, SizeA, Icon.Pass);
+            _shoot = Make(t, "Tiro", "TIRO", new Color(1f, 0.32f, 0.3f, ButtonAlpha), SlotB, SizeB, Icon.Shot);
+            _clear = Make(t, "Despejar", "DESPEJE", new Color(1f, 0.6f, 0.25f, ButtonAlpha), SlotB, SizeB, Icon.Clear);
+            _through = Make(t, "Filtrado", "FILTRADO", new Color(1f, 0.85f, 0.2f, ButtonAlpha), SlotC, SizeC, Icon.Through);
+            _cross = Make(t, "Centro", "CENTRO", new Color(0.35f, 0.6f, 1f, ButtonAlpha), SlotD, SizeD, Icon.Cross);
+            _press = Make(t, "Presionar", "PRESIÓN", new Color(0.35f, 0.75f, 1f, ButtonAlpha), SlotA, SizeA, Icon.Press);
+            _slide = Make(t, "Barrer", "BARRER", new Color(1f, 0.45f, 0.2f, ButtonAlpha), SlotB, SizeB, Icon.Slide);
+            _secondPress = Make(t, "SegundaMarca", "2ª MARCA", new Color(0.3f, 0.6f, 0.95f, ButtonAlpha), SlotC, SizeC, Icon.SecondPress);
+            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.75f, 0.5f, 1f, ButtonAlpha), SlotD, SizeD, Icon.Switch);
+            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.7f, 0.95f, 0.3f, ButtonAlpha), SlotE, SizeE, Icon.None);
+            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.85f, 0.88f, 0.95f, ButtonAlpha), SprintSlot, SizeSprint, Icon.Sprint);
+            _pause = Make(t, "Pausa", "II", new Color(1f, 1f, 1f, 0.7f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 84f, Icon.None);
             _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _secondPress, _switch, _keeper, _sprint, _pause };
             _passBar = ChargeBar(_pass);
             _shootBar = ChargeBar(_shoot);
@@ -145,7 +148,7 @@ namespace Football.Game
         /// <summary>Barra amarilla dentro del botón que muestra la carga de potencia mientras se mantiene pulsado.</summary>
         private static RectTransform ChargeBar(Control c)
         {
-            Image bar = UiKit.Panel(c.Ui.Root.transform, "Carga", new Vector2(c.Size * 0.5f, c.Size * 0.22f),
+            Image bar = UiKit.Panel(c.Ui.Root.transform, "Carga", new Vector2(c.Size * 0.5f, c.Size * 0.1f),
                 new Vector2(0f, ChargeBarHeight), new Color(1f, 0.85f, 0.2f, 0.95f));
             return (RectTransform)bar.transform;
         }
@@ -159,10 +162,101 @@ namespace Football.Game
             }
         }
 
-        private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size)
+        private enum Icon { None, Pass, Through, Shot, Clear, Cross, Sprint, Press, SecondPress, Slide, Switch }
+
+        /// <summary>
+        /// Botón circular translúcido con borde luminoso: el fondo del botón es el aro de color y un círculo oscuro
+        /// translúcido lo rellena; encima, un ícono vectorial armado con paneles y el nombre chico debajo.
+        /// </summary>
+        private static Control Make(Transform parent, string name, string text, Color color, Vector2 slot, float size, Icon icon)
         {
-            UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size >= 150f ? 30 : 24, color, true);
+            UiButton button = UiKit.Button(parent, name, slot, new Vector2(size, size), text, size >= 140f ? 22 : 18, color, true);
+            Transform root = button.Root.transform;
+            var center = new Vector2(size * 0.5f, size * 0.5f);
+            UiKit.Panel(root, "Interior", center, new Vector2(size - RingWidth * 2f, size - RingWidth * 2f), new Color(0.02f, 0.04f, 0.08f, InnerAlpha), true);
+            if (icon != Icon.None)
+            {
+                BuildIcon(root, icon, center + new Vector2(0f, size * 0.1f), size * 0.36f, color);
+                button.Label.rectTransform.anchoredPosition = center - new Vector2(0f, size * 0.27f);
+            }
+
+            button.Label.transform.SetAsLastSibling(); // el texto, por encima del interior
             return new Control { Ui = button, Slot = slot, Size = size, BaseColor = color }; // color base: para cambiar la opacidad
+        }
+
+        /// <summary>Íconos vectoriales simples (flechas, balón, chevrones, aros) hechos con paneles: sin texturas.</summary>
+        private static void BuildIcon(Transform root, Icon icon, Vector2 c, float s, Color color)
+        {
+            Color ink = new Color(color.r, color.g, color.b, 1f);
+            switch (icon)
+            {
+                case Icon.Pass:
+                    Arrow(root, c, s, 0f, ink);
+                    break;
+                case Icon.Through:
+                    Arrow(root, c + new Vector2(0f, -s * 0.2f), s * 0.8f, 45f, ink);
+                    Bar(root, c + new Vector2(-s * 0.35f, s * 0.35f), new Vector2(s * 0.5f, s * 0.08f), 45f, ink); // línea rival que se rompe
+                    break;
+                case Icon.Shot:
+                    UiKit.Panel(root, "Balon", c + new Vector2(s * 0.25f, 0f), new Vector2(s * 0.55f, s * 0.55f), ink, true);
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        Bar(root, c + new Vector2(-s * 0.3f, i * s * 0.18f), new Vector2(s * 0.4f, s * 0.07f), 0f, ink);
+                    }
+
+                    break;
+                case Icon.Clear:
+                    Arrow(root, c, s, 90f, ink);
+                    break;
+                case Icon.Cross:
+                    Arrow(root, c, s * 0.9f, 60f, ink);
+                    break;
+                case Icon.Sprint:
+                    for (int i = -1; i <= 1; i += 2)
+                    {
+                        Chevron(root, c + new Vector2(i * s * 0.18f, 0f), s * 0.5f, ink);
+                    }
+
+                    break;
+                case Icon.Press:
+                    UiKit.Panel(root, "Aro", c, new Vector2(s * 0.9f, s * 0.9f), ink, true);
+                    UiKit.Panel(root, "AroHueco", c, new Vector2(s * 0.62f, s * 0.62f), new Color(0.02f, 0.04f, 0.08f, 1f), true);
+                    UiKit.Panel(root, "Centro", c, new Vector2(s * 0.28f, s * 0.28f), ink, true);
+                    break;
+                case Icon.SecondPress:
+                    UiKit.Panel(root, "Uno", c + new Vector2(-s * 0.22f, 0f), new Vector2(s * 0.4f, s * 0.4f), ink, true);
+                    UiKit.Panel(root, "Dos", c + new Vector2(s * 0.26f, 0f), new Vector2(s * 0.4f, s * 0.4f), ink, true);
+                    break;
+                case Icon.Slide:
+                    Bar(root, c, new Vector2(s * 1.0f, s * 0.16f), -25f, ink);
+                    UiKit.Panel(root, "Pie", c + new Vector2(s * 0.45f, -s * 0.22f), new Vector2(s * 0.25f, s * 0.25f), ink, true);
+                    break;
+                case Icon.Switch:
+                    Arrow(root, c + new Vector2(0f, s * 0.18f), s * 0.7f, 0f, ink);
+                    Arrow(root, c - new Vector2(0f, s * 0.18f), s * 0.7f, 180f, ink);
+                    break;
+            }
+        }
+
+        private static void Arrow(Transform root, Vector2 c, float s, float degrees, Color ink)
+        {
+            float rad = degrees * Mathf.Deg2Rad;
+            var dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            Bar(root, c - dir * s * 0.12f, new Vector2(s * 0.75f, s * 0.14f), degrees, ink);
+            Image head = UiKit.Panel(root, "Punta", c + dir * s * 0.28f, new Vector2(s * 0.36f, s * 0.36f), ink);
+            head.transform.localRotation = Quaternion.Euler(0f, 0f, degrees + 45f);
+        }
+
+        private static void Chevron(Transform root, Vector2 c, float s, Color ink)
+        {
+            Bar(root, c + new Vector2(0f, s * 0.2f), new Vector2(s * 0.6f, s * 0.16f), -45f, ink);
+            Bar(root, c - new Vector2(0f, s * 0.2f), new Vector2(s * 0.6f, s * 0.16f), 45f, ink);
+        }
+
+        private static void Bar(Transform root, Vector2 c, Vector2 size, float degrees, Color ink)
+        {
+            Image bar = UiKit.Panel(root, "Trazo", c, size, ink);
+            bar.transform.localRotation = Quaternion.Euler(0f, 0f, degrees);
         }
 
         /// <summary>Coloca los botones según las preferencias.</summary>
@@ -237,10 +331,11 @@ namespace Football.Game
         {
             bool attack = _enabled && _hasBall;
             bool defense = _enabled && !_hasBall;
+            // Arco de cuatro: PASE, FILTRADO, TIRO (DESPEJE en campo propio) y ESPRINT; sin balón, PRESIÓN, 2ª MARCA y BARRER.
             _pass.Ui.SetVisible(attack);
-            _shoot.Ui.SetVisible(attack);
-            _clear.Ui.SetVisible(attack && (_ownHalf || !_showThrough));
-            _through.Ui.SetVisible(attack && !_ownHalf && _showThrough);
+            _shoot.Ui.SetVisible(attack && !_ownHalf);
+            _clear.Ui.SetVisible(attack && _ownHalf);
+            _through.Ui.SetVisible(attack);
             _cross.Ui.SetVisible(attack && (_showCross || _forceCross));
             _slide.Ui.SetVisible(defense);
             _press.Ui.SetVisible(defense);

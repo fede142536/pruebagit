@@ -79,15 +79,15 @@ namespace Football.Game
 
         private static readonly Ring[] ThighRings =
         {
-            Ring.Pole(0.03f), new Ring(0.0f, 0.085f, 0.085f, 0.085f), new Ring(-0.08f, 0.088f, 0.097f, 0.085f),
+            Ring.Pole(0.03f), new Ring(0.0f, 0.085f, 0.085f, 0.085f), new Ring(-0.08f, 0.089f, 0.103f, 0.086f),
             new Ring(-0.18f, 0.081f, 0.092f, 0.078f), new Ring(-0.3f, 0.068f, 0.076f, 0.065f), new Ring(-0.39f, 0.056f, 0.06f, 0.055f),
-            new Ring(-0.43f, 0.052f, 0.06f, 0.05f), Ring.Pole(-0.46f)
+            new Ring(-0.43f, 0.052f, 0.064f, 0.05f), Ring.Pole(-0.46f)
         };
 
         private static readonly Ring[] ShinRings =
         {
-            Ring.Pole(0.02f), new Ring(0.0f, 0.052f, 0.055f, 0.05f), new Ring(-0.06f, 0.055f, 0.05f, 0.07f),
-            new Ring(-0.14f, 0.054f, 0.048f, 0.068f), new Ring(-0.25f, 0.044f, 0.042f, 0.048f), new Ring(-0.35f, 0.032f, 0.033f, 0.032f),
+            Ring.Pole(0.02f), new Ring(0.0f, 0.052f, 0.055f, 0.05f), new Ring(-0.06f, 0.056f, 0.05f, 0.075f),
+            new Ring(-0.14f, 0.054f, 0.048f, 0.071f), new Ring(-0.25f, 0.044f, 0.042f, 0.048f), new Ring(-0.35f, 0.032f, 0.033f, 0.032f),
             new Ring(-0.4f, 0.03f, 0.031f, 0.03f), Ring.Pole(-0.425f)
         };
 
@@ -110,7 +110,7 @@ namespace Football.Game
         private static readonly Ring[] SleeveRings =
         {
             Ring.Pole(0.062f), new Ring(0.052f, 0.064f, 0.064f, 0.064f), new Ring(-0.02f, 0.069f, 0.069f, 0.066f),
-            new Ring(-0.12f, 0.061f, 0.064f, 0.058f), Ring.Pole(-0.126f)
+            new Ring(-0.12f, 0.066f, 0.068f, 0.063f), Ring.Pole(-0.126f)
         };
 
         private static readonly Ring[] ForearmRings =
@@ -166,6 +166,8 @@ namespace Football.Game
         public static Mesh Shin => Get("shin", () => Sculpt(ShinRings, Sides));
         /// <summary>Media: la pierna apenas más gruesa, de debajo de la rodilla al tobillo (rodilla).</summary>
         public static Mesh Sock => Get("sock", () => Sculpt(Slice(ShinRings, -0.07f, -0.405f), Sides, 1.06f, 0.002f));
+        /// <summary>Franja de la media, abajo de la rodilla (en el color secundario de la equipación).</summary>
+        public static Mesh SockBand => Get("sockband", () => Sculpt(Slice(ShinRings, -0.085f, -0.125f), Sides, 1.09f, 0.003f));
         /// <summary>Botín estilizado con puntera, caña y suela plana (girado en el modelo).</summary>
         public static Mesh Boot => Get("boot", () => Sculpt(BootRings, Sides));
         /// <summary>Brazo con deltoides y bíceps (hombro).</summary>

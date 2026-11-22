@@ -244,6 +244,23 @@ del entretiempo de la IA, gritos, arqueros por tiempo de reacción, fatiga y les
 | Resistencia al final (90') / la más baja | 71 % / 40 % | — |
 | Tiempo por partido | 71 ms (máximo 411 ms) | — |
 
+### 1.11 Saque del medio con un solo ejecutante (22/11/2026)
+
+Regla IFAB actual: un único jugador en el círculo, del lado rival del balón y de frente a su propio arco; nadie más (de ningún
+equipo) dentro del círculo, todos en su campo y dos compañeros ofrecidos para el pase atrás (11 m detrás de la línea, a 7 m
+del centro). El saque humano se apunta hacia el propio campo (cono de `KickoffAimDeg` alrededor de «atrás»).
+
+| Medición | Antes | Después |
+|---|---|---|
+| 11v11, 500 partidos (`--matches 500 --seed 1`): goles / pases completados / goles÷xG | 2,69 / 85,6 % / 0,98 | 2,64 / 86,2 % / 0,99 |
+| Potrero 3v3, 200 partidos: goles por partido | 6,17 | 6,09 |
+| Posesiones de más de 1,5 s en el área (120 partidos) | 11,6 % | 13,3 % |
+
+Tres pruebas dependían de la trayectoria exacta de los partidos sembrados y se rehicieron más robustas, sin buscar semillas:
+la de «dribles en el área» mide ahora 120 partidos con un umbral del 15 % (la tasa real estaba en 11,6 %, a un punto del
+umbral anterior de 12,5 %); la de «Leyenda contra Principiante» pide que el Principiante haga algún gol (ganar los 60 es
+posible); la del «cambio por lesión» mira el primer cambio *después* de la lesión.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

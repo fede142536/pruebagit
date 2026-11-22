@@ -158,7 +158,9 @@ namespace Football.Game
             Part(_body, "Pantalon", AnatomyKit.Pelvis, Tag(look.Shorts, FabricId), Vector3.zero, Vector3.one);
             Part(_body, "Cuello", AnatomyKit.Neck, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
 
-            _head = Pivot(_body, "Cabeza", new Vector3(0f, ShoulderHeight + 0.08f, 0f));
+            // Cabeza algo más chica y cuello más largo: figura esbelta de unas 7,5 cabezas de alto.
+            _head = Pivot(_body, "Cabeza", new Vector3(0f, ShoulderHeight + HeadLift, 0f));
+            _head.localScale = new Vector3(HeadScale, HeadScale, HeadScale);
             Color skin = Tag(look.Skin, SkinId);
             Part(_head, "Craneo", AnatomyKit.Skull, skin, Vector3.zero, Vector3.one);
             Part(_head, "Nariz", AnatomyKit.Nose, skin, new Vector3(0f, 0f, 0.1f), Vector3.one);
@@ -166,8 +168,11 @@ namespace Football.Game
             {
                 Part(_head, "Oreja", MeshKit.Sphere, skin, new Vector3(side * 0.103f, 0.14f, -0.008f), new Vector3(0.024f, 0.058f, 0.04f));
                 Part(_head, "Ojo", MeshKit.Sphere, Tag(EyeColor, SkinId), new Vector3(side * 0.036f, 0.158f, 0.103f), new Vector3(0.02f, 0.014f, 0.01f));
+                Part(_head, "Ceja", MeshKit.Box, Tag(look.Hair, HairId), new Vector3(side * 0.037f, 0.178f, 0.108f), new Vector3(0.038f, 0.008f, 0.01f),
+                    true, Quaternion.Euler(0f, 0f, side * -8f));
             }
 
+            Part(_head, "Boca", MeshKit.Box, Tag(MouthColor, SkinId), new Vector3(0f, 0.075f, 0.104f), new Vector3(0.04f, 0.007f, 0.01f));
             AddHair(_head, look);
 
             _legL = Leg(_body, "PiernaIzq", -HipOffset, look, out _kneeL);
@@ -205,6 +210,9 @@ namespace Football.Game
         }
 
         private static readonly Color EyeColor = new Color(0.07f, 0.05f, 0.04f);
+        private static readonly Color MouthColor = new Color(0.45f, 0.22f, 0.2f);
+        private const float HeadScale = 0.85f;
+        private const float HeadLift = 0.11f;
 
         /// <summary>Pierna: muslo con cuádriceps y el pantalón encima; pierna con gemelo, media y botín con suela y lengüeta.</summary>
         private Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
@@ -215,6 +223,7 @@ namespace Football.Game
             knee = Pivot(hip, "Rodilla", new Vector3(0f, -ThighLength, 0f));
             Part(knee, "Pierna", AnatomyKit.Shin, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
             Part(knee, "Media", AnatomyKit.Sock, Tag(look.Socks, FabricId), Vector3.zero, Vector3.one);
+            Part(knee, "FranjaMedia", AnatomyKit.SockBand, Tag(SockStripe(look), FabricId), Vector3.zero, Vector3.one);
             Color boot = Tag(look.Boots, BootId);
             Part(knee, "Botin", AnatomyKit.Boot, boot, new Vector3(0f, -ShinLength - 0.025f, 0.045f), Vector3.one, true,
                 Quaternion.Euler(90f, 0f, 0f));
@@ -226,6 +235,14 @@ namespace Football.Game
         }
 
         private const float SoleLighten = 0.65f;
+
+        /// <summary>Color de la franja de la media: el secundario de la camiseta, o uno que contraste si es igual a la media.</summary>
+        private static Color SockStripe(PlayerLook look)
+        {
+            Color c = look.Secondary;
+            float diff = Mathf.Abs(c.r - look.Socks.r) + Mathf.Abs(c.g - look.Socks.g) + Mathf.Abs(c.b - look.Socks.b);
+            return diff > 0.3f ? c : (look.Socks.grayscale > 0.5f ? new Color(0.1f, 0.1f, 0.12f) : Color.white);
+        }
 
         /// <summary>Brazo: deltoides y bíceps con la manga encima, codo, antebrazo y mano con pulgar; el arquero lleva guantes.</summary>
         private Transform Arm(Transform body, string name, float x, PlayerLook look, out Transform elbow)
