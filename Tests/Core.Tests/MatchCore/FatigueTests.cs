@@ -122,7 +122,7 @@ namespace Football.Core.Tests.MatchCore
             }
 
             hurt.Stamina = 0.95f;
-            hurt.Injured = true;
+            e.TestInjure(hurt); // el mismo camino que una lesión del partido (el árbitro para el juego)
             while (!e.IsFinished && e.Teams[1].Departed.Count == 0 && guard++ < 100000)
             {
                 e.Tick();

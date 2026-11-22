@@ -317,6 +317,13 @@
     "TargetManDrop": 0.04,
     "RunnerAdvance": 0.08
   },
+  "Coach": {
+    "ShoutSeconds": 45,
+    "ShoutStep": 0.3,
+    "WasteTimeDelayFactor": 1.6,
+    "TalkErrorStep": 0.08,
+    "TalkPressStep": 0.1
+  },
   "Difficulties": [
     {
       "Name": "Beginner",

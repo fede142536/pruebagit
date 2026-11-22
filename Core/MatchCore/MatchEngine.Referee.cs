@@ -103,7 +103,8 @@ namespace Football.Core.MatchCore
             Ball.PlaceAt(restart.Position);
             _prevBallPos = Ball.Pos;
             Phase = MatchPhase.SetPiece;
-            _phaseTimer = RestartDelayFor(restart.Kind);
+            _phaseTimer = RestartDelayFor(restart.Kind)
+                          * (Teams[restart.Team].Shout == TouchlineShout.WasteTime ? Config.Coach.WasteTimeDelayFactor : 1f);
             _takerTimeout = Config.Rules.TakerTimeout;
             _humanRestartTimer = 0f;
 
@@ -272,6 +273,7 @@ namespace Football.Core.MatchCore
         }
 
         private bool _restartKick;
+        private const float NearPostDepth = 2.5f;
 
         /// <summary>Quién saca ahora (durante un saque), o null.</summary>
         public MatchPlayer Taker => Phase == MatchPhase.SetPiece ? _taker : null;
@@ -445,6 +447,24 @@ namespace Football.Core.MatchCore
                 {
                     float goalX = team.AttackDirection * (Pitch.HalfLength - CornerTargetDepth);
                     var target = new Vec2(goalX, _rng.NextGaussian(0f, Config.Ai.CrossTargetSpread));
+                    MatchPlayer shortOption = team.Corners == CornerRoutine.Short ? ShortCornerPlayer(team) : null;
+                    if (shortOption != null)
+                    {
+                        // Córner corto: pase al compañero que se acercó.
+                        KickPass(t, shortOption.Pos, shortOption, false, false, Config.Ai.PassMaxSpeed);
+                        break;
+                    }
+
+                    if (team.Corners == CornerRoutine.NearPost)
+                    {
+                        float postSide = at.Y >= 0f ? 1f : -1f;
+                        target = new Vec2(team.AttackDirection * (Pitch.HalfLength - NearPostDepth), postSide * Pitch.GoalHalfWidth);
+                    }
+                    else if (team.Corners == CornerRoutine.PenaltySpot)
+                    {
+                        target = new Vec2(team.AttackDirection * (Pitch.HalfLength - Config.Pitch.PenaltySpotDistance), 0f);
+                    }
+
                     KickCross(t, target, false, at.Y > 0f ? -CornerSpin : CornerSpin);
                     break;
                 }

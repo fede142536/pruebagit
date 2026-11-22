@@ -273,6 +273,22 @@ namespace Football.Core.MatchCore
         public float RunnerAdvance = 0.08f;
     }
 
+    /// <summary>Director técnico en vivo: gritos desde el banco y charla del entretiempo.</summary>
+    [Serializable]
+    public sealed class CoachConfig
+    {
+        /// <summary>Cuánto dura un grito táctico (s de simulación; el partido dura 6 min).</summary>
+        public float ShoutSeconds = 45f;
+        /// <summary>Tamaño del ajuste de estilo de un grito (fracción en cada eje que toca).</summary>
+        public float ShoutStep = 0.3f;
+        /// <summary>Saques más lentos con «perder tiempo» (× la espera normal).</summary>
+        public float WasteTimeDelayFactor = 1.6f;
+        /// <summary>Menos error de pase y tiro por cada punto de efecto de la charla (positivo = mejor).</summary>
+        public float TalkErrorStep = 0.08f;
+        /// <summary>Más intensidad de presión por cada punto de efecto de la charla.</summary>
+        public float TalkPressStep = 0.1f;
+    }
+
     /// <summary>Reglas, duración y árbitro.</summary>
     [Serializable]
     public sealed class RulesConfig
@@ -678,6 +694,8 @@ namespace Football.Core.MatchCore
         public ReportConfig Report = new ReportConfig();
         /// <summary>Roles individuales.</summary>
         public RoleConfig Roles = new RoleConfig();
+        /// <summary>Director técnico en vivo.</summary>
+        public CoachConfig Coach = new CoachConfig();
 
         /// <summary>Niveles de dificultad: Principiante, Amateur, Profesional, Mundial, Leyenda.</summary>
         public DifficultyProfile[] Difficulties =

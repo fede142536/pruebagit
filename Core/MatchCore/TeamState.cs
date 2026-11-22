@@ -57,6 +57,20 @@ namespace Football.Core.MatchCore
         public MatchPlayer SecondPresser;
         /// <summary>Rol elegido para cada puesto de la formación (sigue al puesto, no al jugador: el que entra lo hereda).</summary>
         public readonly PlayerDuty[] Duties;
+        /// <summary>Formación sin balón (null = la misma que con balón).</summary>
+        public Formation DefensiveFormation;
+        /// <summary>Jugada de córner a favor.</summary>
+        public CornerRoutine Corners;
+        /// <summary>Marcaje en las pelotas paradas en contra.</summary>
+        public SetPieceMarking Marking;
+        /// <summary>Grito táctico en curso.</summary>
+        public TouchlineShout Shout;
+        /// <summary>Tiempo que le queda al grito (s).</summary>
+        public float ShoutTimer;
+        /// <summary>Efecto de la charla del entretiempo (−1 mal, 0 nada, +1 muy bien).</summary>
+        public float TalkBoost;
+        /// <summary>Ya se dio la charla de este entretiempo.</summary>
+        public bool TalkGiven;
         /// <summary>Jugadores que salieron por un cambio (sus estadísticas siguen contando en el informe).</summary>
         public readonly List<MatchPlayer> Departed = new List<MatchPlayer>(8);
         /// <summary>Último compañero que dio un pase completado (para las asistencias); null tras perder el balón.</summary>
@@ -105,6 +119,11 @@ namespace Football.Core.MatchCore
             Bench = setup.Bench ?? new PlayerMatchView[0];
             BenchUsed = new bool[Bench.Length];
             Duties = new PlayerDuty[setup.Players.Length];
+            DefensiveFormation = setup.DefensiveFormation != null && setup.DefensiveFormation.Slots.Length == setup.Players.Length
+                ? setup.DefensiveFormation
+                : null;
+            Corners = setup.Corners;
+            Marking = setup.Marking;
             if (setup.Duties != null)
             {
                 System.Array.Copy(setup.Duties, Duties, System.Math.Min(setup.Duties.Length, Duties.Length));

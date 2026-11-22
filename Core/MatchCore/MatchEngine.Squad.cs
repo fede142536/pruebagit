@@ -274,6 +274,16 @@ namespace Football.Core.MatchCore
         private float _nextInjuryCheck;
         private bool _injuryStop;
 
+        /// <summary>Lesión leve: el jugador sigue más lento, se anota y el árbitro parará el juego.</summary>
+        private void Injure(MatchPlayer p)
+        {
+            p.Injured = true;
+            p.Stats.Injured = true;
+            Teams[p.Team].Stats.Injuries++;
+            AddEvent(MatchEventType.Injury, p.Team, p.Index, p.Pos);
+            _injuryStop = true;
+        }
+
         /// <summary>
         /// Lesiones leves por cansancio: desde <see cref="PlayerConfig.InjuryStartMinute"/>, una tirada por jugador de campo y
         /// minuto de juego, con probabilidad que crece con el cuadrado del cansancio. El lesionado sigue más lento hasta que lo
@@ -305,11 +315,7 @@ namespace Football.Core.MatchCore
                 float chance = c.InjuryBaseRate * (1f + c.InjuryFatigueWeight * fatigue * fatigue);
                 if (_rng.NextFloat() < chance)
                 {
-                    p.Injured = true;
-                    p.Stats.Injured = true;
-                    Teams[p.Team].Stats.Injuries++;
-                    AddEvent(MatchEventType.Injury, p.Team, p.Index, p.Pos);
-                    _injuryStop = true;
+                    Injure(p);
                 }
             }
         }

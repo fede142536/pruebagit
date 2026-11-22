@@ -570,7 +570,7 @@ namespace Football.Core.MatchCore
             float pressure = 1f + 0.6f * (1f - MathUtil.Clamp01(NearestOpponentDistance(origin, p.Team) / PressureRange));
             float errorScale = human ? diff.PlayerErrorScale : diff.PassErrorScale;
             float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.8f * skill) * (1f + distance / 40f) * pressure * errorScale
-                          * FatigueError(p);
+                          * FatigueError(p) * TalkError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
 
             float loft = 0f;
@@ -615,7 +615,7 @@ namespace Football.Core.MatchCore
             float errorScale = human ? diff.PlayerErrorScale : diff.ShotErrorScale;
             float pressure = 1f + ShotPressureWeight * (1f - MathUtil.Clamp01(NearestOpponentDistance(origin, p.Team) / PressureRange));
             float sigma = ai.ShotAngleErrorDeg * MathUtil.Deg2Rad * (1f - 0.7f * finishing) * pressure * errorScale * (1f + distance / 40f)
-                          * FatigueError(p);
+                          * FatigueError(p) * TalkError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
 
             float speed = MathUtil.Lerp(ai.ShotSpeedMin, ai.ShotSpeedMax, MathUtil.Clamp01(power * (0.55f + 0.45f * p.Skill(AttributeId.Shooting))));
@@ -639,7 +639,7 @@ namespace Football.Core.MatchCore
             DifficultyProfile diff = Teams[p.Team].Difficulty;
             float errorScale = human ? diff.PlayerErrorScale : diff.PassErrorScale;
             float sigma = ai.PassAngleErrorDeg * MathUtil.Deg2Rad * (1f - CrossErrorSkill * skill) * (1f + distance / 30f) * errorScale
-                          * FatigueError(p);
+                          * FatigueError(p) * TalkError(p);
             float angle = delta.Angle + _rng.NextGaussian(0f, sigma);
             float loft = ai.CrossLoftDeg * MathUtil.Deg2Rad;
             float speed = Ballistics.LobSpeed(distance, loft, Config.Ball);

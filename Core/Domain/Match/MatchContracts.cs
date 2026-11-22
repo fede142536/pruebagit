@@ -138,5 +138,11 @@ namespace Football.Core.Domain
         public PlayerMatchView[] Bench;
         /// <summary>Rol de cada puesto de la formación (opcional; <see cref="PlayerDuty.Auto"/> = el del estilo).</summary>
         public PlayerDuty[] Duties;
+        /// <summary>Formación sin balón (opcional; null = la misma que con balón). Debe tener los mismos puestos.</summary>
+        public Formation DefensiveFormation;
+        /// <summary>Jugada de córner a favor.</summary>
+        public CornerRoutine Corners;
+        /// <summary>Marcaje en las pelotas paradas en contra.</summary>
+        public SetPieceMarking Marking;
     }
 }

@@ -76,7 +76,7 @@ namespace Football.Core.MatchCore
 
             t.Mentality = mentality;
             t.Pressing = pressing;
-            Tactics.Apply(t.BaseStyle, mentality, pressing, Config.Ai, t.Style);
+            RefreshStyle(t); // mentalidad y presión, sin perder un grito en curso ni la charla del entretiempo
             AddEvent(MatchEventType.TacticsChanged, team, -1, Ball.Pos.Horizontal);
         }
 
@@ -181,6 +181,7 @@ namespace Football.Core.MatchCore
             }
 
             UpdateSubstitutionWindows();
+            UpdateShouts(_dt); // los gritos se gastan con el reloj del partido, también en saques y goles
             TickCount++;
             ClearInputImpulses();
         }
@@ -492,6 +493,10 @@ namespace Football.Core.MatchCore
         private void EndHalf()
         {
             _halfTimeBreak = Half == 1; // en el descanso los cambios no gastan ventana
+            if (_halfTimeBreak)
+            {
+                AiTeamTalks(); // la persona da la suya desde la pausa mientras dura el descanso
+            }
             AddEvent(Half == 1 ? MatchEventType.HalfTime : MatchEventType.FullTime, -1, -1, Vec2.Zero);
             if (Half == 2)
             {

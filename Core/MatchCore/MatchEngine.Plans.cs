@@ -99,7 +99,7 @@ namespace Football.Core.MatchCore
             AiConfig ai = Config.Ai;
             TeamState team = Teams[p.Team];
             TeamStyle style = team.Style;
-            FormationSlot slot = team.Formation.Slots[p.Spot];
+            FormationSlot slot = SlotFor(team, p, state); // doble dibujo: con balón y sin balón
             float dir = team.AttackDirection;
 
             float ballProgress = Pitch.Progress(dir, Ball.Pos.X);
@@ -821,14 +821,9 @@ namespace Football.Core.MatchCore
                 if (boxPlay && p.Slot >= 2)
                 {
                     float goalSign = Teams[r.Team].AttackDirection;
-                    if (taking)
-                    {
-                        target = new Vec2(goalSign * (Pitch.HalfLength - BoxAttackDepth - BoxStep * (p.Slot % 3)), ((p.Slot * 7) % 9 - 4) * 3.2f);
-                    }
-                    else
-                    {
-                        target = new Vec2(goalSign * (Pitch.HalfLength - BoxDefendDepth - BoxStep * (p.Slot % 3)), ((p.Slot * 5) % 9 - 4) * 2.8f);
-                    }
+                    target = taking
+                        ? AttackingBoxSpot(team, p, r, goalSign)
+                        : DefendingBoxSpot(team, p, Teams[r.Team], goalSign);
                 }
 
                 if (r.Kind == RestartKind.Penalty)

@@ -27,7 +27,8 @@ namespace Football.Game
         private readonly GameObject _root;
         private readonly UiButton[] _field = new UiButton[MaxRows];
         private readonly UiButton[] _bench = new UiButton[MaxBench];
-        private readonly UiButton _formationPrevious, _formationNext, _back;
+        private readonly UiButton _formationPrevious, _formationNext, _back, _defensive, _corners, _marking;
+        private static readonly string[] CornerLabels = { "MIXTO", "PRIMER PALO", "PUNTO PENAL", "CORTO" };
         private readonly Text _formation, _status, _message;
         private MatchEngine _engine;
         private int _selected = -1;
@@ -48,6 +49,10 @@ namespace Football.Game
             _formationPrevious = UiKit.Button(t, "FormacionAnterior", new Vector2(760f, 920f), new Vector2(90f, 70f), "‹", 48, UiTheme.Button);
             _formation = UiKit.Label(t, "Formacion", new Vector2(960f, 920f), new Vector2(300f, 70f), string.Empty, 40, UiTheme.Accent);
             _formationNext = UiKit.Button(t, "FormacionSiguiente", new Vector2(1160f, 920f), new Vector2(90f, 70f), "›", 48, UiTheme.Button);
+            // Doble dibujo y pelota parada.
+            _defensive = UiKit.Button(t, "SinBalon", new Vector2(300f, 920f), new Vector2(440f, 60f), string.Empty, 24, UiTheme.Button);
+            _corners = UiKit.Button(t, "Corners", new Vector2(1620f, 955f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
+            _marking = UiKit.Button(t, "Marca", new Vector2(1620f, 895f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
             _status = UiKit.Label(t, "Cupos", new Vector2(960f, 850f), new Vector2(1400f, 44f), string.Empty, 28, Color.white);
             UiKit.Label(t, "EnCampo", new Vector2(FieldX, 805f), new Vector2(700f, 36f), "EN EL CAMPO (toca uno y luego otro para cambiar puestos)", 20, UiTheme.TextDim);
             UiKit.Label(t, "Suplentes", new Vector2(BenchX, 805f), new Vector2(700f, 36f), "SUPLENTES (toca uno del campo y luego un suplente)", 20, UiTheme.TextDim);
@@ -104,6 +109,19 @@ namespace Football.Game
             {
                 CycleFormation(_formationNext.Contains(point) ? 1 : -1);
             }
+            else if (_defensive.Contains(point))
+            {
+                CycleDefensiveFormation();
+            }
+            else if (_corners.Contains(point))
+            {
+                _engine.SetSetPieces(0, (CornerRoutine)(((int)team.Corners + 1) % CornerLabels.Length), team.Marking);
+            }
+            else if (_marking.Contains(point))
+            {
+                _engine.SetSetPieces(0, team.Corners,
+                    team.Marking == SetPieceMarking.Zonal ? SetPieceMarking.ManToMan : SetPieceMarking.Zonal);
+            }
 
             for (int i = 0; i < team.Players.Length && i < MaxRows; i++)
             {
@@ -155,6 +173,22 @@ namespace Football.Game
             _engine.SetFormation(0, next);
         }
 
+        /// <summary>Formación sin balón: la misma que con balón, o cualquiera de las otras con los mismos puestos.</summary>
+        private void CycleDefensiveFormation()
+        {
+            TeamState team = _engine.Teams[0];
+            Formation[] list = team.Players.Length == Formations.Indoor3.Slots.Length ? Formations.Indoor : Formations.All;
+            Formation current = team.DefensiveFormation ?? team.Formation;
+            for (int k = 1; k <= list.Length; k++)
+            {
+                Formation next = list[(System.Array.IndexOf(list, current) + k + list.Length) % list.Length];
+                if (_engine.SetDefensiveFormation(0, next == team.Formation ? null : next))
+                {
+                    return;
+                }
+            }
+        }
+
         private string Describe(SubstitutionResult r)
         {
             switch (r)
@@ -173,6 +207,9 @@ namespace Football.Game
             TeamState team = _engine.Teams[0];
             RulesConfig rules = _engine.Config.Rules;
             _formation.text = team.Formation.Name;
+            _defensive.Label.text = "SIN BALÓN: " + (team.DefensiveFormation != null ? team.DefensiveFormation.Name : "IGUAL");
+            _corners.Label.text = "CÓRNERS: " + CornerLabels[(int)team.Corners];
+            _marking.Label.text = "MARCA EN PELOTA PARADA: " + (team.Marking == SetPieceMarking.Zonal ? "ZONAL" : "INDIVIDUAL");
             string window = _engine.InHalfTimeBreak ? "entretiempo: no gasta ventana" : "ventanas disponibles: " + _engine.WindowsLeft(0) + "/" + rules.MaxSubstitutionWindows;
             _status.text = "Cambios restantes: " + _engine.SubstitutionsLeft(0) + "/" + rules.MaxSubstitutions + "   ·   " + window;
 

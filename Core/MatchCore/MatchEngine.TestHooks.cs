@@ -79,6 +79,14 @@ namespace Football.Core.MatchCore
 
         internal float TestFatigueError(MatchPlayer p) => FatigueError(p);
 
+        internal void TestStartSetPiece(RestartKind kind, int team, Vec2 at) => StartSetPiece(new Restart(kind, team, at));
+
+        internal void TestEndHalf() => EndHalf();
+
+        internal void TestInjure(MatchPlayer p) => Injure(p);
+
+        internal float TestTalkError(MatchPlayer p) => TalkError(p);
+
         internal float TestFatigueReaction(MatchPlayer p) => FatigueReaction(p);
     }
 }

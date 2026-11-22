@@ -132,6 +132,15 @@ namespace Football.Game
             _mentality = UiKit.Button(dim.transform, "Mentalidad", new Vector2(1600f, 660f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             _squadButton = UiKit.Button(dim.transform, "Plantel", new Vector2(1600f, 300f), new Vector2(520f, 92f), "PLANTEL Y TÁCTICA ›", 30, UiTheme.AccentDark);
+            // Gritos desde el banco: el botón muestra el siguiente grito; tocarlo lo da (y avanza al siguiente).
+            _shoutButton = UiKit.Button(dim.transform, "Grito", new Vector2(1600f, 190f), new Vector2(520f, 80f), string.Empty, 26, tactic);
+            // Charla del entretiempo (solo en el descanso).
+            _talkTitle = UiKit.Label(dim.transform, "TituloCharla", new Vector2(330f, 770f), new Vector2(560f, 70f), "CHARLA DEL ENTRETIEMPO", 34, Color.white);
+            for (int i = 0; i < _talkButtons.Length; i++)
+            {
+                _talkButtons[i] = UiKit.Button(dim.transform, "Charla" + i, new Vector2(330f, 660f - i * 104f), new Vector2(480f, 90f),
+                    TalkLabels[i], 30, new Color(0.45f, 0.3f, 0.15f));
+            }
             _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
             Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
@@ -140,7 +149,7 @@ namespace Football.Game
             _pauseBase = new[]
             {
                 pauseTitle.gameObject, _resume.Root, _quick.Root, _quit.Root, tacticTitle.gameObject, _mentality.Root, _pressing.Root,
-                _squadButton.Root, tacticHelp.gameObject
+                _squadButton.Root, tacticHelp.gameObject, _shoutButton.Root
             };
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
@@ -600,7 +609,15 @@ namespace Football.Game
                     case MatchEventType.ThrowIn: text = "SAQUE LATERAL"; break;
                     case MatchEventType.GoalKick: text = "SAQUE DE ARCO"; break;
                     case MatchEventType.FreeKick: text = "TIRO LIBRE"; break;
-                    case MatchEventType.HalfTime: text = "FIN DEL PRIMER TIEMPO"; _audio.LongWhistle(); break;
+                    case MatchEventType.HalfTime:
+                        text = "FIN DEL PRIMER TIEMPO";
+                        _audio.LongWhistle();
+                        if (!_benchmark)
+                        {
+                            SetPaused(true); // entretiempo: se abre la pausa para la charla y los cambios
+                        }
+
+                        break;
                     case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; _audio.LongWhistle(); break;
                     case MatchEventType.Save: text = "¡PARADÓN!"; break;
                     case MatchEventType.Woodwork:
@@ -701,6 +718,12 @@ namespace Football.Game
         /// <summary>Todos los textos "mm:ss" preparados al arrancar: el reloj del partido no crea textos nuevos.</summary>
         private const int RadarTeamSize = 11;
         private UiButton _squadButton;
+        private UiButton _shoutButton;
+        private readonly UiButton[] _talkButtons = new UiButton[3];
+        private Text _talkTitle;
+        private int _shoutChoice = 1;
+        private static readonly string[] ShoutLabels = { "", "ENCARAR MÁS", "TOCAR EN CORTO", "PERDER TIEMPO", "PRESIÓN TRAS PÉRDIDA", "BUSCAR AL 9" };
+        private static readonly string[] TalkLabels = { "CALMADO", "APASIONADO", "EXIGENTE" };
         private TacticsPanel _tacticsPanel;
         private const float IntroSeconds = 3.5f;
         private const float CelebrationSeconds = 2.2f;
@@ -951,8 +974,39 @@ namespace Football.Game
             RefreshPauseLabels();
         }
 
+        private bool TalkTapped(Vector2 point, out int talk)
+        {
+            for (talk = 0; talk < _talkButtons.Length; talk++)
+            {
+                if (_talkButtons[talk].Root.activeSelf && _talkButtons[talk].Contains(point))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool _pauseBaseShown = true;
+
         private void SetPauseBaseVisible(bool visible)
         {
+            bool changed = visible != _pauseBaseShown;
+            _pauseBaseShown = visible;
+            if (visible && changed)
+            {
+                RefreshPauseLabels(); // vuelve la pantalla base: la charla reaparece si corresponde
+            }
+
+            if (!visible)
+            {
+                _talkTitle.gameObject.SetActive(false);
+                for (int i = 0; i < _talkButtons.Length; i++)
+                {
+                    _talkButtons[i].SetVisible(false);
+                }
+            }
+
             for (int i = 0; i < _pauseBase.Length; i++)
             {
                 if (_pauseBase[i].activeSelf != visible)
@@ -981,6 +1035,15 @@ namespace Football.Game
                 TeamState own = _engine.Teams[0];
                 _mentality.Label.text = "MENTALIDAD: " + TeamCatalog.MentalityLabels[(int)own.Mentality + 2];
                 _pressing.Label.text = "PRESIÓN: " + TeamCatalog.PressLabels[(int)own.Pressing + 1];
+                _shoutButton.Label.text = own.Shout != TouchlineShout.None
+                    ? "GRITANDO: " + ShoutLabels[(int)own.Shout] + " · OTRO ›"
+                    : "GRITAR: " + ShoutLabels[_shoutChoice] + " ›";
+                bool talk = _engine.InHalfTimeBreak && !own.TalkGiven;
+                _talkTitle.gameObject.SetActive(talk);
+                for (int i = 0; i < _talkButtons.Length; i++)
+                {
+                    _talkButtons[i].SetVisible(talk);
+                }
             }
         }
 
@@ -1028,6 +1091,20 @@ namespace Football.Game
                     _quickPanel.SetActive(true);
                     SetPauseBaseVisible(false);
                     _quickList.Show(_settings, SettingCategory.Graphics, true);
+                }
+                else if (_shoutButton.Contains(point) && _engine != null)
+                {
+                    _engine.Shout(0, (TouchlineShout)_shoutChoice);
+                    _banner.text = "GRITO: " + ShoutLabels[_shoutChoice];
+                    _shoutChoice = _shoutChoice % (ShoutLabels.Length - 1) + 1;
+                    RefreshPauseLabels();
+                }
+                else if (TalkTapped(point, out int talk) && _engine != null)
+                {
+                    _engine.GiveTeamTalk(0, (TeamTalk)talk, out TalkReaction reaction);
+                    _banner.text = "CHARLA " + TalkLabels[talk] + ": " + (reaction == TalkReaction.Positive ? "EL EQUIPO RESPONDE"
+                        : reaction == TalkReaction.Negative ? "EL EQUIPO SE PONE NERVIOSO" : "SIN EFECTO");
+                    RefreshPauseLabels();
                 }
                 else if (_squadButton.Contains(point) && _engine != null)
                 {
