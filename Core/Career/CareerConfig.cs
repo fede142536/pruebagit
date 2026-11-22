@@ -67,6 +67,16 @@ namespace Football.Core.Career
         public int FormMatches = 5;
         /// <summary>Días antes de un partido de local en que los socios revisan el precio.</summary>
         public int SupporterReviewDaysBefore = 3;
+        /// <summary>Probabilidad de lluvia de cada mes (enero a diciembre; otoño e invierno más lluviosos).</summary>
+        public float[] RainChanceByMonth = { 0.25f, 0.25f, 0.3f, 0.3f, 0.25f, 0.2f, 0.2f, 0.2f, 0.25f, 0.3f, 0.3f, 0.25f };
+        /// <summary>Probabilidad de cielo nublado cuando no llueve.</summary>
+        public float CloudChance = 0.35f;
+        /// <summary>Temperatura media de cada mes (°C, clima templado del Río de la Plata).</summary>
+        public float[] MeanTemperatureByMonth = { 25f, 24f, 22f, 18f, 14f, 11f, 10f, 12f, 14f, 17f, 21f, 24f };
+        /// <summary>Desvío de la temperatura del día respecto de la media (°C).</summary>
+        public float TemperatureSpread = 4f;
+        /// <summary>Grados menos cuando llueve.</summary>
+        public float RainCooling = 3f;
         /// <summary>Asistencia y precios de entradas.</summary>
         public AttendanceConfig Attendance = new AttendanceConfig();
         /// <summary>Directiva y popularidad del DT.</summary>

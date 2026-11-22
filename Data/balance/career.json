@@ -43,6 +43,37 @@
   "DecisiveRounds": 3,
   "FormMatches": 5,
   "SupporterReviewDaysBefore": 3,
+  "RainChanceByMonth": [
+    0.25,
+    0.25,
+    0.3,
+    0.3,
+    0.25,
+    0.2,
+    0.2,
+    0.2,
+    0.25,
+    0.3,
+    0.3,
+    0.25
+  ],
+  "CloudChance": 0.35,
+  "MeanTemperatureByMonth": [
+    25,
+    24,
+    22,
+    18,
+    14,
+    11,
+    10,
+    12,
+    14,
+    17,
+    21,
+    24
+  ],
+  "TemperatureSpread": 4,
+  "RainCooling": 3,
   "Attendance": {
     "Importance": [
       1.45,

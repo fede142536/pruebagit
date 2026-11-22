@@ -17,7 +17,7 @@
   "news.qualified": "{0} se clasificó a la copa internacional por la tabla anual.",
   "news.season_end": "Terminó la temporada {0}. Arranca la pretemporada.",
   "news.champion": "¡{0} es el campeón del torneo!",
-  "news.supporters_request": "La agrupación de socios pide bajar las entradas para el partido con {0}: hoy cuestan ${1} y el máximo razonable es ${2}. Respondé desde la Oficina.",
+  "news.supporters_request": "La agrupación de socios pide bajar las entradas para el partido con {0}: hoy cuestan ${1} y el máximo razonable es ${2}. Respondé desde la Central.",
   "news.supporters_thanks": "Los socios agradecen la rebaja de las entradas.",
   "news.supporters_ignored": "Los socios lamentan que no se haya bajado el precio de las entradas.",
   "news.supporters_repudiation": "Repudio de los socios: «${0} por una entrada es un robo».",

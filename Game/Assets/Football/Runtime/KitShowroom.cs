@@ -43,7 +43,8 @@ namespace Football.Game
         /// <param name="size">Tamaño del recuadro.</param>
         /// <param name="index">Número de vitrina (cada una se coloca en un lugar distinto del mundo).</param>
         /// <param name="startHeading">Orientación inicial (grados), para que las dos no giren sincronizadas.</param>
-        public KitShowroom(Transform uiParent, Vector2 center, Vector2 size, int index, float startHeading)
+        /// <param name="onPitch">Parado sobre césped con una línea de cal (la figura del DT) en vez del pedestal claro.</param>
+        public KitShowroom(Transform uiParent, Vector2 center, Vector2 size, int index, float startHeading, bool onPitch = false)
         {
             _root = new GameObject("Vitrina" + index);
             _root.transform.position = new Vector3(index * ShowroomSpacing, ShowroomDepth, 0f);
@@ -68,14 +69,13 @@ namespace Football.Game
             _camera.targetDisplay = 0;
             _camera.enabled = false;
 
-            // Pedestal: un disco claro bajo los pies.
-            var pedestal = new GameObject("Pedestal");
-            pedestal.transform.SetParent(_root.transform, false);
-            pedestal.transform.localScale = new Vector3(1.6f, 1f, 1.6f);
-            pedestal.AddComponent<MeshFilter>().sharedMesh = MeshKit.Disc;
-            var renderer = pedestal.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = Materials.Get(new Color(0.85f, 0.88f, 0.95f, 1f));
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            // Pedestal: un disco claro bajo los pies, o un pedazo de césped con la línea de cal para el DT.
+            Floor("Pedestal", MeshKit.Disc, onPitch ? PitchGreen : new Color(0.85f, 0.88f, 0.95f, 1f), Vector3.zero,
+                onPitch ? new Vector3(PitchRadius, 1f, PitchRadius) : new Vector3(1.6f, 1f, 1.6f));
+            if (onPitch)
+            {
+                Floor("Cal", MeshKit.Box, Color.white, new Vector3(0f, LineLift, LineDepth), new Vector3(PitchRadius * 2f, 0.005f, LineWidth));
+            }
 
             var imageObject = new GameObject("Jugador3D", typeof(RectTransform));
             imageObject.transform.SetParent(uiParent, false);
@@ -88,6 +88,33 @@ namespace Football.Game
             _image = imageObject.AddComponent<RawImage>();
             _image.texture = _texture;
             _image.raycastTarget = false;
+        }
+
+        private static readonly Color PitchGreen = new Color(0.2f, 0.5f, 0.22f, 1f);
+        private const float PitchRadius = 3f;
+        private const float LineLift = 0.004f;
+        private const float LineDepth = 0.9f;
+        private const float LineWidth = 0.08f;
+
+        private void Floor(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale)
+        {
+            var floor = new GameObject(name);
+            floor.transform.SetParent(_root.transform, false);
+            floor.transform.localPosition = position;
+            floor.transform.localScale = scale;
+            floor.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = floor.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = Materials.Get(color);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+        }
+
+        /// <summary>Viste a la figura con un aspecto completo (el DT con traje o buzo); siempre la reconstruye.</summary>
+        /// <param name="look">Aspecto.</param>
+        public void SetLook(PlayerLook look)
+        {
+            _hasKit = false;
+            DestroyModel();
+            _model = new PlayerModel(_root.transform, "Figura", look, 0f, 1.02f, _meshes);
         }
 
         /// <summary>Viste a la figura con una equipación (solo la reconstruye si cambió).</summary>

@@ -122,5 +122,6 @@ con pruebas, **sin interfaz todavía**:
 | Orquestador de la temporada (`CareerSession`), repositorios SQL de todas las tablas, archivo de partida para el teléfono, Modo Torneo | ✅ 22/11/2026, con pruebas (temporada completa, determinismo al cargar) |
 | Pantallas de Modo Carrera y Torneo en Unity (inicio, plantel y táctica, mercado y ojeadores, club y finanzas) | ✅ escritas; **sin probar en Unity** |
 | Saque IFAB, presentación táctica, selector con escudos, ficha del jugador, controles en arco, estadio y proporciones (D-21) | ✅ núcleo probado; ⚠️ Unity sin ejecutar |
-| Falta | Copas nacionales y continentales con su calendario real, segunda división (hoy el descenso solo baja reputación), IA de fichajes entre rivales, renovaciones de contrato |
+| Modo Carrera completo (D-22): DT, datos de clubes, directiva y popularidad, público por partido, entradas con rango ideal, socios, remodelación del estadio por semanas, medidor de gestión, Copa Argentina, migración 10 | ✅ núcleo probado; ⚠️ pantallas Unity escritas sin ejecutar |
+| Falta | Copas continentales con su calendario real con su calendario real, segunda división (hoy el descenso solo baja reputación), IA de fichajes entre rivales, renovaciones de contrato |
 

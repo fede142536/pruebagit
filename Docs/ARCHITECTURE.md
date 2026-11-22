@@ -118,6 +118,10 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
   anual, retiros al cuerpo técnico, juveniles). Todo el estado vive en `CareerData`; el azar sale de la semilla y la fecha,
   así una partida cargada sigue igual que si nunca se hubiera guardado (hay prueba). Modo Torneo: el mismo orquestador con
   una sola rueda. Parámetros en `Data/balance/career.json`.
+- **Club y DT** (D-22): `BoardExpectations`, `MatchAttendanceCalculator` y `TicketPricingAdvisor`, `SupporterRequestSystem`,
+  `StadiumRemodelingSystem` y `ManagementRatingSystem` son funciones puras en `Management/` con su configuración
+  serializable; `CareerSession` (archivos parciales `.Club` y `.Overview`) las conecta con el reloj (`WeekPassed` avanza las
+  obras, `MonthClosed` revisa caja y popularidad, `HomeMatchPlayed` lleva público y precio a las finanzas).
 
 ## 5. Persistencia
 
@@ -126,7 +130,8 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
 - Guardado atómico (transacción + archivo temporal) y copia de seguridad rotativa: `AtomicSave` (hecho, con pruebas).
 - Migraciones actuales: v1 inicial, v2 contratos, v3 cláusulas y personalidad, v4 finanzas e instalaciones, v5
   competiciones, v6 estado del plantel, cuerpo técnico y scouting, v7 noticias e historia, v8 estado de la partida
-  (fecha, temporada, club, semilla, modo y táctica del usuario).
+  (fecha, temporada, club, semilla, modo y táctica del usuario), v9 estadísticas de temporada, v10 DT, datos de clubes,
+  estadios y obras, socios, historial de entradas, fichajes e historial del medidor.
 - `SqlCareerRepository` guarda y lee una partida completa sobre todas las tablas, en una transacción (`AtomicSave`).
 - En el teléfono, Unity no trae un proveedor de SQLite: la partida se guarda con `CareerFile` (binario propio con versión,
   mismo contenido que las tablas) y `AtomicSave.WriteFile` (temporal, reemplazo atómico y respaldos).
@@ -145,6 +150,8 @@ Implementada en `Game/Assets/Football/Runtime` (Fase 1; **sin ejecutar aún en U
 | `UiKit` / `MenuScreen` / `ResultScreen` | Interfaz creada por código, sin `EventSystem` |
 | `DebugPanel` | FPS, tiempo de fotograma p99, recolecciones de basura, asignaciones, memoria, latencia estimada |
 | `Materials` | Materiales planos sin iluminación a partir de un material base en `Resources` |
+| `CareerScreen` + `CareerPage` | Contenedor de la carrera (cabecera, barra de 5 secciones, área segura) y base de cada pantalla: `ManagerCreationScreen`, `CareerClubSelectScreen`, `CareerHubScreen`, `CareerObjectivesScreen`, `CareerFinanceScreen`, `CareerStadiumScreen`; `CareerController` las une con `CareerSession` |
+| `StadiumLook` | Ocupación, anillos de tribuna y andamios del estadio; lo comparten `MatchView` y la vista isométrica |
 
 Principios generales de la capa Unity:
 

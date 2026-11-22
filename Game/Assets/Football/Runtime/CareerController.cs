@@ -50,13 +50,35 @@ namespace Football.Game
         {
             _tournament = tournament;
             Session = null;
+            _screen.Configure(Configs().Career);
             _screen.ShowStart(tournament, favorite, File.Exists(SavePath));
         }
 
         /// <summary>Vuelve a la pantalla de la partida (después del partido 3D).</summary>
         public void Resume()
         {
+            if (Session.Data.Manager.Sacked)
+            {
+                Sack();
+                return;
+            }
+
             _screen.ShowSession(Session);
+        }
+
+        /// <summary>
+        /// Aspecto del estadio del partido de hoy: la ocupación que calcula el núcleo con el precio y la importancia, los
+        /// anillos según la capacidad y los andamios si hay una ampliación en obra.
+        /// </summary>
+        public StadiumLook MatchStadium()
+        {
+            Fixture f = Session?.PendingUserFixture;
+            if (f == null || !Session.Data.Stadiums.TryGetValue(f.HomeClubId, out StadiumState stadium))
+            {
+                return StadiumLook.Full;
+            }
+
+            return StadiumLook.From(stadium, Session.ExpectedAttendance(f));
         }
 
         /// <summary>Oculta la pantalla.</summary>
@@ -71,7 +93,10 @@ namespace Football.Game
             switch (_screen.Action)
             {
                 case CareerAction.NewGame:
-                    StartNew(_screen.ChosenTeam);
+                    StartNew(_screen.ChosenTeam, _screen.Manager);
+                    break;
+                case CareerAction.Sacked:
+                    Sack();
                     break;
                 case CareerAction.LoadGame:
                     Load();
@@ -155,13 +180,32 @@ namespace Football.Game
 
         private string SavePath => Path.Combine(Application.persistentDataPath, _tournament ? TournamentFileName : CareerFileName);
 
-        private void StartNew(int teamIndex)
+        /// <summary>La directiva echó al DT: la carrera termina (se borra la partida) y se vuelve a crear un DT.</summary>
+        private void Sack()
+        {
+            string club = Session.Data.Club(Session.Data.UserClubId).Name;
+            try
+            {
+                File.Delete(SavePath);
+            }
+            catch (IOException e)
+            {
+                Debug.LogWarning("Football: no se pudo borrar la partida (" + e.Message + ")");
+            }
+
+            Session = null;
+            _screen.ShowStart(_tournament, 0, false);
+            _screen.SetStatus(string.Format(CultureInfo.InvariantCulture, Locale.Get("career.sacked_end"), club));
+        }
+
+        private void StartNew(int teamIndex, ManagerProfile manager)
         {
             try
             {
                 TeamDatabase db = TeamCatalog.Database;
                 int seed = (int)(DateTime.Now.Ticks & int.MaxValue);
-                Session = CareerSession.NewGame(db, TeamCatalog.Teams[teamIndex].Name, DateTime.Now.Year, seed, Configs(), _tournament);
+                Session = CareerSession.NewGame(db, TeamCatalog.Teams[teamIndex].Name, DateTime.Now.Year, seed, Configs(), _tournament,
+                    _tournament ? null : manager);
                 _screen.ShowSession(Session);
                 Save(false);
             }

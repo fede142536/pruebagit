@@ -27,6 +27,10 @@ namespace Football.Game
         public Color Boots;
         /// <summary>Peinado (0 corto, 1 degradé, 2 melena con vincha, 3 rulos, 4 rapado).</summary>
         public int HairStyle;
+        /// <summary>Pantalón largo (traje o buzo del DT): las piernas van del color del pantalón.</summary>
+        public bool Trousers;
+        /// <summary>Manga larga (traje o buzo del DT): los brazos van del color de la camiseta.</summary>
+        public bool LongSleeves;
         /// <summary>Con barba.</summary>
         public bool Beard;
         /// <summary>Es arquero (lleva guantes).</summary>
@@ -218,10 +222,11 @@ namespace Football.Game
         private Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
         {
             Transform hip = Pivot(body, name, new Vector3(x, HipHeight, 0f));
-            Part(hip, "Muslo", AnatomyKit.Thigh, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Color leg = look.Trousers ? Tag(look.Shorts, FabricId) : Tag(look.Skin, SkinId);
+            Part(hip, "Muslo", AnatomyKit.Thigh, leg, Vector3.zero, Vector3.one);
             Part(hip, "PiernaShort", AnatomyKit.ShortLeg, Tag(look.Shorts, FabricId), Vector3.zero, Vector3.one);
             knee = Pivot(hip, "Rodilla", new Vector3(0f, -ThighLength, 0f));
-            Part(knee, "Pierna", AnatomyKit.Shin, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Part(knee, "Pierna", AnatomyKit.Shin, leg, Vector3.zero, Vector3.one);
             Part(knee, "Media", AnatomyKit.Sock, Tag(look.Socks, FabricId), Vector3.zero, Vector3.one);
             Part(knee, "FranjaMedia", AnatomyKit.SockBand, Tag(SockStripe(look), FabricId), Vector3.zero, Vector3.one);
             Color boot = Tag(look.Boots, BootId);
@@ -248,10 +253,11 @@ namespace Football.Game
         private Transform Arm(Transform body, string name, float x, PlayerLook look, out Transform elbow)
         {
             Transform shoulder = Pivot(body, name, new Vector3(x, ShoulderHeight - 0.02f, 0f));
-            Part(shoulder, "Brazo", AnatomyKit.UpperArm, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Color arm = look.LongSleeves ? Tag(look.Shirt, FabricId) : Tag(look.Skin, SkinId);
+            Part(shoulder, "Brazo", AnatomyKit.UpperArm, arm, Vector3.zero, Vector3.one);
             Part(shoulder, "Manga", AnatomyKit.Sleeve, Tag(look.Shirt, FabricId), Vector3.zero, Vector3.one);
             elbow = Pivot(shoulder, "Codo", new Vector3(0f, -UpperArmLength, 0f));
-            Part(elbow, "Antebrazo", AnatomyKit.Forearm, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Part(elbow, "Antebrazo", AnatomyKit.Forearm, arm, Vector3.zero, Vector3.one);
             Color hand = look.Keeper ? Tag(look.Gloves, FabricId) : Tag(look.Skin, SkinId);
             Vector3 handScale = look.Keeper ? new Vector3(1.35f, 1.25f, 1.5f) : Vector3.one;
             Part(elbow, "Mano", AnatomyKit.Hand, hand, new Vector3(0f, -ForearmLength, 0f), handScale);

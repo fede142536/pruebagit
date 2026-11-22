@@ -210,5 +210,39 @@ namespace Football.Core.Tests.Career
                 Assert.That(d.ClubInfos[s.Data.UserClubId].Founded, Is.EqualTo(1889));
             }
         }
+
+        [Test]
+        public void Forecast_IsDeterministic_AndFollowsTheConfiguredSeasons()
+        {
+            CareerSession a = New(seed: 4), b = New(seed: 4);
+            var fixtures = a.Data.Fixtures.Take(60).ToList();
+            foreach (Fixture f in fixtures)
+            {
+                MatchForecast fa = a.ForecastOf(f), fb = b.ForecastOf(b.Data.Fixtures.Single(x => x.Id == f.Id));
+                Assert.That(fa.Weather, Is.EqualTo(fb.Weather));
+                Assert.That(fa.Temperature, Is.EqualTo(fb.Temperature));
+                var c = new CareerConfig();
+                float mean = c.MeanTemperatureByMonth[f.Date.Month - 1];
+                Assert.That(fa.Temperature, Is.InRange(mean - c.TemperatureSpread - c.RainCooling - 1, mean + c.TemperatureSpread + 1));
+            }
+
+            Assert.That(fixtures.Select(f => a.ForecastOf(f).Weather).Distinct().Count(), Is.GreaterThan(1), "no siempre el mismo cielo");
+        }
+
+        [Test]
+        public void FinanceSummary_AddsUpTheSeasonLedger_AndProjectsTheCash()
+        {
+            CareerSession s = New();
+            PlayUntil(s, () => s.Data.TicketHistory.Count >= 3);
+            SeasonFinanceSummary sum = s.FinanceSummary();
+            ClubFinances fin = s.Data.Finances[s.Data.UserClubId];
+            long net = fin.Ledger.Where(e => e.Date.Year == s.Data.Season).Sum(e => e.Amount);
+            Assert.That(sum.Net, Is.EqualTo(net));
+            Assert.That(sum.ByCategory.Sum(), Is.EqualTo(net));
+            Assert.That(sum.ByCategory[(int)FinanceCategory.Gate], Is.GreaterThan(0), "la taquilla entra en el libro");
+            Assert.That(sum.Income, Is.GreaterThan(0));
+            Assert.That(sum.Expenses, Is.GreaterThan(0));
+            Assert.That(Math.Sign(sum.ProjectedCash - fin.Cash), Is.EqualTo(Math.Sign(sum.Net)).Or.EqualTo(0), "la proyección sigue el ritmo actual");
+        }
     }
 }

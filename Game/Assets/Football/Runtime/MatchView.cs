@@ -40,13 +40,15 @@ namespace Football.Game
         private const float BoardHeight = 0.9f;
         private const float GoalDepth = 1.6f;
 
-        internal static readonly Color[] SkinTones =
+        /// <summary>Tonos de piel (jugadores, hinchas y DT).</summary>
+        public static readonly Color[] SkinTones =
         {
             new Color(0.96f, 0.80f, 0.69f), new Color(0.87f, 0.67f, 0.51f), new Color(0.76f, 0.57f, 0.42f),
             new Color(0.55f, 0.38f, 0.26f), new Color(0.36f, 0.24f, 0.17f)
         };
 
-        internal static readonly Color[] HairColors =
+        /// <summary>Colores de pelo.</summary>
+        public static readonly Color[] HairColors =
         {
             new Color(0.07f, 0.06f, 0.05f), new Color(0.2f, 0.12f, 0.07f), new Color(0.35f, 0.22f, 0.12f),
             new Color(0.78f, 0.63f, 0.32f), new Color(0.5f, 0.24f, 0.1f)
@@ -96,8 +98,10 @@ namespace Football.Game
         private static float FocusZoom => ViewTuning.Current.Camera.FocusZoom;
         private Confetti _confetti;
         private readonly KitColors _homeKit, _awayKit;
+        private readonly StadiumLook _look;
         private GrassBurst _grass;
-        private const int HairStyles = 5;
+        /// <summary>Cantidad de peinados distintos.</summary>
+        public const int HairStyles = 5;
         private const int BeardEvery = 4;
         private const float RunUpDistance = 2.4f;   // el sacador de córner o de saque de arco toma carrera en diagonal
         private const float RunUpSeconds = 0.22f;
@@ -135,8 +139,10 @@ namespace Football.Game
         /// <param name="awayKit">Equipación del visitante.</param>
         /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
         /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate)
+        /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio.</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook look)
         {
+            _look = look;
             _pitch = pitch;
             _tickRate = tickRate;
             _homeKit = homeKit;
@@ -363,7 +369,8 @@ namespace Football.Game
 
             // Gradas escalonadas detrás de los carteles (tonos variados para sugerir público).
             Color[] tiers = { new Color(0.32f, 0.12f, 0.14f), new Color(0.14f, 0.2f, 0.38f), new Color(0.3f, 0.3f, 0.34f) }; // tonos de público
-            for (int t = 0; t < tiers.Length; t++)
+            int built = Mathf.Clamp(_look.Tiers, 1, tiers.Length);
+            for (int t = 0; t < built; t++)
             {
                 float offset = TierOffset(t);
                 float height = 2.5f + t * 4f;
@@ -374,8 +381,40 @@ namespace Football.Game
 
             if (!walls)
             {
-                BuildCrowd(halfL, halfW, tiers.Length);
+                BuildCrowd(halfL, halfW, built);
                 BuildBenchesAndPhotographers(_pitch.HalfLength, _pitch.HalfWidth);
+                if (_look.StandsWork)
+                {
+                    BuildScaffolding(halfL, halfW, built);
+                }
+            }
+        }
+
+        private const float ScaffoldPoleSpacing = 4f;
+        private const float ScaffoldLevelHeight = 2.2f;
+        private static readonly Color ScaffoldColor = new Color(0.85f, 0.62f, 0.12f);
+
+        /// <summary>
+        /// Ampliación de tribunas en obra: andamios (postes y travesaños amarillos) donde va el anillo nuevo, detrás de la
+        /// tribuna de enfrente. La misma obra se ve en la vista isométrica de la pantalla del estadio.
+        /// </summary>
+        private void BuildScaffolding(float halfL, float halfW, int builtTiers)
+        {
+            float z = halfW + TierOffset(builtTiers);
+            float height = 2.5f + builtTiers * 4f;
+            float length = 2f * halfL + 30f;
+            int poles = (int)(length / ScaffoldPoleSpacing);
+            for (int k = 0; k <= poles; k++)
+            {
+                float x = -length * 0.5f + k * ScaffoldPoleSpacing;
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z - TierDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z + TierDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
+            }
+
+            for (float y = ScaffoldLevelHeight; y < height; y += ScaffoldLevelHeight)
+            {
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z - TierDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z + TierDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
             }
         }
 
@@ -459,7 +498,9 @@ namespace Football.Game
 
         /// <summary>
         /// Público en las tribunas: figuras simples (torso y cabeza) con colores de los dos equipos y ropa variada,
-        /// agrupadas en una malla por tribuna. La densidad depende del perfil gráfico.
+        /// agrupadas en una malla por tribuna. La densidad depende del perfil gráfico y la cantidad de gente, de la ocupación
+        /// del partido (<see cref="StadiumLook.Attendance"/>): cada lugar se llena o no según un hash fijo, así el estadio
+        /// semivacío queda salpicado de huecos y no siempre vacío del mismo lado.
         /// </summary>
         private void BuildCrowd(float halfL, float halfW, int tiers)
         {
@@ -479,9 +520,9 @@ namespace Football.Game
                 float offset = TierOffset(t);
                 float top = 2.5f + t * 4f;
                 // Tribuna lateral (enfrente de la cámara) y las dos cabeceras.
-                CrowdBlock(new Vector3(0f, top, halfW + offset), 2f * halfL + 26f, true, spacing, palette, ref seed);
-                CrowdBlock(new Vector3(-halfL - offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed);
-                CrowdBlock(new Vector3(halfL + offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed);
+                CrowdBlock(new Vector3(0f, top, halfW + offset), 2f * halfL + 26f, true, spacing, palette, ref seed, _look.Attendance);
+                CrowdBlock(new Vector3(-halfL - offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed, _look.Attendance);
+                CrowdBlock(new Vector3(halfL + offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed, _look.Attendance);
             }
         }
 
@@ -536,7 +577,10 @@ namespace Football.Game
         private const int BenchPlayers = 5;
         private const int PhotographersPerEnd = 3;
 
-        private void CrowdBlock(Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed)
+        private const uint SeatHash = 2654435761u;
+        private const float SeatHashRange = 16777216f; // 2^24: los 24 bits altos del hash
+
+        private void CrowdBlock(Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed, float fill)
         {
             bool merged = Materials.PlayerShaderAvailable;
             var merge = new MeshMerge();
@@ -547,6 +591,11 @@ namespace Football.Game
                 for (int k = 0; k < count; k++)
                 {
                     seed++;
+                    if (((uint)seed * SeatHash >> 8) / SeatHashRange >= fill)
+                    {
+                        continue; // lugar vacío
+                    }
+
                     float along = -length * 0.5f + (k + 0.5f) * spacing + ((seed * 7) % 5 - 2) * 0.08f;
                     Vector3 p = alongX ? new Vector3(along, 0f, depth) : new Vector3(depth, 0f, along);
                     Color shirt = palette[(seed * 13 + row * 5) % palette.Length];

@@ -202,7 +202,8 @@ namespace Football.Game
 
             _careerMatch = true;
             Go(State.Match);
-            if (_match.BeginCareer(userTeam, rivalTeam, user, rival, userKit, rivalKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length]))
+            if (_match.BeginCareer(userTeam, rivalTeam, user, rival, userKit, rivalKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length],
+                    _career.MatchStadium()))
             {
                 return;
             }

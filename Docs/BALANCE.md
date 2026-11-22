@@ -371,3 +371,22 @@ dentro de un margen de goles en cada diferencia.
   tamaño cuando exista el orquestador de temporada.
 - **Clásicos**: +15 % de faltas y tarjetas por nivel de rivalidad y más error para los jugadores poco serenos.
 
+## 9. Carrera: público, entradas, socios, obras y medidor (`career.json`, 22/11/2026)
+
+Valores de fábrica y lo que miden las pruebas (`CareerManagementTests`, `CareerClubTests`):
+
+| Sistema | Parámetro | Valor | Comprobación |
+|---|---|---|---|
+| Público | Importancia (final, clásico, decisivo, normal, sin nada) | ×1,45 / ×1,35 / ×1,25 / ×1,00 / ×0,65 | la final llena el estadio aun con precio Premium; un partido sin nada en juego se vacía |
+| Público | Ocupación base · elasticidad del precio | 0,62 · 1,1 | en un partido sin nada en juego, subir el precio baja la recaudación neta |
+| Entradas | Precio de referencia · niveles | $14.000 · ×0,6 / ×1 / ×1,5 / ×2,3 | el rango ideal es más alto en clásicos y finales y más bajo en un partido gris con mala racha |
+| Entradas | Ancho del rango ideal · margen «elevado» | ±15 % · +25 % | verde dentro, amarillo hasta +25 %, rojo después |
+| Socios | Malestar al ignorar · crítico · partidos seguidos | +10 · 75 · 3 | repudio y pedido de salida solo con malestar sostenido |
+| Directiva | Popularidad inicial · despido | 80 · 25 | una racha de derrotas con la popularidad en caída termina en despido |
+| Obras | Tribunas: asientos y semanas | +4.000/8.000/12.000 · 16–20/32–36/48–52 | la obra termina exactamente en su semana y suma la capacidad |
+| Medidor | Pesos hinchas / plantel / presupuesto | 35 / 35 / 30 % | cada pilar entre 0 y 100; un fichaje que rinde suma, uno que no, resta |
+| Clima | Lluvia por mes · temperatura media | 20–30 % · 10–25 °C | determinista por partido y semilla |
+
+Pendiente: medir varias temporadas completas por jerarquía de club (caja final, popularidad media y despidos) y ajustar
+la elasticidad y los objetivos de la directiva con esos datos.
+

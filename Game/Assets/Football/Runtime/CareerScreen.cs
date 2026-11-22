@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Football.Core.Career;
-using Football.Core.Competitions;
 using Football.Core.Data;
 using Football.Core.Domain;
 using Football.Core.Management;
@@ -17,7 +16,7 @@ namespace Football.Game
     {
         /// <summary>Nada.</summary>
         None,
-        /// <summary>Empezar una partida nueva con el club elegido.</summary>
+        /// <summary>Empezar una partida nueva con el DT y el club elegidos.</summary>
         NewGame,
         /// <summary>Seguir la partida guardada.</summary>
         LoadGame,
@@ -26,30 +25,37 @@ namespace Football.Game
         /// <summary>Guardar.</summary>
         Save,
         /// <summary>Volver al menú principal.</summary>
-        Exit
+        Exit,
+        /// <summary>Del DT a la elección de club (la resuelve la pantalla).</summary>
+        PickClub,
+        /// <summary>De la elección de club al DT (la resuelve la pantalla).</summary>
+        BackToManager,
+        /// <summary>La directiva despidió al DT: se guarda y se vuelve al menú.</summary>
+        Sacked
     }
 
     /// <summary>
-    /// Pantalla del Modo Carrera y del Torneo, armada con UiKit (sin EventSystem): pestañas INICIO (próximo rival, JUGAR,
-    /// SIMULAR, AVANZAR, tablas Torneo/Anual/Promedios y buzón), PLANTEL (forma, moral, físico, contrato, estado y táctica
-    /// con doble dibujo, estilo y roles por línea), MERCADO (búsqueda por rangos, ojeadores, ofertas, cláusulas y ofertas
-    /// recibidas) y CLUB (finanzas, pases entre presupuestos, infraestructura y cuerpo técnico). En el Torneo solo hay
-    /// INICIO y PLANTEL. No tiene lógica de juego: todo lo hace <see cref="CareerSession"/>. Respeta el área segura.
+    /// Contenedor del Modo Carrera y del Torneo, armado con UiKit (sin EventSystem) y dentro del área segura. Para una
+    /// carrera nueva muestra la creación del DT y la elección de club; durante la partida, una barra de cinco botones abajo
+    /// (Central, Plantilla y Táctica, Mercado y Ojeo, Oficina y Objetivos, Finanzas y Estadio) y la cabecera con guardar y
+    /// salir. El Torneo usa su elección de club simple y solo Central y Plantilla. No tiene lógica de juego: todo lo hace
+    /// <see cref="CareerSession"/>; cada sección es una <see cref="CareerPage"/> (salvo Plantilla y Mercado, que viven acá).
     /// </summary>
-    public sealed class CareerScreen : MenuScreenBase
+    public sealed class CareerScreen : MenuScreenBase, ICareerHost
     {
-        private const int TableRows = 16;
-        private const int NewsRows = 6;
+        private const long Million = 1_000_000;
         private const int SquadRows = 13;
         private const int MarketRows = 8;
         private const int OfferRows = 3;
         private const int AgeStep = 1;
         private const int RatingStep = 2;
         private const float FeeStep = 0.1f;
-        private const float BudgetMoveShare = 0.1f;
-        private const int StaffImprovement = 2;
-        private const int MaxStaffAbility = 20;
-        private const long Million = 1_000_000;
+        private const int Sections = 5;
+        private const float BarY = 58f, BarHeight = 92f, BarStep = 384f;
+        private const float StatusY = 122f, StartStatusY = 175f;
+        // Plantilla y Mercado se diseñaron para toda la pantalla: se achican para dejar lugar a la cabecera y la barra.
+        private const float SectionScale = 0.885f;
+        private static readonly Vector2 SectionOffset = new Vector2(960f * (1f - SectionScale), 100f);
         private static readonly Vector2 Centre = new Vector2(960f, 540f);
         private static readonly string[] FormationNames = { "4-4-2", "4-3-3", "4-2-3-1", "4-3-1-2" };
         private static readonly string[] StyleNames = { "Balanced", "Possession", "Counter Attack", "High Press", "Defensive" };
@@ -60,18 +66,23 @@ namespace Football.Game
             { null, Position.Goalkeeper, Position.CenterBack, Position.LeftBack, Position.RightBack, Position.DefensiveMidfielder,
               Position.CentralMidfielder, Position.AttackingMidfielder, Position.LeftWinger, Position.RightWinger, Position.Striker };
 
-        private enum Tab { Home, Squad, Market, Club }
-
         private readonly Dictionary<string, string> _newsTemplates;
         private readonly Text _header;
         private readonly Text _status;
-        private readonly UiButton[] _tabs = new UiButton[4];
+        private readonly UiButton[] _bar = new UiButton[Sections];
         private readonly UiButton _save, _exit;
-        private readonly GameObject[] _panels = new GameObject[4];
         private readonly GameObject _startPanel;
+        private readonly Transform _squadPanel, _marketPanel;
+        private readonly ManagerCreationScreen _managerPage;
+        private readonly CareerClubSelectScreen _clubPage;
+        private readonly CareerHubScreen _hub;
+        private readonly CareerObjectivesScreen _office;
+        private readonly CareerFinanceScreen _finance;
+        private readonly CareerStadiumScreen _stadium;
         private CareerSession _session;
         private PlayerCardPanel _card;
-        private Tab _tab;
+        private CareerSection _section;
+        private CareerPage _startPage;
         private Vector2 _shift;
         private float _scale = 1f;
 
@@ -81,13 +92,11 @@ namespace Football.Game
         /// <summary>Club elegido para la partida nueva (índice de <see cref="TeamCatalog.Teams"/>).</summary>
         public int ChosenTeam { get; private set; }
 
-        // inicio
-        private Text _nextTitle, _nextLine, _nextInfo;
-        private UiButton _play, _simulate, _advance;
-        private readonly UiButton[] _tableTabs = new UiButton[3];
-        private TextGrid _table;
-        private int _tableMode;
-        private readonly Text[] _news = new Text[NewsRows];
+        /// <summary>DT de la partida nueva (null en el Torneo).</summary>
+        public ManagerProfile Manager { get; private set; }
+
+        /// <inheritdoc />
+        public CareerSession Session => _session;
 
         // plantel
         private TextGrid _squad;
@@ -110,69 +119,98 @@ namespace Football.Game
         private readonly Text[] _offerLines = new Text[OfferRows];
         private readonly UiButton[] _accept = new UiButton[OfferRows], _reject = new UiButton[OfferRows];
 
-        // club
-        private TextGrid _money;
-        private UiButton _toWages, _toTransfers;
-        private readonly Text[] _facilityText = new Text[4];
-        private readonly UiButton[] _upgrade = new UiButton[4];
-        private readonly Text[] _staffText = new Text[4];
-        private readonly UiButton[] _hire = new UiButton[4];
-        private static readonly StaffRole[] ShownStaff = { StaffRole.Manager, StaffRole.Scout, StaffRole.Physio, StaffRole.YouthCoach };
-
-        // inicio de partida
+        // inicio del Torneo
         private Text _startTitle, _startClub;
-        private UiButton _startPrev, _startNext, _startGo, _startLoad;
+        private UiButton _startPrev, _startNext, _startGo, _startLoad, _startBack;
 
         /// <summary>Crea la pantalla (oculta).</summary>
         public CareerScreen(Transform parent, PointerInput pointers) : base(parent, pointers, "CarreraUI")
         {
             _newsTemplates = LoadNews();
-            _header = UiKit.Label(Root, "Cabecera", new Vector2(560f, 1030f), new Vector2(1000f, 50f), string.Empty, 30, UiTheme.Text, TextAnchor.MiddleLeft);
-            _status = UiKit.Label(Root, "Estado", new Vector2(960f, 28f), new Vector2(1800f, 40f), string.Empty, 24, UiTheme.Accent);
-            string[] tabKeys = { "career.tab.home", "career.tab.squad", "career.tab.market", "career.tab.club" };
-            for (int i = 0; i < _tabs.Length; i++)
+            _header = UiKit.Label(Root, "Cabecera", new Vector2(700f, 1035f), new Vector2(1300f, 50f), string.Empty, 28, UiTheme.Text, TextAnchor.MiddleLeft);
+            _status = UiKit.Label(Root, "Estado", new Vector2(960f, StatusY), new Vector2(1800f, 36f), string.Empty, 22, UiTheme.Accent);
+            _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1035f), new Vector2(160f, 54f), Locale.Get("career.save"), 22, UiTheme.AccentDark);
+            _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1035f), new Vector2(150f, 54f), Locale.Get("career.exit"), 22, UiTheme.Button);
+
+            _hub = new CareerHubScreen(Root, this);
+            _squadPanel = SectionGroup("Plantilla");
+            BuildSquad(_squadPanel);
+            _marketPanel = SectionGroup("Mercado");
+            BuildMarket(_marketPanel);
+            _office = new CareerObjectivesScreen(Root, this);
+            _finance = new CareerFinanceScreen(Root, this);
+            _stadium = new CareerStadiumScreen(Root, this);
+            for (int i = 0; i < Sections; i++)
             {
-                _tabs[i] = UiKit.Button(Root, "Pestana" + i, new Vector2(1120f + i * 150f, 1030f), new Vector2(140f, 54f), Locale.Get(tabKeys[i]), 22, UiTheme.Button);
+                _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(192f + i * BarStep, BarY), new Vector2(BarStep - 12f, BarHeight),
+                    Locale.Get("career.section." + i), 24, UiTheme.Button);
             }
 
-            _save = UiKit.Button(Root, "Guardar", new Vector2(1720f, 1030f), new Vector2(120f, 54f), Locale.Get("career.save"), 22, UiTheme.AccentDark);
-            _exit = UiKit.Button(Root, "Salir", new Vector2(1850f, 1030f), new Vector2(110f, 54f), Locale.Get("career.exit"), 22, UiTheme.Button);
-            for (int i = 0; i < _panels.Length; i++)
-            {
-                _panels[i] = Group("Panel" + i);
-            }
-
-            BuildHome(_panels[(int)Tab.Home].transform);
-            BuildSquad(_panels[(int)Tab.Squad].transform);
-            BuildMarket(_panels[(int)Tab.Market].transform);
-            BuildClub(_panels[(int)Tab.Club].transform);
-            _startPanel = Group("Inicio");
+            _managerPage = new ManagerCreationScreen(Root, this);
+            _clubPage = new CareerClubSelectScreen(Root, this);
+            _startPanel = CareerPage.CreateGroup(Root, "InicioTorneo").gameObject;
             BuildStart(_startPanel.transform);
             _card = new PlayerCardPanel(parent);
         }
 
+        private Transform SectionGroup(string name)
+        {
+            Transform t = CareerPage.CreateGroup(Root, name);
+            t.localScale = new Vector3(SectionScale, SectionScale, 1f);
+            ((RectTransform)t).anchoredPosition = SectionOffset;
+            t.gameObject.SetActive(false);
+            return t;
+        }
+
+        /// <summary>Del área de diseño a las coordenadas de Plantilla y Mercado (achicadas).</summary>
+        private static Vector2 InSection(Vector2 p) => (p - SectionOffset) / SectionScale;
+
+        /// <summary>Parámetros de la carrera (directiva, precios), para las pantallas que los describen.</summary>
+        public void Configure(CareerConfig config)
+        {
+            _clubPage.Configure(config);
+            _office.Configure(config);
+            _finance.Configure(config);
+        }
+
         // ------------------------------------------------------------------ ciclo
 
-        /// <summary>Muestra la elección de club (partida nueva o continuar).</summary>
+        /// <summary>Muestra el comienzo: creación del DT (carrera) o elección de club (torneo), con «continuar» si hay partida.</summary>
         /// <param name="tournament">Modo Torneo.</param>
         /// <param name="favorite">Club preseleccionado.</param>
         /// <param name="hasSave">Hay una partida guardada para continuar.</param>
         public void ShowStart(bool tournament, int favorite, bool hasSave)
         {
             _session = null;
+            Manager = null;
             ChosenTeam = Mathf.Clamp(favorite, 0, TeamCatalog.Teams.Length - 1);
-            _startTitle.text = Locale.Get(tournament ? "career.new_tournament" : "career.new_title");
-            _startLoad.SetVisible(hasSave);
-            _startClub.text = TeamCatalog.Teams[ChosenTeam].Name;
+            HideSections();
             SetTopBarVisible(false);
-            _startPanel.SetActive(true);
-            foreach (GameObject p in _panels)
+            _status.text = string.Empty;
+            _status.rectTransform.anchoredPosition = new Vector2(Centre.x, StartStatusY); // sobre los botones de abajo
+            _startPanel.SetActive(tournament);
+            if (tournament)
             {
-                p.SetActive(false);
+                _startPage = null;
+                _startTitle.text = Locale.Get("career.new_tournament");
+                _startLoad.SetVisible(hasSave);
+                _startClub.text = TeamCatalog.Teams[ChosenTeam].Name;
+            }
+            else
+            {
+                _managerPage.Reset(hasSave);
+                _clubPage.Select(ChosenTeam);
+                ShowStartPage(_managerPage);
             }
 
-            _status.text = string.Empty;
             Show();
+        }
+
+        private void ShowStartPage(CareerPage page)
+        {
+            _managerPage.SetVisible(page == _managerPage);
+            _clubPage.SetVisible(page == _clubPage);
+            _startPage = page;
         }
 
         /// <summary>Muestra la partida en curso.</summary>
@@ -181,11 +219,18 @@ namespace Football.Game
         {
             _session = session;
             _startPanel.SetActive(false);
+            _managerPage.SetVisible(false);
+            _clubPage.SetVisible(false);
+            _startPage = null;
+            _status.rectTransform.anchoredPosition = new Vector2(Centre.x, StatusY);
             SetTopBarVisible(true);
             bool career = !session.Data.TournamentOnly;
-            _tabs[(int)Tab.Market].SetVisible(career);
-            _tabs[(int)Tab.Club].SetVisible(career);
-            SelectTab(Tab.Home);
+            for (int i = 0; i < Sections; i++)
+            {
+                _bar[i].SetVisible(career || i <= (int)CareerSection.Squad);
+            }
+
+            Open(CareerSection.Hub);
             Show();
         }
 
@@ -193,6 +238,52 @@ namespace Football.Game
         public void SetStatus(string text)
         {
             _status.text = text ?? string.Empty;
+        }
+
+        /// <inheritdoc />
+        public void Request(CareerAction action)
+        {
+            switch (action)
+            {
+                case CareerAction.PickClub:
+                    ManagerProfile p = _managerPage.Profile;
+                    Manager = new ManagerProfile
+                    {
+                        FirstName = p.FirstName, LastName = p.LastName, Nationality = p.Nationality, AvatarIndex = p.AvatarIndex, Outfit = p.Outfit
+                    };
+                    _status.text = string.Empty;
+                    ShowStartPage(_clubPage);
+                    break;
+                case CareerAction.BackToManager:
+                    ShowStartPage(_managerPage);
+                    break;
+                case CareerAction.NewGame:
+                    ChosenTeam = _clubPage.Chosen;
+                    Action = action;
+                    break;
+                default:
+                    Action = action;
+                    break;
+            }
+        }
+
+        /// <inheritdoc />
+        public void Open(CareerSection section)
+        {
+            _section = section;
+            _squadPanel.gameObject.SetActive(section == CareerSection.Squad);
+            _marketPanel.gameObject.SetActive(section == CareerSection.Market);
+            _hub.SetVisible(section == CareerSection.Hub);
+            _office.SetVisible(section == CareerSection.Office);
+            _finance.SetVisible(section == CareerSection.Finance);
+            _stadium.SetVisible(section == CareerSection.Stadium);
+            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : (int)section;
+            for (int i = 0; i < Sections; i++)
+            {
+                _bar[i].Background.color = i == highlighted ? UiTheme.Selected : UiTheme.Button;
+            }
+
+            Refresh();
         }
 
         /// <inheritdoc />
@@ -207,15 +298,25 @@ namespace Football.Game
         {
             base.Hide();
             _card?.Hide();
+            _managerPage.SetVisible(false);
         }
 
         /// <summary>Procesa los toques del fotograma.</summary>
         public void Update()
         {
             Action = CareerAction.None;
+            _startPage?.Tick(Time.deltaTime);
             if (BackKey)
             {
-                Action = CareerAction.Exit;
+                if (_startPage == _clubPage)
+                {
+                    ShowStartPage(_managerPage);
+                }
+                else
+                {
+                    Action = CareerAction.Exit;
+                }
+
                 return;
             }
 
@@ -230,39 +331,55 @@ namespace Football.Game
                 return;
             }
 
-            for (int t = 0; t < n; t++)
+            for (int t = 0; t < n && Action == CareerAction.None; t++)
             {
                 Vector2 p = Local(taps[t]);
                 if (_session == null)
                 {
-                    TapStart(p);
+                    if (_startPage != null)
+                    {
+                        _startPage.Tap(p);
+                    }
+                    else
+                    {
+                        TapStart(p);
+                    }
+
                     continue;
                 }
 
-                if (_save.Contains(p)) { Action = CareerAction.Save; }
-                else if (_exit.Contains(p)) { Action = CareerAction.Exit; }
-                else
+                if (_save.Contains(p)) { Action = CareerAction.Save; continue; }
+                if (_exit.Contains(p)) { Action = CareerAction.Exit; continue; }
+                bool barTapped = false;
+                for (int i = 0; i < Sections; i++)
                 {
-                    for (int i = 0; i < _tabs.Length; i++)
+                    if (_bar[i].Root.activeSelf && _bar[i].Contains(p))
                     {
-                        if (_tabs[i].Contains(p))
-                        {
-                            SelectTab((Tab)i);
-                        }
-                    }
-
-                    switch (_tab)
-                    {
-                        case Tab.Home: TapHome(p); break;
-                        case Tab.Squad: TapSquad(p); break;
-                        case Tab.Market: TapMarket(p); break;
-                        case Tab.Club: TapClub(p); break;
+                        Open((CareerSection)i);
+                        barTapped = true;
                     }
                 }
+
+                if (barTapped)
+                {
+                    continue;
+                }
+
+                switch (_section)
+                {
+                    case CareerSection.Hub: _hub.Tap(p); break;
+                    case CareerSection.Squad: TapSquad(InSection(p)); break;
+                    case CareerSection.Market: TapMarket(InSection(p)); break;
+                    case CareerSection.Office: _office.Tap(p); break;
+                    case CareerSection.Finance: _finance.Tap(p); break;
+                    case CareerSection.Stadium: _stadium.Tap(p); break;
+                }
+
+                RefreshHeader();
             }
         }
 
-        /// <summary>Vuelve a dibujar la pestaña actual (después de un partido, por ejemplo).</summary>
+        /// <summary>Vuelve a dibujar la sección actual (después de un partido, por ejemplo).</summary>
         public void Refresh()
         {
             if (_session == null)
@@ -270,33 +387,41 @@ namespace Football.Game
                 return;
             }
 
-            CareerData d = _session.Data;
-            _header.text = d.Club(d.UserClubId).Name.ToUpperInvariant() + "   ·   " + d.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
-                           + "   ·   " + _session.CurrentTournament().Name;
-            switch (_tab)
+            RefreshHeader();
+            switch (_section)
             {
-                case Tab.Home: RefreshHome(); break;
-                case Tab.Squad: RefreshSquad(); break;
-                case Tab.Market: RefreshMarket(); break;
-                case Tab.Club: RefreshClub(); break;
+                case CareerSection.Hub: _hub.Refresh(); break;
+                case CareerSection.Squad: RefreshSquad(); break;
+                case CareerSection.Market: RefreshMarket(); break;
+                case CareerSection.Office: _office.Refresh(); break;
+                case CareerSection.Finance: _finance.Refresh(); break;
+                case CareerSection.Stadium: _stadium.Refresh(); break;
             }
         }
 
-        private void SelectTab(Tab tab)
+        private void RefreshHeader()
         {
-            _tab = tab;
-            for (int i = 0; i < _panels.Length; i++)
-            {
-                _panels[i].SetActive(i == (int)tab);
-                _tabs[i].Background.color = i == (int)tab ? UiTheme.Selected : UiTheme.Button;
-            }
+            CareerData d = _session.Data;
+            string manager = d.TournamentOnly || d.Manager.FullName.Length == 0 ? string.Empty : "   ·   " + Locale.Get("manager.dt") + " " + d.Manager.FullName;
+            _header.text = d.Club(d.UserClubId).Name.ToUpperInvariant() + "   ·   " + d.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
+                           + "   ·   " + CareerText.Money(d.Finances[d.UserClubId].Cash) + manager;
+        }
 
-            Refresh();
+        private void HideSections()
+        {
+            _squadPanel.gameObject.SetActive(false);
+            _marketPanel.gameObject.SetActive(false);
+            _hub.SetVisible(false);
+            _office.SetVisible(false);
+            _finance.SetVisible(false);
+            _stadium.SetVisible(false);
+            _managerPage.SetVisible(false);
+            _clubPage.SetVisible(false);
         }
 
         private void SetTopBarVisible(bool visible)
         {
-            foreach (UiButton b in _tabs)
+            foreach (UiButton b in _bar)
             {
                 b.SetVisible(visible);
             }
@@ -306,7 +431,7 @@ namespace Football.Game
             _header.gameObject.SetActive(visible);
         }
 
-        // ------------------------------------------------------------------ elección de club
+        // ------------------------------------------------------------------ elección de club del Torneo
 
         private void BuildStart(Transform p)
         {
@@ -317,11 +442,8 @@ namespace Football.Game
             _startClub = UiKit.Label(p, "Club", new Vector2(960f, 620f), new Vector2(760f, 120f), string.Empty, 52, UiTheme.Text);
             _startGo = UiKit.Button(p, "Empezar", new Vector2(960f, 420f), new Vector2(520f, 110f), Locale.Get("career.start"), 44, UiTheme.AccentDark);
             _startLoad = UiKit.Button(p, "Continuar", new Vector2(960f, 270f), new Vector2(520f, 100f), Locale.Get("career.continue"), 36, UiTheme.Button);
-            UiButton back = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.exit"), 28, UiTheme.Button);
-            _startBack = back;
+            _startBack = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.exit"), 28, UiTheme.Button);
         }
-
-        private UiButton _startBack;
 
         private void TapStart(Vector2 p)
         {
@@ -333,138 +455,6 @@ namespace Football.Game
             else if (_startBack.Contains(p)) { Action = CareerAction.Exit; }
 
             _startClub.text = TeamCatalog.Teams[ChosenTeam].Name;
-        }
-
-        // ------------------------------------------------------------------ inicio
-
-        private void BuildHome(Transform p)
-        {
-            UiKit.Panel(p, "Proximo", new Vector2(460f, 760f), new Vector2(840f, 380f), UiTheme.Panel);
-            _nextTitle = UiKit.Label(p, "ProximoTitulo", new Vector2(460f, 910f), new Vector2(800f, 50f), Locale.Get("career.next_match"), 30, UiTheme.Accent);
-            _nextLine = UiKit.Label(p, "ProximoRival", new Vector2(460f, 830f), new Vector2(800f, 70f), string.Empty, 44, UiTheme.Text);
-            _nextInfo = UiKit.Label(p, "ProximoInfo", new Vector2(460f, 760f), new Vector2(800f, 50f), string.Empty, 26, UiTheme.TextDim);
-            _play = UiKit.Button(p, "Jugar", new Vector2(200f, 640f), new Vector2(240f, 96f), Locale.Get("career.play"), 38, UiTheme.AccentDark);
-            _simulate = UiKit.Button(p, "Simular", new Vector2(460f, 640f), new Vector2(240f, 96f), Locale.Get("career.simulate"), 34, UiTheme.Button);
-            _advance = UiKit.Button(p, "Avanzar", new Vector2(720f, 640f), new Vector2(240f, 96f), Locale.Get("career.advance"), 34, UiTheme.Button);
-
-            UiKit.Panel(p, "Buzon", new Vector2(460f, 300f), new Vector2(840f, 460f), UiTheme.Panel);
-            UiKit.Label(p, "BuzonTitulo", new Vector2(460f, 500f), new Vector2(800f, 44f), Locale.Get("career.news"), 28, UiTheme.Accent);
-            for (int i = 0; i < NewsRows; i++)
-            {
-                _news[i] = UiKit.Label(p, "Noticia" + i, new Vector2(460f, 440f - i * 60f), new Vector2(800f, 56f), string.Empty, 22, UiTheme.Text, TextAnchor.MiddleLeft);
-            }
-
-            UiKit.Panel(p, "Tabla", new Vector2(1370f, 520f), new Vector2(900f, 900f), UiTheme.Panel);
-            string[] keys = { "career.table.tournament", "career.table.annual", "career.table.averages" };
-            for (int i = 0; i < _tableTabs.Length; i++)
-            {
-                _tableTabs[i] = UiKit.Button(p, "TablaModo" + i, new Vector2(1100f + i * 270f, 925f), new Vector2(250f, 56f), Locale.Get(keys[i]), 24, UiTheme.Button);
-            }
-
-            _table = new TextGrid(p, "Posiciones", new Vector2(940f, 860f), 50f, new[] { 960f, 1180f, 1520f, 1620f, 1730f },
-                new[] { 60f, 420f, 90f, 90f, 110f }, TableRows, 24);
-        }
-
-        private void RefreshHome()
-        {
-            CareerData d = _session.Data;
-            Fixture next = _session.PendingUserFixture ?? _session.NextUserFixture();
-            bool today = _session.PendingUserFixture != null;
-            if (next == null)
-            {
-                _nextLine.text = _session.TournamentOver
-                    ? string.Format(CultureInfo.InvariantCulture, Locale.Get("career.tournament_over"), d.Club(_session.ChampionId()).Name)
-                    : Locale.Get("career.no_match");
-                _nextInfo.text = string.Empty;
-            }
-            else
-            {
-                bool home = next.HomeClubId == d.UserClubId;
-                int rival = home ? next.AwayClubId : next.HomeClubId;
-                _nextLine.text = d.Club(rival).Name;
-                _nextInfo.text = Locale.Get(home ? "career.home_game" : "career.away_game") + "  ·  "
-                                 + (today ? Locale.Get("career.today") : next.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture));
-            }
-
-            _play.SetVisible(today);
-            _simulate.SetVisible(today);
-            _advance.SetVisible(!today && !_session.TournamentOver);
-            for (int i = 0; i < _tableTabs.Length; i++)
-            {
-                _tableTabs[i].Background.color = i == _tableMode ? UiTheme.Selected : UiTheme.Button;
-                _tableTabs[i].SetVisible(i == 0 || !d.TournamentOnly);
-            }
-
-            FillTable();
-            IReadOnlyList<NewsItem> items = _session.Inbox.Items;
-            for (int i = 0; i < NewsRows; i++)
-            {
-                _news[i].text = i < items.Count ? items[i].Date.ToString("dd/MM", CultureInfo.InvariantCulture) + "  " + NewsText(items[i]) : string.Empty;
-            }
-        }
-
-        private void FillTable()
-        {
-            CareerData d = _session.Data;
-            _table.Clear();
-            bool averages = _tableMode == 2;
-            _table.SetRow(0, "#", Locale.Get("career.col.club"), averages ? string.Empty : Locale.Get("career.col.played"),
-                averages ? string.Empty : Locale.Get("career.col.gd"), Locale.Get(averages ? "career.col.average" : "career.col.points"));
-            if (averages)
-            {
-                List<AverageRow> rows = _session.AveragesTable();
-                for (int i = 0; i < rows.Count && i + 1 < TableRows; i++)
-                {
-                    _table.SetRow(i + 1, Num(i + 1), d.Club(rows[i].ClubId).Name, string.Empty, string.Empty,
-                        rows[i].Average.ToString("0.000", CultureInfo.InvariantCulture));
-                    _table.Highlight(i + 1, rows[i].ClubId == d.UserClubId);
-                }
-
-                return;
-            }
-
-            List<Standing> table = _tableMode == 0 ? _session.TournamentTable() : _session.AnnualTable();
-            for (int i = 0; i < table.Count && i + 1 < TableRows; i++)
-            {
-                Standing s = table[i];
-                _table.SetRow(i + 1, Num(i + 1), d.Club(s.ClubId).Name, Num(s.Played), Num(s.GoalDifference), Num(s.Points));
-                _table.Highlight(i + 1, s.ClubId == d.UserClubId);
-            }
-        }
-
-        private void TapHome(Vector2 p)
-        {
-            for (int i = 0; i < _tableTabs.Length; i++)
-            {
-                if (_tableTabs[i].Contains(p))
-                {
-                    _tableMode = i;
-                    RefreshHome();
-                }
-            }
-
-            if (_play.Contains(p))
-            {
-                Action = CareerAction.Play;
-            }
-            else if (_simulate.Contains(p))
-            {
-                Fixture f = _session.PendingUserFixture;
-                MatchReport r = _session.SimulateUserMatch();
-                CareerData d = _session.Data;
-                SetStatus(d.Club(f.HomeClubId).Name + "  " + r.HomeGoals + " - " + r.AwayGoals + "  " + d.Club(f.AwayClubId).Name);
-                Refresh();
-            }
-            else if (_advance.Contains(p))
-            {
-                DayOutcome outcome = _session.AdvanceToNextMatch();
-                if (outcome == DayOutcome.SeasonFinished)
-                {
-                    SetStatus(Locale.Get("career.season_over"));
-                }
-
-                Refresh();
-            }
         }
 
         // ------------------------------------------------------------------ plantel y táctica
@@ -700,111 +690,8 @@ namespace Football.Game
             }
         }
 
-        // ------------------------------------------------------------------ club
-
-        private void BuildClub(Transform p)
-        {
-            UiKit.Panel(p, "Finanzas", new Vector2(480f, 600f), new Vector2(880f, 740f), UiTheme.Panel);
-            UiKit.Label(p, "FinanzasTitulo", new Vector2(480f, 930f), new Vector2(840f, 50f), Locale.Get("career.finances"), 30, UiTheme.Accent);
-            _money = new TextGrid(p, "Dinero", new Vector2(80f, 860f), 70f, new[] { 330f, 760f }, new[] { 500f, 300f }, 6, 26);
-            _toWages = UiKit.Button(p, "ASueldos", new Vector2(270f, 330f), new Vector2(360f, 80f), Locale.Get("career.to_wages"), 28, UiTheme.Button);
-            _toTransfers = UiKit.Button(p, "AFichajes", new Vector2(690f, 330f), new Vector2(360f, 80f), Locale.Get("career.to_transfers"), 28, UiTheme.Button);
-
-            UiKit.Panel(p, "Obras", new Vector2(1420f, 760f), new Vector2(920f, 420f), UiTheme.Panel);
-            UiKit.Label(p, "ObrasTitulo", new Vector2(1420f, 935f), new Vector2(880f, 50f), Locale.Get("career.facilities"), 30, UiTheme.Accent);
-            for (int i = 0; i < 4; i++)
-            {
-                float y = 860f - i * 85f;
-                _facilityText[i] = UiKit.Label(p, "Obra" + i, new Vector2(1240f, y), new Vector2(520f, 60f), string.Empty, 24, UiTheme.Text, TextAnchor.MiddleLeft);
-                _upgrade[i] = UiKit.Button(p, "Ampliar" + i, new Vector2(1700f, y), new Vector2(320f, 64f), string.Empty, 22, UiTheme.Button);
-            }
-
-            UiKit.Panel(p, "CuerpoTecnico", new Vector2(1420f, 300f), new Vector2(920f, 440f), UiTheme.Panel);
-            UiKit.Label(p, "CuerpoTitulo", new Vector2(1420f, 485f), new Vector2(880f, 50f), Locale.Get("career.staff"), 30, UiTheme.Accent);
-            for (int i = 0; i < 4; i++)
-            {
-                float y = 410f - i * 85f;
-                _staffText[i] = UiKit.Label(p, "Staff" + i, new Vector2(1240f, y), new Vector2(520f, 60f), string.Empty, 22, UiTheme.Text, TextAnchor.MiddleLeft);
-                _hire[i] = UiKit.Button(p, "Contratar" + i, new Vector2(1700f, y), new Vector2(320f, 64f), Locale.Get("career.hire"), 22, UiTheme.Button);
-            }
-        }
-
-        private void RefreshClub()
-        {
-            CareerData d = _session.Data;
-            ClubFinances f = d.Finances[d.UserClubId];
-            _money.Clear();
-            _money.SetRow(0, Locale.Get("career.cash"), Money(f.Cash));
-            _money.SetRow(1, Locale.Get("career.transfer_budget"), Money(f.TransferBudget));
-            _money.SetRow(2, Locale.Get("career.wage_budget"), Money(f.WeeklyWageBudget));
-            _money.SetRow(3, Locale.Get("career.wage_bill"), Money(_session.WeeklyWages(d.UserClubId)));
-            _money.SetRow(4, Locale.Get("career.reputation"), Num(f.Reputation));
-            _money.SetRow(5, Locale.Get("career.members"), f.Members.ToString("N0", CultureInfo.InvariantCulture));
-            ClubFacilities facilities = d.Facilities[d.UserClubId];
-            for (int i = 0; i < 4; i++)
-            {
-                Facility fac = facilities.All[i];
-                _facilityText[i].text = Locale.Get("career.facility." + i) + "  ·  " + Format("career.level", fac.Level)
-                                        + (fac.WeeksToFinish > 0 ? "  ·  " + Format("career.building", fac.WeeksToFinish) : string.Empty);
-                _upgrade[i].Label.text = Format("career.upgrade", Money(_session.Finance.UpgradeCost(fac.Level + 1)));
-            }
-
-            for (int i = 0; i < ShownStaff.Length; i++)
-            {
-                StaffMember s = d.Staff.Find(x => x.ClubId == d.UserClubId && x.Role == ShownStaff[i]);
-                _staffText[i].text = Locale.Get("career.staff." + (int)ShownStaff[i]) + ": " + (s == null ? "-" : s.Name + " (" + s.Ability + ") " + Money(s.WeeklyWage));
-            }
-        }
-
-        private void TapClub(Vector2 p)
-        {
-            CareerData d = _session.Data;
-            ClubFinances f = d.Finances[d.UserClubId];
-            if (_toWages.Contains(p))
-            {
-                bool ok = _session.Finance.MoveToWages(d.UserClubId, (long)(f.TransferBudget * (double)BudgetMoveShare), d.Today);
-                SetStatus(Locale.Get(ok ? "career.moved" : "career.move_failed"));
-            }
-            else if (_toTransfers.Contains(p))
-            {
-                long spare = f.WeeklyWageBudget - _session.WeeklyWages(d.UserClubId);
-                bool ok = spare > 0 && _session.Finance.MoveToTransfers(d.UserClubId, (long)(spare * (double)BudgetMoveShare) + 1, d.Today);
-                SetStatus(Locale.Get(ok ? "career.moved" : "career.move_failed"));
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                if (_upgrade[i].Contains(p))
-                {
-                    SetStatus(Locale.Get(_session.Finance.StartUpgrade(d.UserClubId, (FacilityKind)i, d.Today) ? "career.upgrade_started" : "career.upgrade_failed"));
-                }
-
-                if (_hire[i].Contains(p))
-                {
-                    StaffMember s = d.Staff.Find(x => x.ClubId == d.UserClubId && x.Role == ShownStaff[i]);
-                    int ability = Math.Min(MaxStaffAbility, (s?.Ability ?? 0) + StaffImprovement);
-                    string name = s?.Name ?? Locale.Get("career.staff." + (int)ShownStaff[i]);
-                    SetStatus(Locale.Get(_session.HireStaff(ShownStaff[i], ability, name) ? "career.hired" : "career.hire_failed"));
-                }
-            }
-
-            RefreshClub();
-        }
 
         // ------------------------------------------------------------------ auxiliares
-
-        private GameObject Group(string name)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(Root, false);
-            var rect = (RectTransform)go.transform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.zero;
-            rect.pivot = Vector2.zero;
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = UiKit.Reference;
-            return go;
-        }
 
         /// <summary>Encoge y corre el área de diseño para que no la tape el recorte de la cámara o los bordes curvos.</summary>
         private void FitSafeArea()
@@ -821,15 +708,23 @@ namespace Football.Game
         /// <summary>Del toque (área de diseño sin escalar) a las coordenadas de los elementos.</summary>
         private Vector2 Local(Vector2 tap) => (tap - Centre - _shift) / _scale + Centre;
 
-        private string NewsText(NewsItem item)
+        /// <inheritdoc />
+        public string NewsText(NewsItem item)
         {
             string[] args = item.Args ?? Array.Empty<string>();
             var shown = new string[args.Length];
             for (int i = 0; i < args.Length; i++)
             {
-                // Los avisos del motor traen el identificador del jugador: se muestra su nombre.
+                // Los avisos del motor traen el identificador del jugador: se muestra su nombre; las claves de la interfaz, su texto.
+                if (args[i].StartsWith("stadium.", StringComparison.Ordinal))
+                {
+                    shown[i] = Locale.Get(args[i]);
+                    continue;
+                }
+
                 shown[i] = int.TryParse(args[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int id) && _session.Data.Players.TryGetValue(id, out Player p)
                            && item.Key != "news.result" && item.Key != "news.season_end" && item.Key != "news.scout_report"
+                           && !item.Key.StartsWith("news.supporters", StringComparison.Ordinal) && item.Key != "news.stadium_work_done"
                     ? ShortName(p)
                     : args[i];
             }
@@ -857,81 +752,16 @@ namespace Football.Game
 
         private static string PositionCode(Position p) => PlayerLabels.Code(p);
 
-        private static string Money(long amount) => "$" + (amount / Million).ToString("N0", CultureInfo.InvariantCulture) + " M";
+        private static string Money(long amount) => CareerText.Money(amount);
 
-        private static string Num(int value) => value.ToString(CultureInfo.InvariantCulture);
+        private static string Num(int value) => CareerText.Num(value);
 
-        private static string Format(string key, params object[] args) => string.Format(CultureInfo.InvariantCulture, Locale.Get(key), args);
+        private static string Format(string key, params object[] args) => CareerText.Format(key, args);
 
         private static T Next<T>(T[] values, T current)
         {
             int i = Array.IndexOf(values, current);
             return values[(i + 1) % values.Length];
-        }
-
-        /// <summary>Tabla de textos en filas y columnas (se crea una vez; después solo cambian los textos).</summary>
-        private sealed class TextGrid
-        {
-            private readonly Text[,] _cells;
-            private readonly Image[] _marks;
-            private readonly float _top, _rowHeight, _left, _right;
-
-            public TextGrid(Transform parent, string name, Vector2 topLeft, float rowHeight, float[] columnCentres, float[] widths, int rows, int fontSize)
-            {
-                _cells = new Text[rows, columnCentres.Length];
-                _marks = new Image[rows];
-                _top = topLeft.y;
-                _rowHeight = rowHeight;
-                _left = topLeft.x;
-                _right = columnCentres[columnCentres.Length - 1] + widths[widths.Length - 1] * 0.5f;
-                for (int r = 0; r < rows; r++)
-                {
-                    float y = RowY(r);
-                    _marks[r] = UiKit.Panel(parent, name + "Fila" + r, new Vector2((_left + _right) * 0.5f, y), new Vector2(_right - _left, rowHeight - 4f),
-                        new Color(UiTheme.Accent.r, UiTheme.Accent.g, UiTheme.Accent.b, 0.18f));
-                    _marks[r].gameObject.SetActive(false);
-                    for (int c = 0; c < columnCentres.Length; c++)
-                    {
-                        _cells[r, c] = UiKit.Label(parent, name + r + "_" + c, new Vector2(columnCentres[c], y), new Vector2(widths[c], rowHeight),
-                            string.Empty, fontSize, r == 0 ? UiTheme.TextDim : UiTheme.Text, c == 1 || c == 0 && widths[c] > 200f ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter);
-                    }
-                }
-            }
-
-            public float RowY(int row) => _top - row * _rowHeight;
-
-            public void Clear()
-            {
-                for (int r = 0; r < _cells.GetLength(0); r++)
-                {
-                    _marks[r].gameObject.SetActive(false);
-                    for (int c = 0; c < _cells.GetLength(1); c++)
-                    {
-                        _cells[r, c].text = string.Empty;
-                    }
-                }
-            }
-
-            public void SetRow(int row, params string[] values)
-            {
-                for (int c = 0; c < values.Length && c < _cells.GetLength(1); c++)
-                {
-                    _cells[row, c].text = values[c];
-                }
-            }
-
-            public void Highlight(int row, bool on) => _marks[row].gameObject.SetActive(on);
-
-            public int RowAt(Vector2 p)
-            {
-                if (p.x < _left || p.x > _right)
-                {
-                    return -1;
-                }
-
-                int row = Mathf.RoundToInt((_top - p.y) / _rowHeight);
-                return row >= 0 && row < _cells.GetLength(0) && Mathf.Abs(RowY(row) - p.y) <= _rowHeight * 0.5f ? row : -1;
-            }
         }
     }
 }

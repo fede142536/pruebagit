@@ -229,3 +229,38 @@ simula. Los seguimientos de ojeadores en curso y las ofertas recibidas sin respo
 - **Estadio:** pista perimetral azul, césped más vivo, LED continuos, tribunas más cerca, bancos de suplentes y fotógrafos
   en el lateral de la cámara. **Figura:** cabeza al 85 % y cuello más largo (≈7,5 cabezas), cejas, boca y franja en las medias.
 **Consecuencias:** los partidos amistosos con equipos del archivo ya no varían los atributos de un partido a otro.
+
+## D-22 · Modo Carrera completo: DT, directiva, entradas, socios, obras del estadio y medidor de gestión — Aceptada (pedido del usuario)
+**Decisión:**
+- **DT propio** (`ManagerProfile`): nombre, apellido, nacionalidad (Argentina de fábrica), uno de 6 avatares y traje o buzo.
+  Popularidad inicial 80; la directiva lo despide por debajo de 25 (`career.json` → `Board.FireThreshold`). El despido
+  termina la carrera: se borra la partida y se vuelve a crear un DT.
+- **Datos institucionales** de los 15 clubes en `argentina.json` (bloque `Club`): fundación, estadio y capacidad reales;
+  presupuesto de fichajes, masa salarial y valor **estimados por nosotros** (1 USD = 1.400 ARS), y jerarquía Grande /
+  Media tabla / En desarrollo. Sin escudos reales (D-12).
+- **Directiva**: cinco objetivos (nacional, continental, juvenil, finanzas y exposición de marca) con prioridad
+  1 CRÍTICA a 4 BAJA según la jerarquía; la popularidad cambia con resultados, clásicos, caja y el balance de fin de temporada.
+- **Público por partido** (`MatchAttendanceCalculator`): importancia ×1,45 final de copa, ×1,35 clásico, ×1,25 decisivo,
+  ×1,00 normal y ×0,65 sin nada en juego; racha, posición respecto de lo esperado, ánimo y malestar de los socios, y
+  elasticidad del precio. La taquilla y los consumos van al libro contable. El estadio 3D muestra esa ocupación
+  (`StadiumLook`): cada asiento se llena o no según un hash fijo.
+- **Entradas**: cuatro niveles (Popular, Normal, Alta, Premium) y ajuste fino para el próximo partido; `TicketPricingAdvisor`
+  da un rango ideal por partido (verde ideal, amarillo elevado, rojo excesivo).
+- **Socios** (`SupporterRequestSystem`): si el precio supera el rango, piden una rebaja por el buzón; aceptar mejora la
+  relación, ignorar sube el malestar. Con malestar sostenido sobre 75 hay repudio, menos público y piden la salida del DT.
+- **Estadio** (`StadiumRemodelingSystem`): cuatro categorías × tres niveles con costo y semanas (tribunas +4.000/+8.000/
+  +12.000 asientos en 16–20/32–36/48–52 semanas; parking +1.000/+2.500/+5.000 plazas en 10/20/32; equipamiento 6/14/24;
+  servicios 8/18/30). Una obra por categoría; cuenta regresiva semanal; al terminar se aplica y avisa. Durante una
+  ampliación de tribunas se cierra una parte del estadio y se ven andamios en el 3D y en la vista isométrica.
+- **Medidor de gestión** (0–100): hinchas 35 %, plantel y fichajes 35 %, presupuesto 30 %, con cada factor y sus puntos
+  a la vista («Refuerzo X: +4 pts»).
+- **Copa Argentina** por eliminación directa con todos los clubes (la tabla de liga no la mezcla). Clima del partido
+  determinista (`ForecastOf`, por mes y semilla).
+- **Persistencia**: migración 10 (DT, datos de clubes, estadios, obras, socios, historial de precios, fichajes e historial
+  del medidor) y archivo de partida versión 3 (lee las versiones 1 y 2).
+- **Unity**: creación del DT (con figura 3D en traje o buzo), elección de club con expectativas, Central con calendario
+  de 5 días, Oficina y objetivos, Finanzas (anillo de ingresos y precio en vivo) y Remodelación del estadio; barra de
+  5 botones abajo. Plantilla y Mercado son las de antes, achicadas para dejar lugar a la barra.
+**Consecuencias:** las partidas guardadas antes de esta versión se leen con datos de fábrica para lo nuevo (DT sin nombre,
+estadio inicial del club). Todos los números de estos sistemas están en `Data/balance/career.json`.
+

@@ -223,13 +223,14 @@ namespace Football.Game
         /// <param name="rivalKit">Camiseta del rival.</param>
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Minutos reales por parte.</param>
+        /// <param name="stadium">Público, tribunas y obras del estadio del partido.</param>
         /// <returns>Verdadero si arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
         public bool BeginCareer(TeamDefinition userTeam, TeamDefinition rivalTeam, MatchTeamSetup user, MatchTeamSetup rival,
-            KitColors userKit, KitColors rivalKit, int difficulty, int halfMinutes)
+            KitColors userKit, KitColors rivalKit, int difficulty, int halfMinutes, StadiumLook stadium)
         {
             try
             {
-                BeginUnsafe(userTeam, rivalTeam, null, null, userKit, rivalKit, difficulty, halfMinutes, false, false, user, rival);
+                BeginUnsafe(userTeam, rivalTeam, null, null, userKit, rivalKit, difficulty, halfMinutes, false, false, user, rival, stadium);
                 LastError = null;
                 return true;
             }
@@ -248,7 +249,7 @@ namespace Football.Game
 
         private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, SquadSelection homeSquad, SquadSelection awaySquad,
             KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor,
-            MatchTeamSetup prebuiltHome = null, MatchTeamSetup prebuiltAway = null)
+            MatchTeamSetup prebuiltHome = null, MatchTeamSetup prebuiltAway = null, StadiumLook? stadium = null)
         {
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
@@ -273,7 +274,7 @@ namespace Football.Game
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full);
             _nameTags.Setup(_engine);
             _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize); // en 3 contra 3 no hace falta
             _playerHud.SetVisible(!benchmark);
