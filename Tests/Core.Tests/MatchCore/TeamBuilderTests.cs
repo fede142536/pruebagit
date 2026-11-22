@@ -44,7 +44,7 @@ namespace Football.Core.Tests.MatchCore
         {
             TeamDatabase db = LoadArgentina();
             string[] names = db.Teams.Select(t => t.Name).ToArray();
-            Assert.That(names, Is.EquivalentTo(new[]
+            Assert.That(names, Is.SupersetOf(new[]
             {
                 "Boca Juniors", "River Plate", "Racing Club", "Estudiantes de La Plata", "San Lorenzo", "Independiente"
             }));
@@ -69,7 +69,7 @@ namespace Football.Core.Tests.MatchCore
                         Assert.That(hex.IsMatch(color), Is.True, $"{t.Name}: color inválido {color}");
                     }
 
-                    Assert.That(new[] { "Solid", "Stripes", "Band", "Sash" }, Does.Contain(k.Pattern));
+                    Assert.That(new[] { "Solid", "Stripes", "Band", "Sash", "Chevron", "Halves" }, Does.Contain(k.Pattern));
                 }
 
                 foreach (PlayerDefinition p in t.Players)
@@ -96,6 +96,35 @@ namespace Football.Core.Tests.MatchCore
                     int[] xi = TeamBuilder.PickLineup(t, f);
                     Assert.That(TeamBuilder.ParsePosition(t.Players[xi[0]].Position), Is.EqualTo(Position.Goalkeeper), $"{t.Name} {f.Name}: arquero");
                 }
+            }
+        }
+
+        [Test]
+        public void ArgentinaFile_HasTheNineNewClubs_AndTheirClassics()
+        {
+            TeamDatabase db = LoadArgentina();
+            string[] wanted =
+            {
+                "Vélez Sarsfield", "Defensa y Justicia", "Banfield", "Lanús", "Gimnasia y Esgrima La Plata", "Talleres", "Belgrano",
+                "Rosario Central", "Newell's Old Boys"
+            };
+            foreach (string name in wanted)
+            {
+                TeamDefinition team = db.Teams.SingleOrDefault(t => t.Name == name);
+                Assert.That(team, Is.Not.Null, name);
+                Assert.That(team.Home.Shirt, Is.Not.EqualTo(team.Away.Shirt), name + ": titular y alternativa distintas");
+            }
+
+            Assert.That(db.Teams.Select(t => t.Name).Distinct().Count(), Is.EqualTo(db.Teams.Length), "sin equipos repetidos");
+            Assert.That(db.RivalryBetween("Rosario Central", "Newell's Old Boys"), Is.EqualTo(RivalryLevel.Classic));
+            Assert.That(db.RivalryBetween("Belgrano", "Talleres"), Is.EqualTo(RivalryLevel.Classic), "en cualquier orden");
+            Assert.That(db.RivalryBetween("Banfield", "Lanús"), Is.EqualTo(RivalryLevel.Classic));
+            Assert.That(db.RivalryBetween("Vélez Sarsfield", "Belgrano"), Is.EqualTo(RivalryLevel.None));
+            foreach (RivalryDefinition r in db.Rivalries)
+            {
+                Assert.That(db.Teams.Any(t => t.Name == r.TeamA) && db.Teams.Any(t => t.Name == r.TeamB), Is.True,
+                    $"la rivalidad {r.Name} usa equipos del archivo");
+                Assert.That(Enum.TryParse(r.Level, true, out RivalryLevel _), Is.True, r.Level);
             }
         }
 

@@ -66,6 +66,11 @@ distintas, y pueden tener errores. **Las medias son estimaciones propias** (no d
 sin escudos, logotipos ni diseños oficiales de camisetas.
 **Uso:** personal. Si el repositorio es público, conviene hacerlo privado o quitar el archivo antes de compartirlo.
 El juego sigue funcionando sin el archivo (usa dos equipos ficticios).
+**Ampliación (23/11/2026, a pedido del usuario):** nueve clubes más (Vélez, Defensa y Justicia, Banfield, Lanús, Gimnasia, Talleres,
+Belgrano, Rosario Central y Newell's), camisetas titular y alternativa (patrones nuevos: V y mitades) y rivalidades
+(`Rivalries`, nivel `RivalryLevel`). Las páginas de plantel no se pudieron abrir desde la sesión (dominios bloqueados): solo
+se cargaron los nombres que aparecieron en búsquedas web, y cada plantel se completó hasta 22 con jugadores «Juvenil ficticio
+XXX-n» para que se pueda jugar. Están marcados para que el usuario los reemplace.
 
 ## D-13 · Defensa por posición y táctica en vivo — Aceptada (pedido del usuario: «enfocate en el gameplay del partido»)
 **Decisión:** la probabilidad de una entrada depende de la geometría (orientación del defensor, si está delante o detrás del

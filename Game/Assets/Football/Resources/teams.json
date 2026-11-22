@@ -1,7 +1,7 @@
 {
-  "Source": "Búsquedas web del 20 y 21 de noviembre de 2026: listas de convocados y planteles publicados por medios (El Gráfico, RPP, La Página Millonaria, Fichajes.com, Vavel, ESPN, sitios oficiales). Las fuentes tienen fechas distintas y no siempre coinciden.",
-  "Updated": "2026-11-21",
-  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC.",
+  "Source": "Búsquedas web del 20 y 21 de noviembre de 2026: listas de convocados y planteles publicados por medios (El Gráfico, RPP, La Página Millonaria, Fichajes.com, Vavel, ESPN, sitios oficiales). Las fuentes tienen fechas distintas y no siempre coinciden. Clubes agregados el 23/11/2026 (Vélez, Defensa y Justicia, Banfield, Lanús, Gimnasia, Talleres, Belgrano, Rosario Central y Newell's): nombres tomados de resúmenes de búsquedas web (Vavel, ESPN, Fichajes, Flashscore, Livefutbol, Tribuna, Football-Lineups, La Capital, La Unión); las páginas de plantel no se pudieron abrir desde la sesión.",
+  "Updated": "2026-11-23",
+  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC. En los 9 clubes agregados el 23/11/2026 los planteles están INCOMPLETOS: solo figuran los nombres encontrados en las búsquedas, y los huecos de cada puesto se completaron con jugadores llamados «Juvenil ficticio XXX-n» para que el equipo pueda jugar; reemplázalos por los reales editando este archivo. Algunos apellidos sin nombre de pila figuran tal como aparecieron en la fuente.",
   "Teams": [
     {
       "Name": "Boca Juniors",
@@ -1149,6 +1149,1682 @@
           "Rating": 69
         }
       ]
+    },
+    {
+      "Name": "Vélez Sarsfield",
+      "ShortName": "VEL",
+      "Style": "Possession",
+      "Formation": "4-3-3",
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1E4FA0",
+        "Pattern": "Chevron",
+        "Shorts": "#1E4FA0",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#1E4FA0",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Chevron",
+        "Shorts": "#FFFFFF",
+        "Socks": "#1E4FA0"
+      },
+      "Players": [
+        {
+          "Name": "Tomás Marchiori",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 73
+        },
+        {
+          "Name": "Emanuel Mammana",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 71
+        },
+        {
+          "Name": "Lisandro Magallán",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 70
+        },
+        {
+          "Name": "Elías Gómez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 70
+        },
+        {
+          "Name": "Joaquín García",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 69
+        },
+        {
+          "Name": "Jano Gordon",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Aarón Quirós",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 64
+        },
+        {
+          "Name": "Lucas Robertone",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 72
+        },
+        {
+          "Name": "Rodrigo Aliendro",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 71
+        },
+        {
+          "Name": "Manuel Lanzini",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 73
+        },
+        {
+          "Name": "Diego Valdés",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 72
+        },
+        {
+          "Name": "Claudio Baeza",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 70
+        },
+        {
+          "Name": "Matías Arias",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 65
+        },
+        {
+          "Name": "Dilan Godoy",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 65
+        },
+        {
+          "Name": "Thiago Aguirre",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 64
+        },
+        {
+          "Name": "Florián Monzón",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 68
+        },
+        {
+          "Name": "Álex Verón",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "EI",
+          "Rating": 64
+        },
+        {
+          "Name": "Juvenil ficticio VEL-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio VEL-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio VEL-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio VEL-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio VEL-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Defensa y Justicia",
+      "ShortName": "DYJ",
+      "Style": "Possession",
+      "Formation": "4-2-3-1",
+      "Home": {
+        "Shirt": "#F5D300",
+        "Secondary": "#0B7A3B",
+        "Pattern": "Solid",
+        "Shorts": "#0B7A3B",
+        "Socks": "#0B7A3B"
+      },
+      "Away": {
+        "Shirt": "#0B7A3B",
+        "Secondary": "#F5D300",
+        "Pattern": "Solid",
+        "Shorts": "#0B7A3B",
+        "Socks": "#F5D300"
+      },
+      "Players": [
+        {
+          "Name": "Damián Fernández",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Fernando Román",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Héctor Martínez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Valentín Loza",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 65
+        },
+        {
+          "Name": "Ayrton Portillo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 66
+        },
+        {
+          "Name": "Santiago Sosa",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 65
+        },
+        {
+          "Name": "Tomás Pérez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 67
+        },
+        {
+          "Name": "Máximo Rodríguez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 66
+        },
+        {
+          "Name": "Nicolás Palavecino",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 68
+        },
+        {
+          "Name": "David Barbona",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 68
+        },
+        {
+          "Name": "Esteban Lucero",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 64
+        },
+        {
+          "Name": "Nazareno Roselli",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 67
+        },
+        {
+          "Name": "Mateo Aguiar",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 64
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio DYJ-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Banfield",
+      "ShortName": "BAN",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#0B6E2E",
+        "Pattern": "Sash",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#0B6E2E",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#0B6E2E"
+      },
+      "Players": [
+        {
+          "Name": "Facundo Sanguinetti",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 70
+        },
+        {
+          "Name": "Diego Rodríguez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 64
+        },
+        {
+          "Name": "Danilo Arboleda",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Santiago Daniele",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Nehuén Paz",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Juan Luis Alfaro",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 65
+        },
+        {
+          "Name": "Nicolás Meriano",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 64
+        },
+        {
+          "Name": "Brandon Oviedo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 66
+        },
+        {
+          "Name": "Lautaro Cano",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 64
+        },
+        {
+          "Name": "Ignacio Abraham",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 66
+        },
+        {
+          "Name": "Tiziano Perrotta",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 63
+        },
+        {
+          "Name": "Bruno Sepúlveda",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 66
+        },
+        {
+          "Name": "Juvenil ficticio BAN-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BAN-10",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Lanús",
+      "ShortName": "LAN",
+      "Style": "Possession",
+      "Formation": "4-2-3-1",
+      "Home": {
+        "Shirt": "#7A1F2B",
+        "Secondary": "#7A1F2B",
+        "Pattern": "Solid",
+        "Shorts": "#7A1F2B",
+        "Socks": "#7A1F2B"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#7A1F2B",
+        "Pattern": "Band",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Nahuel Losada",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 73
+        },
+        {
+          "Name": "Franco Petroli",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 66
+        },
+        {
+          "Name": "Carlos Izquierdoz",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 71
+        },
+        {
+          "Name": "José María Canale",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Gonzalo Pérez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 68
+        },
+        {
+          "Name": "Sasha Marcich",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 67
+        },
+        {
+          "Name": "Nicolás Morgantini",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 65
+        },
+        {
+          "Name": "Tomás Guidara",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 67
+        },
+        {
+          "Name": "Agustín Cardozo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 70
+        },
+        {
+          "Name": "Ramiro Carrera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 71
+        },
+        {
+          "Name": "Raúl Loaiza",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 69
+        },
+        {
+          "Name": "Matías Sepúlveda",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 67
+        },
+        {
+          "Name": "Franco Watson",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 65
+        },
+        {
+          "Name": "Eduardo Salvio",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 71
+        },
+        {
+          "Name": "Lucas Besozzi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 67
+        },
+        {
+          "Name": "Yoshan Valois",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 65
+        },
+        {
+          "Name": "Juvenil ficticio LAN-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio LAN-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio LAN-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio LAN-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio LAN-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio LAN-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Gimnasia y Esgrima La Plata",
+      "ShortName": "GIM",
+      "Style": "Counter Attack",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1B2A4A",
+        "Pattern": "Band",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#1B2A4A",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Band",
+        "Shorts": "#1B2A4A",
+        "Socks": "#1B2A4A"
+      },
+      "Players": [
+        {
+          "Name": "Nelson Insfrán",
+          "ShortName": "",
+          "Number": 23,
+          "Position": "POR",
+          "Rating": 68
+        },
+        {
+          "Name": "Luciano Kadijevic",
+          "ShortName": "",
+          "Number": 27,
+          "Position": "POR",
+          "Rating": 64
+        },
+        {
+          "Name": "Renzo Giampaoli",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Fabricio Corbalán",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Bautista Barros Schelotto",
+          "ShortName": "",
+          "Number": 31,
+          "Position": "LD",
+          "Rating": 64
+        },
+        {
+          "Name": "Juan Cortazzo",
+          "ShortName": "",
+          "Number": 35,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Mastrángelo",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Manuel Panaro",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "MCO",
+          "Rating": 67
+        },
+        {
+          "Name": "Maximiliano Zalazar",
+          "ShortName": "",
+          "Number": 43,
+          "Position": "MI",
+          "Rating": 64
+        },
+        {
+          "Name": "Agustín Colazo",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "DC",
+          "Rating": 65
+        },
+        {
+          "Name": "Auzmendi",
+          "ShortName": "",
+          "Number": 29,
+          "Position": "DC",
+          "Rating": 66
+        },
+        {
+          "Name": "Bolzán",
+          "ShortName": "",
+          "Number": 28,
+          "Position": "DC",
+          "Rating": 63
+        },
+        {
+          "Name": "Juvenil ficticio GIM-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio GIM-10",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Talleres",
+      "ShortName": "TAL",
+      "Style": "High Press",
+      "Formation": "4-3-3",
+      "Home": {
+        "Shirt": "#102A5C",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#102A5C",
+        "Socks": "#102A5C"
+      },
+      "Away": {
+        "Shirt": "#0D1B3D",
+        "Secondary": "#6CB4E4",
+        "Pattern": "Solid",
+        "Shorts": "#0D1B3D",
+        "Socks": "#0D1B3D"
+      },
+      "Players": [
+        {
+          "Name": "Guido Herrera",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 72
+        },
+        {
+          "Name": "Santino Barbi",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 62
+        },
+        {
+          "Name": "Gabriel Báez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 67
+        },
+        {
+          "Name": "Augusto Schott",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 66
+        },
+        {
+          "Name": "Matías Catalán",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 69
+        },
+        {
+          "Name": "Alexandro Maidana",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 64
+        },
+        {
+          "Name": "Thiago Baroni",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 64
+        },
+        {
+          "Name": "Valentín Fascendini",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 65
+        },
+        {
+          "Name": "Rodrigo Guth",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Juan Rodríguez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 68
+        },
+        {
+          "Name": "Juvenil ficticio TAL-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-10",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-11",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio TAL-12",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Belgrano",
+      "ShortName": "BEL",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#6CB4E4",
+        "Secondary": "#6CB4E4",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#6CB4E4"
+      },
+      "Away": {
+        "Shirt": "#111111",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Band",
+        "Shorts": "#111111",
+        "Socks": "#111111"
+      },
+      "Players": [
+        {
+          "Name": "Alexis Maldonado",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Adrián Spörle",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 67
+        },
+        {
+          "Name": "Agustín Falcón",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Leonardo Morales",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Lucas Zelarayán",
+          "ShortName": "L. Zelarayán",
+          "Number": 10,
+          "Position": "MCO",
+          "Rating": 73
+        },
+        {
+          "Name": "Gonzalo Zelarayán",
+          "ShortName": "G. Zelarayán",
+          "Number": 30,
+          "Position": "MC",
+          "Rating": 62
+        },
+        {
+          "Name": "Juvenil ficticio BEL-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-10",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-11",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-12",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-13",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-14",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-15",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio BEL-16",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Rosario Central",
+      "ShortName": "RCE",
+      "Style": "Counter Attack",
+      "Formation": "4-2-3-1",
+      "Home": {
+        "Shirt": "#0A3C8C",
+        "Secondary": "#FFD200",
+        "Pattern": "Stripes",
+        "Shorts": "#0A3C8C",
+        "Socks": "#0A3C8C"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#0A3C8C",
+        "Pattern": "Band",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Jeremías Ledesma",
+          "ShortName": "",
+          "Number": 23,
+          "Position": "POR",
+          "Rating": 73
+        },
+        {
+          "Name": "Damián Fernández",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 62
+        },
+        {
+          "Name": "Agustín Sández",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "LI",
+          "Rating": 68
+        },
+        {
+          "Name": "Gastón Ávila",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Emanuel Coronel",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 66
+        },
+        {
+          "Name": "Alexis Soto",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 65
+        },
+        {
+          "Name": "Ángel Di María",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "ED",
+          "Rating": 78
+        },
+        {
+          "Name": "Juvenil ficticio RCE-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-10",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-11",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-12",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-13",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-14",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio RCE-15",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "ED",
+          "Rating": 58
+        }
+      ]
+    },
+    {
+      "Name": "Newell's Old Boys",
+      "ShortName": "NOB",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "Home": {
+        "Shirt": "#D0021B",
+        "Secondary": "#111111",
+        "Pattern": "Halves",
+        "Shorts": "#111111",
+        "Socks": "#111111"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#D0021B",
+        "Pattern": "Band",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Josué Reinatti",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 66
+        },
+        {
+          "Name": "Lucas Carrizo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 67
+        },
+        {
+          "Name": "Oscar Salomón",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Martín Ortega",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 65
+        },
+        {
+          "Name": "Jerónimo Russo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 63
+        },
+        {
+          "Name": "Bruno Cabrera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 66
+        },
+        {
+          "Name": "Saúl Salcedo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 68
+        },
+        {
+          "Name": "Armando Méndez",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "LD",
+          "Rating": 67
+        },
+        {
+          "Name": "Rodrigo Herrera",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 66
+        },
+        {
+          "Name": "Luca Regiardo",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 67
+        },
+        {
+          "Name": "Jerónimo Gómez Mattar",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 64
+        },
+        {
+          "Name": "Walter Núñez",
+          "ShortName": "",
+          "Number": 33,
+          "Position": "EI",
+          "Rating": 63
+        },
+        {
+          "Name": "Matías Cóccaro",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 69
+        },
+        {
+          "Name": "Juvenil ficticio NOB-1",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-2",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "POR",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-3",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DFC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-4",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-5",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCD",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-6",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MCO",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-7",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "MI",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-8",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "DC",
+          "Rating": 58
+        },
+        {
+          "Name": "Juvenil ficticio NOB-9",
+          "ShortName": "",
+          "Number": 0,
+          "Position": "EI",
+          "Rating": 58
+        }
+      ]
+    }
+  ],
+  "Rivalries": [
+    {
+      "TeamA": "Boca Juniors",
+      "TeamB": "River Plate",
+      "Level": "Classic",
+      "Name": "Superclásico"
+    },
+    {
+      "TeamA": "Racing Club",
+      "TeamB": "Independiente",
+      "Level": "Classic",
+      "Name": "Clásico de Avellaneda"
+    },
+    {
+      "TeamA": "Estudiantes de La Plata",
+      "TeamB": "Gimnasia y Esgrima La Plata",
+      "Level": "Classic",
+      "Name": "Clásico platense"
+    },
+    {
+      "TeamA": "Rosario Central",
+      "TeamB": "Newell's Old Boys",
+      "Level": "Classic",
+      "Name": "Clásico rosarino"
+    },
+    {
+      "TeamA": "Talleres",
+      "TeamB": "Belgrano",
+      "Level": "Classic",
+      "Name": "Clásico cordobés"
+    },
+    {
+      "TeamA": "Banfield",
+      "TeamB": "Lanús",
+      "Level": "Classic",
+      "Name": "Clásico del Sur"
+    },
+    {
+      "TeamA": "Defensa y Justicia",
+      "TeamB": "Banfield",
+      "Level": "Derby",
+      "Name": "Derbi del sur del conurbano"
+    },
+    {
+      "TeamA": "Defensa y Justicia",
+      "TeamB": "Lanús",
+      "Level": "Derby",
+      "Name": "Derbi del sur del conurbano"
+    },
+    {
+      "TeamA": "Vélez Sarsfield",
+      "TeamB": "San Lorenzo",
+      "Level": "Rivalry",
+      "Name": "Rivalidad del oeste y Boedo"
+    },
+    {
+      "TeamA": "Boca Juniors",
+      "TeamB": "San Lorenzo",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
+    },
+    {
+      "TeamA": "River Plate",
+      "TeamB": "San Lorenzo",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
+    },
+    {
+      "TeamA": "Boca Juniors",
+      "TeamB": "Racing Club",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
+    },
+    {
+      "TeamA": "River Plate",
+      "TeamB": "Racing Club",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
+    },
+    {
+      "TeamA": "Boca Juniors",
+      "TeamB": "Independiente",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
+    },
+    {
+      "TeamA": "River Plate",
+      "TeamB": "Independiente",
+      "Level": "Rivalry",
+      "Name": "Clásico grande"
     }
   ]
 }
