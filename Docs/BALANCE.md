@@ -213,6 +213,24 @@ El arquero achica más cerca del arco (`KeeperMaxDepth` 6,5 → 3,5 m) y la IA p
 y 3,5 tiros lejanos por equipo; ahora 1,7). En el fútbol real la conversión lejana es menor (≈4 %): sigue pendiente.
 Cancha cerrada: 5,1 goles.
 
+### 1.10 Medición final del 23/11/2026 (bloques 1 y 2 completos)
+
+`dotnet run -c Release --project Tools/HeadlessSim -- --matches 1000 --seed 1` (incluye doble dibujo, roles por estilo, charla
+del entretiempo de la IA, gritos, arqueros por tiempo de reacción, fatiga y lesiones):
+
+| Métrica | Valor | Objetivo |
+|---|---|---|
+| Excepciones / sin terminar / estados inválidos | 0 / 0 / 0 | 0 ✅ |
+| Goles por partido | **2,69** (local 37 % · empate 26 % · visitante 37 %) | 2,4–2,9 ✅ |
+| Acierto de pase | **85,6 %** | 82–87 % ✅ |
+| Goles / xG | 0,98 | ≈ 1 ✅ |
+| Tiros / al arco por equipo | 4,6 / 2,0 (44 %) | — |
+| Conversión: < 11 m · 11–18 m · > 18 m | 49 % · 35 % · 13 % | decreciente ✅ |
+| Faltas / amarillas / rojas por equipo | 2,0 / 0,36 / 0,03 | — |
+| Lesiones por equipo | 0,14 | — |
+| Resistencia al final (90') / la más baja | 71 % / 40 % | — |
+| Tiempo por partido | 71 ms (máximo 411 ms) | — |
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.
@@ -285,5 +303,41 @@ partidos por medición, porque con 50 partidos por equipo el ruido es de unos ±
 - Equilibrio entre estilos: «Presión alta» todavía algo por encima (ver 1.1).
 - Remates al arco altos (52 %) y pocas asistencias (39 %) frente al fútbol real.
 - La sensación del regate y de la contención con el dedo solo se puede validar en el teléfono.
-- Consistencia *Jugar* / *Ver* / *Simular*: el motor estadístico `MatchSim` aún no existe (Fase 2); se calibrará contra `MatchCore`.
+- Consistencia *Jugar* / *Ver* / *Simular*: `MatchSim` calibrado contra `MatchCore` (§7); repetir la medición si cambia el balance.
+- Conversión de tiros lejanos (13 %) todavía alta frente al fútbol real (≈ 4 %).
 - Economía de la carrera (Fase 2 en adelante).
+
+## 7. Simulador rápido (`MatchSim`) calibrado contra `MatchCore` (23/11/2026)
+
+`MatchSim` no copia la lógica del motor en tiempo real: reproduce sus **resultados medidos**. Procedimiento (repetirlo si
+cambia el balance de `MatchCore`):
+
+1. **Goles según la diferencia de fuerza** (200 partidos de `MatchCore` por caso, equipos de 65 ± la mitad de la
+   diferencia, estilo equilibrado, 4-4-2):
+
+   | Diferencia | `MatchCore` victorias / goles | `MatchSim` (500 partidos) |
+   |---|---|---|
+   | 0 | 36 % · 1,34–1,36 | 35 % · 1,25–1,36 |
+   | 5 | 58 % · 1,94–1,05 | 58 % · 1,82–0,92 |
+   | 10 | 80 % · 2,59–0,67 | 77 % · 2,43–0,66 |
+   | 20 | 97 % · 4,15–0,29 | 94 % · 3,98–0,30 |
+
+   Modelo: goles = `BaseGoals` 1,33 × e^(`StrengthSensitivity` 0,074 × diferencia) (el favorito satura:
+   diferencia / (1 + diferencia / 80)) × factor del partido abierto/cerrado común (desviación 0,3).
+2. **Efecto de cada estilo** contra uno equilibrado (150 partidos de `MatchCore`): goles a favor / en contra relativos —
+   Posesión 0,80 / 1,00; Contraataque 0,87 / 0,90; Presión alta 1,30 / 1,10; Defensivo 0,75 / 0,70.
+3. **Escenario mezclado** (`--matches 1000 --seed 1`, estilos y formaciones al azar, calidad 65 ± 5): `MatchSim` **2,65**
+   goles, 36 / 24 / 40 % (`MatchCore`: 2,63 · 37 / 26 / 37 %). Tiempo: **≈ 60 µs** por partido.
+
+La prueba `MatchSimTests.FiveHundredMatches_MatchTheRealTimeEngine_AtEveryStrengthGap` exige estar a ±8 puntos de victorias y
+dentro de un margen de goles en cada diferencia.
+
+## 8. Gestión (Fases 2–4, núcleo)
+
+- **Ventaja de local**: +3 % en los atributos efectivos del local (`management.json` → `HomeAdvantage`). Con equipos iguales
+  (600 partidos de `MatchSim`): local 44,5 % · empate 27 % · visitante 28,5 % (fútbol real ≈ 45 / 27 / 28).
+- **Economía** (`finance.json`): un club de prestigio 70 con 20 M semanales de sueldos termina la temporada con caja
+  positiva (prueba `ASeasonOfAMidTableClub_DoesNotGoBankrupt`). Falta calibrar con varias temporadas y clubes de distinto
+  tamaño cuando exista el orquestador de temporada.
+- **Clásicos**: +15 % de faltas y tarjetas por nivel de rivalidad y más error para los jugadores poco serenos.
+

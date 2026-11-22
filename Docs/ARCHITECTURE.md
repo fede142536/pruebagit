@@ -100,11 +100,25 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
   botones son impulsos de un solo paso. Pase con auto-apuntado graduable, disparo con potencia, centro, entrada y cambio de jugador.
 - **Sin allocations por paso** (verificado por prueba: 0 bytes en 6.000 pasos) y **determinista** (100/100 ejecuciones idénticas).
 
+### 4.2 Gestión (Fases 2–4, núcleo)
+
+- **Contrato del partido en `Domain/Match`**: `PlayerMatchView`, `MatchTeamSetup`, formaciones, estilo, roles, estadísticas y
+  `MatchReport`. Así `MatchCore` y `MatchSim` (hermanos) dependen solo de `Domain`.
+- **`MatchSim`**: `QuickMatchSimulator.Play(home, away, rng, config, report)` → `MatchReport` en microsegundos. Calibrado con
+  datos medidos en `MatchCore` (`Data/balance/matchsim.json`).
+- **`Management`**: `SeasonClock` (sobre `SimClock`) publica `WeekPassed` y `MonthClosed` en el `EventBus`; `FinanceSystem`,
+  `Inbox` y otros escuchan. `MatchPreparation` arma el equipo con atributos efectivos; `ReportApplier` aplica el informe.
+  Scouting, mercado, cantera, vestuario e historia viva son clases independientes que se comunican por eventos.
+- **`Competitions`**: calendario, tablas, promedios, zonas y eliminatorias.
+- **Textos**: el núcleo guarda claves (`news.injury`); los textos están en `Data/locale/news.es.json` y `news.en.json`.
+
 ## 5. Persistencia
 
 - **SQLite** para carrera y guardados; el esquema tiene `schema_version` y migraciones incrementales numeradas (`0001_init.sql`, …) con prueba que migra desde cada versión anterior.
 - Repositorios detrás de interfaces (`IClubRepository`…); el dominio no conoce SQL.
-- Guardado atómico (transacción + archivo temporal) y copia de seguridad rotativa.
+- Guardado atómico (transacción + archivo temporal) y copia de seguridad rotativa: `AtomicSave` (hecho, con pruebas).
+- Migraciones actuales: v1 inicial, v2 contratos, v3 cláusulas y personalidad, v4 finanzas e instalaciones, v5
+  competiciones, v6 estado del plantel, cuerpo técnico y scouting, v7 noticias e historia.
 
 ## 6. Capa Unity
 

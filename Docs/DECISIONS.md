@@ -107,6 +107,15 @@ calidad BAJA). **No hay sombras proyectadas en tiempo real**: los materiales son
 para el A13) y una sombra real exigiría materiales iluminados de URP y otra pasada de dibujo; se mantienen las sombras de
 contacto (discos) que se achican con la altura. Se puede reconsiderar para el perfil ALTO cuando haya mediciones en el teléfono.
 
+## D-16 · Núcleo de gestión antes de cerrar la Fase 1 — Aceptada (pedido explícito del usuario, 23/11/2026)
+**Contexto:** el roadmap dice no avanzar de fase sin confirmación; el usuario pidió de forma explícita los módulos de las
+Fases 2 a 4. **Decisión:** se construyeron en `Core/` con pruebas, sin interfaz, mientras la Fase 1 sigue pendiente de
+validarse en el teléfono. **Arquitectura:** el contrato del partido pasó a `Domain/Match` para respetar la regla de
+dependencias (`MatchCore` y `MatchSim` son hermanos). `MatchSim` no imita a `MatchCore` por código: se calibra con datos
+medidos (goles según diferencia de fuerza y efecto de cada estilo) y una prueba de 500 partidos lo verifica.
+**Consecuencias:** si cambia el balance de `MatchCore`, hay que volver a medir y actualizar `matchsim.json`
+(procedimiento en `BALANCE.md` §7). Los planteles de los 9 clubes nuevos están incompletos (ver D-12).
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 

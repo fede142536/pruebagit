@@ -8,9 +8,9 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 |---|---|---|
 | **0 — Fundamentos** ✅ *(núcleo; ver estado abajo)* | Docs, estructura, CI, RNG determinista, modelo de datos base, esquema SQLite con migraciones | `dotnet test` verde en CI; migración 0→N probada; spike de SQLite en Android documentado |
 | **1 — Corte vertical jugable** | Partido 11v11 3D jugable con controles táctiles (detalle abajo) | Criterios medibles de la sección "Fase 1"; el usuario valida la sensación de juego |
-| **2 — Núcleo de gestión** | Plantilla, contratos, finanzas, calendario, ligas, tablas, simulación rápida, guardado/carga | Temporada completa simulada headless sin errores; economía sin quiebras absurdas |
-| **3 — Integración gestión ↔ partido** | Táctica, forma, moral, fatiga, lesiones y sanciones fluyen en ambos sentidos | Un partido jugado actualiza la carrera; prueba de ida y vuelta |
-| **4 — Sistemas de club** | Fichajes con negociación, cantera, ojeadores, estadio e inmediaciones, socios, directiva, prensa, patrocinadores | Cada sistema con pruebas y efecto medible en la economía/partido |
+| **2 — Núcleo de gestión** ⚠️ *núcleo hecho, sin interfaz* | Plantilla, contratos, finanzas, calendario, ligas, tablas, simulación rápida, guardado/carga | Temporada completa simulada headless sin errores; economía sin quiebras absurdas |
+| **3 — Integración gestión ↔ partido** ⚠️ *núcleo hecho, sin interfaz* | Táctica, forma, moral, fatiga, lesiones y sanciones fluyen en ambos sentidos | Un partido jugado actualiza la carrera; prueba de ida y vuelta |
+| **4 — Sistemas de club** ⚠️ *núcleo en buena parte, sin interfaz* | Fichajes con negociación, cantera, ojeadores, estadio e inmediaciones, socios, directiva, prensa, patrocinadores | Cada sistema con pruebas y efecto medible en la economía/partido |
 | **5 — Competiciones** | Copas nacionales e internacionales, sorteos, desempates, congestión | Competición internacional completa simulada, sin conflictos de calendario |
 | **6 — IA y dificultad** | Roles tácticos, 5 niveles calibrados, adaptativa opcional | `BALANCE.md` con métricas dentro de rango en los 5 niveles |
 | **7 — Pulido** | Arte intercambiable, audio, VFX, repeticiones, accesibilidad, localización | Auditoría de accesibilidad y localización es/en completa |
@@ -64,6 +64,7 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 | 1.7 HUD, depuración y benchmark | ⚠️ escrito, **sin medir en el dispositivo** (marcador, pausa, panel de depuración, partido IA contra IA con semilla fija) |
 | 1.8 Jugabilidad del partido: entradas según posición y orientación, recortes, contención y cobertura de la IA, mantener el balón, táctica en vivo (mentalidad y presión) e IA que se adapta al marcador | ✅ núcleo hecho y probado (`DuelTests`, `TacticsTests`; métricas en `BALANCE.md` §1.1); ⚠️ botones de táctica en la pausa sin ejecutar en Unity |
 | 1.10 Presentación del partido: radar (11v11) y fichas de compañeros fuera de cámara, barras de potencia y resistencia, aro pulsante y aro del próximo CAMBIAR, estela del balón, cámara dinámica (zoom y anticipación), sonido generado por código (hinchada dinámica, silbato, golpeo, palo, red), papelitos, repetición del gol en cámara lenta y vibración | ⚠️ escrito, compila contra la simulación de la API de Unity; **sin ejecutar en Unity** |
+| 1.13 Pedido del 22-23/11/2026: rendimiento (mallas agrupadas, zona segura, ajustes de vista en JSON), buffer de entrada y segunda marca, `MatchReport` completo con xG, mal control (pase 85,7 %), fatiga y lesiones, roles, doble dibujo, pelota parada, gritos y charla, arqueros por tiempo de reacción (2,63 goles), pausa y watchdog corregidos, selector EA FC con jugador 3D, estadio con público y LED, jugadores redondeados con animaciones, 9 clubes más con clásicos | ✅ núcleo probado (350 pruebas); ⚠️ capa Unity compilada contra la simulación, sin ejecutar en Unity |
 | 1.12 Transmisión de TV y pulido: presentación aérea con alineaciones, placas animadas (gol y tarjetas), festejo con cámara sobre el goleador antes de la repetición, red que se infla, temblor en el palo, choques con trastabilleo, inercia más pesada, mandos Bluetooth, perfiles gráficos Baja/Media/Alta y menú con un 3 contra 3 de fondo | ✅ motor probado (choques y festejo); ⚠️ capa Unity sin ejecutar en Unity |
 | 1.11 IA: arquero que achica en el mano a mano, desmarques al espacio libre, cambio automático al compañero que llega primero | ✅ núcleo hecho y probado (`AiBehaviourTests`) |
 | 1.9 Revisión de calidad con agentes (motor, Unity, datos, pruebas): goles fantasma del arquero, autor del gol, fuera de juego, sacador expulsado, convocatorias guardadas, interfaz en pantallas 20:9, cámara única, toques colgados, pausa al salir de la app | ✅ núcleo corregido y probado (`EngineRegressionTests`); ⚠️ Unity compilado contra la simulación, sin ejecutar. Pendiente: reducir llamadas de dibujo (~300 por fotograma), zona segura de la muesca, ajustes de URP para gama baja, valores de ajuste aún escritos en código |
@@ -102,3 +103,21 @@ Regla: al terminar cada fase se ejecutan las pruebas, se resume qué funciona y 
 
 1. **Aprobación del plan y de D-03** (`MatchCore` sin PhysX).
 2. **Computadora:** Unity es un programa gratuito (para uso personal) que se instala en una PC o Mac y con el que se arma la aplicación para el teléfono. Hace falta una computadora con Windows o Mac, preferiblemente con 16 GB de RAM y ~30 GB libres. Con ella instalaríamos Unity y generaríamos el archivo `.apk` que se instala en tu A13.
+
+---
+
+## Fases 2 a 4 — Estado del núcleo (23/11/2026, a pedido del usuario)
+
+El usuario pidió explícitamente avanzar con el núcleo de gestión antes de cerrar la Fase 1 en el teléfono. Hecho en `Core/`,
+con pruebas, **sin interfaz todavía**:
+
+| Pieza | Estado |
+|---|---|
+| `MatchSim` (simulador rápido, ~60 µs por partido, mismo `MatchReport`) calibrado contra `MatchCore` | ✅ prueba de 500 partidos por diferencia de calidad |
+| Finanzas (presupuestos separados con comisión, flujo semanal y mensual, taquilla) e infraestructura por niveles | ✅ |
+| Calendario sin conflictos, tablas con desempates, promedios, zonas, playoffs y eliminatorias | ✅ |
+| Ciclo gestión ↔ partido (forma, moral, físico, lesiones, sanciones, ventaja de local) | ✅ ida y vuelta probada |
+| Cuerpo técnico, scouting progresivo, mercado con cláusulas y perfiles de rivales, cantera, personalidad, química, vestuario, promesas, buzón, historia viva | ✅ como sistemas sueltos con pruebas |
+| Migraciones 3 a 7 y guardado atómico | ✅ |
+| Falta | Orquestador de la temporada (une todo día a día), copas nacionales y continentales con su calendario real, IA de fichajes de los rivales en el mercado, repositorios SQL de las tablas nuevas, interfaz de la carrera |
+
