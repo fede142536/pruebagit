@@ -126,7 +126,7 @@ namespace Football.Core.MatchSim
 
         private static void Discipline(Side side, TeamReport team, IRandom rng, MatchSimConfig c)
         {
-            float aggression = 1f + (side.Style.PressIntensity - 0.5f);
+            float aggression = (1f + (side.Style.PressIntensity - 0.5f)) * (1f + c.RivalryFoulStep * (int)side.Setup.Rivalry);
             int fouls = Poisson(rng, c.Fouls * aggression);
             for (int i = 0; i < fouls; i++)
             {
@@ -205,37 +205,10 @@ namespace Football.Core.MatchSim
             return k;
         }
 
-        private static int Line(Position p)
-        {
-            switch (p)
-            {
-                case Position.Goalkeeper: return Goalkeeper;
-                case Position.CenterBack:
-                case Position.LeftBack:
-                case Position.RightBack: return Defender;
-                case Position.Striker:
-                case Position.LeftWinger:
-                case Position.RightWinger: return Forward;
-                default: return Midfielder;
-            }
-        }
+        private static int Line(Position p) => (int)PlayerRatings.LineOf(p);
 
-        /// <summary>Valoración de un jugador en su línea (media de los atributos que importan en ella).</summary>
-        private static float LineScore(PlayerMatchView p)
-        {
-            AttributeSet a = p.Attributes;
-            switch (Line(p.Role))
-            {
-                case Goalkeeper:
-                    return (a[AttributeId.Reflexes] + a[AttributeId.Handling] + a[AttributeId.GoalkeeperPositioning]) / 3f;
-                case Defender:
-                    return (a[AttributeId.Tackling] + a[AttributeId.Positioning] + a[AttributeId.Strength] + a[AttributeId.Heading] + a[AttributeId.Pace]) / 5f;
-                case Forward:
-                    return (a[AttributeId.Finishing] + a[AttributeId.Shooting] + a[AttributeId.Dribbling] + a[AttributeId.Pace] + a[AttributeId.Composure]) / 5f;
-                default:
-                    return (a[AttributeId.Passing] + a[AttributeId.Vision] + a[AttributeId.FirstTouch] + a[AttributeId.Decisions] + a[AttributeId.Dribbling]) / 5f;
-            }
-        }
+        /// <summary>Valoración de un jugador en su línea.</summary>
+        private static float LineScore(PlayerMatchView p) => PlayerRatings.Overall(p.Attributes, p.Role);
 
         /// <summary>Un equipo preparado para simular: fuerzas por línea y los jugadores que participan.</summary>
         private sealed class Side

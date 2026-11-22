@@ -227,6 +227,13 @@ namespace Football.Core.MatchCore
             return new Vec2(goalSign * (Pitch.HalfLength - BoxDefendDepth - BoxStep * (p.Slot % 3)), ((p.Slot * 5) % 9 - 4) * 2.8f);
         }
 
+        /// <summary>Multiplicador de faltas por la rivalidad del partido.</summary>
+        private float RivalryFouls(MatchPlayer p) => 1f + Config.Coach.RivalryFoulStep * (int)Teams[p.Team].Rivalry;
+
+        /// <summary>Multiplicador de error por la presión de un clásico (los serenos lo sienten menos).</summary>
+        private float RivalryPressure(MatchPlayer p) =>
+            1f + Config.Coach.RivalryPressureStep * (int)Teams[p.Team].Rivalry * (1f - p.Skill(AttributeId.Composure));
+
         private const float NearPostSpread = 1.6f;
         private const float SpotSpread = 1.6f;
         private const float ShortCornerBack = 4f;

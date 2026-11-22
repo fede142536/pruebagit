@@ -318,6 +318,8 @@
     "RunnerAdvance": 0.08
   },
   "Coach": {
+    "RivalryFoulStep": 0.15,
+    "RivalryPressureStep": 0.05,
     "ShoutSeconds": 45,
     "ShoutStep": 0.3,
     "WasteTimeDelayFactor": 1.6,

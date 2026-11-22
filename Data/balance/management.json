@@ -1,0 +1,31 @@
+{
+  "FormWeight": 0.015,
+  "MoraleWeight": 0.0008,
+  "FitnessPenalty": 0.15,
+  "HomeAdvantage": 0.03,
+  "FormSmoothing": 0.3,
+  "ResultMorale": [
+    4,
+    0,
+    -4
+  ],
+  "RatingMorale": 2,
+  "FitnessRecoveryPerDay": 0.12,
+  "InjuryDays": [
+    4,
+    21
+  ],
+  "MedicalLevelSaving": 0.08,
+  "RedCardBan": 2,
+  "YellowLimit": 5,
+  "PromiseShare": [
+    0,
+    0.8,
+    0.6,
+    0.35,
+    0.15,
+    0.2
+  ],
+  "BrokenPromiseMorale": 8,
+  "PromiseGraceMatches": 6
+}

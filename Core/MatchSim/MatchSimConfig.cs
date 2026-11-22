@@ -49,6 +49,8 @@ namespace Football.Core.MatchSim
         public float Yellows = 0.32f;
         /// <summary>Rojas por equipo (MatchCore: 0,02).</summary>
         public float Reds = 0.02f;
+        /// <summary>Más faltas y tarjetas por cada nivel de rivalidad (igual que en el motor en tiempo real).</summary>
+        public float RivalryFoulStep = 0.15f;
         /// <summary>Córners por equipo (MatchCore: 0,4).</summary>
         public float Corners = 0.4f;
         /// <summary>Lesiones leves por equipo (MatchCore: 0,13).</summary>

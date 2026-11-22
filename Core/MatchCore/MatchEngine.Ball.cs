@@ -571,7 +571,7 @@ namespace Football.Core.MatchCore
                 float tackling = p.Skill(AttributeId.Tackling);
                 float winChance = ContextTackleChance(p, owner, out bool behind, out bool front) + (human ? rules.HumanTackleBonus : 0f);
                 // De frente y mirando al balón es una entrada limpia casi siempre; por detrás, falta fácil.
-                float foulChance = Rules.FoulChance(rules, tackling, p.Skill(AttributeId.Aggression))
+                float foulChance = Rules.FoulChance(rules, tackling, p.Skill(AttributeId.Aggression)) * RivalryFouls(p)
                                    * (behind ? rules.StandingBehindFoulMultiplier : front ? rules.FrontTackleFoulMultiplier : 1f);
                 TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foulChance, winChance);
 
@@ -637,7 +637,7 @@ namespace Football.Core.MatchCore
                     Teams[p.Team].Stats.Tackles++;
                     p.Stats.Tackles++;
                     float win = MathUtil.Clamp(ContextTackleChance(p, owner, out bool fromBehind) + rules.SlideWinBonus, 0f, 0.95f);
-                    float foul = Rules.FoulChance(rules, p.Skill(AttributeId.Tackling), p.Skill(AttributeId.Aggression))
+                    float foul = Rules.FoulChance(rules, p.Skill(AttributeId.Tackling), p.Skill(AttributeId.Aggression)) * RivalryFouls(p)
                                  * rules.SlideFoulMultiplier * (fromBehind ? rules.BehindFoulMultiplier : 1f);
                     TackleOutcome outcome = Rules.ResolveTackle(_rng.NextFloat(), _rng.NextFloat(), foul, win);
                     if (outcome == TackleOutcome.Foul)

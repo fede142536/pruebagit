@@ -16,6 +16,7 @@
   "Fouls": 1.75,
   "Yellows": 0.32,
   "Reds": 0.02,
+  "RivalryFoulStep": 0.15,
   "Corners": 0.4,
   "Injuries": 0.13,
   "Recoveries": 16.8,

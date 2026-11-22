@@ -277,6 +277,10 @@ namespace Football.Core.MatchCore
     [Serializable]
     public sealed class CoachConfig
     {
+        /// <summary>Más probabilidad de falta por cada nivel de rivalidad (rivalidad 1, derbi 2, clásico 3).</summary>
+        public float RivalryFoulStep = 0.15f;
+        /// <summary>Más error de golpeo por cada nivel de rivalidad, para un jugador sin serenidad (Composure).</summary>
+        public float RivalryPressureStep = 0.05f;
         /// <summary>Cuánto dura un grito táctico (s de simulación; el partido dura 6 min).</summary>
         public float ShoutSeconds = 45f;
         /// <summary>Tamaño del ajuste de estilo de un grito (fracción en cada eje que toca).</summary>

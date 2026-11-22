@@ -61,6 +61,8 @@ namespace Football.Core.MatchCore
         public Formation DefensiveFormation;
         /// <summary>Jugada de córner a favor.</summary>
         public CornerRoutine Corners;
+        /// <summary>Rivalidad con el rival de este partido.</summary>
+        public RivalryLevel Rivalry;
         /// <summary>Marcaje en las pelotas paradas en contra.</summary>
         public SetPieceMarking Marking;
         /// <summary>Grito táctico en curso.</summary>
@@ -123,6 +125,7 @@ namespace Football.Core.MatchCore
                 ? setup.DefensiveFormation
                 : null;
             Corners = setup.Corners;
+            Rivalry = setup.Rivalry;
             Marking = setup.Marking;
             if (setup.Duties != null)
             {

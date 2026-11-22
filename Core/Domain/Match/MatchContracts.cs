@@ -144,5 +144,7 @@ namespace Football.Core.Domain
         public CornerRoutine Corners;
         /// <summary>Marcaje en las pelotas paradas en contra.</summary>
         public SetPieceMarking Marking;
+        /// <summary>Rivalidad con el rival de este partido (más faltas, más tarjetas y más presión en los clásicos).</summary>
+        public RivalryLevel Rivalry;
     }
 }
