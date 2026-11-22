@@ -41,6 +41,7 @@ namespace Football.Game
         private static readonly Vector2 SlotC = new Vector2(1585f, 490f);
         private static readonly Vector2 SlotD = new Vector2(1800f, 580f);
         private static readonly Vector2 SprintSlot = new Vector2(1345f, 160f);
+        private static readonly Vector2 SlotE = new Vector2(1610f, 700f); // segunda marca, sobre los botones de defensa
         // Un 15 % más chicos que la primera versión y translúcidos para no tapar a los jugadores.
         private const float SizeA = 160f, SizeB = 150f, SizeC = 124f, SizeD = 115f, SizeSprint = 128f;
         private const float ButtonAlpha = 0.55f;
@@ -60,7 +61,7 @@ namespace Football.Game
 
         private readonly Canvas _canvas;
         private readonly Control _pass, _shoot, _clear, _through, _cross;
-        private readonly Control _slide, _press, _switch, _keeper;
+        private readonly Control _slide, _press, _secondPress, _switch, _keeper;
         private readonly Control _sprint, _pause;
         private readonly Control[] _controls;
         private readonly GameObject _joystickBase;
@@ -111,11 +112,12 @@ namespace Football.Game
             _cross = Make(t, "Centro", "CENTRO", new Color(0.2f, 0.45f, 0.9f, ButtonAlpha), SlotD, SizeD);
             _slide = Make(t, "Barrer", "BARRER", new Color(0.85f, 0.3f, 0.1f, ButtonAlpha), SlotA, SizeA);
             _press = Make(t, "Presionar", "PRESIÓN", new Color(0.2f, 0.55f, 0.85f, ButtonAlpha), SlotB, SizeB);
+            _secondPress = Make(t, "SegundaMarca", "2ª MARCA", new Color(0.15f, 0.4f, 0.65f, ButtonAlpha), SlotE, SizeD);
             _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.5f, 0.3f, 0.8f, ButtonAlpha), SlotC, SizeC);
             _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.55f, 0.8f, 0.15f, ButtonAlpha), SlotD, SizeD);
             _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.35f, 0.35f, 0.4f, ButtonAlpha), SprintSlot, SizeSprint);
             _pause = Make(t, "Pausa", "II", new Color(0f, 0f, 0f, 0.45f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 90f);
-            _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _switch, _keeper, _sprint, _pause };
+            _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _secondPress, _switch, _keeper, _sprint, _pause };
             _passBar = ChargeBar(_pass);
             _shootBar = ChargeBar(_shoot);
 
@@ -241,6 +243,7 @@ namespace Football.Game
             _cross.Ui.SetVisible(attack && (_showCross || _forceCross));
             _slide.Ui.SetVisible(defense);
             _press.Ui.SetVisible(defense);
+            _secondPress.Ui.SetVisible(defense);
             _switch.Ui.SetVisible(defense);
             _keeper.Ui.SetVisible(defense);
             _sprint.Ui.SetVisible(_enabled);
@@ -538,6 +541,7 @@ namespace Football.Game
                 Clear = _clear.JustDown || kb.ClearDown,
                 Slide = _slide.JustDown || kb.SlideDown,
                 Press = _press.Down || kb.PressHeld,
+                SecondPress = _secondPress.Down || kb.SecondPressHeld,
                 Switch = _switch.JustDown || kb.SwitchDown,
                 Keeper = _keeper.JustDown || kb.KeeperDown
             };

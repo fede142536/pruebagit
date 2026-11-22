@@ -224,6 +224,8 @@ namespace Football.Core.MatchCore
         public bool Press;
         /// <summary>Tomar o soltar el control del arquero (impulso).</summary>
         public bool Keeper;
+        /// <summary>Segunda marca (mantenido): sin balón, el compañero más cercano al poseedor rival sale a presionarlo.</summary>
+        public bool SecondPress;
     }
 
     /// <summary>Acción visible de un jugador, para elegir animación.</summary>

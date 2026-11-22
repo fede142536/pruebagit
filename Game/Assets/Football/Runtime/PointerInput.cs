@@ -55,6 +55,8 @@ namespace Football.Game
         public bool SlideDown;
         /// <summary>Presión mantenida.</summary>
         public bool PressHeld;
+        /// <summary>Segunda marca mantenida.</summary>
+        public bool SecondPressHeld;
         /// <summary>Despeje pulsado en este fotograma.</summary>
         public bool ClearDown;
         /// <summary>Control del arquero pulsado en este fotograma.</summary>
@@ -278,6 +280,7 @@ namespace Football.Game
             Keyboard.ShootHeld = Held(kb, GameAction.Shoot);
             Keyboard.SlideDown = Pressed(kb, GameAction.Slide);
             Keyboard.PressHeld = Held(kb, GameAction.Press);
+            Keyboard.SecondPressHeld = Held(kb, GameAction.SecondPress);
             Keyboard.ClearDown = Pressed(kb, GameAction.Clear);
             Keyboard.KeeperDown = Pressed(kb, GameAction.Keeper);
             Keyboard.SwitchDown = Pressed(kb, GameAction.Switch);
@@ -289,7 +292,7 @@ namespace Football.Game
         /// <summary>
         /// Mando físico (Xbox, PlayStation o genérico por Bluetooth): stick izquierdo mover; A/✕ pase (mantener = potencia);
         /// B/○ tiro (mantener) o barrida sin balón; X/□ filtrado; Y/△ centro; RB esprint; LB cambiar; RT presionar;
-        /// LT despejar; Select arquero; Start pausa. Se suma al teclado.
+        /// LT despejar; R3 segunda marca; Select arquero; Start pausa. Se suma al teclado.
         /// </summary>
         private void ReadGamepad()
         {
@@ -315,6 +318,7 @@ namespace Football.Game
             Keyboard.CrossHeld |= pad.buttonNorth.isPressed;
             Keyboard.SwitchDown |= pad.leftShoulder.wasPressedThisFrame;
             Keyboard.PressHeld |= pad.rightTrigger.isPressed;
+            Keyboard.SecondPressHeld |= pad.rightStickButton.isPressed; // R3: segunda marca (mantener)
             Keyboard.ClearDown |= pad.leftTrigger.wasPressedThisFrame;
             Keyboard.KeeperDown |= pad.selectButton.wasPressedThisFrame;
             Keyboard.PauseDown |= pad.startButton.wasPressedThisFrame;
@@ -402,6 +406,7 @@ namespace Football.Game
             Keyboard.ShootHeld = Held(GameAction.Shoot);
             Keyboard.SlideDown = Pressed(GameAction.Slide);
             Keyboard.PressHeld = Held(GameAction.Press);
+            Keyboard.SecondPressHeld = Held(GameAction.SecondPress);
             Keyboard.ClearDown = Pressed(GameAction.Clear);
             Keyboard.KeeperDown = Pressed(GameAction.Keeper);
             Keyboard.SwitchDown = Pressed(GameAction.Switch);

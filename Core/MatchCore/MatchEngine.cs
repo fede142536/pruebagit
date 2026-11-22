@@ -346,6 +346,11 @@ namespace Football.Core.MatchCore
                 else
                 {
                     PlayerMotion.Step(p, dt, Config.Player);
+                    if (p == Teams[p.Team].SecondPresser)
+                    {
+                        // Salir a presionar por la segunda marca cansa más que correr sin más.
+                        p.Stamina = MathUtil.Clamp01(p.Stamina - Config.Player.SecondPressStaminaDrain * dt);
+                    }
                 }
 
                 p.Pos = Pitch.Clamp(p.Pos, margin);

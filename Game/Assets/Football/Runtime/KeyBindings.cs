@@ -36,7 +36,9 @@ namespace Football.Game
         /// <summary>Controlar al arquero.</summary>
         Keeper,
         /// <summary>Pausa.</summary>
-        Pause
+        Pause,
+        /// <summary>Segunda marca (mantener): un compañero sale a presionar al poseedor. Va al final para no mover las teclas guardadas.</summary>
+        SecondPress
     }
 
     /// <summary>
@@ -54,13 +56,13 @@ namespace Football.Game
         public static readonly string[] Labels =
         {
             "ARRIBA", "ABAJO", "IZQUIERDA", "DERECHA", "ESPRINT", "PASE", "TIRO", "PASE FILTRADO", "CENTRO", "DESPEJAR",
-            "BARRER", "PRESIONAR", "CAMBIAR JUGADOR", "ARQUERO", "PAUSA"
+            "BARRER", "PRESIONAR", "CAMBIAR JUGADOR", "ARQUERO", "PAUSA", "SEGUNDA MARCA"
         };
 
         private static readonly KeyCode[] Defaults =
         {
             KeyCode.W, KeyCode.S, KeyCode.A, KeyCode.D, KeyCode.LeftShift, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.I, KeyCode.R,
-            KeyCode.Q, KeyCode.E, KeyCode.Tab, KeyCode.G, KeyCode.Escape
+            KeyCode.Q, KeyCode.E, KeyCode.Tab, KeyCode.G, KeyCode.Escape, KeyCode.F
         };
 
         private static readonly KeyCode[] Current = new KeyCode[Defaults.Length];

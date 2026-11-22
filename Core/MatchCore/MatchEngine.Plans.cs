@@ -459,7 +459,7 @@ namespace Football.Core.MatchCore
             }
             else if (ownerTeam >= 0)
             {
-                if (p == team.Presser || p == team.Presser2)
+                if (p == team.Presser || p == team.Presser2 || p == team.SecondPresser)
                 {
                     // Contiene a distancia y solo se lanza a por el balón cuando la entrada tiene buenas opciones.
                     float distance = Vec2.Distance(p.Pos, Owner.Pos);

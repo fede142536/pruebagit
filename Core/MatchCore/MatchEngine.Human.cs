@@ -67,6 +67,12 @@ namespace Football.Core.MatchCore
             current.Clear |= input.Clear;
             current.Keeper |= input.Keeper;
             current.Press = input.Press;
+            current.SecondPress = input.SecondPress;
+            if (input.Tackle || input.Slide)
+            {
+                Teams[team].DefendBufferTimer = Config.Player.HumanDefendBuffer;
+            }
+
             if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
             {
                 Teams[team].KickBufferTimer = Config.Player.HumanInputBuffer;
@@ -103,7 +109,13 @@ namespace Football.Core.MatchCore
             {
                 TeamState team = Teams[t];
                 MatchInput i = team.Input;
-                i.Tackle = i.Switch = i.Slide = i.Keeper = false;
+                i.Switch = i.Keeper = false;
+                team.DefendBufferTimer -= _dt;
+                if (team.DefendBufferTimer <= 0f)
+                {
+                    i.Tackle = i.Slide = false; // la entrada y la barrida esperan un instante si el jugador estaba ocupado
+                }
+
                 team.KickBufferTimer -= _dt;
                 if (team.KickBufferTimer <= 0f)
                 {
@@ -233,6 +245,8 @@ namespace Football.Core.MatchCore
                         team.SwitchTimer = ai.SwitchCooldown;
                     }
                 }
+
+                UpdateSecondPress(team);
             }
         }
 
@@ -287,6 +301,7 @@ namespace Football.Core.MatchCore
                         }
 
                         StartSlide(p);
+                        ConsumeDefend(team);
                         continue;
                     }
 
@@ -294,6 +309,7 @@ namespace Football.Core.MatchCore
                     if (input.Tackle)
                     {
                         p.TackleWindow = HumanTackleWindow;
+                        ConsumeDefend(team);
                     }
 
                     // Con la presión mantenida, entra de pie en cuanto alcanza al poseedor rival.
@@ -312,10 +328,54 @@ namespace Football.Core.MatchCore
             return Rules.IsFromBehind(Config.Rules, -Vec2.Dot(Vec2.FromAngle(owner.Heading), toOwner));
         }
 
+        /// <summary>Descarta la entrada o barrida ya usada (para que no se repita mientras dura el buffer).</summary>
+        private static void ConsumeDefend(TeamState team)
+        {
+            MatchInput i = team.Input;
+            i.Tackle = i.Slide = false;
+            team.Input = i;
+            team.DefendBufferTimer = 0f;
+        }
+
         /// <summary>
-        /// Presión mantenida: si el defensor ya está de frente al poseedor rival va a por el balón y entra de pie al alcanzarlo;
-        /// si lo persigue por detrás, primero busca ponerse entre él y la portería. Con balón suelto va hacia el balón.
+        /// Segunda marca: mientras la persona la mantiene y el rival tiene el balón, el compañero más cercano al poseedor
+        /// (sin contar al controlado ni al arquero, y a menos de <see cref="PlayerConfig.SecondPressMaxDistance"/>) sale a
+        /// presionarlo; la persona queda libre para cerrar líneas de pase.
         /// </summary>
+        private void UpdateSecondPress(TeamState team)
+        {
+            MatchPlayer previous = team.SecondPresser;
+            team.SecondPresser = null;
+            if (!team.Input.SecondPress || Owner == null || Owner.Team == team.Index)
+            {
+                return;
+            }
+
+            MatchPlayer best = null;
+            float bestDistance = Config.Player.SecondPressMaxDistance;
+            for (int i = 1; i < team.Players.Length; i++)
+            {
+                MatchPlayer p = team.Players[i];
+                if (p.SentOff || p == team.Controlled)
+                {
+                    continue;
+                }
+
+                float d = Vec2.Distance(p.Pos, Owner.Pos);
+                if (d < bestDistance)
+                {
+                    bestDistance = d;
+                    best = p;
+                }
+            }
+
+            team.SecondPresser = best;
+            if (best != null && best != previous)
+            {
+                best.DecisionTimer = 0f; // reacciona en este mismo paso
+            }
+        }
+
         /// <summary>Descarta los botones de golpeo ya usados (para que un pase guardado no se repita).</summary>
         private static void ConsumeKick(TeamState team)
         {
@@ -326,6 +386,10 @@ namespace Football.Core.MatchCore
             team.KickBufferTimer = 0f;
         }
 
+        /// <summary>
+        /// Presión mantenida: si el defensor ya está de frente al poseedor rival va a por el balón y entra de pie al alcanzarlo;
+        /// si lo persigue por detrás, primero busca ponerse entre él y la portería. Con balón suelto va hacia el balón.
+        /// </summary>
         private void ApplyPress(MatchPlayer p, MatchInput input)
         {
             float run = 0.5f * (1f + Config.Player.JogFraction);

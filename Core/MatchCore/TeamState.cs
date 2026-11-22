@@ -49,6 +49,10 @@ namespace Football.Core.MatchCore
         public MatchInput Input;
         /// <summary>Tiempo que se guarda un botón de golpeo aún no usado (s).</summary>
         public float KickBufferTimer;
+        /// <summary>Tiempo que se guardan la entrada y la barrida aún no usadas (s).</summary>
+        public float DefendBufferTimer;
+        /// <summary>Compañero que presiona al poseedor por la segunda marca de la persona (null si no la pide).</summary>
+        public MatchPlayer SecondPresser;
         /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
         public float SwitchTimer;
         /// <summary>Asistencia de pase elegida por la persona (0..1), o negativa para usar la de la dificultad.</summary>

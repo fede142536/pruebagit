@@ -155,6 +155,12 @@ namespace Football.Core.MatchCore
         public float HumanPassPowerMax = 1.6f;
         /// <summary>Tiempo que se guarda un botón de golpeo pulsado justo antes de poder usarlo (s).</summary>
         public float HumanInputBuffer = 0.2f;
+        /// <summary>Tiempo que se guardan la entrada y la barrida pulsadas mientras el jugador termina otra acción (s).</summary>
+        public float HumanDefendBuffer = 0.18f;
+        /// <summary>Segunda marca: distancia máxima al poseedor rival del compañero que sale a presionar (m).</summary>
+        public float SecondPressMaxDistance = 28f;
+        /// <summary>Segunda marca: gasto extra de resistencia por segundo del compañero que presiona (además de correr).</summary>
+        public float SecondPressStaminaDrain = 0.004f;
         /// <summary>Altura a la que el arquero sostiene el balón en las manos (m).</summary>
         public float KeeperHoldHeight = 1.0f;
         /// <summary>Distancia mínima del arquero con balón a su línea de gol (m): nunca la cruza con el balón en las manos.</summary>

@@ -209,6 +209,7 @@ namespace Football.Core.MatchCore
             if (t.Controlled == old) t.Controlled = incoming;
             if (t.Presser == old) t.Presser = null;
             if (t.Presser2 == old) t.Presser2 = null;
+            if (t.SecondPresser == old) t.SecondPresser = null;
             if (t.Cover == old) t.Cover = null;
             if (t.Chaser == old) t.Chaser = null;
             if (_taker == old) _taker = incoming;
