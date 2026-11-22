@@ -59,6 +59,33 @@ namespace Football.Core.Data
         public KitDefinition Away = new KitDefinition();
         /// <summary>Plantilla completa (se elige el mejor once para la formación).</summary>
         public PlayerDefinition[] Players = Array.Empty<PlayerDefinition>();
+        /// <summary>Datos institucionales para el modo carrera (fundación, estadio, presupuestos); opcionales.</summary>
+        public ClubInfo Club = new ClubInfo();
+    }
+
+    /// <summary>
+    /// Datos institucionales de un club para el modo carrera. Fundación, estadio y capacidad son datos públicos aproximados;
+    /// presupuestos y valor son <b>estimaciones propias</b> en pesos (D-12). Con valores en 0 se usan fórmulas por reputación.
+    /// </summary>
+    [Serializable]
+    public sealed class ClubInfo
+    {
+        /// <summary>Año de fundación.</summary>
+        public int Founded;
+        /// <summary>Nombre del estadio.</summary>
+        public string Stadium = string.Empty;
+        /// <summary>Capacidad del estadio.</summary>
+        public int Capacity;
+        /// <summary>Presupuesto de fichajes de la temporada.</summary>
+        public long TransferBudget;
+        /// <summary>Presupuesto anual de sueldos.</summary>
+        public long AnnualWageBudget;
+        /// <summary>Valor del club.</summary>
+        public long ClubValue;
+        /// <summary>Jerarquía: <c>Big</c> (grande), <c>Mid</c> (media tabla) o <c>Development</c> (en desarrollo).</summary>
+        public string Tier = "Mid";
+        /// <summary>Historia breve.</summary>
+        public string History = string.Empty;
     }
 
     /// <summary>Archivo con varios equipos.</summary>

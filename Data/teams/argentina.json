@@ -219,7 +219,17 @@
           "Position": "DC",
           "Rating": 62
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1905,
+        "Stadium": "La Bombonera (Alberto J. Armando)",
+        "Capacity": 57200,
+        "TransferBudget": 35000000,
+        "AnnualWageBudget": 56000000,
+        "ClubValue": 336000000,
+        "Tier": "Big",
+        "History": "Fundado en 1905 en La Boca. El Xeneize, uno de los dos grandes del fútbol argentino."
+      }
     },
     {
       "Name": "River Plate",
@@ -437,7 +447,17 @@
           "Position": "DC",
           "Rating": 69
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1901,
+        "Stadium": "Más Monumental",
+        "Capacity": 85018,
+        "TransferBudget": 42000000,
+        "AnnualWageBudget": 63000000,
+        "ClubValue": 364000000,
+        "Tier": "Big",
+        "History": "Fundado en 1901 en La Boca y hoy en Núñez. El Millonario, el estadio más grande del país."
+      }
     },
     {
       "Name": "Racing Club",
@@ -620,7 +640,17 @@
           "Position": "DC",
           "Rating": 66
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1903,
+        "Stadium": "Presidente Perón (El Cilindro)",
+        "Capacity": 51389,
+        "TransferBudget": 21000000,
+        "AnnualWageBudget": 35000000,
+        "ClubValue": 182000000,
+        "Tier": "Big",
+        "History": "Fundado en 1903 en Avellaneda. La Academia, primer campeón intercontinental argentino."
+      }
     },
     {
       "Name": "Estudiantes de La Plata",
@@ -796,7 +826,17 @@
           "Position": "DC",
           "Rating": 64
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1905,
+        "Stadium": "Jorge Luis Hirschi",
+        "Capacity": 32530,
+        "TransferBudget": 14000000,
+        "AnnualWageBudget": 25200000,
+        "ClubValue": 133000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1905 en La Plata. El Pincharrata, cuatro veces campeón de América."
+      }
     },
     {
       "Name": "San Lorenzo",
@@ -986,7 +1026,17 @@
           "Position": "DC",
           "Rating": 66
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1908,
+        "Stadium": "Pedro Bidegain (Nuevo Gasómetro)",
+        "Capacity": 47964,
+        "TransferBudget": 5600000,
+        "AnnualWageBudget": 16800000,
+        "ClubValue": 98000000,
+        "Tier": "Big",
+        "History": "Fundado en 1908 en Almagro. El Ciclón de Boedo, campeón de la Libertadores 2014."
+      }
     },
     {
       "Name": "Independiente",
@@ -1148,7 +1198,17 @@
           "Position": "DC",
           "Rating": 69
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1905,
+        "Stadium": "Libertadores de América – Ricardo E. Bochini",
+        "Capacity": 42069,
+        "TransferBudget": 11200000,
+        "AnnualWageBudget": 25200000,
+        "ClubValue": 126000000,
+        "Tier": "Big",
+        "History": "Fundado en 1905 en Avellaneda. El Rojo, el Rey de Copas con siete Libertadores."
+      }
     },
     {
       "Name": "Vélez Sarsfield",
@@ -1310,7 +1370,17 @@
           "Position": "ED",
           "Rating": 64
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1910,
+        "Stadium": "José Amalfitani",
+        "Capacity": 49540,
+        "TransferBudget": 11200000,
+        "AnnualWageBudget": 21000000,
+        "ClubValue": 119000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1910 en Liniers. El Fortín, campeón del mundo en 1994."
+      }
     },
     {
       "Name": "Defensa y Justicia",
@@ -1486,7 +1556,17 @@
           "Position": "DC",
           "Rating": 67
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1935,
+        "Stadium": "Norberto «Tito» Tomaghello",
+        "Capacity": 20000,
+        "TransferBudget": 4200000,
+        "AnnualWageBudget": 9800000,
+        "ClubValue": 56000000,
+        "Tier": "Development",
+        "History": "Fundado en 1935 en Florencio Varela. El Halcón, campeón de la Sudamericana 2020."
+      }
     },
     {
       "Name": "Banfield",
@@ -1662,7 +1742,17 @@
           "Position": "DC",
           "Rating": 66
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1896,
+        "Stadium": "Florencio Sola",
+        "Capacity": 34901,
+        "TransferBudget": 3500000,
+        "AnnualWageBudget": 8400000,
+        "ClubValue": 49000000,
+        "Tier": "Development",
+        "History": "Fundado en 1896 en Banfield. El Taladro, campeón del Apertura 2009."
+      }
     },
     {
       "Name": "Lanús",
@@ -1838,7 +1928,17 @@
           "Position": "EI",
           "Rating": 67
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1915,
+        "Stadium": "Ciudad de Lanús – Néstor Díaz Pérez",
+        "Capacity": 47027,
+        "TransferBudget": 8400000,
+        "AnnualWageBudget": 16800000,
+        "ClubValue": 84000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1915 en Lanús. El Granate, campeón de dos Sudamericanas."
+      }
     },
     {
       "Name": "Gimnasia y Esgrima La Plata",
@@ -2014,7 +2114,17 @@
           "Position": "DC",
           "Rating": 66
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1887,
+        "Stadium": "Juan Carmelo Zerillo (El Bosque)",
+        "Capacity": 24544,
+        "TransferBudget": 2800000,
+        "AnnualWageBudget": 8400000,
+        "ClubValue": 42000000,
+        "Tier": "Development",
+        "History": "Fundado en 1887 en La Plata. El Lobo, el club más antiguo de América en actividad."
+      }
     },
     {
       "Name": "Talleres",
@@ -2190,7 +2300,17 @@
           "Position": "DC",
           "Rating": 62
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1913,
+        "Stadium": "Mario Alberto Kempes",
+        "Capacity": 57000,
+        "TransferBudget": 14000000,
+        "AnnualWageBudget": 22400000,
+        "ClubValue": 126000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1913 en Córdoba. La T, de los clubes más convocantes del interior."
+      }
     },
     {
       "Name": "Belgrano",
@@ -2366,7 +2486,17 @@
           "Position": "ED",
           "Rating": 72
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1905,
+        "Stadium": "Julio César Villagra (Gigante de Alberdi)",
+        "Capacity": 30000,
+        "TransferBudget": 5600000,
+        "AnnualWageBudget": 12600000,
+        "ClubValue": 63000000,
+        "Tier": "Development",
+        "History": "Fundado en 1905 en Córdoba. El Pirata, del barrio de Alberdi."
+      }
     },
     {
       "Name": "Rosario Central",
@@ -2542,7 +2672,17 @@
           "Position": "DC",
           "Rating": 73
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1889,
+        "Stadium": "Gigante de Arroyito",
+        "Capacity": 41654,
+        "TransferBudget": 9800000,
+        "AnnualWageBudget": 19600000,
+        "ClubValue": 98000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1889 en Rosario. El Canalla, una de las hinchadas más fieles del país."
+      }
     },
     {
       "Name": "Newell's Old Boys",
@@ -2718,7 +2858,17 @@
           "Position": "EI",
           "Rating": 63
         }
-      ]
+      ],
+      "Club": {
+        "Founded": 1903,
+        "Stadium": "Marcelo Bielsa",
+        "Capacity": 42000,
+        "TransferBudget": 5600000,
+        "AnnualWageBudget": 12600000,
+        "ClubValue": 70000000,
+        "Tier": "Mid",
+        "History": "Fundado en 1903 en Rosario. La Lepra, cuna de grandes jugadores."
+      }
     }
   ],
   "Rivalries": [
