@@ -39,6 +39,7 @@ namespace Football.Tools.HeadlessSim
             bool printReport = false;
             bool quick = false;
             string simDumpPath = null;
+            string financeDumpPath = null;
             for (int i = 0; i < args.Length; i++)
             {
                 bool needsValue = args[i] != "--verbose" && args[i] != "--indoor" && args[i] != "--report" && args[i] != "--sim";
@@ -62,6 +63,7 @@ namespace Football.Tools.HeadlessSim
                     case "--report": printReport = true; break;
                     case "--sim": quick = true; break;
                     case "--dump-sim-config": simDumpPath = args[++i]; break;
+                    case "--dump-finance-config": financeDumpPath = args[++i]; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                     default:
@@ -80,6 +82,13 @@ namespace Football.Tools.HeadlessSim
             {
                 Console.Error.WriteLine($"Valores fuera de rango: --difficulty y --away-difficulty van de 0 a {levels - 1}; --matches debe ser positivo.");
                 return 2;
+            }
+
+            if (financeDumpPath != null)
+            {
+                File.WriteAllText(financeDumpPath, JsonSerializer.Serialize(new Football.Core.Management.FinanceConfig(), Json) + "\n");
+                Console.WriteLine("Economía escrita en " + financeDumpPath);
+                return 0;
             }
 
             if (simDumpPath != null)
