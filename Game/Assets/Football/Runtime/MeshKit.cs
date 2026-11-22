@@ -9,7 +9,6 @@ namespace Football.Game
     /// </summary>
     public static class MeshKit
     {
-        private const int LimbSides = 8;
         private const int SphereSegments = 10;
         private const int SphereRings = 7;
         private const int DiscSides = 14;
@@ -21,11 +20,77 @@ namespace Football.Game
         private static Mesh _arrow;
         private static Mesh _disc;
 
-        /// <summary>Extremidad: prisma octogonal de 1 m que cuelga desde su pivote (y = 0) hasta y = -1, algo más fina abajo.</summary>
-        public static Mesh Limb => _limb != null ? _limb : (_limb = Prism(0.5f, 0.38f, -1f));
+        /// <summary>
+        /// Extremidad: torno redondeado (cápsula que se afina hacia abajo, como un muslo o un antebrazo) de 1 m que cuelga
+        /// desde su pivote (y = 0) hasta y = -1. Sus extremos son redondos para que las articulaciones no muestren aristas.
+        /// </summary>
+        public static Mesh Limb => _limb != null ? _limb : (_limb = Lathe(new[]
+        {
+            new Vector2(0.04f, 0f), new Vector2(0.01f, 0.3f), new Vector2(-0.05f, 0.47f), new Vector2(-0.25f, 0.5f),
+            new Vector2(-0.6f, 0.44f), new Vector2(-0.92f, 0.38f), new Vector2(-0.99f, 0.28f), new Vector2(-1.02f, 0f)
+        }));
 
-        /// <summary>Tronco: prisma más ancho arriba (hombros) que abajo (cintura), de y = 0 a y = -1.</summary>
-        public static Mesh Torso => _torso != null ? _torso : (_torso = Prism(0.5f, 0.42f, -1f));
+        /// <summary>Tronco atlético: hombros anchos y redondeados, pecho y cintura más estrecha, de y = 0 a y = -1.</summary>
+        public static Mesh Torso => _torso != null ? _torso : (_torso = Lathe(new[]
+        {
+            new Vector2(0.05f, 0f), new Vector2(0.02f, 0.3f), new Vector2(-0.06f, 0.48f), new Vector2(-0.2f, 0.5f),
+            new Vector2(-0.5f, 0.46f), new Vector2(-0.85f, 0.41f), new Vector2(-1f, 0.4f), new Vector2(-1.03f, 0f)
+        }));
+
+        private static Mesh _capsule;
+
+        /// <summary>Cápsula centrada de alto 1 y diámetro 1 (pantalón, cuello, guantes, botines).</summary>
+        public static Mesh Capsule => _capsule != null ? _capsule : (_capsule = Lathe(new[]
+        {
+            new Vector2(0.5f, 0f), new Vector2(0.45f, 0.3f), new Vector2(0.32f, 0.47f), new Vector2(0.1f, 0.5f),
+            new Vector2(-0.1f, 0.5f), new Vector2(-0.32f, 0.47f), new Vector2(-0.45f, 0.3f), new Vector2(-0.5f, 0f)
+        }));
+
+        private static Mesh _cylinder;
+
+        /// <summary>Cilindro centrado de alto 1 y diámetro 1 (postes y travesaño).</summary>
+        public static Mesh Cylinder => _cylinder != null ? _cylinder : (_cylinder = Lathe(new[]
+        {
+            new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(-0.5f, 0.5f), new Vector2(-0.5f, 0f)
+        }));
+
+        private const int LatheSides = 10;
+
+        /// <summary>
+        /// Sólido de revolución alrededor del eje Y a partir de un perfil (y, radio), de arriba abajo; el primer y el último
+        /// punto deben tener radio 0 (cierran la figura).
+        /// </summary>
+        private static Mesh Lathe(Vector2[] profile)
+        {
+            var s = new Solid();
+            int top = s.Add(new Vector3(0f, profile[0].x, 0f));
+            int bottom = s.Add(new Vector3(0f, profile[profile.Length - 1].x, 0f));
+            int ringCount = profile.Length - 2;
+            var rings = new int[ringCount, LatheSides];
+            for (int r = 0; r < ringCount; r++)
+            {
+                Vector2 point = profile[r + 1];
+                for (int i = 0; i < LatheSides; i++)
+                {
+                    float a = i * Mathf.PI * 2f / LatheSides;
+                    rings[r, i] = s.Add(new Vector3(Mathf.Cos(a) * point.y, point.x, Mathf.Sin(a) * point.y));
+                }
+            }
+
+            for (int i = 0; i < LatheSides; i++)
+            {
+                int j = (i + 1) % LatheSides;
+                s.Tri(top, rings[0, j], rings[0, i]);
+                s.Tri(bottom, rings[ringCount - 1, i], rings[ringCount - 1, j]);
+                for (int r = 0; r < ringCount - 1; r++)
+                {
+                    s.Quad(rings[r, i], rings[r, j], rings[r + 1, j], rings[r + 1, i]);
+                }
+            }
+
+            float middle = (profile[0].x + profile[profile.Length - 1].x) * 0.5f;
+            return s.Build(new Vector3(0f, middle, 0f));
+        }
 
         /// <summary>Cubo unitario centrado.</summary>
         public static Mesh Box => _box != null ? _box : (_box = BuildBox());
@@ -89,32 +154,6 @@ namespace Football.Game
                 mesh.RecalculateBounds();
                 return mesh;
             }
-        }
-
-        private static Mesh Prism(float topRadius, float bottomRadius, float bottomY)
-        {
-            var s = new Solid();
-            int top = s.Add(new Vector3(0f, 0f, 0f));
-            int bottom = s.Add(new Vector3(0f, bottomY, 0f));
-            var ringTop = new int[LimbSides];
-            var ringBottom = new int[LimbSides];
-            for (int i = 0; i < LimbSides; i++)
-            {
-                float a = i * Mathf.PI * 2f / LimbSides;
-                float x = Mathf.Cos(a), z = Mathf.Sin(a);
-                ringTop[i] = s.Add(new Vector3(x * topRadius, 0f, z * topRadius));
-                ringBottom[i] = s.Add(new Vector3(x * bottomRadius, bottomY, z * bottomRadius));
-            }
-
-            for (int i = 0; i < LimbSides; i++)
-            {
-                int j = (i + 1) % LimbSides;
-                s.Quad(ringTop[i], ringTop[j], ringBottom[j], ringBottom[i]);
-                s.Tri(top, ringTop[j], ringTop[i]);
-                s.Tri(bottom, ringBottom[i], ringBottom[j]);
-            }
-
-            return s.Build(new Vector3(0f, bottomY * 0.5f, 0f));
         }
 
         private static Mesh BuildBox()

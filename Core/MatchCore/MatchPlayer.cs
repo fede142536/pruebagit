@@ -57,6 +57,8 @@ namespace Football.Core.MatchCore
         public bool WantsTackle;
         /// <summary>El portero se lanza (velocidad lateral alta).</summary>
         public bool Diving;
+        /// <summary>Altura a la que va la estirada del arquero (m), para animarla.</summary>
+        public float DiveHeight;
         /// <summary>Rival al que marca.</summary>
         public MatchPlayer MarkTarget;
         /// <summary>Posición base que le corresponde según formación, balón y estilo del equipo.</summary>

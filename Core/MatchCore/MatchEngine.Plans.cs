@@ -680,6 +680,7 @@ namespace Football.Core.MatchCore
                             keeper.Target = new Vec2(end * (Pitch.HalfLength - KeeperGoalInset), MathUtil.Clamp(yAt, -reach, reach));
                             keeper.Diving = true;
                             keeper.Action = PlayerAction.Dive;
+                            keeper.DiveHeight = MathF.Max(0f, Ball.Pos.Z + Ball.Vel.Z * t - 0.5f * Config.Ball.Gravity * t * t);
                             keeper.ActionDisplayTimer = KickDisplay;
                             return;
                         }
@@ -702,6 +703,8 @@ namespace Football.Core.MatchCore
                 keeper.Target = Owner.Pos + (goal - Owner.Pos).Normalized * ai.KeeperRushStop;
                 keeper.SpeedFactor = 1f;
                 keeper.WantsTackle = Vec2.Distance(keeper.Pos, Owner.Pos) <= Config.Rules.TackleRange * TackleReadyFactor;
+                keeper.Action = PlayerAction.Rush;
+                keeper.ActionDisplayTimer = Config.Ai.DecisionInterval;
                 return;
             }
 

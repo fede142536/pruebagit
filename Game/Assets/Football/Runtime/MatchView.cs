@@ -91,6 +91,13 @@ namespace Football.Game
         private const float IntroHeight = 70f;
         private static float FocusZoom => ViewTuning.Current.Camera.FocusZoom;
         private Confetti _confetti;
+        private GrassBurst _grass;
+        private const int HairStyles = 5;
+        private const int BeardEvery = 4;
+        private const float RunUpDistance = 2.4f;   // el sacador de córner o de saque de arco toma carrera en diagonal
+        private const float RunUpSeconds = 0.22f;
+        private const float HoldBallHeight = 0.5f;
+        private float[] _runUp;
         private float _zoom = 1f;
         private float _lookAheadX;
         private float _lookAheadZ;
@@ -142,6 +149,7 @@ namespace Football.Game
             Safe("jugadores", () => BuildPlayers(homeKit, awayKit));
             Safe("balón", BuildBall);
             Safe("indicadores", BuildIndicators);
+            Safe("terrones", () => _grass = new GrassBurst(_root.transform));
             Safe("papelitos", () => _confetti = new Confetti(_root.transform, pitch.HalfLength, pitch.HalfWidth,
                 new[] { homeKit.Shirt, awayKit.Shirt, Color.white }, _meshes));
         }
@@ -227,6 +235,35 @@ namespace Football.Game
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             return go.transform;
+        }
+
+        /// <summary>
+        /// Carrera previa del sacador en córners y saques de arco: mientras espera se ve unos pasos atrás, en diagonal
+        /// hacia afuera; al patear, recorre ese tramo en un instante. Solo es visual (el motor no cambia).
+        /// </summary>
+        private Vector2 RunUpOffset(MatchSnapshot previous, MatchSnapshot current, int i, float x, float y, float deltaTime)
+        {
+            if (_runUp == null || _runUp.Length != _players.Length)
+            {
+                _runUp = new float[_players.Length];
+            }
+
+            var outward = new Vector2(Mathf.Sign(x), Mathf.Sign(y) * 0.7f).normalized;
+            bool runUpKick = current.Restart == RestartKind.Corner || current.Restart == RestartKind.GoalKick;
+            if (current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && runUpKick)
+            {
+                _runUp[i] = 1f;
+                return outward * RunUpDistance;
+            }
+
+            if (_runUp[i] > 0f && current.Phase == MatchPhase.Playing)
+            {
+                _runUp[i] = Mathf.Max(0f, _runUp[i] - deltaTime / RunUpSeconds);
+                return outward * (RunUpDistance * _runUp[i]);
+            }
+
+            _runUp[i] = 0f;
+            return Vector2.zero;
         }
 
         private static Vector3 ToUnity(float x, float y, float height) => new Vector3(x, height, y);
@@ -442,7 +479,12 @@ namespace Football.Game
                     Socks = kit.Socks,
                     Skin = SkinTones[(i * 7 + 3) % SkinTones.Length],
                     Hair = HairColors[(i * 5 + 1) % HairColors.Length],
-                    Boots = new Color(0.08f, 0.08f, 0.08f)
+                    Boots = new Color(0.08f, 0.08f, 0.08f),
+                    // Aspecto determinista: cada jugador tiene siempre el mismo peinado y barba.
+                    HairStyle = (i * 13 + 5) % HairStyles,
+                    Beard = i % BeardEvery == 2,
+                    Keeper = keeper,
+                    Gloves = home ? new Color(0.95f, 0.9f, 0.2f) : new Color(0.25f, 0.8f, 0.95f)
                 };
                 // Contextura: los arqueros, algo más altos; el resto varía un poco (determinista, sin azar).
                 float build = keeper ? KeeperBuild : MinBuild + (i * BuildStep % BuildSteps) * BuildRange / (BuildSteps - 1);
@@ -510,6 +552,7 @@ namespace Football.Game
         {
             _clock += deltaTime;
             _confetti?.Update(deltaTime);
+            _grass?.Update(deltaTime);
             AnimateNets(deltaTime);
             float bx = Mathf.Lerp(previous.BallX, current.BallX, alpha);
             float by = Mathf.Lerp(previous.BallY, current.BallY, alpha);
@@ -541,7 +584,25 @@ namespace Football.Game
                 // Ángulo hacia el balón relativo a la orientación (positivo = a la izquierda en el plano del motor).
                 float toBall = Mathf.Atan2(by - y, bx - x) * Mathf.Rad2Deg;
                 float relative = Mathf.DeltaAngle(heading, toBall);
-                model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, current.PlayerAction[i], -relative, relative < 0f, deltaTime);
+                PlayerAction action = current.PlayerAction[i];
+                Vector2 runUp = RunUpOffset(previous, current, i, x, y, deltaTime);
+                if (runUp.sqrMagnitude > 0f)
+                {
+                    x += runUp.x;
+                    y += runUp.y;
+                    speed = Mathf.Max(speed, RunUpDistance / RunUpSeconds * 0.5f); // zancada de carrera
+                }
+
+                if (action == PlayerAction.Slide && previous.PlayerAction[i] != PlayerAction.Slide && _grass != null)
+                {
+                    float rad = heading * Mathf.Deg2Rad;
+                    _grass.Emit(ToUnity(x, y, 0.05f), new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)));
+                }
+
+                bool holdingThrow = current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && current.Restart == RestartKind.ThrowIn;
+                bool holdingBall = current.OwnerIndex == i && i % _perTeam == 0 && current.BallZ > HoldBallHeight;
+                model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, relative < 0f, deltaTime,
+                    current.DiveHeight[i], holdingThrow, holdingBall);
                 _heads[i] = ToUnity(x, y, NameHeight);
             }
 

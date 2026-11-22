@@ -271,8 +271,14 @@ namespace Football.Core.MatchCore
             }
         }
 
+        private bool _restartKick;
+
+        /// <summary>Quién saca ahora (durante un saque), o null.</summary>
+        public MatchPlayer Taker => Phase == MatchPhase.SetPiece ? _taker : null;
+
         private void BeginRestartKick(MatchPlayer t)
         {
+            _restartKick = true;
             Phase = MatchPhase.Playing;
             _planTimer = 0f;
             t.ActionTimer = 0f;

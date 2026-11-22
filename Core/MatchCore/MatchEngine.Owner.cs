@@ -676,7 +676,15 @@ namespace Football.Core.MatchCore
             _saveRolled = false;
             _beatenKeeper = null;
             p.KickTimer = Config.Player.KickCooldown;
-            p.Action = PlayerAction.Kick;
+            p.Action = kind == KickKind.Pass ? PlayerAction.Pass : kind == KickKind.Shot ? PlayerAction.Shoot : PlayerAction.Kick;
+            if (_restartKick)
+            {
+                _restartKick = false;
+                if (_restart.Kind == RestartKind.ThrowIn)
+                {
+                    p.Action = PlayerAction.ThrowIn;
+                }
+            }
             p.ActionDisplayTimer = KickDisplay;
             p.SpeedFactor = 0f;
 

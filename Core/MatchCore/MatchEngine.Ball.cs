@@ -417,6 +417,7 @@ namespace Football.Core.MatchCore
             }
             keeper.Action = PlayerAction.Dive;
             keeper.ActionDisplayTimer = ActionDisplay;
+            keeper.DiveHeight = Ball.Pos.Z;
 
             float handling = keeper.Skill(AttributeId.Handling);
             if (speed <= c.KeeperCatchMaxSpeed * (0.8f + 0.4f * handling) && Ball.Pos.Z < CatchHeight)
@@ -602,7 +603,7 @@ namespace Football.Core.MatchCore
             p.SlideResolved = false;
             p.Speed = MathF.Max(p.Speed, Config.Rules.SlideSpeed);
             p.WantsTackle = false;
-            p.Action = PlayerAction.Tackle;
+            p.Action = PlayerAction.Slide;
             p.ActionDisplayTimer = Config.Rules.SlideDuration + Config.Rules.SlideRecovery;
         }
 

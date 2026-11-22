@@ -209,7 +209,17 @@ namespace Football.Core.MatchCore
         /// <summary>Trastabilla tras un choque con un rival más fuerte.</summary>
         Stumble,
         /// <summary>Festejando un gol.</summary>
-        Celebrate
+        Celebrate,
+        /// <summary>Pase raso (apertura de cadera, golpe con el interior).</summary>
+        Pass,
+        /// <summary>Tiro (armado amplio y acompañamiento de la pierna).</summary>
+        Shoot,
+        /// <summary>Barrida: deslizamiento rasante con una pierna extendida.</summary>
+        Slide,
+        /// <summary>Saque de banda con las dos manos por detrás de la cabeza.</summary>
+        ThrowIn,
+        /// <summary>Arquero que sale a achicar en el mano a mano.</summary>
+        Rush
     }
 
 }

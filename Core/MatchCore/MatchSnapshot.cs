@@ -25,6 +25,12 @@ namespace Football.Core.MatchCore
         public readonly PlayerAction[] PlayerAction = new PlayerAction[PlayerCount];
         /// <summary>Expulsados.</summary>
         public readonly bool[] SentOff = new bool[PlayerCount];
+        /// <summary>Altura de la estirada de cada jugador (m; solo los arqueros que se lanzan).</summary>
+        public readonly float[] DiveHeight = new float[PlayerCount];
+        /// <summary>Tipo de saque en curso (si la fase es de saque).</summary>
+        public RestartKind Restart;
+        /// <summary>Quién saca, o -1.</summary>
+        public int TakerIndex;
 
         /// <summary>Posición X del balón.</summary>
         public float BallX;
@@ -65,7 +71,11 @@ namespace Football.Core.MatchCore
                 PlayerSpeed[i] = p.Speed;
                 PlayerAction[i] = p.Action;
                 SentOff[i] = p.SentOff;
+                DiveHeight[i] = p.DiveHeight;
             }
+
+            Restart = engine.CurrentRestart.Kind;
+            TakerIndex = engine.Taker != null ? engine.Taker.Index : -1;
 
             BallX = engine.Ball.Pos.X;
             BallY = engine.Ball.Pos.Y;
