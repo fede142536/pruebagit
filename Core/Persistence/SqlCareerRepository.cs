@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using Football.Core.Career;
 using Football.Core.Domain;
+using Football.Core.MatchCore;
 
 namespace Football.Core.Persistence
 {
@@ -20,7 +21,7 @@ namespace Football.Core.Persistence
 
         private static readonly string[] TablesChildrenFirst =
         {
-            "career_meta", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
+            "career_meta", "player_season_stats", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
             "competitions", "facilities", "ledger", "club_finances", "contracts", "player_attributes", "players", "clubs"
         };
 
@@ -337,6 +338,14 @@ namespace Football.Core.Persistence
                 InsertRecord(tx, CareerGoalsPrefix + g.Key, g.Value, g.Key, data.Season);
             }
 
+            foreach (KeyValuePair<int, CardStats> st in data.SeasonStats)
+            {
+                SqlHelper.Execute(Connection,
+                    "INSERT INTO player_season_stats (player_id, matches, goals, assists, rating_sum, rated) VALUES (@id, @m, @g, @a, @r, @n)", tx,
+                    ("@id", st.Key), ("@m", st.Value.Matches), ("@g", st.Value.Goals), ("@a", st.Value.Assists), ("@r", (double)st.Value.RatingSum),
+                    ("@n", st.Value.Rated));
+            }
+
             foreach (int id in data.HallOfFame)
             {
                 SqlHelper.Execute(Connection, "INSERT INTO hall_of_fame (player_id, inducted_season) VALUES (@id, @season)", tx,
@@ -362,6 +371,10 @@ namespace Football.Core.Persistence
                 data.Records.Add(new RecordEntry { Key = key, Value = (float)r.GetDouble(1), HolderId = r.GetInt32(2), Season = r.GetInt32(3) });
             });
             Read("SELECT player_id FROM hall_of_fame ORDER BY inducted_season, player_id", r => data.HallOfFame.Add(r.GetInt32(0)));
+            Read("SELECT player_id, matches, goals, assists, rating_sum, rated FROM player_season_stats", r => data.SeasonStats[r.GetInt32(0)] = new CardStats
+            {
+                Matches = r.GetInt32(1), Goals = r.GetInt32(2), Assists = r.GetInt32(3), RatingSum = (float)r.GetDouble(4), Rated = r.GetInt32(5)
+            });
         }
 
         // ------------------------------------------------------------------ auxiliares

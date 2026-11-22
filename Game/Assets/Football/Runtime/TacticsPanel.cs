@@ -95,6 +95,32 @@ namespace Football.Game
             _root.SetActive(false);
         }
 
+        /// <summary>Ficha del jugador (de la cancha o del banco) que hay en un punto, o null.</summary>
+        /// <param name="point">Punto en el área de diseño.</param>
+        public PlayerCardInfo CardAt(Vector2 point)
+        {
+            TeamState team = _engine.Teams[0];
+            for (int i = 0; i < team.Players.Length && i < MaxRows; i++)
+            {
+                if (_field[i].Contains(point))
+                {
+                    _selected = -1;
+                    Refresh();
+                    return PlayerCards.FromMatch(team.Players[i]);
+                }
+            }
+
+            for (int i = 0; i < team.Bench.Length && i < MaxBench; i++)
+            {
+                if (_bench[i].Contains(point))
+                {
+                    return PlayerCards.FromView(team.Bench[i]);
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>Procesa un toque (en coordenadas del área de diseño).</summary>
         public void Tap(Vector2 point)
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Football.Core.Domain;
+using Football.Core.MatchCore;
 
 namespace Football.Core.Career
 {
@@ -112,6 +113,8 @@ namespace Football.Core.Career
         public readonly List<RecordEntry> Records = new List<RecordEntry>();
         /// <summary>Goles de carrera de cada jugador.</summary>
         public readonly Dictionary<int, int> CareerGoals = new Dictionary<int, int>();
+        /// <summary>Estadísticas de la temporada en curso de cada jugador (partidos, goles, asistencias, notas).</summary>
+        public readonly Dictionary<int, CardStats> SeasonStats = new Dictionary<int, CardStats>();
         /// <summary>Salón de la fama.</summary>
         public readonly List<int> HallOfFame = new List<int>();
 

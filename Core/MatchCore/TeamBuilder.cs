@@ -316,13 +316,13 @@ namespace Football.Core.MatchCore
         /// <summary>Construye el equipo listo para el motor de partido.</summary>
         /// <param name="team">Definición del equipo.</param>
         /// <param name="config">Configuración del partido (para el estilo).</param>
-        /// <param name="rng">Fuente de azar para la variación individual de atributos.</param>
+        /// <param name="rng">Se conserva por compatibilidad: la variación individual de atributos ya es fija por jugador.</param>
         public static MatchTeamSetup Build(TeamDefinition team, MatchConfig config, IRandom rng) => Build(team, config, rng, null);
 
         /// <summary>Construye el equipo con la convocatoria elegida por el usuario (o la automática si es null o no es válida).</summary>
         /// <param name="team">Definición del equipo.</param>
         /// <param name="config">Configuración del partido.</param>
-        /// <param name="rng">Fuente de azar.</param>
+        /// <param name="rng">Se conserva por compatibilidad (los atributos son fijos por jugador, ver <see cref="PlayerCards"/>).</param>
         /// <param name="selection">Formación y titulares elegidos.</param>
         public static MatchTeamSetup Build(TeamDefinition team, MatchConfig config, IRandom rng, SquadSelection selection)
         {
@@ -355,7 +355,8 @@ namespace Football.Core.MatchCore
 
                 // Los atributos salen de su posición natural; jugar fuera de puesto le resta algo de media.
                 float effective = EffectiveRating(def, role);
-                RosterFactory.FillAttributes(rng, effective, natural == Position.Goalkeeper || role != Position.Goalkeeper ? natural : role, view.Attributes);
+                // Variación individual fija por jugador (no por partido): la ficha muestra lo mismo que se juega.
+                RosterFactory.FillAttributes(PlayerCards.RandomFor(def.Name), effective, natural == Position.Goalkeeper || role != Position.Goalkeeper ? natural : role, view.Attributes);
                 players[slot] = view;
             }
 
@@ -373,7 +374,7 @@ namespace Football.Core.MatchCore
                     Number = def.Number > 0 ? def.Number : index + 1,
                     Role = natural
                 };
-                RosterFactory.FillAttributes(rng, def.Rating, natural, view.Attributes);
+                RosterFactory.FillAttributes(PlayerCards.RandomFor(def.Name), def.Rating, natural, view.Attributes);
                 bench[i] = view;
             }
 

@@ -69,6 +69,8 @@ namespace Football.Core.Tests.Career
                 Assert.That(loaded.News.Select(n => n.Key + string.Join(",", n.Args)), Is.EqualTo(d.News.Select(n => n.Key + string.Join(",", n.Args))));
                 Assert.That(loaded.Records.Count, Is.EqualTo(d.Records.Count));
                 Assert.That(loaded.CareerGoals, Is.EquivalentTo(d.CareerGoals));
+                Assert.That(loaded.SeasonStats.Keys, Is.EquivalentTo(d.SeasonStats.Keys));
+                Assert.That(loaded.SeasonStats.Values.Sum(x => x.Goals), Is.EqualTo(d.SeasonStats.Values.Sum(x => x.Goals)));
             }
         }
 

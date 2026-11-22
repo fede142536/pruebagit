@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Football.Core.Domain;
+using Football.Core.MatchCore;
 using Football.Core.Persistence;
 
 namespace Football.Core.Career
@@ -15,7 +16,7 @@ namespace Football.Core.Career
     public static class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 1;
+        private const int Version = 2; // 2: estadísticas de la temporada de cada jugador
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -232,6 +233,17 @@ namespace Football.Core.Career
                 {
                     w.Write(id);
                 }
+
+                w.Write(d.SeasonStats.Count);
+                foreach (KeyValuePair<int, CardStats> st in d.SeasonStats)
+                {
+                    w.Write(st.Key);
+                    w.Write(st.Value.Matches);
+                    w.Write(st.Value.Goals);
+                    w.Write(st.Value.Assists);
+                    w.Write(st.Value.RatingSum);
+                    w.Write(st.Value.Rated);
+                }
             }
         }
 
@@ -247,7 +259,7 @@ namespace Football.Core.Career
                 }
 
                 int version = r.ReadInt32();
-                if (version != Version)
+                if (version < 1 || version > Version)
                 {
                     throw new InvalidDataException("Versión de partida desconocida: " + version);
                 }
@@ -395,6 +407,18 @@ namespace Football.Core.Career
                 for (int i = 0; i < fame; i++)
                 {
                     d.HallOfFame.Add(r.ReadInt32());
+                }
+
+                if (version >= 2)
+                {
+                    int stats = r.ReadInt32();
+                    for (int i = 0; i < stats; i++)
+                    {
+                        d.SeasonStats[r.ReadInt32()] = new CardStats
+                        {
+                            Matches = r.ReadInt32(), Goals = r.ReadInt32(), Assists = r.ReadInt32(), RatingSum = r.ReadSingle(), Rated = r.ReadInt32()
+                        };
+                    }
                 }
 
                 return d;

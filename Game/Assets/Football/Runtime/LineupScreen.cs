@@ -41,6 +41,8 @@ namespace Football.Game
         private int _side;
         private SquadGroup _selectedGroup;
         private int _selectedIndex = -1;
+        private readonly PlayerCardPanel _card;
+        private readonly HoldDetector _hold = new HoldDetector();
 
         /// <summary>Se terminó de editar (volver a la pantalla de equipos).</summary>
         public bool Done { get; private set; }
@@ -49,7 +51,8 @@ namespace Football.Game
         public LineupScreen(Transform parent, PointerInput pointers, FriendlySetup setup) : base(parent, pointers, "AlineacionUI")
         {
             _setup = setup;
-            _title = Title("ALINEACIÓN", "Toca un jugador y luego otro para intercambiarlos");
+            _title = Title("ALINEACIÓN", "Toca un jugador y luego otro para intercambiarlos  ·  " + Locale.Get("card.hint"));
+            _card = new PlayerCardPanel(parent);
             BuildPitch();
 
             _formationPrevious = UiKit.Button(Root, "FormacionAnterior", new Vector2(1180f, 990f), new Vector2(80f, 76f), "<", 40, UiTheme.Button);
@@ -99,6 +102,13 @@ namespace Football.Game
             UiKit.Panel(Root, "AreaPropia", center + new Vector2(0f, -PitchHeight * 0.5f + 70f), new Vector2(380f, 3f), line);
             UiKit.Panel(Root, "AreaRival", center + new Vector2(0f, PitchHeight * 0.5f - 70f), new Vector2(380f, 3f), line);
             UiKit.Label(Root, "Ataque", center + new Vector2(0f, PitchHeight * 0.5f - 22f), new Vector2(400f, 30f), "ATAQUE", 20, line);
+        }
+
+        /// <inheritdoc />
+        public override void Hide()
+        {
+            base.Hide();
+            _card?.Hide();
         }
 
         /// <summary>Muestra la alineación de un lado (0 tu equipo, 1 el rival).</summary>
@@ -196,9 +206,31 @@ namespace Football.Game
         public void Update()
         {
             Done = false;
+            if (_card.Visible)
+            {
+                // Ficha abierta: cualquier toque (o atrás) la cierra.
+                if (BackKey || Taps(out _) > 0)
+                {
+                    _card.Hide();
+                }
+
+                return;
+            }
+
             if (BackKey)
             {
                 Finish();
+                return;
+            }
+
+            if (_hold.Update(Pointers, Time.unscaledDeltaTime, out Vector2 held)
+                && HitPlayer(held, _setup.Squad(_side), out SquadGroup heldGroup, out int heldIndex))
+            {
+                // Mantener presionado: ficha del jugador (y se cancela el intercambio que había empezado con ese toque).
+                _selectedIndex = -1;
+                SquadSelection sq = _setup.Squad(_side);
+                _card.Show(PlayerCards.FromDefinition(_setup.Definition(_side).Players[sq.Group(heldGroup)[heldIndex]]));
+                Refresh();
                 return;
             }
 

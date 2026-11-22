@@ -1,8 +1,9 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Football.Core.Common;
 using Football.Core.Data;
 using Football.Core.MatchCore;
-using Football.Core.Domain;
 
 namespace Football.Game
 {
@@ -22,32 +23,43 @@ namespace Football.Game
     }
 
     /// <summary>
-    /// Elección de equipos para el amistoso, al estilo EA FC: a los costados, un jugador 3D de cuerpo entero con la
-    /// equipación elegida; en el centro, dos paneles (TU EQUIPO / RIVAL) con el selector de club y un carrusel de camisetas
-    /// (la elegida en grande y la otra en miniatura a los costados).
+    /// Elección de clubes para el amistoso. Arriba, las pestañas TU EQUIPO / EQUIPO RIVAL y el botón ALEATORIO. A la izquierda,
+    /// una grilla de tarjetas cuadradas con el escudo procedural, el nombre y la media (OVR) de cada club; la elegida se
+    /// resalta. A la derecha, el escudo grande, el nombre, las estrellas, las camisetas CASA y VISITANTE lado a lado (se
+    /// alternan con un toque) y el jugador 3D con la camiseta elegida. Sin lógica de juego: solo cambia la elección.
     /// </summary>
     public sealed class TeamSelectScreen : MenuScreenBase
     {
-        private const float PanelWidth = 500f;
-        private const float PanelHeight = 800f;
-        private const float MainKitScale = 1.15f;
-        private const float SideKitScale = 0.45f;
+        private const int Columns = 4;
+        private const float CardSize = 168f;
+        private const float CardGap = 14f;
+        private const float GridLeft = 70f;
+        private const float GridTop = 880f;
+        private const float KitScale = 0.62f;
         private static readonly Vector2 KitBoxSize = new Vector2(300f, 330f);
+        private static readonly Color CardColor = new Color(0.12f, 0.15f, 0.2f, 0.92f);
 
-        private sealed class Card
+        private sealed class ClubCard
         {
-            public UiButton Previous, Next, KitPrevious, KitNext, Lineup;
-            public Text Name, Info, Star, KitName, Figure;
-            public StarRating Stars;
-            public KitPreview Kit, LeftKit, RightKit;
-            public KitShowroom Showroom;
+            public UiButton Button;
+            public Image Frame;
+            public ClubCrest Crest;
+            public Text Name, Rating;
         }
 
         private readonly FriendlySetup _setup;
-        private readonly Card[] _cards = new Card[2];
-        private readonly UiButton _back;
-        private readonly UiButton _continue;
-        private readonly Text _clash;
+        private readonly ClubCard[] _clubs;
+        private readonly UiButton[] _sideTabs = new UiButton[2];
+        private readonly UiButton _random, _back, _continue, _lineup;
+        private readonly UiButton[] _kitButtons = new UiButton[2];
+        private readonly Image[] _kitFrames = new Image[2];
+        private readonly KitPreview[] _kits = new KitPreview[2];
+        private readonly ClubCrest _bigCrest;
+        private readonly Text _name, _info, _versus, _clash;
+        private readonly StarRating _stars;
+        private readonly KitShowroom _showroom;
+        private readonly IRandom _randomSource = new SeededRandom((ulong)DateTime.Now.Ticks);
+        private int _side;
 
         /// <summary>Acción pedida en este fotograma.</summary>
         public TeamSelectAction Action { get; private set; }
@@ -56,54 +68,65 @@ namespace Football.Game
         public TeamSelectScreen(Transform parent, PointerInput pointers, FriendlySetup setup) : base(parent, pointers, "EquiposUI")
         {
             _setup = setup;
-            Title("PARTIDO AMISTOSO", "Elige los clubes y sus camisetas");
-            _cards[0] = BuildCard(new Vector2(700f, 480f), "TU EQUIPO");
-            _cards[1] = BuildCard(new Vector2(1220f, 480f), "RIVAL");
-            _cards[0].Showroom = new KitShowroom(Root, new Vector2(225f, 520f), new Vector2(360f, 600f), 0, 200f);
-            _cards[1].Showroom = new KitShowroom(Root, new Vector2(1695f, 520f), new Vector2(360f, 600f), 1, 160f);
-            _cards[0].Figure = UiKit.Label(Root, "FiguraLocal", new Vector2(225f, 195f), new Vector2(400f, 40f), string.Empty, 26, UiTheme.Text);
-            _cards[1].Figure = UiKit.Label(Root, "FiguraRival", new Vector2(1695f, 195f), new Vector2(400f, 40f), string.Empty, 26, UiTheme.Text);
-            UiKit.Label(Root, "Vs", new Vector2(960f, 785f), new Vector2(120f, 60f), "VS", 44, UiTheme.TextDim);
-            _clash = UiKit.Label(Root, "Choque", new Vector2(960f, 55f), new Vector2(1000f, 40f), string.Empty, 24, UiTheme.Warning);
+            Title("PARTIDO AMISTOSO");
+            _sideTabs[0] = UiKit.Button(Root, "TuEquipo", new Vector2(1050f, 1005f), new Vector2(300f, 70f), "TU EQUIPO", 30, UiTheme.Button);
+            _sideTabs[1] = UiKit.Button(Root, "Rival", new Vector2(1370f, 1005f), new Vector2(300f, 70f), "EQUIPO RIVAL", 30, UiTheme.Button);
+            _random = UiKit.Button(Root, "Aleatorio", new Vector2(1720f, 1005f), new Vector2(280f, 70f), "ALEATORIO", 30, UiTheme.AccentDark);
+
+            TeamDefinition[] teams = TeamCatalog.Teams;
+            _clubs = new ClubCard[teams.Length];
+            for (int i = 0; i < teams.Length; i++)
+            {
+                _clubs[i] = BuildClubCard(i, teams[i]);
+            }
+
+            // Panel derecho: escudo grande, nombre, estrellas, camisetas CASA / VISITANTE y jugador 3D.
+            UiKit.Panel(Root, "Panel", new Vector2(1390f, 520f), new Vector2(940f, 820f), UiTheme.Panel);
+            _bigCrest = new ClubCrest(Root, new Vector2(1060f, 800f), 210f);
+            _name = UiKit.Label(Root, "Nombre", new Vector2(1430f, 850f), new Vector2(560f, 70f), string.Empty, 42, UiTheme.Text, TextAnchor.MiddleLeft);
+            _stars = new StarRating(Root, new Vector2(1280f, 785f));
+            _info = UiKit.Label(Root, "Info", new Vector2(1430f, 730f), new Vector2(560f, 40f), string.Empty, 24, UiTheme.TextDim, TextAnchor.MiddleLeft);
+            string[] kitNames = { "CASA", "VISITANTE" };
+            for (int k = 0; k < 2; k++)
+            {
+                var center = new Vector2(1060f + k * 260f, 420f);
+                _kitFrames[k] = UiKit.Panel(Root, "MarcoCamiseta" + k, center, new Vector2(230f, 320f), UiTheme.Button);
+                _kits[k] = KitBox(Root, center + new Vector2(0f, 20f));
+                _kitButtons[k] = UiKit.Button(Root, "Camiseta" + k, center + new Vector2(0f, -130f), new Vector2(210f, 50f), kitNames[k], 24, UiTheme.Button);
+                _kitButtons[k].Size = new Vector2(230f, 320f); // todo el recuadro es tocable
+                _kitButtons[k].Center = center;
+            }
+
+            _showroom = new KitShowroom(Root, new Vector2(1680f, 470f), new Vector2(300f, 520f), 0, 200f);
+            _lineup = UiKit.Button(Root, "Alineacion", new Vector2(1390f, 170f), new Vector2(460f, 76f), "EDITAR ALINEACIÓN", 28, UiTheme.Button);
+            _versus = UiKit.Label(Root, "Versus", new Vector2(960f, 115f), new Vector2(1400f, 40f), string.Empty, 26, UiTheme.Text);
+            _clash = UiKit.Label(Root, "Choque", new Vector2(960f, 82f), new Vector2(1400f, 30f), string.Empty, 22, UiTheme.Warning);
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
             _continue = UiKit.Button(Root, "Continuar", new Vector2(1680f, 60f), new Vector2(400f, 84f), "CONTINUAR", 38, UiTheme.AccentDark);
         }
 
-        private Card BuildCard(Vector2 center, string heading)
+        private ClubCard BuildClubCard(int index, TeamDefinition team)
         {
-            Image panel = UiKit.Panel(Root, "Tarjeta" + heading, center, new Vector2(PanelWidth, PanelHeight), UiTheme.Panel);
-            Transform t = panel.transform;
-            Vector2 c = new Vector2(PanelWidth * 0.5f, PanelHeight * 0.5f);
-            var card = new Card();
-            UiKit.Label(t, "Encabezado", c + new Vector2(0f, 360f), new Vector2(460f, 50f), heading, 34, UiTheme.Accent);
-            // Selector de club.
-            card.Previous = UiKit.Button(t, "Anterior", c + new Vector2(-200f, 290f), new Vector2(76f, 76f), "<", 44, UiTheme.Button);
-            card.Next = UiKit.Button(t, "Siguiente", c + new Vector2(200f, 290f), new Vector2(76f, 76f), ">", 44, UiTheme.Button);
-            card.Name = UiKit.Label(t, "Nombre", c + new Vector2(0f, 290f), new Vector2(320f, 80f), string.Empty, 32, UiTheme.Text);
-            card.Stars = new StarRating(t, c + new Vector2(0f, 228f));
-            card.Info = UiKit.Label(t, "Info", c + new Vector2(0f, 182f), new Vector2(470f, 40f), string.Empty, 24, UiTheme.TextDim);
-            card.Star = UiKit.Label(t, "Figura", c + new Vector2(0f, 146f), new Vector2(470f, 40f), string.Empty, 22, UiTheme.TextDim);
-            // Carrusel de camisetas: la otra en miniatura a cada lado, la elegida grande al centro.
-            card.LeftKit = KitBox(t, c + new Vector2(-185f, -20f), SideKitScale);
-            card.RightKit = KitBox(t, c + new Vector2(185f, -20f), SideKitScale);
-            card.Kit = KitBox(t, c + new Vector2(0f, -10f), MainKitScale);
-            card.KitPrevious = UiKit.Button(t, "CamisetaAnterior", c + new Vector2(-185f, -215f), new Vector2(76f, 70f), "<", 40, UiTheme.Button);
-            card.KitNext = UiKit.Button(t, "CamisetaSiguiente", c + new Vector2(185f, -215f), new Vector2(76f, 70f), ">", 40, UiTheme.Button);
-            card.KitName = UiKit.Label(t, "NombreCamiseta", c + new Vector2(0f, -215f), new Vector2(260f, 60f), string.Empty, 28, UiTheme.Text);
-            card.Lineup = UiKit.Button(t, "Alineacion", c + new Vector2(0f, -330f), new Vector2(420f, 80f), "EDITAR ALINEACIÓN", 28, UiTheme.Button);
-            // Las zonas táctiles de los botones de la tarjeta se miden en coordenadas del lienzo.
-            Offset(card.Previous, center, c);
-            Offset(card.Next, center, c);
-            Offset(card.KitPrevious, center, c);
-            Offset(card.KitNext, center, c);
-            Offset(card.Lineup, center, c);
+            int col = index % Columns, row = index / Columns;
+            var center = new Vector2(GridLeft + CardSize * 0.5f + col * (CardSize + CardGap), GridTop - CardSize * 0.5f - row * (CardSize + CardGap));
+            var card = new ClubCard
+            {
+                Frame = UiKit.Panel(Root, "Marco" + index, center, new Vector2(CardSize + 8f, CardSize + 8f), UiTheme.Accent)
+            };
+            card.Button = UiKit.Button(Root, "Club" + index, center, new Vector2(CardSize, CardSize), string.Empty, 10, CardColor);
+            card.Crest = new ClubCrest(Root, center + new Vector2(0f, 18f), CardSize * 0.5f);
+            card.Crest.Set(team);
+            card.Name = UiKit.Label(Root, "NombreClub" + index, center + new Vector2(0f, -52f), new Vector2(CardSize - 8f, 30f),
+                TeamCatalog.ScoreboardName(team), 18, UiTheme.Text);
+            card.Rating = UiKit.Label(Root, "Media" + index, center + new Vector2(CardSize * 0.32f, CardSize * 0.36f), new Vector2(50f, 30f),
+                Mathf.RoundToInt(TeamCatalog.Rating(index)).ToString(), 22, UiTheme.Gold);
             return card;
         }
 
-        /// <summary>Camiseta dentro de un recuadro escalado (grande en el centro del carrusel, chica a los lados).</summary>
-        private static KitPreview KitBox(Transform parent, Vector2 center, float scale)
+        /// <summary>Camiseta dentro de un recuadro escalado.</summary>
+        private static KitPreview KitBox(Transform parent, Vector2 center)
         {
-            var go = new GameObject("CarruselCamiseta", typeof(RectTransform));
+            var go = new GameObject("Camiseta", typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var rect = (RectTransform)go.transform;
             rect.anchorMin = Vector2.zero;
@@ -111,15 +134,8 @@ namespace Football.Game
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = center;
             rect.sizeDelta = KitBoxSize;
-            rect.localScale = new Vector3(scale, scale, 1f);
+            rect.localScale = new Vector3(KitScale, KitScale, 1f);
             return new KitPreview(go.transform, KitBoxSize * 0.5f);
-        }
-
-        private static void Offset(UiButton button, Vector2 panelCenter, Vector2 localCenter)
-        {
-            // Place() dejó el centro en coordenadas locales de la tarjeta; se guarda también el centro absoluto para tocarlo.
-            Vector2 local = button.Center;
-            button.Center = panelCenter + (local - localCenter);
         }
 
         /// <inheritdoc />
@@ -128,53 +144,49 @@ namespace Football.Game
             Action = TeamSelectAction.None;
             base.Show();
             Refresh();
-            for (int side = 0; side < 2; side++)
-            {
-                _cards[side].Showroom.SetVisible(true);
-            }
+            _showroom.SetVisible(true);
         }
 
         /// <inheritdoc />
         public override void Hide()
         {
             base.Hide();
-            for (int side = 0; side < 2; side++)
-            {
-                _cards[side].Showroom?.SetVisible(false); // sin pantalla a la vista, las cámaras de las vitrinas no dibujan
-            }
+            _showroom?.SetVisible(false); // sin pantalla a la vista, la cámara de la vitrina no dibuja
         }
 
         private void Refresh()
         {
-            for (int side = 0; side < 2; side++)
+            int chosen = _setup.Team(_side), other = _setup.Team(1 - _side);
+            for (int i = 0; i < _clubs.Length; i++)
             {
-                Card card = _cards[side];
-                TeamDefinition team = _setup.Definition(side);
-                float rating = TeamCatalog.Rating(_setup.Team(side));
-                card.Name.text = team.Name;
-                card.Stars.Set(rating);
-                SquadSelection squad = _setup.Squad(side);
-                card.Info.text = "Media " + rating.ToString("F0") + "  ·  " + TeamCatalog.StyleLabel(team.Style) + "  ·  " + squad.Formation.Name;
-                PlayerDefinition best = team.Players[0];
-                foreach (PlayerDefinition p in team.Players)
-                {
-                    if (p.Rating > best.Rating)
-                    {
-                        best = p;
-                    }
-                }
-
-                card.Star.text = "Figura: " + best.Name + " (" + best.Rating + ")";
-                KitColors chosen = _setup.KitOf(side);
-                KitColors other = KitColors.From(_setup.Kit(side) == 0 ? team.Away : team.Home);
-                card.Kit.Set(chosen);
-                card.LeftKit.Set(other);
-                card.RightKit.Set(other);
-                card.KitName.text = _setup.Kit(side) == 0 ? "TITULAR" : "ALTERNATIVA";
-                card.Showroom.SetKit(chosen);
-                card.Figure.text = (best.Number > 0 ? best.Number + "  ·  " : string.Empty) + TeamBuilder.DisplayName(best).ToUpperInvariant();
+                ClubCard card = _clubs[i];
+                card.Frame.gameObject.SetActive(i == chosen);
+                card.Button.Background.color = i == chosen ? UiTheme.Selected : i == other ? new Color(0.08f, 0.09f, 0.12f, 0.92f) : CardColor;
+                card.Name.color = i == other ? UiTheme.TextMuted : UiTheme.Text;
             }
 
+            for (int s = 0; s < 2; s++)
+            {
+                _sideTabs[s].Background.color = s == _side ? UiTheme.Selected : UiTheme.Button;
+            }
+
+            TeamDefinition team = _setup.Definition(_side);
+            float rating = TeamCatalog.Rating(chosen);
+            _bigCrest.Set(team);
+            _name.text = team.Name;
+            _stars.Set(rating);
+            _info.text = "Media " + rating.ToString("F0") + "  ·  " + TeamCatalog.StyleLabel(team.Style) + "  ·  " + _setup.Squad(_side).Formation.Name;
+            int kit = _setup.Kit(_side);
+            _kits[0].Set(KitColors.From(team.Home));
+            _kits[1].Set(KitColors.From(team.Away));
+            for (int k = 0; k < 2; k++)
+            {
+                _kitFrames[k].color = k == kit ? UiTheme.Selected : UiTheme.Button;
+                _kitButtons[k].Background.color = k == kit ? UiTheme.AccentDark : UiTheme.Button;
+            }
+
+            _showroom.SetKit(_setup.KitOf(_side));
+            _versus.text = _setup.Definition(0).Name.ToUpperInvariant() + "   VS   " + _setup.Definition(1).Name.ToUpperInvariant();
             _clash.text = _setup.KitsClash ? "Las camisetas se parecen: el rival usará la otra para distinguir a los equipos." : string.Empty;
         }
 
@@ -182,11 +194,7 @@ namespace Football.Game
         public void Update()
         {
             Action = TeamSelectAction.None;
-            for (int side = 0; side < 2; side++)
-            {
-                _cards[side].Showroom.Update(Time.unscaledDeltaTime);
-            }
-
+            _showroom.Update(Time.unscaledDeltaTime);
             if (BackKey)
             {
                 Action = TeamSelectAction.Back;
@@ -197,28 +205,39 @@ namespace Football.Game
             for (int t = 0; t < n; t++)
             {
                 Vector2 p = taps[t];
-                for (int side = 0; side < 2; side++)
+                for (int s = 0; s < 2; s++)
                 {
-                    Card card = _cards[side];
-                    if (card.Previous.Contains(p))
+                    if (_sideTabs[s].Contains(p))
                     {
-                        _setup.CycleTeam(side, -1);
+                        _side = s;
                     }
-                    else if (card.Next.Contains(p))
+
+                    if (_kitButtons[s].Contains(p))
                     {
-                        _setup.CycleTeam(side, 1);
-                    }
-                    else if (card.KitPrevious.Contains(p) || card.KitNext.Contains(p))
-                    {
-                        _setup.ToggleKit(side);
-                    }
-                    else if (card.Lineup.Contains(p))
-                    {
-                        Action = side == 0 ? TeamSelectAction.EditHomeLineup : TeamSelectAction.EditAwayLineup;
+                        _setup.SetKit(_side, s);
                     }
                 }
 
-                if (_back.Contains(p))
+                for (int i = 0; i < _clubs.Length; i++)
+                {
+                    if (_clubs[i].Button.Contains(p))
+                    {
+                        _setup.SetTeam(_side, i);
+                    }
+                }
+
+                if (_random.Contains(p))
+                {
+                    int count = TeamCatalog.Teams.Length;
+                    for (int tries = 0; tries < count && !_setup.SetTeam(_side, _randomSource.NextInt(0, count)); tries++)
+                    {
+                    }
+                }
+                else if (_lineup.Contains(p))
+                {
+                    Action = _side == 0 ? TeamSelectAction.EditHomeLineup : TeamSelectAction.EditAwayLineup;
+                }
+                else if (_back.Contains(p))
                 {
                     Action = TeamSelectAction.Back;
                 }

@@ -171,7 +171,16 @@ namespace Football.Core.Persistence
                     style TEXT NOT NULL DEFAULT 'Balanced',
                     fullback_duty INTEGER NOT NULL DEFAULT 0,
                     midfield_duty INTEGER NOT NULL DEFAULT 0,
-                    striker_duty INTEGER NOT NULL DEFAULT 0)")
+                    striker_duty INTEGER NOT NULL DEFAULT 0)"),
+
+            new SqlMigration(9, "Estadísticas de la temporada de cada jugador (ficha del jugador)",
+                @"CREATE TABLE player_season_stats (
+                    player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+                    matches INTEGER NOT NULL DEFAULT 0 CHECK (matches >= 0),
+                    goals INTEGER NOT NULL DEFAULT 0 CHECK (goals >= 0),
+                    assists INTEGER NOT NULL DEFAULT 0 CHECK (assists >= 0),
+                    rating_sum REAL NOT NULL DEFAULT 0,
+                    rated INTEGER NOT NULL DEFAULT 0 CHECK (rated >= 0))")
         };
     }
 }

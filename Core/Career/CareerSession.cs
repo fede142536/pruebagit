@@ -438,6 +438,7 @@ namespace Football.Core.Career
             }
 
             _history.RecordMatch(report, f.HomeClubId, f.AwayClubId, Data.Season);
+            AddSeasonStats(report);
             _bus.Publish(new HomeMatchPlayed
             {
                 Date = Data.Today, ClubId = f.HomeClubId, OpponentReputation = Data.Finances[f.AwayClubId].Reputation,
@@ -449,6 +450,45 @@ namespace Football.Core.Career
             }
 
             return report;
+        }
+
+        private void AddSeasonStats(MatchReport report)
+        {
+            foreach (TeamReport team in report.Teams)
+            {
+                foreach (PlayerReport p in team.Players)
+                {
+                    if (p.Minutes <= 0f || !Data.Players.ContainsKey(p.PlayerId))
+                    {
+                        continue;
+                    }
+
+                    if (!Data.SeasonStats.TryGetValue(p.PlayerId, out CardStats s))
+                    {
+                        s = new CardStats();
+                        Data.SeasonStats[p.PlayerId] = s;
+                    }
+
+                    s.Matches++;
+                    s.Goals += p.Stats.Goals;
+                    s.Assists += p.Stats.Assists;
+                    if (p.Rating > 0f)
+                    {
+                        s.RatingSum += p.Rating;
+                        s.Rated++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Ficha de un jugador: carta, atributos, puestos, estado y estadísticas de la temporada.</summary>
+        /// <param name="playerId">Jugador.</param>
+        public PlayerCardInfo Card(int playerId)
+        {
+            Player p = Data.Players[playerId];
+            Data.Conditions.TryGetValue(playerId, out PlayerCondition c);
+            Data.SeasonStats.TryGetValue(playerId, out CardStats s);
+            return PlayerCards.FromPlayer(p, c, s, Data.Today);
         }
 
         private MatchTeamSetup Setup(int clubId, bool home)
@@ -622,6 +662,8 @@ namespace Football.Core.Career
             {
                 c.SeasonMinutes = 0f;
             }
+
+            Data.SeasonStats.Clear();
 
             _inbox.Post("news.season_end", Data.Season.ToString(CultureInfo.InvariantCulture));
             Data.Season++;

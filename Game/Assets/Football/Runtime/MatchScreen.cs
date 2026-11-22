@@ -143,6 +143,7 @@ namespace Football.Game
                     TalkLabels[i], 30, new Color(0.45f, 0.3f, 0.15f));
             }
             _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
+            _card = new PlayerCardPanel(parent);
             Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
             // Elementos de la pantalla base de la pausa: se ocultan al abrir un submenú para que nada quede detrás de sus listas.
@@ -389,6 +390,7 @@ namespace Football.Game
             _celebrationTimer = 0f;
             _introTimer = 0f;
             _presentation.Stop();
+            _card.Hide();
             _plate.Hide();
             _lineupCard.SetActive(false);
             _playerHud.SetVisible(false);
@@ -786,6 +788,8 @@ namespace Football.Game
         private static readonly string[] ShoutLabels = { "", "ENCARAR MÁS", "TOCAR EN CORTO", "PERDER TIEMPO", "PRESIÓN TRAS PÉRDIDA", "BUSCAR AL 9" };
         private static readonly string[] TalkLabels = { "CALMADO", "APASIONADO", "EXIGENTE" };
         private TacticsPanel _tacticsPanel;
+        private PlayerCardPanel _card;
+        private readonly HoldDetector _hold = new HoldDetector();
         private const float IntroSeconds = 3.5f;
         private const float AfterPresentationSeconds = 2f;
         private const int FullTeam = 11;
@@ -1042,6 +1046,10 @@ namespace Football.Game
             }
 
             _paused = paused;
+            if (!paused)
+            {
+                _card.Hide();
+            }
             AudioListener.pause = paused;
             if (paused)
             {
@@ -1143,6 +1151,27 @@ namespace Football.Game
 
         private void HandlePauseInput()
         {
+            if (_card.Visible)
+            {
+                // Ficha abierta: cualquier toque la cierra.
+                if (FirstTap().HasValue)
+                {
+                    _card.Hide();
+                }
+
+                return;
+            }
+
+            if (_tacticsPanel.Visible && _hold.Update(_pointers, Time.unscaledDeltaTime, out Vector2 held))
+            {
+                PlayerCardInfo info = _tacticsPanel.CardAt(held);
+                if (info != null)
+                {
+                    _card.Show(info);
+                    return;
+                }
+            }
+
             for (int i = 0; i < _pointers.Count; i++)
             {
                 PointerState p = _pointers.Pointers[i];

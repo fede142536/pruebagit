@@ -70,6 +70,7 @@ namespace Football.Game
         private readonly GameObject[] _panels = new GameObject[4];
         private readonly GameObject _startPanel;
         private CareerSession _session;
+        private PlayerCardPanel _card;
         private Tab _tab;
         private Vector2 _shift;
         private float _scale = 1f;
@@ -147,6 +148,7 @@ namespace Football.Game
             BuildClub(_panels[(int)Tab.Club].transform);
             _startPanel = Group("Inicio");
             BuildStart(_startPanel.transform);
+            _card = new PlayerCardPanel(parent);
         }
 
         // ------------------------------------------------------------------ ciclo
@@ -200,6 +202,13 @@ namespace Football.Game
             FitSafeArea();
         }
 
+        /// <inheritdoc />
+        public override void Hide()
+        {
+            base.Hide();
+            _card?.Hide();
+        }
+
         /// <summary>Procesa los toques del fotograma.</summary>
         public void Update()
         {
@@ -211,6 +220,16 @@ namespace Football.Game
             }
 
             int n = Taps(out Vector2[] taps);
+            if (_card.Visible)
+            {
+                if (n > 0)
+                {
+                    _card.Hide(); // cualquier toque cierra la ficha
+                }
+
+                return;
+            }
+
             for (int t = 0; t < n; t++)
             {
                 Vector2 p = Local(taps[t]);
@@ -501,7 +520,15 @@ namespace Football.Game
 
         private void TapSquad(Vector2 p)
         {
-            int count = _session.Squad(_session.Data.UserClubId).Count;
+            List<Player> squad = _session.Squad(_session.Data.UserClubId);
+            int count = squad.Count;
+            int row = _squad.RowAt(p) - 1;
+            if (row >= 0 && _squadOffset + row < count)
+            {
+                _card.Show(_session.Card(squad[_squadOffset + row].Id)); // tocar un jugador abre su ficha
+                return;
+            }
+
             if (_squadPrev.Contains(p)) { _squadOffset = Math.Max(0, _squadOffset - SquadRows); }
             else if (_squadNext.Contains(p) && _squadOffset + SquadRows < count) { _squadOffset += SquadRows; }
 

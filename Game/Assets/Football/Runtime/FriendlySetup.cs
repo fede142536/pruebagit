@@ -86,6 +86,40 @@ namespace Football.Game
             _settings.Save();
         }
 
+        /// <summary>Elige directamente el club de un lado (no puede ser el mismo del otro lado).</summary>
+        /// <param name="side">Lado.</param>
+        /// <param name="index">Índice del club en <see cref="TeamCatalog.Teams"/>.</param>
+        /// <returns>Falso si el club ya está elegido del otro lado o no existe.</returns>
+        public bool SetTeam(int side, int index)
+        {
+            if (index < 0 || index >= TeamCatalog.Teams.Length || index == Team(1 - side))
+            {
+                return false;
+            }
+
+            if (side == 0)
+            {
+                _settings.HomeTeam = index;
+            }
+            else
+            {
+                _settings.Opponent = index;
+            }
+
+            _squads[side] = SquadStore.Load(index, _indoor);
+            _settings.Save();
+            return true;
+        }
+
+        /// <summary>Elige la camiseta de un lado (0 titular, 1 alternativa).</summary>
+        public void SetKit(int side, int kit)
+        {
+            if (Kit(side) != kit)
+            {
+                ToggleKit(side);
+            }
+        }
+
         /// <summary>Alterna entre camiseta titular y alternativa de un lado.</summary>
         public void ToggleKit(int side)
         {
