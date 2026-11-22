@@ -37,9 +37,11 @@ namespace Football.Tools.HeadlessSim
             string teamsPath = null;
             bool indoor = false;
             bool printReport = false;
+            bool quick = false;
+            string simDumpPath = null;
             for (int i = 0; i < args.Length; i++)
             {
-                bool needsValue = args[i] != "--verbose" && args[i] != "--indoor" && args[i] != "--report";
+                bool needsValue = args[i] != "--verbose" && args[i] != "--indoor" && args[i] != "--report" && args[i] != "--sim";
                 if (needsValue && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine($"Falta el valor de {args[i]}.");
@@ -58,6 +60,8 @@ namespace Football.Tools.HeadlessSim
                     case "--verbose": verbose = true; break;
                     case "--indoor": indoor = true; break;
                     case "--report": printReport = true; break;
+                    case "--sim": quick = true; break;
+                    case "--dump-sim-config": simDumpPath = args[++i]; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                     default:
@@ -78,6 +82,13 @@ namespace Football.Tools.HeadlessSim
                 return 2;
             }
 
+            if (simDumpPath != null)
+            {
+                File.WriteAllText(simDumpPath, JsonSerializer.Serialize(new Football.Core.MatchSim.MatchSimConfig(), Json) + "\n");
+                Console.WriteLine("Configuración del simulador rápido escrita en " + simDumpPath);
+                return 0;
+            }
+
             if (dumpPath != null)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(dumpPath)));
@@ -96,11 +107,11 @@ namespace Football.Tools.HeadlessSim
                 return Ascii(config, seed, difficulty, rating, asciiEvery);
             }
 
-            return Run(config, matches, seed, difficulty, awayDifficulty < 0 ? difficulty : awayDifficulty, rating, verbose, printReport);
+            return Run(config, matches, seed, difficulty, awayDifficulty < 0 ? difficulty : awayDifficulty, rating, verbose, printReport, quick);
         }
 
         private static int Run(MatchConfig config, int matches, ulong seed, int difficulty, int awayDifficulty, float rating, bool verbose,
-            bool printReport)
+            bool printReport, bool quick = false)
         {
             var total = new double[2, Columns];
             var bucketShots = new double[3]; var bucketGoals = new double[3]; var bucketOnTarget = new double[3];
@@ -125,6 +136,22 @@ namespace Football.Tools.HeadlessSim
 
                 try
                 {
+                    if (quick)
+                    {
+                        // Simulador rápido (MatchSim): mismas métricas, para compararlo con el motor en tiempo real.
+                        timer.Restart();
+                        MatchReport simReport = Football.Core.MatchSim.QuickMatchSimulator.Play(home, away, rng.Fork("sim"),
+                            new Football.Core.MatchSim.MatchSimConfig(), config.Report);
+                        timer.Stop();
+                        totalMs += timer.Elapsed.TotalMilliseconds;
+                        Accumulate(total, simReport);
+                        int sg0 = simReport.HomeGoals, sg1 = simReport.AwayGoals;
+                        goals += sg0 + sg1;
+                        goalHistogram[Math.Min(9, sg0 + sg1)]++;
+                        if (sg0 > sg1) homeWins++; else if (sg0 == sg1) draws++; else awayWins++;
+                        continue;
+                    }
+
                     var engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, awayDifficulty);
                     timer.Restart();
                     int guard = 0;
