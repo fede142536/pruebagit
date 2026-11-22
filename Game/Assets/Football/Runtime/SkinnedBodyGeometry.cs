@@ -9,7 +9,7 @@ namespace Football.Game
     /// distinta profundidad hacia delante (<see cref="Front"/>, +Z) y hacia atrás (<see cref="Back"/>, −Z). Así se modelan
     /// pecho y espalda, cuádriceps, gemelos o mandíbula sin cajas ni esferas sueltas.
     /// </summary>
-    public readonly struct Ring
+    public readonly struct BodyRing
     {
         /// <summary>Altura de la sección (m).</summary>
         public readonly float Y;
@@ -21,7 +21,7 @@ namespace Football.Game
         public readonly float Back;
 
         /// <summary>Crea una sección (radio 0 = polo que cierra la malla).</summary>
-        public Ring(float y, float rx, float front, float back)
+        public BodyRing(float y, float rx, float front, float back)
         {
             Y = y;
             Rx = rx;
@@ -30,7 +30,7 @@ namespace Football.Game
         }
 
         /// <summary>Polo: punto del eje que cierra la malla.</summary>
-        public static Ring Pole(float y) => new Ring(y, 0f, 0f, 0f);
+        public static BodyRing Pole(float y) => new BodyRing(y, 0f, 0f, 0f);
 
         /// <summary>Punto de la sección en el ángulo dado (0 = +X, π/2 = delante).</summary>
         public Vector3 Point(float angle, float inflate = 1f, float offset = 0f)
@@ -183,118 +183,118 @@ namespace Football.Game
 
         // ---- perfiles (en metros; tronco desde el suelo, el resto en el espacio de su articulación) ----
 
-        private static readonly Ring[] Torso =
+        private static readonly BodyRing[] Torso =
         {
-            Ring.Pole(1.525f), new Ring(1.515f, 0.075f, 0.055f, 0.06f), new Ring(1.485f, 0.165f, 0.085f, 0.095f),
-            new Ring(1.44f, 0.215f, 0.11f, 0.105f), new Ring(1.37f, 0.212f, 0.135f, 0.115f), new Ring(1.29f, 0.198f, 0.138f, 0.115f),
-            new Ring(1.2f, 0.178f, 0.122f, 0.108f), new Ring(1.1f, 0.158f, 0.108f, 0.1f), new Ring(1.02f, 0.162f, 0.106f, 0.101f),
-            new Ring(0.985f, 0.176f, 0.12f, 0.115f), new Ring(0.975f, 0.168f, 0.11f, 0.106f), Ring.Pole(0.97f) // ruedo sobre el pantalón
+            BodyRing.Pole(1.525f), new BodyRing(1.515f, 0.075f, 0.055f, 0.06f), new BodyRing(1.485f, 0.165f, 0.085f, 0.095f),
+            new BodyRing(1.44f, 0.215f, 0.11f, 0.105f), new BodyRing(1.37f, 0.212f, 0.135f, 0.115f), new BodyRing(1.29f, 0.198f, 0.138f, 0.115f),
+            new BodyRing(1.2f, 0.178f, 0.122f, 0.108f), new BodyRing(1.1f, 0.158f, 0.108f, 0.1f), new BodyRing(1.02f, 0.162f, 0.106f, 0.101f),
+            new BodyRing(0.985f, 0.176f, 0.12f, 0.115f), new BodyRing(0.975f, 0.168f, 0.11f, 0.106f), BodyRing.Pole(0.97f) // ruedo sobre el pantalón
         };
 
-        private static readonly Ring[] Pelvis =
+        private static readonly BodyRing[] Pelvis =
         {
-            Ring.Pole(1.01f), new Ring(1.0f, 0.166f, 0.108f, 0.104f), new Ring(0.93f, 0.186f, 0.115f, 0.13f),
-            new Ring(0.86f, 0.19f, 0.112f, 0.128f), new Ring(0.81f, 0.17f, 0.1f, 0.112f), Ring.Pole(0.79f)
+            BodyRing.Pole(1.01f), new BodyRing(1.0f, 0.166f, 0.108f, 0.104f), new BodyRing(0.93f, 0.186f, 0.115f, 0.13f),
+            new BodyRing(0.86f, 0.19f, 0.112f, 0.128f), new BodyRing(0.81f, 0.17f, 0.1f, 0.112f), BodyRing.Pole(0.79f)
         };
 
-        private static readonly Ring[] ShortLeg =
+        private static readonly BodyRing[] ShortLeg =
         {
-            Ring.Pole(0.035f), new Ring(0.025f, 0.09f, 0.09f, 0.092f), new Ring(-0.08f, 0.096f, 0.098f, 0.095f),
-            new Ring(-0.16f, 0.102f, 0.102f, 0.099f), new Ring(-0.172f, 0.108f, 0.108f, 0.104f), new Ring(-0.178f, 0.097f, 0.097f, 0.094f),
-            Ring.Pole(-0.18f) // botamanga abierta
+            BodyRing.Pole(0.035f), new BodyRing(0.025f, 0.09f, 0.09f, 0.092f), new BodyRing(-0.08f, 0.096f, 0.098f, 0.095f),
+            new BodyRing(-0.16f, 0.102f, 0.102f, 0.099f), new BodyRing(-0.172f, 0.108f, 0.108f, 0.104f), new BodyRing(-0.178f, 0.097f, 0.097f, 0.094f),
+            BodyRing.Pole(-0.18f) // botamanga abierta
         };
 
-        private static readonly Ring[] Thigh =
+        private static readonly BodyRing[] Thigh =
         {
-            Ring.Pole(-0.11f), new Ring(-0.12f, 0.084f, 0.096f, 0.081f), new Ring(-0.18f, 0.081f, 0.092f, 0.078f), new Ring(-0.3f, 0.068f, 0.076f, 0.065f),
-            new Ring(-0.39f, 0.056f, 0.06f, 0.055f), new Ring(-0.43f, 0.052f, 0.064f, 0.05f), Ring.Pole(-0.46f)
+            BodyRing.Pole(-0.11f), new BodyRing(-0.12f, 0.084f, 0.096f, 0.081f), new BodyRing(-0.18f, 0.081f, 0.092f, 0.078f), new BodyRing(-0.3f, 0.068f, 0.076f, 0.065f),
+            new BodyRing(-0.39f, 0.056f, 0.06f, 0.055f), new BodyRing(-0.43f, 0.052f, 0.064f, 0.05f), BodyRing.Pole(-0.46f)
         };
 
-        private static readonly Ring[] Shin =
+        private static readonly BodyRing[] Shin =
         {
-            Ring.Pole(0.02f), new Ring(0.0f, 0.052f, 0.055f, 0.05f), new Ring(-0.06f, 0.056f, 0.05f, 0.075f), new Ring(-0.1f, 0.055f, 0.049f, 0.073f),
-            Ring.Pole(-0.105f)
+            BodyRing.Pole(0.02f), new BodyRing(0.0f, 0.052f, 0.055f, 0.05f), new BodyRing(-0.06f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.1f, 0.055f, 0.049f, 0.073f),
+            BodyRing.Pole(-0.105f)
         };
 
-        private static readonly Ring[] SockProfile =
+        private static readonly BodyRing[] SockProfile =
         {
-            Ring.Pole(-0.066f), new Ring(-0.07f, 0.059f, 0.054f, 0.079f), new Ring(-0.14f, 0.057f, 0.051f, 0.075f),
-            new Ring(-0.25f, 0.047f, 0.045f, 0.051f), new Ring(-0.35f, 0.034f, 0.035f, 0.034f), new Ring(-0.405f, 0.032f, 0.033f, 0.032f),
-            Ring.Pole(-0.41f)
+            BodyRing.Pole(-0.066f), new BodyRing(-0.07f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.14f, 0.057f, 0.051f, 0.075f),
+            new BodyRing(-0.25f, 0.047f, 0.045f, 0.051f), new BodyRing(-0.35f, 0.034f, 0.035f, 0.034f), new BodyRing(-0.405f, 0.032f, 0.033f, 0.032f),
+            BodyRing.Pole(-0.41f)
         };
 
-        private static readonly Ring[] SockCuff = // borde superior enrollado de la media
+        private static readonly BodyRing[] SockCuff = // borde superior enrollado de la media
         {
-            Ring.Pole(-0.058f), new Ring(-0.06f, 0.064f, 0.06f, 0.085f), new Ring(-0.082f, 0.064f, 0.059f, 0.084f), Ring.Pole(-0.084f)
+            BodyRing.Pole(-0.058f), new BodyRing(-0.06f, 0.064f, 0.06f, 0.085f), new BodyRing(-0.082f, 0.064f, 0.059f, 0.084f), BodyRing.Pole(-0.084f)
         };
 
-        private static readonly Ring[] SockBand =
+        private static readonly BodyRing[] SockBand =
         {
-            Ring.Pole(-0.096f), new Ring(-0.098f, 0.062f, 0.057f, 0.083f), new Ring(-0.122f, 0.061f, 0.055f, 0.081f), Ring.Pole(-0.124f)
+            BodyRing.Pole(-0.096f), new BodyRing(-0.098f, 0.062f, 0.057f, 0.083f), new BodyRing(-0.122f, 0.061f, 0.055f, 0.081f), BodyRing.Pole(-0.124f)
         };
 
         // Botín a lo largo de Y (talón en −Y, puntera en +Y); se gira 90° en X para que la puntera mire hacia delante.
-        private static readonly Ring[] Boot =
+        private static readonly BodyRing[] Boot =
         {
-            Ring.Pole(-0.078f), new Ring(-0.068f, 0.036f, 0.03f, 0.04f), new Ring(-0.025f, 0.043f, 0.033f, 0.072f),
-            new Ring(0.035f, 0.046f, 0.033f, 0.056f), new Ring(0.1f, 0.044f, 0.031f, 0.036f), new Ring(0.15f, 0.039f, 0.029f, 0.026f),
-            new Ring(0.185f, 0.027f, 0.023f, 0.016f), Ring.Pole(0.2f)
+            BodyRing.Pole(-0.078f), new BodyRing(-0.068f, 0.036f, 0.03f, 0.04f), new BodyRing(-0.025f, 0.043f, 0.033f, 0.072f),
+            new BodyRing(0.035f, 0.046f, 0.033f, 0.056f), new BodyRing(0.1f, 0.044f, 0.031f, 0.036f), new BodyRing(0.15f, 0.039f, 0.029f, 0.026f),
+            new BodyRing(0.185f, 0.027f, 0.023f, 0.016f), BodyRing.Pole(0.2f)
         };
 
-        private static readonly Ring[] UpperArm =
+        private static readonly BodyRing[] UpperArm =
         {
-            Ring.Pole(-0.095f), new Ring(-0.1f, 0.048f, 0.055f, 0.046f), new Ring(-0.16f, 0.043f, 0.05f, 0.042f),
-            new Ring(-0.22f, 0.04f, 0.042f, 0.038f), new Ring(-0.28f, 0.037f, 0.035f, 0.037f), Ring.Pole(-0.31f)
+            BodyRing.Pole(-0.095f), new BodyRing(-0.1f, 0.048f, 0.055f, 0.046f), new BodyRing(-0.16f, 0.043f, 0.05f, 0.042f),
+            new BodyRing(-0.22f, 0.04f, 0.042f, 0.038f), new BodyRing(-0.28f, 0.037f, 0.035f, 0.037f), BodyRing.Pole(-0.31f)
         };
 
-        private static readonly Ring[] Sleeve =
+        private static readonly BodyRing[] Sleeve =
         {
-            Ring.Pole(0.062f), new Ring(0.052f, 0.064f, 0.064f, 0.064f), new Ring(-0.02f, 0.069f, 0.069f, 0.066f),
-            new Ring(-0.115f, 0.066f, 0.068f, 0.063f), new Ring(-0.126f, 0.071f, 0.073f, 0.068f), new Ring(-0.131f, 0.062f, 0.063f, 0.06f),
-            Ring.Pole(-0.133f) // borde de la manga
+            BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f),
+            new BodyRing(-0.115f, 0.066f, 0.068f, 0.063f), new BodyRing(-0.126f, 0.071f, 0.073f, 0.068f), new BodyRing(-0.131f, 0.062f, 0.063f, 0.06f),
+            BodyRing.Pole(-0.133f) // borde de la manga
         };
 
-        private static readonly Ring[] LongSleeveProfile =
+        private static readonly BodyRing[] LongSleeveProfile =
         {
-            Ring.Pole(0.062f), new Ring(0.052f, 0.064f, 0.064f, 0.064f), new Ring(-0.02f, 0.069f, 0.069f, 0.066f),
-            new Ring(-0.15f, 0.058f, 0.062f, 0.055f), new Ring(-0.29f, 0.046f, 0.046f, 0.046f), Ring.Pole(-0.31f)
+            BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f),
+            new BodyRing(-0.15f, 0.058f, 0.062f, 0.055f), new BodyRing(-0.29f, 0.046f, 0.046f, 0.046f), BodyRing.Pole(-0.31f)
         };
 
-        private static readonly Ring[] Forearm =
+        private static readonly BodyRing[] Forearm =
         {
-            Ring.Pole(0.025f), new Ring(0.0f, 0.037f, 0.036f, 0.037f), new Ring(-0.05f, 0.041f, 0.04f, 0.038f),
-            new Ring(-0.15f, 0.032f, 0.03f, 0.03f), new Ring(-0.235f, 0.024f, 0.02f, 0.02f), Ring.Pole(-0.25f)
+            BodyRing.Pole(0.025f), new BodyRing(0.0f, 0.037f, 0.036f, 0.037f), new BodyRing(-0.05f, 0.041f, 0.04f, 0.038f),
+            new BodyRing(-0.15f, 0.032f, 0.03f, 0.03f), new BodyRing(-0.235f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.25f)
         };
 
-        private static readonly Ring[] Hand =
+        private static readonly BodyRing[] Hand =
         {
-            Ring.Pole(0.008f), new Ring(-0.01f, 0.03f, 0.016f, 0.016f), new Ring(-0.05f, 0.036f, 0.018f, 0.018f),
-            new Ring(-0.09f, 0.03f, 0.015f, 0.014f), Ring.Pole(-0.108f)
+            BodyRing.Pole(0.008f), new BodyRing(-0.01f, 0.03f, 0.016f, 0.016f), new BodyRing(-0.05f, 0.036f, 0.018f, 0.018f),
+            new BodyRing(-0.09f, 0.03f, 0.015f, 0.014f), BodyRing.Pole(-0.108f)
         };
 
-        private static readonly Ring[] Neck =
+        private static readonly BodyRing[] Neck =
         {
-            Ring.Pole(1.63f), new Ring(1.61f, 0.05f, 0.052f, 0.05f), new Ring(1.55f, 0.056f, 0.052f, 0.056f),
-            new Ring(1.49f, 0.066f, 0.062f, 0.062f), Ring.Pole(1.47f)
+            BodyRing.Pole(1.63f), new BodyRing(1.61f, 0.05f, 0.052f, 0.05f), new BodyRing(1.55f, 0.056f, 0.052f, 0.056f),
+            new BodyRing(1.49f, 0.066f, 0.062f, 0.062f), BodyRing.Pole(1.47f)
         };
 
-        private static readonly Ring[] Skull =
+        private static readonly BodyRing[] Skull =
         {
-            Ring.Pole(0.275f), new Ring(0.262f, 0.05f, 0.05f, 0.052f), new Ring(0.232f, 0.09f, 0.1f, 0.104f),
-            new Ring(0.18f, 0.104f, 0.115f, 0.117f), new Ring(0.12f, 0.1f, 0.115f, 0.11f), new Ring(0.07f, 0.086f, 0.11f, 0.094f),
-            new Ring(0.032f, 0.062f, 0.096f, 0.06f), new Ring(0.012f, 0.036f, 0.07f, 0.028f), Ring.Pole(0.0f)
+            BodyRing.Pole(0.275f), new BodyRing(0.262f, 0.05f, 0.05f, 0.052f), new BodyRing(0.232f, 0.09f, 0.1f, 0.104f),
+            new BodyRing(0.18f, 0.104f, 0.115f, 0.117f), new BodyRing(0.12f, 0.1f, 0.115f, 0.11f), new BodyRing(0.07f, 0.086f, 0.11f, 0.094f),
+            new BodyRing(0.032f, 0.062f, 0.096f, 0.06f), new BodyRing(0.012f, 0.036f, 0.07f, 0.028f), BodyRing.Pole(0.0f)
         };
 
-        private static readonly Ring[] Nose =
+        private static readonly BodyRing[] Nose =
         {
-            Ring.Pole(0.158f), new Ring(0.145f, 0.011f, 0.01f, 0.004f), new Ring(0.115f, 0.016f, 0.026f, 0.006f), Ring.Pole(0.104f)
+            BodyRing.Pole(0.158f), new BodyRing(0.145f, 0.011f, 0.01f, 0.004f), new BodyRing(0.115f, 0.016f, 0.026f, 0.006f), BodyRing.Pole(0.104f)
         };
 
-        private static readonly Ring[] HairCap =
+        private static readonly BodyRing[] HairCap =
         {
-            Ring.Pole(0.29f), new Ring(0.279f, 0.056f, 0.056f, 0.058f), new Ring(0.248f, 0.097f, 0.106f, 0.11f),
-            new Ring(0.2f, 0.112f, 0.11f, 0.124f), new Ring(0.16f, 0.112f, 0.075f, 0.122f), new Ring(0.12f, 0.104f, 0.02f, 0.115f),
-            Ring.Pole(0.11f)
+            BodyRing.Pole(0.29f), new BodyRing(0.279f, 0.056f, 0.056f, 0.058f), new BodyRing(0.248f, 0.097f, 0.106f, 0.11f),
+            new BodyRing(0.2f, 0.112f, 0.11f, 0.124f), new BodyRing(0.16f, 0.112f, 0.075f, 0.122f), new BodyRing(0.12f, 0.104f, 0.02f, 0.115f),
+            BodyRing.Pole(0.11f)
         };
 
         // ---- salida ----
@@ -487,9 +487,9 @@ namespace Football.Game
             Ellipsoid(HeadAt(new Vector3(0f, 0.086f, 0.112f), Vector3.zero, new Vector3(0.026f, 0.007f, 0.008f)), hair, head, 2, 5);
         }
 
-        private static Ring[] Band(float rx, float depth) => new[]
+        private static BodyRing[] Band(float rx, float depth) => new[]
         {
-            Ring.Pole(0.016f), new Ring(0.015f, rx, depth, depth), new Ring(-0.015f, rx, depth, depth), Ring.Pole(-0.016f)
+            BodyRing.Pole(0.016f), new BodyRing(0.015f, rx, depth, depth), new BodyRing(-0.015f, rx, depth, depth), BodyRing.Pole(-0.016f)
         };
 
         private static Color SockStripe(BodySpec s)
@@ -543,7 +543,7 @@ namespace Football.Game
                 for (int row = 0; row <= PatchRows; row++)
                 {
                     float y = Mathf.Lerp(yTop, yBottom, row / (float)PatchRows);
-                    Ring r = Sample(Torso, y);
+                    BodyRing r = Sample(Torso, y);
                     for (int col = 0; col <= PatchColumns; col++)
                     {
                         float x = centre(y) + Mathf.Lerp(-halfWidth, halfWidth, col / (float)PatchColumns);
@@ -564,7 +564,7 @@ namespace Football.Game
             int rows = PatchRows / 2;
             for (int row = 0; row <= rows; row++)
             {
-                Ring r = Sample(Torso, Mathf.Lerp(yTop, yBottom, row / (float)rows));
+                BodyRing r = Sample(Torso, Mathf.Lerp(yTop, yBottom, row / (float)rows));
                 for (int col = 0; col <= columns; col++)
                 {
                     _local.Add(r.Point(col * Mathf.PI * 2f / columns, PatternInflate, PatternOffset));
@@ -589,20 +589,20 @@ namespace Football.Game
         }
 
         /// <summary>Sección interpolada a una altura dada (entre los anillos que no son polos).</summary>
-        public static Ring Sample(Ring[] rings, float y)
+        public static BodyRing Sample(BodyRing[] rings, float y)
         {
             for (int i = 1; i < rings.Length - 2; i++)
             {
-                Ring a = rings[i], c = rings[i + 1];
+                BodyRing a = rings[i], c = rings[i + 1];
                 if (y <= a.Y && y >= c.Y)
                 {
                     float t = (a.Y - y) / Mathf.Max(a.Y - c.Y, 1e-5f);
-                    return new Ring(y, Mathf.Lerp(a.Rx, c.Rx, t), Mathf.Lerp(a.Front, c.Front, t), Mathf.Lerp(a.Back, c.Back, t));
+                    return new BodyRing(y, Mathf.Lerp(a.Rx, c.Rx, t), Mathf.Lerp(a.Front, c.Front, t), Mathf.Lerp(a.Back, c.Back, t));
                 }
             }
 
-            Ring edge = y > rings[1].Y ? rings[1] : rings[rings.Length - 2];
-            return new Ring(y, edge.Rx, edge.Front, edge.Back);
+            BodyRing edge = y > rings[1].Y ? rings[1] : rings[rings.Length - 2];
+            return new BodyRing(y, edge.Rx, edge.Front, edge.Back);
         }
 
         // ------------------------------------------------------------------ máscaras del shader (x sudor, y pliegues)
@@ -756,7 +756,7 @@ namespace Football.Game
         }
 
         /// <summary>Malla esculpida por secciones; las tapas que quedan dentro de otra pieza se omiten (ahorran triángulos).</summary>
-        private void Sculpt(Ring[] rings, int sides, Place place, Color color, int bone, MaskFn mask, bool capTop, bool capBottom)
+        private void Sculpt(BodyRing[] rings, int sides, Place place, Color color, int bone, MaskFn mask, bool capTop, bool capBottom)
         {
             BeginShell();
             int ringCount = rings.Length - 2;
@@ -807,14 +807,14 @@ namespace Football.Game
         /// <summary>Elipsoide de pocas caras (rasgos de la cara, pelo, pulgar).</summary>
         private void Ellipsoid(Place place, Color color, int bone, int rings, int sides)
         {
-            var profile = new Ring[rings + 2];
-            profile[0] = Ring.Pole(1f);
-            profile[rings + 1] = Ring.Pole(-1f);
+            var profile = new BodyRing[rings + 2];
+            profile[0] = BodyRing.Pole(1f);
+            profile[rings + 1] = BodyRing.Pole(-1f);
             for (int i = 1; i <= rings; i++)
             {
                 float y = 1f - 2f * i / (rings + 1);
                 float r = Mathf.Sqrt(1f - y * y);
-                profile[i] = new Ring(y, r, r, r);
+                profile[i] = new BodyRing(y, r, r, r);
             }
 
             BeginShell();
