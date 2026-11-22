@@ -119,6 +119,8 @@ namespace Football.Game
             UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
             _mentality = UiKit.Button(dim.transform, "Mentalidad", new Vector2(1600f, 660f), new Vector2(520f, 92f), string.Empty, 30, tactic);
             _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
+            _squadButton = UiKit.Button(dim.transform, "Plantel", new Vector2(1600f, 300f), new Vector2(520f, 92f), "PLANTEL Y TÁCTICA ›", 30, UiTheme.AccentDark);
+            _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
             UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
             UiKit.Label(dim.transform, "TituloControles", new Vector2(330f, 770f), new Vector2(520f, 70f), "CONTROLES", 44, Color.white);
@@ -575,6 +577,16 @@ namespace Football.Game
                         _view.Shake(PostShake);
                         _audio.Post();
                         break;
+                    case MatchEventType.Substitution:
+                        // Entra un jugador nuevo: nombres, radar y placa de TV.
+                        _nameTags.Setup(_engine);
+                        _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize);
+                        TeamState subTeam = _engine.Teams[e.Team];
+                        string left = subTeam.SubstitutedOut.Count > 0 ? subTeam.SubstitutedOut[subTeam.SubstitutedOut.Count - 1] : string.Empty;
+                        _plate.Show("CAMBIO", new Color(0.3f, 0.75f, 1f),
+                            ((int)e.Minute + 1) + "'   ENTRA " + _engine.Players[e.PlayerIndex].Name.ToUpperInvariant() + "  ·  SALE " + left.ToUpperInvariant(),
+                            e.Team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
+                        break;
                     case MatchEventType.TacticsChanged:
                         // Solo se anuncia el cambio del rival (el propio lo elige la persona en la pausa) y sin tapar otro aviso.
                         if (e.Team == 1 && _bannerTimer <= 0f)
@@ -651,6 +663,8 @@ namespace Football.Game
 
         /// <summary>Todos los textos "mm:ss" preparados al arrancar: el reloj del partido no crea textos nuevos.</summary>
         private const int RadarTeamSize = 11;
+        private UiButton _squadButton;
+        private TacticsPanel _tacticsPanel;
         private const float IntroSeconds = 3.5f;
         private const float CelebrationSeconds = 2.2f;
         private const float PostShake = 0.25f;
@@ -863,6 +877,11 @@ namespace Football.Game
 
         private void SetPaused(bool paused)
         {
+            if (!paused)
+            {
+                _tacticsPanel.Hide();
+            }
+
             _paused = paused;
             AudioListener.pause = paused;
             if (paused)
@@ -921,7 +940,23 @@ namespace Football.Game
                 }
 
                 Vector2 point = UiKit.ToArea(p.Position);
-                if (_resume.Contains(point))
+                if (_tacticsPanel.Visible)
+                {
+                    _tacticsPanel.Tap(point);
+                    if (_tacticsPanel.BackRequested)
+                    {
+                        _tacticsPanel.Hide();
+                        RefreshPauseLabels();
+                    }
+
+                    continue;
+                }
+
+                if (_squadButton.Contains(point) && _engine != null)
+                {
+                    _tacticsPanel.Show(_engine);
+                }
+                else if (_resume.Contains(point))
                 {
                     SetPaused(false);
                 }
