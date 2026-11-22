@@ -409,5 +409,10 @@
   "tickets.title": "TICKET PRICES",
   "weather.0": "Sunny",
   "weather.1": "Cloudy",
-  "weather.2": "Rain"
+  "weather.2": "Rain",
+  "career.filter": "Filter",
+  "career.filter.0": "ALL",
+  "career.filter.1": "BIG CLUBS",
+  "career.filter.2": "MID-TABLE",
+  "career.filter.3": "DEVELOPING"
 }

@@ -25,7 +25,8 @@ namespace Football.Game
     /// <summary>
     /// Elección de clubes para el amistoso. Arriba, las pestañas TU EQUIPO / EQUIPO RIVAL y el botón ALEATORIO. A la izquierda,
     /// una grilla de tarjetas cuadradas con el escudo procedural, el nombre y la media (OVR) de cada club; la elegida se
-    /// resalta. A la derecha, el escudo grande, el nombre, las estrellas, las camisetas CASA y VISITANTE lado a lado (se
+    /// resalta. Con los 30 clubes de Primera la grilla se pagina (16 por página, con flechas y contador) y se puede filtrar por
+    /// jerarquía (TODOS, GRANDES, MEDIA TABLA, EN DESARROLLO). A la derecha, el escudo grande, el nombre, las estrellas, las camisetas CASA y VISITANTE lado a lado (se
     /// alternan con un toque) y el jugador 3D con la camiseta elegida. Sin lógica de juego: solo cambia la elección.
     /// </summary>
     public sealed class TeamSelectScreen : MenuScreenBase
@@ -35,6 +36,11 @@ namespace Football.Game
         private const float CardGap = 14f;
         private const float GridLeft = 70f;
         private const float GridTop = 880f;
+        private const int Rows = 4;
+        private const int PageSize = Columns * Rows;
+        private const float PagerY = 125f;
+        private static readonly string[] FilterTiers = { null, "Big", "Mid", "Development" };
+        private static readonly string[] FilterLabels = { "TODOS", "GRANDES", "MEDIA TABLA", "EN DESARROLLO" };
         private const float KitScale = 0.62f;
         private static readonly Vector2 KitBoxSize = new Vector2(300f, 330f);
         private static readonly Color CardColor = new Color(0.12f, 0.15f, 0.2f, 0.92f);
@@ -45,6 +51,29 @@ namespace Football.Game
             public Image Frame;
             public ClubCrest Crest;
             public Text Name, Rating;
+
+            /// <summary>Mueve toda la tarjeta (marco, botón, escudo y textos) a otro lugar de la grilla.</summary>
+            public void Move(Vector2 center)
+            {
+                Frame.rectTransform.anchoredPosition = center;
+                Button.Place(center, new Vector2(CardSize, CardSize));
+                Crest.Root.anchoredPosition = center + new Vector2(0f, 18f);
+                Name.rectTransform.anchoredPosition = center + new Vector2(0f, -52f);
+                Rating.rectTransform.anchoredPosition = center + new Vector2(CardSize * 0.32f, CardSize * 0.36f);
+            }
+
+            /// <summary>Muestra u oculta toda la tarjeta.</summary>
+            public void SetVisible(bool visible)
+            {
+                Button.SetVisible(visible);
+                Crest.SetVisible(visible);
+                Name.gameObject.SetActive(visible);
+                Rating.gameObject.SetActive(visible);
+                if (!visible)
+                {
+                    Frame.gameObject.SetActive(false);
+                }
+            }
         }
 
         private readonly FriendlySetup _setup;
@@ -59,7 +88,10 @@ namespace Football.Game
         private readonly StarRating _stars;
         private readonly KitShowroom _showroom;
         private readonly IRandom _randomSource = new SeededRandom((ulong)DateTime.Now.Ticks);
-        private int _side;
+        private readonly UiButton _prevPage, _nextPage, _filter;
+        private readonly Text _pageLabel;
+        private readonly System.Collections.Generic.List<int> _shown = new System.Collections.Generic.List<int>();
+        private int _side, _page, _filterIndex;
 
         /// <summary>Acción pedida en este fotograma.</summary>
         public TeamSelectAction Action { get; private set; }
@@ -72,6 +104,10 @@ namespace Football.Game
             _sideTabs[0] = UiKit.Button(Root, "TuEquipo", new Vector2(1050f, 1005f), new Vector2(300f, 70f), "TU EQUIPO", 30, UiTheme.Button);
             _sideTabs[1] = UiKit.Button(Root, "Rival", new Vector2(1370f, 1005f), new Vector2(300f, 70f), "EQUIPO RIVAL", 30, UiTheme.Button);
             _random = UiKit.Button(Root, "Aleatorio", new Vector2(1720f, 1005f), new Vector2(280f, 70f), "ALEATORIO", 30, UiTheme.AccentDark);
+            _filter = UiKit.Button(Root, "Filtro", new Vector2(720f, 1005f), new Vector2(300f, 70f), FilterLabels[0], 22, UiTheme.Button);
+            _prevPage = UiKit.Button(Root, "PaginaAnterior", new Vector2(250f, PagerY), new Vector2(110f, 50f), "<", 30, UiTheme.Button);
+            _nextPage = UiKit.Button(Root, "PaginaSiguiente", new Vector2(610f, PagerY), new Vector2(110f, 50f), ">", 30, UiTheme.Button);
+            _pageLabel = UiKit.Label(Root, "Pagina", new Vector2(430f, PagerY), new Vector2(200f, 40f), string.Empty, 24, UiTheme.TextDim);
 
             TeamDefinition[] teams = TeamCatalog.Teams;
             _clubs = new ClubCard[teams.Length];
@@ -105,10 +141,12 @@ namespace Football.Game
             _continue = UiKit.Button(Root, "Continuar", new Vector2(1680f, 60f), new Vector2(400f, 84f), "CONTINUAR", 38, UiTheme.AccentDark);
         }
 
+        private static Vector2 SlotCenter(int slot) =>
+            new Vector2(GridLeft + CardSize * 0.5f + (slot % Columns) * (CardSize + CardGap), GridTop - CardSize * 0.5f - (slot / Columns) * (CardSize + CardGap));
+
         private ClubCard BuildClubCard(int index, TeamDefinition team)
         {
-            int col = index % Columns, row = index / Columns;
-            var center = new Vector2(GridLeft + CardSize * 0.5f + col * (CardSize + CardGap), GridTop - CardSize * 0.5f - row * (CardSize + CardGap));
+            Vector2 center = SlotCenter(index % PageSize);
             var card = new ClubCard
             {
                 Frame = UiKit.Panel(Root, "Marco" + index, center, new Vector2(CardSize + 8f, CardSize + 8f), UiTheme.Accent)
@@ -144,6 +182,8 @@ namespace Football.Game
             Action = TeamSelectAction.None;
             base.Show();
             Refresh();
+            FollowChosen();
+            Refresh();
             _showroom.SetVisible(true);
         }
 
@@ -154,12 +194,53 @@ namespace Football.Game
             _showroom?.SetVisible(false); // sin pantalla a la vista, la cámara de la vitrina no dibuja
         }
 
+        /// <summary>Pasa a la página donde está el club elegido (si el filtro lo deja a la vista).</summary>
+        private void FollowChosen()
+        {
+            int position = _shown.IndexOf(_setup.Team(_side));
+            if (position < 0 && _filterIndex != 0)
+            {
+                _filterIndex = 0; // el club elegido quedó fuera del filtro: se vuelve a ver todos
+                Refresh();
+                position = _shown.IndexOf(_setup.Team(_side));
+            }
+
+            if (position >= 0)
+            {
+                _page = position / PageSize;
+            }
+        }
+
         private void Refresh()
         {
             int chosen = _setup.Team(_side), other = _setup.Team(1 - _side);
+            _shown.Clear();
+            for (int i = 0; i < _clubs.Length; i++)
+            {
+                if (FilterTiers[_filterIndex] == null || TeamCatalog.Teams[i].Club?.Tier == FilterTiers[_filterIndex])
+                {
+                    _shown.Add(i);
+                }
+            }
+
+            int pages = Mathf.Max(1, (_shown.Count + PageSize - 1) / PageSize);
+            _page = Mathf.Clamp(_page, 0, pages - 1);
+            _pageLabel.text = (_page + 1) + " / " + pages + "  ·  " + _shown.Count;
+            _filter.Label.text = FilterLabels[_filterIndex];
+            _prevPage.SetVisible(pages > 1);
+            _nextPage.SetVisible(pages > 1);
             for (int i = 0; i < _clubs.Length; i++)
             {
                 ClubCard card = _clubs[i];
+                int position = _shown.IndexOf(i);
+                bool onPage = position >= _page * PageSize && position < (_page + 1) * PageSize;
+                card.SetVisible(onPage);
+                if (!onPage)
+                {
+                    continue;
+                }
+
+                card.Move(SlotCenter(position - _page * PageSize));
                 card.Frame.gameObject.SetActive(i == chosen);
                 card.Button.Background.color = i == chosen ? UiTheme.Selected : i == other ? new Color(0.08f, 0.09f, 0.12f, 0.92f) : CardColor;
                 card.Name.color = i == other ? UiTheme.TextMuted : UiTheme.Text;
@@ -220,18 +301,33 @@ namespace Football.Game
 
                 for (int i = 0; i < _clubs.Length; i++)
                 {
-                    if (_clubs[i].Button.Contains(p))
+                    if (_clubs[i].Button.Root.activeSelf && _clubs[i].Button.Contains(p))
                     {
                         _setup.SetTeam(_side, i);
                     }
                 }
 
-                if (_random.Contains(p))
+                if (_filter.Contains(p))
+                {
+                    _filterIndex = (_filterIndex + 1) % FilterTiers.Length;
+                    _page = 0;
+                }
+                else if (_prevPage.Root.activeSelf && _prevPage.Contains(p))
+                {
+                    _page--;
+                }
+                else if (_nextPage.Root.activeSelf && _nextPage.Contains(p))
+                {
+                    _page++;
+                }
+                else if (_random.Contains(p))
                 {
                     int count = TeamCatalog.Teams.Length;
                     for (int tries = 0; tries < count && !_setup.SetTeam(_side, _randomSource.NextInt(0, count)); tries++)
                     {
                     }
+
+                    FollowChosen();
                 }
                 else if (_lineup.Contains(p))
                 {

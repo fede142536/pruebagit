@@ -20,7 +20,10 @@ namespace Football.Game
     public sealed class CareerHubScreen : CareerPage
     {
         private const int CalendarDays = 5;
-        private const int TableRows = 16;
+        private const int PageRows = 15;
+        private const int TableRows = PageRows + 1; // más el encabezado
+        private const float TableRowHeight = 44f;
+        private const float PagerY = 150f;
         private const int NewsRows = 6;
         private const float CrestSize = 120f;
         private const float DayWidth = 120f, DayStep = 128f;
@@ -38,6 +41,9 @@ namespace Football.Game
         private readonly UiButton[] _tableTabs = new UiButton[3];
         private readonly TextGrid _table;
         private int _tableMode;
+        private int _tablePage = -1; // -1: la página donde está el club del usuario
+        private readonly UiButton _tablePrev, _tableNext;
+        private readonly Text _tableRange;
 
         /// <summary>Crea la pantalla (oculta).</summary>
         public CareerHubScreen(Transform root, ICareerHost host) : base(root, "Central", host)
@@ -108,7 +114,10 @@ namespace Football.Game
                 _tableTabs[i] = UiKit.Button(p, "TablaModo" + i, new Vector2(1460f + i * 167f, 950f), new Vector2(160f, 52f), Locale.Get(keys[i]), 17, UiTheme.Button);
             }
 
-            _table = new TextGrid(p, "Posiciones", new Vector2(1370f, 890f), 48f, new[] { 1395f, 1560f, 1720f, 1790f, 1855f },
+            _tablePrev = UiKit.Button(p, "TablaAnterior", new Vector2(1490f, PagerY), new Vector2(90f, 46f), "<", 28, UiTheme.Button);
+            _tableNext = UiKit.Button(p, "TablaSiguiente", new Vector2(1760f, PagerY), new Vector2(90f, 46f), ">", 28, UiTheme.Button);
+            _tableRange = UiKit.Label(p, "TablaRango", new Vector2(1625f, PagerY), new Vector2(190f, 40f), string.Empty, 22, UiTheme.TextDim);
+            _table = new TextGrid(p, "Posiciones", new Vector2(1370f, 890f), TableRowHeight, new[] { 1395f, 1560f, 1720f, 1790f, 1855f },
                 new[] { 44f, 240f, 60f, 70f, 70f }, TableRows, 20);
         }
 
@@ -218,26 +227,42 @@ namespace Football.Game
             bool averages = _tableMode == 2;
             _table.SetRow(0, "#", Locale.Get("career.col.club"), averages ? string.Empty : Locale.Get("career.col.played"),
                 averages ? string.Empty : Locale.Get("career.col.gd"), Locale.Get(averages ? "career.col.average" : "career.col.points"));
-            if (averages)
+            List<AverageRow> rows = averages ? Session.AveragesTable() : null;
+            List<Standing> table = averages ? null : _tableMode == 0 ? Session.TournamentTable() : Session.AnnualTable();
+            int count = averages ? rows.Count : table.Count;
+            int userAt = averages ? rows.FindIndex(r => r.ClubId == d.UserClubId) : table.FindIndex(r => r.ClubId == d.UserClubId);
+            int pages = Mathf.Max(1, (count + PageRows - 1) / PageRows);
+            int page = Mathf.Clamp(_tablePage >= 0 ? _tablePage : Mathf.Max(0, userAt) / PageRows, 0, pages - 1);
+            _tablePage = _tablePage < 0 ? -1 : page;
+            _tablePrev.SetVisible(pages > 1);
+            _tableNext.SetVisible(pages > 1);
+            int first = page * PageRows;
+            _tableRange.text = pages > 1 ? (first + 1) + "-" + Mathf.Min(count, first + PageRows) + " / " + count : string.Empty;
+            for (int k = 0; k < PageRows && first + k < count; k++)
             {
-                List<AverageRow> rows = Session.AveragesTable();
-                for (int i = 0; i < rows.Count && i + 1 < TableRows; i++)
+                int i = first + k, row = k + 1;
+                if (averages)
                 {
-                    _table.SetRow(i + 1, CareerText.Num(i + 1), d.Club(rows[i].ClubId).Name, string.Empty, string.Empty,
+                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(rows[i].ClubId).Name, string.Empty, string.Empty,
                         rows[i].Average.ToString("0.000", CultureInfo.InvariantCulture));
-                    _table.Highlight(i + 1, rows[i].ClubId == d.UserClubId);
+                    _table.Highlight(row, rows[i].ClubId == d.UserClubId);
                 }
-
-                return;
+                else
+                {
+                    Standing s = table[i];
+                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(s.ClubId).Name, CareerText.Num(s.Played), CareerText.Num(s.GoalDifference), CareerText.Num(s.Points));
+                    _table.Highlight(row, s.ClubId == d.UserClubId);
+                }
             }
+        }
 
-            List<Standing> table = _tableMode == 0 ? Session.TournamentTable() : Session.AnnualTable();
-            for (int i = 0; i < table.Count && i + 1 < TableRows; i++)
-            {
-                Standing s = table[i];
-                _table.SetRow(i + 1, CareerText.Num(i + 1), d.Club(s.ClubId).Name, CareerText.Num(s.Played), CareerText.Num(s.GoalDifference), CareerText.Num(s.Points));
-                _table.Highlight(i + 1, s.ClubId == d.UserClubId);
-            }
+        private int CurrentPage()
+        {
+            CareerData d = Data;
+            int count = _tableMode == 2 ? Session.AveragesTable().Count : (_tableMode == 0 ? Session.TournamentTable() : Session.AnnualTable()).Count;
+            int userAt = _tableMode == 2 ? Session.AveragesTable().FindIndex(r => r.ClubId == d.UserClubId)
+                : (_tableMode == 0 ? Session.TournamentTable() : Session.AnnualTable()).FindIndex(r => r.ClubId == d.UserClubId);
+            return _tablePage >= 0 ? _tablePage : Mathf.Max(0, userAt) / PageRows;
         }
 
         /// <inheritdoc />
@@ -248,9 +273,24 @@ namespace Football.Game
                 if (_tableTabs[i].Contains(p))
                 {
                     _tableMode = i;
+                    _tablePage = -1;
                     Refresh();
                     return;
                 }
+            }
+
+            if (_tablePrev.Root.activeSelf && _tablePrev.Contains(p))
+            {
+                _tablePage = Mathf.Max(0, CurrentPage() - 1);
+                Refresh();
+                return;
+            }
+
+            if (_tableNext.Root.activeSelf && _tableNext.Contains(p))
+            {
+                _tablePage = CurrentPage() + 1;
+                Refresh();
+                return;
             }
 
             if (_requestGroup.activeSelf && (_accept.Contains(p) || _keep.Contains(p)))

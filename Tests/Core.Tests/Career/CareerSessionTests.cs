@@ -35,15 +35,16 @@ namespace Football.Core.Tests.Career
         {
             CareerSession s = NewCareer();
             CareerData d = s.Data;
-            Assert.That(d.Clubs, Has.Count.EqualTo(15));
+            Assert.That(d.Clubs, Has.Count.EqualTo(30), "toda la Primera");
             Assert.That(d.Club(d.UserClubId).Name, Is.EqualTo(UserTeam));
             Assert.That(d.Clubs.All(c => s.Squad(c.Id).Count >= 20), Is.True);
             Assert.That(d.Players.Values.All(p => p.Contract != null && p.Contract.WeeklyWage > 0), Is.True);
             Assert.That(d.Staff.Count(st => st.ClubId == d.UserClubId), Is.EqualTo(4));
             Assert.That(d.Competitions.Select(c => c.Kind), Is.EquivalentTo(new[] { TournamentKind.Apertura, TournamentKind.Clausura, TournamentKind.Cup }));
-            int perTournament = 15 * 14 / 2 + 15 / 2; // 15 clubes: 15 fechas de 7 partidos (uno libre)
-            Assert.That(d.Fixtures.Count(f => f.CompetitionId == CompetitionInfo.IdOf(2027, TournamentKind.Apertura)),
-                Is.EqualTo(perTournament - 15 / 2), "todos contra todos a una rueda");
+            // Dos zonas de 15: 14 partidos de zona y 1 interzonal por club en cada torneo = 30 × 15 / 2 partidos.
+            Assert.That(d.Fixtures.Count(f => f.CompetitionId == CompetitionInfo.IdOf(2027, TournamentKind.Apertura)), Is.EqualTo(30 * 15 / 2));
+            Assert.That(d.Fixtures.Where(f => f.CompetitionId == CompetitionInfo.IdOf(2027, TournamentKind.Apertura)).Select(f => f.Group).Distinct(),
+                Is.EquivalentTo(new[] { 0, 1, 2 }), "zona A, zona B e interzonales");
             Assert.That(d.Rivalries.Any(r => r.Level == RivalryLevel.Classic), Is.True);
         }
 
@@ -116,7 +117,7 @@ namespace Football.Core.Tests.Career
             Assert.That(s.Data.Players.Count, Is.GreaterThan(playersBefore), "llegaron juveniles");
             Assert.That(s.Data.Finances.Values.Sum(f => f.Cash), Is.Not.EqualTo(cashBefore), "hubo sueldos e ingresos");
             Assert.That(s.Data.Finances.Values.SelectMany(f => f.Ledger).Any(e => e.Category == FinanceCategory.Gate), Is.True);
-            Assert.That(s.AveragesTable(), Has.Count.EqualTo(15));
+            Assert.That(s.AveragesTable(), Has.Count.EqualTo(30));
             Assert.That(s.AnnualTable(2027).First().Points, Is.GreaterThan(s.AnnualTable(2027).Last().Points));
         }
 

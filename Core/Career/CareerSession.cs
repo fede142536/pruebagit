@@ -244,7 +244,8 @@ namespace Football.Core.Career
                 {
                     Name = string.IsNullOrEmpty(info.Stadium) ? def.Name : info.Stadium,
                     Capacity = info.Capacity > 0 ? info.Capacity : configs.Finance.StadiumCapacity[0],
-                    ParkingSpaces = cc.InitialParking[(int)tier], Pitch = (PitchCondition)cc.InitialPitch[(int)tier]
+                    ParkingSpaces = info.ParkingSpaces > 0 ? info.ParkingSpaces : cc.InitialParking[(int)tier],
+                    Pitch = Enum.TryParse(info.Pitch, true, out PitchCondition pitch) ? pitch : (PitchCondition)cc.InitialPitch[(int)tier]
                 };
                 club.TransferBudget = data.Finances[club.Id].TransferBudget;
                 club.WageBudget = data.Finances[club.Id].WeeklyWageBudget;
@@ -289,7 +290,8 @@ namespace Football.Core.Career
         {
             string full = (pd.Name ?? string.Empty).Trim();
             int space = full.LastIndexOf(' ');
-            int age = rng.NextInt(19, 34);
+            int estimated = rng.NextInt(19, 34); // se sortea siempre para que la partida no cambie según el archivo
+            int age = pd.Age > 0 ? pd.Age : estimated;
             Position position = TeamBuilder.ParsePosition(pd.Position);
             var p = new Player
             {
@@ -305,7 +307,11 @@ namespace Football.Core.Career
 
         // ------------------------------------------------------------------ calendario
 
-        /// <summary>Arma el Apertura y el Clausura de la temporada en curso (todos contra todos, localía invertida).</summary>
+        /// <summary>
+        /// Arma el Apertura y el Clausura de la temporada en curso. Con pocos clubes, todos contra todos; desde
+        /// <see cref="CareerConfig.ZoneSplitFrom"/> clubes, dos zonas (cabezas de serie por reputación en serpentina) más los cruces
+        /// interzonales, para que la temporada entre en el año. El Clausura repite el Apertura con la localía invertida.
+        /// </summary>
         public void StartSeason()
         {
             CareerConfig cc = _cfg.Career;
@@ -315,7 +321,10 @@ namespace Football.Core.Career
             int aperturaId = CompetitionInfo.IdOf(season, TournamentKind.Apertura);
             int clausuraId = CompetitionInfo.IdOf(season, TournamentKind.Clausura);
             Data.Competitions.Add(new CompetitionInfo { Id = aperturaId, Name = "Apertura " + season, Season = season, Kind = TournamentKind.Apertura });
-            List<Fixture> apertura = FixtureGenerator.RoundRobin(aperturaId, ids, first, cc.DaysBetweenRounds, false, new SeededRandom(Mix(season)));
+            List<Fixture> apertura = ids.Count >= cc.ZoneSplitFrom
+                ? FixtureGenerator.TwoZones(aperturaId, ids.OrderByDescending(c => Data.Finances[c].Reputation).ThenBy(c => c).ToList(), first,
+                    cc.DaysBetweenRounds, new SeededRandom(Mix(season)))
+                : FixtureGenerator.RoundRobin(aperturaId, ids, first, cc.DaysBetweenRounds, false, new SeededRandom(Mix(season)));
             int nextId = Data.Fixtures.Count == 0 ? 1 : Data.Fixtures.Max(f => f.Id) + 1;
             DateTime clausuraStart = apertura.Max(f => f.Date).AddDays(cc.BreakBetweenTournaments);
             foreach (Fixture f in apertura)
@@ -337,7 +346,7 @@ namespace Football.Core.Career
             {
                 Data.Fixtures.Add(new Fixture
                 {
-                    Id = nextId++, CompetitionId = clausuraId, Round = f.Round, HomeClubId = f.AwayClubId, AwayClubId = f.HomeClubId,
+                    Id = nextId++, CompetitionId = clausuraId, Round = f.Round, Group = f.Group, HomeClubId = f.AwayClubId, AwayClubId = f.HomeClubId,
                     Date = clausuraStart.AddDays((f.Round - 1) * cc.DaysBetweenRounds)
                 });
             }

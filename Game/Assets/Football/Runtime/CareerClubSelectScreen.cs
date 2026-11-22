@@ -9,7 +9,7 @@ namespace Football.Game
 {
     /// <summary>
     /// Elección del club (segundo paso del Modo Carrera). A la izquierda, la ficha: bandera, escudo, estrellas, liga y
-    /// flechas para recorrer los clubes; en el centro, las cinco expectativas de la directiva ordenadas por prioridad
+    /// flechas para recorrer los clubes (con contador y un filtro por jerarquía para moverse entre los 30 de Primera); en el centro, las cinco expectativas de la directiva ordenadas por prioridad
     /// («1 CRÍTICA» … «4 BAJA»); a la derecha, historia y fundación, presupuesto de fichajes, valor del club, camisetas
     /// titular y alternativa, y el estadio con su capacidad. Los datos salen de <see cref="ClubInfo"/> del archivo de equipos.
     /// </summary>
@@ -18,8 +18,12 @@ namespace Football.Game
         private const int Objectives = 5;
         private const float CrestSize = 250f;
         private const float RowStep = 132f;
+        private static readonly string[] FilterTiers = { null, "Big", "Mid", "Development" };
 
-        private readonly UiButton _back, _prev, _next, _go;
+        private readonly UiButton _back, _prev, _next, _go, _filter;
+        private readonly Text _counter;
+        private readonly System.Collections.Generic.List<int> _shown = new System.Collections.Generic.List<int>();
+        private int _filterIndex;
         private readonly ClubCrest _crest;
         private readonly StarRating _stars;
         private readonly FlagView _flag;
@@ -37,7 +41,9 @@ namespace Football.Game
         {
             Transform p = Panel;
             _back = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.back"), 28, UiTheme.Button);
-            UiKit.Label(p, "Titulo", new Vector2(760f, 1020f), new Vector2(900f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
+            UiKit.Label(p, "Titulo", new Vector2(700f, 1020f), new Vector2(800f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
+            _filter = UiKit.Button(p, "Filtro", new Vector2(1500f, 1020f), new Vector2(380f, 70f), string.Empty, 24, UiTheme.Button);
+            _counter = UiKit.Label(p, "Contador", new Vector2(1790f, 1020f), new Vector2(170f, 60f), string.Empty, 28, UiTheme.TextDim);
 
             // Ficha del club.
             UiKit.Panel(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f), UiTheme.Panel);
@@ -101,8 +107,11 @@ namespace Football.Game
             _name.text = team.Name;
             _stars.Set(TeamCatalog.Rating(Chosen));
             ClubTier tier = BoardExpectations.ParseTier(info.Tier);
+            RebuildShown();
+            _filter.Label.text = Locale.Get("career.filter") + ": " + Locale.Get("career.filter." + _filterIndex);
+            _counter.text = Mathf.Max(1, _shown.IndexOf(Chosen) + 1) + " / " + _shown.Count;
             _tier.text = Locale.Get("career.tier." + (int)tier);
-            _stadium.text = info.Stadium;
+            _stadium.text = string.IsNullOrEmpty(info.City) ? info.Stadium : info.Stadium + " · " + info.City;
             _capacity.text = CareerText.Format("career.capacity", CareerText.Count(info.Capacity));
             _founded.text = info.Founded > 0 ? CareerText.Format("career.founded", info.Founded) : team.Name;
             _history.text = info.History;
@@ -122,14 +131,46 @@ namespace Football.Game
             }
         }
 
+        private void RebuildShown()
+        {
+            _shown.Clear();
+            for (int i = 0; i < TeamCatalog.Teams.Length; i++)
+            {
+                if (FilterTiers[_filterIndex] == null || TeamCatalog.Teams[i].Club?.Tier == FilterTiers[_filterIndex])
+                {
+                    _shown.Add(i);
+                }
+            }
+        }
+
+        private void Step(int direction)
+        {
+            RebuildShown();
+            if (_shown.Count == 0)
+            {
+                return;
+            }
+
+            int at = _shown.IndexOf(Chosen);
+            Chosen = _shown[at < 0 ? 0 : (at + direction + _shown.Count) % _shown.Count];
+        }
+
         /// <inheritdoc />
         public override void Tap(Vector2 p)
         {
-            int count = TeamCatalog.Teams.Length;
             if (_back.Contains(p)) { Host.Request(CareerAction.BackToManager); return; }
             if (_go.Contains(p)) { Host.Request(CareerAction.NewGame); return; }
-            if (_prev.Contains(p)) { Chosen = (Chosen + count - 1) % count; }
-            else if (_next.Contains(p)) { Chosen = (Chosen + 1) % count; }
+            if (_prev.Contains(p)) { Step(-1); }
+            else if (_next.Contains(p)) { Step(1); }
+            else if (_filter.Contains(p))
+            {
+                _filterIndex = (_filterIndex + 1) % FilterTiers.Length;
+                RebuildShown();
+                if (_shown.Count > 0 && !_shown.Contains(Chosen))
+                {
+                    Chosen = _shown[0];
+                }
+            }
             else { return; }
 
             Refresh();

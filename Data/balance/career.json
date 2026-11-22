@@ -42,6 +42,7 @@
   "CupRoundSpacingDays": 35,
   "DecisiveRounds": 3,
   "FormMatches": 5,
+  "ZoneSplitFrom": 20,
   "SupporterReviewDaysBefore": 3,
   "RainChanceByMonth": [
     0.25,

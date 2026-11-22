@@ -109,7 +109,7 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
 - **`Management`**: `SeasonClock` (sobre `SimClock`) publica `WeekPassed` y `MonthClosed` en el `EventBus`; `FinanceSystem`,
   `Inbox` y otros escuchan. `MatchPreparation` arma el equipo con atributos efectivos; `ReportApplier` aplica el informe.
   Scouting, mercado, cantera, vestuario e historia viva son clases independientes que se comunican por eventos.
-- **`Competitions`**: calendario, tablas, promedios, zonas y eliminatorias.
+- **`Competitions`**: calendario (todos contra todos y `TwoZones` para ligas de 20 o más clubes), tablas, promedios, zonas y eliminatorias.
 - **Textos**: el núcleo guarda claves (`news.injury`); los textos están en `Data/locale/news.es.json` y `news.en.json`.
   Los de la interfaz, en `Data/locale/ui.es.json` y `ui.en.json` (lector `Common/StringTable`).
 - **`Career`** (22/11/2026): `CareerSession` orquesta la temporada día a día sobre `SeasonClock`: partidos ajenos con

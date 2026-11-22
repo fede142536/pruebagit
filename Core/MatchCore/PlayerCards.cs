@@ -171,7 +171,7 @@ namespace Football.Core.MatchCore
             Position position = TeamBuilder.ParsePosition(def.Position);
             var attributes = new AttributeSet();
             RosterFactory.FillAttributes(RandomFor(def.Name), def.Rating, position, attributes);
-            PlayerCardInfo card = Fill(def.Name, def.Number, position, attributes, AgeOf(def.Name));
+            PlayerCardInfo card = Fill(def.Name, def.Number, position, attributes, def.Age > 0 ? def.Age : AgeOf(def.Name));
             card.Overall = def.Rating;
             return card;
         }

@@ -58,6 +58,29 @@ namespace Football.Core.Career
             }
         }
 
+        /// <summary>
+        /// Clubes que pasaron directo en una ronda (los que seguían en carrera y no tuvieron partido). Se reconstruye desde la
+        /// primera ronda: los vivos de la siguiente son los ganadores más los que pasaron directo.
+        /// </summary>
+        private List<int> CupByes(List<Fixture> cup, int round)
+        {
+            List<int> alive = Data.Clubs.Select(c => c.Id).ToList();
+            var byes = new List<int>();
+            for (int r = 1; r <= round; r++)
+            {
+                List<Fixture> ties = cup.Where(f => f.Round == r).ToList();
+                byes = alive.Where(c => ties.All(f => f.HomeClubId != c && f.AwayClubId != c)).ToList();
+                if (r == round)
+                {
+                    break;
+                }
+
+                alive = ties.Select(f => Knockout.Winner(f, new SeededRandom(Mix(f.Id * 31L)))).Concat(byes).ToList();
+            }
+
+            return byes;
+        }
+
         /// <summary>Cuando termina una ronda de copa, arma la siguiente con los ganadores (y el que pasó directo).</summary>
         private void AdvanceCup()
         {
@@ -81,11 +104,7 @@ namespace Football.Core.Career
                 winners.Add(Knockout.Winner(f, new SeededRandom(Mix(f.Id * 31L))));
             }
 
-            if (round == 1)
-            {
-                // El cabeza de serie que no jugó la primera ronda entra ahora.
-                winners.AddRange(Data.Clubs.Select(c => c.Id).Where(c => last.All(f => f.HomeClubId != c && f.AwayClubId != c)));
-            }
+            winners.AddRange(CupByes(cup, round)); // el club que pasó directo (con número impar) sigue en carrera
 
             if (winners.Count == 1)
             {

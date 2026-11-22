@@ -288,3 +288,33 @@ y vello (hasta 2.570 con rayas; 2.326 el DT de traje); 0 pesos inválidos; al do
 **Consecuencias:** 22 mallas con huesos por partido (antes ~9 objetos por jugador). Falta medir en el Galaxy A13 el costo de
 la piel por GPU/CPU y confirmar 0 B de basura por fotograma con el perfilador.
 
+## D-24 · Primera División completa: 30 clubes, torneos por zonas y selectores paginados — Aceptada (pedido del usuario, 22/11/2026)
+**Decisión:**
+- **Datos** (`Data/teams/argentina.json`, copia en `Game/Assets/Football/Resources/teams.json`): se agregan 15 clubes
+  (Huracán, Argentinos Juniors, Godoy Cruz, Tigre, Platense, Unión de Santa Fe, Instituto, Atlético Tucumán, Central Córdoba de
+  Santiago del Estero, Barracas Central, Sarmiento de Junín, Independiente Rivadavia, Deportivo Riestra, Aldosivi y San Martín de
+  San Juan) y los 15 anteriores quedan intactos. Cada uno trae sigla de 3 letras, camisetas titular y alternativa, estilo y
+  formación, ciudad, fundación, estadio y capacidad (de Wikipedia), estacionamiento y estado inicial del césped, jerarquía
+  (Media tabla o En desarrollo), presupuestos y valor del club (estimaciones propias en la escala de los demás) y rivalidades.
+- **Planteles reales** de 22 jugadores por club, sin ficticios: nombres, dorsales y fecha de nacimiento (edad real en
+  `PlayerDefinition.Age`) salen de las páginas de plantel de es.wikipedia.org (Instituto, de en.wikipedia.org porque la versión
+  española trae solo 13). **Limitaciones, a corregir editando el archivo:** esas páginas solo distinguen arquero, defensor,
+  mediocampista y delantero, así que las posiciones finas (lateral, volante central o por afuera, extremo) se infirieron del
+  dorsal; Godoy Cruz y San Martín de San Juan no traen dorsales (se asignaron por la costumbre del puesto); no traen pierna hábil
+  ni altura (se siguen estimando de forma fija, D-21); y la selección de los 22 entre los 30–50 de cada página se hizo con
+  un criterio propio (numeración de primer equipo y edad), por lo que puede faltar algún titular. **Las medias son estimaciones
+  propias** (once inicial entre 65,7 y 71,7 según el club; mínimo 62; el máximo individual es 75).
+- **Torneos por zonas** (`FixtureGenerator.TwoZones`, `career.json` → `ZoneSplitFrom` = 20): con 30 clubes un todos contra todos
+  son 29 fechas por torneo y dos torneos no entran en el año. Desde 20 clubes cada torneo se juega en dos zonas de 15 (serpentina
+  por reputación): 14 partidos de zona y 1 interzonal, en 15 fechas. En zonas impares, cada fecha los dos clubes libres se
+  cruzan entre sí; en zonas pares se agrega una fecha final entre los de igual cabeza de serie. Con menos de 20 clubes, todo igual
+  que antes. La tabla del torneo es general (todos juegan 15), la anual suma Apertura y Clausura (30 partidos) y los promedios
+  y descensos usan los mismos puntos por partido. **Pendiente:** los playoffs entre zonas y que los cruces interzonales sean los
+  clásicos (hoy los fija el sorteo de los libres).
+- **Copa Argentina**: con 30 clubes son 5 rondas; se corrigió que el club que pasa directo en una ronda impar quedara fuera en las
+  siguientes (antes solo se recuperaba en la primera).
+- **UI**: el selector del amistoso pagina la grilla de escudos (16 por página) y filtra por jerarquía; el de la carrera tiene contador
+  y filtro y muestra la ciudad; la tabla de Central pagina de a 15 (abre en la página del club del usuario).
+**Consecuencias:** `career.json` gana `ZoneSplitFrom`; `ClubInfo` gana `City`, `ParkingSpaces` y `Pitch` (opcionales: sin ellos
+valen los de la jerarquía); las partidas guardadas con 15 clubes siguen cargando porque el fixture ya está guardado.
+

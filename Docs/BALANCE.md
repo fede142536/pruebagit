@@ -390,3 +390,15 @@ Valores de fábrica y lo que miden las pruebas (`CareerManagementTests`, `Career
 Pendiente: medir varias temporadas completas por jerarquía de club (caja final, popularidad media y despidos) y ajustar
 la elasticidad y los objetivos de la directiva con esos datos.
 
+## 10. Primera División de 30 clubes (22/11/2026)
+
+- **Medias de los 15 clubes nuevos** (estimación propia, `Data/teams/argentina.json`): media del once entre 65,7 (San Martín de San
+  Juan) y 71,7 (Argentinos Juniors); los originales van de 66,0 a 75,6. Una prueba exige 62–78 por jugador y 65–73 para el once.
+- **Calendario**: dos zonas de 15 → 15 fechas por torneo (14 + 1 interzonal), 225 partidos por torneo; Apertura, 3 semanas de
+  pausa y Clausura entran en ~250 días. Pruebas: ninguna fecha repite equipo, cada club juega toda su zona una vez y un solo
+  cruce interzonal, localías equilibradas (±1), determinismo por semilla.
+- **Presupuestos de los nuevos** (fichajes / sueldos anuales / valor, en millones): Media tabla 3,5–4,9 / 10,5–12,6 / 56–77;
+  En desarrollo 1,8–3,1 / 6,3–9,8 / 28–49; coherentes con los de Vélez, Lanús, Banfield y Gimnasia.
+- **Por medir:** varias temporadas completas con 30 clubes (reparto de puntos, descensos por promedios, ocupación de los estadios
+  chicos como Riestra con 8.740 lugares) y si 2 descensos sobre 30 clubes es el castigo adecuado.
+

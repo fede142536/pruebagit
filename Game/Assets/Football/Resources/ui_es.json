@@ -409,5 +409,10 @@
   "tickets.title": "PRECIO DE LAS ENTRADAS",
   "weather.0": "Soleado",
   "weather.1": "Nublado",
-  "weather.2": "Lluvia"
+  "weather.2": "Lluvia",
+  "career.filter": "Filtro",
+  "career.filter.0": "TODOS",
+  "career.filter.1": "GRANDES",
+  "career.filter.2": "MEDIA TABLA",
+  "career.filter.3": "EN DESARROLLO"
 }

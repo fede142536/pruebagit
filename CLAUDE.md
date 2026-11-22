@@ -51,7 +51,7 @@ Reglas:
 
 ## Contenido y licencias
 
-- **Sin escudos, logotipos ni diseños oficiales.** Por pedido explícito del usuario (D-12), `Data/teams/argentina.json` tiene nombres reales de jugadores de seis clubes con medias **estimadas por nosotros**; es para uso personal. El juego debe seguir funcionando sin ese archivo (equipos ficticios de reserva). Tras editarlo, `Tools/build-core.sh` lo copia a `Game/Assets/Football/Resources/teams.json` (una prueba verifica que coinciden).
+- **Sin escudos, logotipos ni diseños oficiales.** Por pedido explícito del usuario (D-12), `Data/teams/argentina.json` tiene nombres reales de jugadores de los 30 clubes de Primera con medias **estimadas por nosotros**; es para uso personal. El juego debe seguir funcionando sin ese archivo (equipos ficticios de reserva). Tras editarlo, `Tools/build-core.sh` lo copia a `Game/Assets/Football/Resources/teams.json` (una prueba verifica que coinciden).
 - Solo assets con licencia clara (CC0/MIT o equivalente), registrados en `ASSETS_LICENSES.md` (fuente, autor, licencia, URL, fecha).
 - La capa de arte es intercambiable: la lógica no depende de modelos, texturas ni audio concretos.
 

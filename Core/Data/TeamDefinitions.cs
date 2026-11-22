@@ -39,6 +39,8 @@ namespace Football.Core.Data
         public string Position = "MC";
         /// <summary>Media de 1 a 100.</summary>
         public int Rating = 65;
+        /// <summary>Edad real (años cumplidos) si el archivo la trae; 0 = se estima de forma fija a partir del nombre (D-21).</summary>
+        public int Age;
     }
 
     /// <summary>Equipo con sus equipaciones, estilo y plantilla.</summary>
@@ -86,6 +88,12 @@ namespace Football.Core.Data
         public string Tier = "Mid";
         /// <summary>Historia breve.</summary>
         public string History = string.Empty;
+        /// <summary>Ciudad o barrio del club (se muestra junto al estadio); vacío si no se conoce.</summary>
+        public string City = string.Empty;
+        /// <summary>Plazas de estacionamiento iniciales; 0 = las de su jerarquía (<c>career.json</c>).</summary>
+        public int ParkingSpaces;
+        /// <summary>Estado inicial del césped (Bad, Regular, Good, VeryGood o Excellent); vacío = el de su jerarquía.</summary>
+        public string Pitch = string.Empty;
     }
 
     /// <summary>Archivo con varios equipos.</summary>

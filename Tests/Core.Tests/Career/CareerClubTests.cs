@@ -63,8 +63,8 @@ namespace Football.Core.Tests.Career
             PlayUntil(s, () => s.Data.News.Concat(s.Inbox.Items).Any(n => n.Key == "news.cup_champion"), 200);
             Assert.That(s.Inbox.Items.Count(n => n.Key == "news.cup_champion"), Is.EqualTo(1));
             var cup = s.Data.Fixtures.Where(CareerSession.IsCup).ToList();
-            Assert.That(cup.Select(f => f.Round).Distinct().Count(), Is.EqualTo(4), "15 clubes: 4 rondas hasta la final");
-            Fixture final = cup.Single(f => f.Round == 4);
+            Assert.That(cup.Select(f => f.Round).Distinct().Count(), Is.EqualTo(5), "30 clubes: 15 cruces, 7 y uno que pasa directo, 4, 2 y la final");
+            Fixture final = cup.Single(f => f.Round == 5);
             Assert.That(s.IsCupFinal(final), Is.True);
             Assert.That(s.ImportanceOf(final), Is.EqualTo(MatchImportance.CupFinal));
             Assert.That(s.AnnualTable().Sum(r => r.Played), Is.EqualTo(2 * s.Data.Fixtures.Count(f => f.IsPlayed && !CareerSession.IsCup(f))));

@@ -65,6 +65,8 @@ namespace Football.Core.Career
         public int DecisiveRounds = 3;
         /// <summary>Partidos que cuenta la racha.</summary>
         public int FormMatches = 5;
+        /// <summary>Cantidad de clubes desde la que cada torneo se juega en dos zonas con cruces interzonales (por debajo, todos contra todos).</summary>
+        public int ZoneSplitFrom = 20;
         /// <summary>Días antes de un partido de local en que los socios revisan el precio.</summary>
         public int SupporterReviewDaysBefore = 3;
         /// <summary>Probabilidad de lluvia de cada mes (enero a diciembre; otoño e invierno más lluviosos).</summary>

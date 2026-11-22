@@ -42,6 +42,62 @@ namespace Football.Core.Tests.Competitions
             }
         }
 
+        [TestCase(30, 15)]  // Primera División: dos zonas impares de 15 -> 14 de zona + 1 interzonal en 15 fechas
+        [TestCase(28, 14)]  // zonas pares de 14: 13 de zona + 1 fecha final de interzonales en 14 fechas
+        [TestCase(24, 12)]
+        public void TwoZones_EveryClubPlaysItsZoneOnce_PlusOneInterzonal_WithoutConflicts(int teams, int zoneSize)
+        {
+            var seeded = Enumerable.Range(1, teams).ToList();
+            List<Fixture> fixtures = FixtureGenerator.TwoZones(1, seeded, Start, 7, new SeededRandom(5));
+            List<List<int>> zones = Groups.Snake(seeded, 2);
+            int expectedRounds = zoneSize % 2 == 1 ? zoneSize : zoneSize;
+            Assert.That(fixtures.Select(f => f.Round).Max(), Is.EqualTo(expectedRounds), "fechas del torneo");
+            Assert.That(fixtures, Has.Count.EqualTo(teams * zoneSize / 2 + (zoneSize % 2 == 0 ? 0 : 0)));
+            foreach (var round in fixtures.GroupBy(f => f.Round))
+            {
+                Assert.That(round.SelectMany(f => new[] { f.HomeClubId, f.AwayClubId }), Is.Unique, $"fecha {round.Key}: nadie juega dos veces");
+                Assert.That(round.Select(f => f.Date).Distinct().Count(), Is.EqualTo(1));
+            }
+
+            foreach (int club in seeded)
+            {
+                List<Fixture> mine = fixtures.Where(f => f.HomeClubId == club || f.AwayClubId == club).ToList();
+                Assert.That(mine, Has.Count.EqualTo(zoneSize), $"club {club}: partidos del torneo");
+                List<int> zone = zones.Single(z => z.Contains(club));
+                int[] rivals = mine.Select(f => f.HomeClubId == club ? f.AwayClubId : f.HomeClubId).ToArray();
+                Assert.That(rivals, Is.Unique, "nadie se repite");
+                Assert.That(zone.Where(c => c != club).All(rivals.Contains), Is.True, $"club {club}: juega contra toda su zona");
+                Assert.That(rivals.Count(r => !zone.Contains(r)), Is.EqualTo(1), $"club {club}: un solo cruce interzonal");
+                Assert.That(mine.Count(f => f.HomeClubId == club), Is.InRange(zoneSize / 2 - 1, zoneSize / 2 + 2), $"club {club}: localías equilibradas");
+            }
+
+            Assert.That(fixtures.Where(f => f.Group == 0).All(f => zones.Single(z => z.Contains(f.HomeClubId)) != zones.Single(z => z.Contains(f.AwayClubId))),
+                Is.True, "el grupo 0 son los cruces interzonales");
+            Assert.That(fixtures.Where(f => f.Group != 0).All(f => zones[f.Group - 1].Contains(f.HomeClubId) && zones[f.Group - 1].Contains(f.AwayClubId)), Is.True);
+        }
+
+        [Test]
+        public void TwoZones_SpreadsTheSeededClubsAcrossBothZones_AndFitsInAYear()
+        {
+            var seeded = Enumerable.Range(1, 30).ToList();
+            List<List<int>> zones = Groups.Snake(seeded, 2);
+            Assert.That(zones[0].Take(2), Is.EquivalentTo(new[] { 1, 4 }), "serpentina: 1.º y 4.º en la zona A");
+            Assert.That(zones[1].Take(2), Is.EquivalentTo(new[] { 2, 3 }));
+            List<Fixture> fixtures = FixtureGenerator.TwoZones(1, seeded, Start, 7, new SeededRandom(1));
+            // Apertura + 3 semanas + Clausura: cada torneo son 15 fechas, no 29.
+            Assert.That((fixtures.Max(f => f.Date) - Start).TotalDays, Is.LessThanOrEqualTo(14 * 7));
+            Assert.That(2 * 15 * 7 + 21, Is.LessThan(365), "los dos torneos entran en el año");
+            Assert.Throws<ArgumentException>(() => FixtureGenerator.TwoZones(1, new[] { 1, 2, 3 }, Start, 7));
+        }
+
+        [Test]
+        public void TwoZones_IsDeterministic_ForTheSameSeed()
+        {
+            var seeded = Enumerable.Range(1, 30).ToList();
+            string Key(List<Fixture> l) => string.Join(";", l.Select(f => $"{f.Round}:{f.HomeClubId}-{f.AwayClubId}:{f.Group}"));
+            Assert.That(Key(FixtureGenerator.TwoZones(1, seeded, Start, 7, new SeededRandom(9))), Is.EqualTo(Key(FixtureGenerator.TwoZones(1, seeded, Start, 7, new SeededRandom(9)))));
+        }
+
         [Test]
         public void SingleRound_HomeGamesAreBalanced()
         {
