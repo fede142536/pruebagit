@@ -40,7 +40,7 @@ namespace Football.Core.Tests.Career
             Assert.That(d.Clubs.All(c => s.Squad(c.Id).Count >= 20), Is.True);
             Assert.That(d.Players.Values.All(p => p.Contract != null && p.Contract.WeeklyWage > 0), Is.True);
             Assert.That(d.Staff.Count(st => st.ClubId == d.UserClubId), Is.EqualTo(4));
-            Assert.That(d.Competitions.Select(c => c.Kind), Is.EquivalentTo(new[] { TournamentKind.Apertura, TournamentKind.Clausura }));
+            Assert.That(d.Competitions.Select(c => c.Kind), Is.EquivalentTo(new[] { TournamentKind.Apertura, TournamentKind.Clausura, TournamentKind.Cup }));
             int perTournament = 15 * 14 / 2 + 15 / 2; // 15 clubes: 15 fechas de 7 partidos (uno libre)
             Assert.That(d.Fixtures.Count(f => f.CompetitionId == CompetitionInfo.IdOf(2027, TournamentKind.Apertura)),
                 Is.EqualTo(perTournament - 15 / 2), "todos contra todos a una rueda");

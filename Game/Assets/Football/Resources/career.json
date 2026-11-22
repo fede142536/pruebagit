@@ -27,5 +27,210 @@
   ],
   "ReleaseClauseFactor": 2.5,
   "StaffAbilityPivot": 10,
-  "StaffWagePerAbility": 150000
+  "StaffWagePerAbility": 150000,
+  "InitialParking": [
+    3000,
+    1500,
+    600
+  ],
+  "InitialPitch": [
+    2,
+    1,
+    1
+  ],
+  "CupFirstOffsetDays": 10,
+  "CupRoundSpacingDays": 35,
+  "DecisiveRounds": 3,
+  "FormMatches": 5,
+  "SupporterReviewDaysBefore": 3,
+  "Attendance": {
+    "Importance": [
+      1.45,
+      1.35,
+      1.25,
+      1,
+      0.65
+    ],
+    "LevelMultiplier": [
+      0.6,
+      1,
+      1.5,
+      2.3
+    ],
+    "ReferencePrice": 14000,
+    "BaseOccupancy": 0.62,
+    "PerReputation": 0.005,
+    "FormWeight": 0.4,
+    "PositionWeight": 0.15,
+    "MoodWeight": 0.3,
+    "UnrestWeight": 0.35,
+    "PriceElasticity": 1.1,
+    "ImportanceDampening": 3,
+    "BaseAccessCap": 0.85,
+    "AccessPerParkingSpace": 3E-05,
+    "IdealSpread": 0.15,
+    "ElevatedMargin": 0.25,
+    "OpponentAppeal": 0.006
+  },
+  "Board": {
+    "NationalTarget": [
+      3,
+      8,
+      12
+    ],
+    "YouthTarget": [
+      0.05,
+      0.1,
+      0.15
+    ],
+    "FinanceTarget": [
+      0.75,
+      0.9,
+      1
+    ],
+    "AttendanceTarget": [
+      0.85,
+      0.72,
+      0.6
+    ],
+    "YouthAge": 21,
+    "PriorityWeight": [
+      15,
+      10,
+      5,
+      2
+    ],
+    "ResultPopularity": [
+      1,
+      0,
+      -1.5
+    ],
+    "ClassicWin": 3,
+    "ClassicLoss": 4,
+    "FinancePerTenPercent": 0.5,
+    "FireThreshold": 25
+  },
+  "Supporters": {
+    "StartingRelation": 60,
+    "AcceptRelation": 8,
+    "AcceptUnrest": 12,
+    "IgnoreUnrest": 10,
+    "IgnoreRelation": 6,
+    "UnrestPerTenPercent": 4,
+    "LowStakesFactor": 1.6,
+    "BadFormThreshold": 0.35,
+    "CalmPerMatch": 6,
+    "RelationPerFairMatch": 1.5,
+    "CriticalUnrest": 75,
+    "SustainedMatches": 3,
+    "SackingPressure": 10
+  },
+  "Stadium": {
+    "Cost": [
+      4000000000,
+      10000000000,
+      18000000000,
+      800000000,
+      2000000000,
+      4500000000,
+      500000000,
+      1500000000,
+      3500000000,
+      700000000,
+      2500000000,
+      6000000000
+    ],
+    "WeeksMin": [
+      16,
+      32,
+      48,
+      10,
+      20,
+      32,
+      6,
+      14,
+      24,
+      8,
+      18,
+      30
+    ],
+    "WeeksMax": [
+      20,
+      36,
+      52,
+      10,
+      20,
+      32,
+      6,
+      14,
+      24,
+      8,
+      18,
+      30
+    ],
+    "StandSeats": [
+      4000,
+      8000,
+      12000
+    ],
+    "ParkingSpaces": [
+      1000,
+      2500,
+      5000
+    ],
+    "ClosedShareDuringStands": 0.08,
+    "SecondaryPerSpectator": [
+      0,
+      1500,
+      2500,
+      3500
+    ],
+    "ParkingPerSpectator": [
+      0,
+      300,
+      700,
+      1200
+    ],
+    "CorporatePerMatch": 120000000,
+    "MerchPerReputation": 4000000,
+    "InjuryFactor": [
+      1.2,
+      1.05,
+      1,
+      0.9,
+      0.82
+    ]
+  },
+  "Rating": {
+    "PillarWeight": [
+      0.35,
+      0.35,
+      0.3
+    ],
+    "RelationWeight": 0.4,
+    "PricePerTenPercent": 5,
+    "RequestAccepted": 2,
+    "RequestIgnored": 3,
+    "OccupancyReference": 0.7,
+    "OccupancyPerTenPercent": 4,
+    "PerFacilityLevel": 2,
+    "PerClassic": 3,
+    "MoraleWeight": 0.5,
+    "RotationReference": 0.6,
+    "RotationPerTenPercent": 2,
+    "PerBrokenPromise": 4,
+    "SigningMinMatches": 3,
+    "SigningExpectedRating": 6.6,
+    "SigningPerTenth": 0.8,
+    "SigningPerContribution": 0.6,
+    "SigningFeeWeight": 40,
+    "SigningCap": 8,
+    "BalancePerTenPercent": 5,
+    "BalanceCap": 25,
+    "WageOverrunPerTenPercent": 8,
+    "BalancedInvestment": 5,
+    "OverspendShare": 0.6,
+    "Overspend": 10,
+    "Deficit": 20
+  }
 }

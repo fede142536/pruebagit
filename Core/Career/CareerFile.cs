@@ -13,10 +13,10 @@ namespace Football.Core.Career
     /// <see cref="SqlCareerRepository"/> pero sin depender de un proveedor de SQLite (Unity en Android no trae uno). Se
     /// escribe con <see cref="AtomicSave.WriteFile"/>: archivo temporal, reemplazo atómico y respaldos rotativos.
     /// </summary>
-    public static class CareerFile
+    public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 2; // 2: estadísticas de la temporada de cada jugador
+        private const int Version = 3; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -244,6 +244,8 @@ namespace Football.Core.Career
                     w.Write(st.Value.RatingSum);
                     w.Write(st.Value.Rated);
                 }
+
+                WriteClubManagement(w, d);
             }
         }
 
@@ -419,6 +421,11 @@ namespace Football.Core.Career
                             Matches = r.ReadInt32(), Goals = r.ReadInt32(), Assists = r.ReadInt32(), RatingSum = r.ReadSingle(), Rated = r.ReadInt32()
                         };
                     }
+                }
+
+                if (version >= 3)
+                {
+                    ReadClubManagement(r, d);
                 }
 
                 return d;

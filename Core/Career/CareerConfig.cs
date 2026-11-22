@@ -1,3 +1,5 @@
+using Football.Core.Management;
+
 namespace Football.Core.Career
 {
     /// <summary>
@@ -51,5 +53,29 @@ namespace Football.Core.Career
         public int StaffAbilityPivot = 10;
         /// <summary>Sueldo semanal de un integrante del cuerpo técnico por punto de capacidad.</summary>
         public long StaffWagePerAbility = 150_000;
+        /// <summary>Plazas de estacionamiento iniciales por jerarquía (grande, media, desarrollo).</summary>
+        public int[] InitialParking = { 3000, 1500, 600 };
+        /// <summary>Estado inicial del campo por jerarquía (2 bueno, 1 regular).</summary>
+        public int[] InitialPitch = { 2, 1, 1 };
+        /// <summary>Días desde la primera fecha hasta la primera ronda de la Copa Argentina.</summary>
+        public int CupFirstOffsetDays = 10;
+        /// <summary>Días entre rondas de la copa.</summary>
+        public int CupRoundSpacingDays = 35;
+        /// <summary>Fechas finales en las que un partido puede ser «decisivo» o «sin nada en juego».</summary>
+        public int DecisiveRounds = 3;
+        /// <summary>Partidos que cuenta la racha.</summary>
+        public int FormMatches = 5;
+        /// <summary>Días antes de un partido de local en que los socios revisan el precio.</summary>
+        public int SupporterReviewDaysBefore = 3;
+        /// <summary>Asistencia y precios de entradas.</summary>
+        public AttendanceConfig Attendance = new AttendanceConfig();
+        /// <summary>Directiva y popularidad del DT.</summary>
+        public BoardConfig Board = new BoardConfig();
+        /// <summary>Socios.</summary>
+        public SupporterConfig Supporters = new SupporterConfig();
+        /// <summary>Remodelación del estadio.</summary>
+        public StadiumConfig Stadium = new StadiumConfig();
+        /// <summary>Medidor de gestión.</summary>
+        public RatingConfig Rating = new RatingConfig();
     }
 }

@@ -20,7 +20,9 @@ namespace Football.Core.Career
         /// <summary>Hoy juega el club del usuario: hay que jugarlo (motor 3D) o simularlo antes de seguir.</summary>
         UserMatchToday,
         /// <summary>Terminó la temporada (descensos, clasificados, retiros y juveniles ya aplicados).</summary>
-        SeasonFinished
+        SeasonFinished,
+        /// <summary>La directiva despidió al DT: la carrera terminó.</summary>
+        ManagerSacked
     }
 
     /// <summary>Parámetros de todos los sistemas de la carrera, leídos de <c>Data/balance/</c>.</summary>
@@ -57,10 +59,12 @@ namespace Football.Core.Career
     /// copa por la tabla anual, retiros (los veteranos pueden pasar al cuerpo técnico) y juveniles nuevos.
     /// Todo el azar sale de la semilla de la partida y de la fecha, así el resultado no depende de cuándo se guardó.
     /// </summary>
-    public sealed class CareerSession : IWageBill
+    public sealed partial class CareerSession : IWageBill
     {
         private const int MaxDaysToNextMatch = 400;
         private const int DaysPerWeek = 7;
+        private const int WeeksPerYear = 52;
+        private const int ClubValueFromCash = 3;
         private const int ReputationStepForQualifying = 3;
         private const int ReputationStepForRelegation = 8;
         private const int MinReputation = 1;
@@ -158,6 +162,7 @@ namespace Football.Core.Career
 
             _applier = new ReportApplier(_cfg.Management, _bus);
             _bus.Subscribe<MonthClosed>(OnMonthClosed);
+            _bus.Subscribe<WeekPassed>(OnWeekPassed);
             _dayRng = DayRandom();
             PendingUserFixture = TodaysUserFixture();
         }
@@ -174,13 +179,16 @@ namespace Football.Core.Career
         /// <param name="seed">Semilla de la partida.</param>
         /// <param name="configs">Parámetros.</param>
         /// <param name="tournamentOnly">Modo Torneo: un solo campeonato a una rueda, sin temporadas siguientes.</param>
-        public static CareerSession NewGame(TeamDatabase db, string userTeam, int season, int seed, CareerConfigs configs, bool tournamentOnly = false)
+        /// <param name="manager">Director técnico del usuario (null = uno sin nombre).</param>
+        public static CareerSession NewGame(TeamDatabase db, string userTeam, int season, int seed, CareerConfigs configs, bool tournamentOnly = false,
+            ManagerProfile manager = null)
         {
             CareerConfig cc = configs.Career;
             var rng = new SeededRandom((ulong)(uint)seed);
             var market = new TransferMarket(configs.Management);
             DateTime start = new DateTime(season, cc.SeasonStartMonth, cc.SeasonStartDay).AddDays(-cc.DaysBetweenRounds);
-            var data = new CareerData { Seed = seed, Season = season, Today = start, TournamentOnly = tournamentOnly };
+            var data = new CareerData { Seed = seed, Season = season, Today = start, TournamentOnly = tournamentOnly, Manager = manager ?? new ManagerProfile() };
+            data.Supporters.Relation = cc.Supporters.StartingRelation;
             data.Tactics.Formation = cc.Formation;
             int nextPlayer = 1, nextStaff = 1;
             for (int t = 0; t < db.Teams.Length; t++)
@@ -214,12 +222,29 @@ namespace Football.Core.Career
                 float rating = (float)def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
                 int reputation = (int)MathUtil.Clamp(50f + (rating - cc.ReputationPivotRating) * cc.ReputationPerRating, MinReputation, MaxReputation);
                 long wages = data.Players.Values.Where(p => p.ClubId == club.Id).Sum(p => p.Contract.WeeklyWage);
-                long cash = reputation * cc.CashPerReputation;
+                // Presupuestos del archivo (estimaciones propias por club) o, si faltan, fórmulas por reputación.
+                ClubInfo info = def.Club ?? new ClubInfo();
+                long transfer = info.TransferBudget > 0 ? info.TransferBudget : (long)(reputation * cc.CashPerReputation * (double)cc.TransferBudgetShare);
+                long cash = Math.Max(reputation * cc.CashPerReputation, transfer * 2);
+                long weeklyWages = Math.Max(info.AnnualWageBudget / WeeksPerYear, (long)(wages * (double)cc.WageBudgetMargin));
                 data.Finances[club.Id] = new ClubFinances
                 {
-                    ClubId = club.Id, Cash = cash, TransferBudget = (long)(cash * (double)cc.TransferBudgetShare),
-                    WeeklyWageBudget = (long)(wages * (double)cc.WageBudgetMargin), Members = reputation * cc.MembersPerReputation,
-                    TicketPrice = configs.Finance.ReferenceTicketPrice, Reputation = reputation
+                    ClubId = club.Id, Cash = cash, TransferBudget = transfer, WeeklyWageBudget = weeklyWages,
+                    Members = reputation * cc.MembersPerReputation,
+                    TicketPrice = MatchAttendanceCalculator.PriceOf(TicketLevel.Normal, cc.Attendance), Reputation = reputation
+                };
+                ClubTier tier = BoardExpectations.ParseTier(info.Tier);
+                data.ClubInfos[club.Id] = new ClubInfo
+                {
+                    Founded = info.Founded, Stadium = info.Stadium, Capacity = info.Capacity, TransferBudget = transfer,
+                    AnnualWageBudget = weeklyWages * WeeksPerYear, ClubValue = info.ClubValue > 0 ? info.ClubValue : cash * ClubValueFromCash,
+                    Tier = tier.ToString(), History = info.History
+                };
+                data.Stadiums[club.Id] = new StadiumState
+                {
+                    Name = string.IsNullOrEmpty(info.Stadium) ? def.Name : info.Stadium,
+                    Capacity = info.Capacity > 0 ? info.Capacity : configs.Finance.StadiumCapacity[0],
+                    ParkingSpaces = cc.InitialParking[(int)tier], Pitch = (PitchCondition)cc.InitialPitch[(int)tier]
                 };
                 club.TransferBudget = data.Finances[club.Id].TransferBudget;
                 club.WageBudget = data.Finances[club.Id].WeeklyWageBudget;
@@ -299,12 +324,14 @@ namespace Football.Core.Career
                 Data.Fixtures.Add(f);
             }
 
+            Data.SeasonStartCash = Data.Finances[Data.UserClubId].Cash;
             if (Data.TournamentOnly)
             {
                 return; // Torneo: una sola rueda
             }
 
             Data.Competitions.Add(new CompetitionInfo { Id = clausuraId, Name = "Clausura " + season, Season = season, Kind = TournamentKind.Clausura });
+            StartCup(first, ref nextId);
 
             foreach (Fixture f in apertura)
             {
@@ -322,6 +349,11 @@ namespace Football.Core.Career
         /// </summary>
         public DayOutcome AdvanceDay()
         {
+            if (Data.Manager.Sacked)
+            {
+                return DayOutcome.ManagerSacked;
+            }
+
             if (PendingUserFixture != null)
             {
                 return DayOutcome.UserMatchToday;
@@ -347,6 +379,13 @@ namespace Football.Core.Career
                 Play(f, null);
             }
 
+            AdvanceCup();
+            ReviewSupporters();
+            if (Data.Manager.Sacked)
+            {
+                return DayOutcome.ManagerSacked;
+            }
+
             PendingUserFixture = TodaysUserFixture();
             if (PendingUserFixture != null)
             {
@@ -362,7 +401,7 @@ namespace Football.Core.Career
                 }
 
                 EndSeason();
-                return DayOutcome.SeasonFinished;
+                return Data.Manager.Sacked ? DayOutcome.ManagerSacked : DayOutcome.SeasonFinished;
             }
 
             return DayOutcome.Continue;
@@ -406,6 +445,7 @@ namespace Football.Core.Career
             Fixture f = PendingUserFixture ?? throw new InvalidOperationException("Hoy no juega el usuario.");
             Play(f, report ?? throw new ArgumentNullException(nameof(report)));
             PendingUserFixture = null;
+            AdvanceCup();
         }
 
         /// <summary>Simula con el simulador rápido el partido de hoy del usuario.</summary>
@@ -414,6 +454,7 @@ namespace Football.Core.Career
             Fixture f = PendingUserFixture ?? throw new InvalidOperationException("Hoy no juega el usuario.");
             MatchReport report = Play(f, null);
             PendingUserFixture = null;
+            AdvanceCup();
             return report;
         }
 
@@ -425,12 +466,18 @@ namespace Football.Core.Career
                 report = QuickMatchSimulator.Play(home, away, _dayRng.Fork("f" + f.Id), _cfg.Sim, _cfg.Report);
             }
 
+            MatchImportance importance = ImportanceOf(f);
+            long price = TicketPriceFor(f);
+            AttendanceResult crowd = MatchAttendanceCalculator.Compute(AttendanceInputFor(f, importance, price), _cfg.Career.Attendance);
             f.HomeGoals = report.HomeGoals;
             f.AwayGoals = report.AwayGoals;
+            float injuryFactor = _cfg.Career.Stadium.InjuryFactor[(int)Data.Stadiums[f.HomeClubId].Pitch];
             for (int side = 0; side < 2; side++)
             {
                 int clubId = side == 0 ? f.HomeClubId : f.AwayClubId;
-                _applier.Apply(report, side, SquadConditions(clubId), Data.Facilities[clubId][FacilityKind.Medical].Level, _dayRng.Fork("a" + f.Id + side));
+                Dictionary<int, PlayerCondition> squadConditions = SquadConditions(clubId);
+                _applier.Apply(report, side, squadConditions, Data.Facilities[clubId][FacilityKind.Medical].Level, _dayRng.Fork("a" + f.Id + side));
+                ScaleNewInjuries(report.Teams[side], squadConditions, injuryFactor); // el estado del campo también cuenta
                 if (clubId == Data.UserClubId)
                 {
                     _dressing.RecordMatch(report.Teams[side]);
@@ -442,8 +489,15 @@ namespace Football.Core.Career
             _bus.Publish(new HomeMatchPlayed
             {
                 Date = Data.Today, ClubId = f.HomeClubId, OpponentReputation = Data.Finances[f.AwayClubId].Reputation,
-                Rivalry = RivalryBetween(f.HomeClubId, f.AwayClubId)
+                Rivalry = RivalryBetween(f.HomeClubId, f.AwayClubId), Spectators = Math.Max(1, crowd.Spectators), TicketPrice = price
             });
+            long extras = StadiumRemodelingSystem.MatchdayExtras(Data.Stadiums[f.HomeClubId], crowd.Spectators, _cfg.Career.Stadium);
+            if (extras > 0)
+            {
+                Data.Finances[f.HomeClubId].Record(Data.Today, FinanceCategory.Matchday, extras);
+            }
+
+            AfterMatch(f, report, importance, price, crowd);
             if (Involves(f, Data.UserClubId))
             {
                 _inbox.Post("news.result", Data.Club(f.HomeClubId).Name, Num(report.HomeGoals), Num(report.AwayGoals), Data.Club(f.AwayClubId).Name);
@@ -548,7 +602,7 @@ namespace Football.Core.Career
 
         /// <summary>Tabla anual de una temporada (la en curso o una ya jugada).</summary>
         /// <param name="season">Temporada (año).</param>
-        public List<Standing> AnnualTable(int season) => Table(f => f.CompetitionId / 10 == season);
+        public List<Standing> AnnualTable(int season) => Table(f => f.CompetitionId / 10 == season && !IsCup(f));
 
         /// <summary>Tabla de promedios: puntos por partido de las últimas temporadas (la en curso incluida).</summary>
         public List<AverageRow> AveragesTable()
@@ -575,7 +629,7 @@ namespace Football.Core.Career
             foreach (int season in Data.Competitions.Select(c => c.Season).Distinct())
             {
                 var table = new LeagueTable(Data.Clubs.Select(c => c.Id), LeagueTable.ArgentineOrder);
-                foreach (Fixture f in Data.Fixtures.Where(f => f.IsPlayed && f.CompetitionId / 10 == season))
+                foreach (Fixture f in Data.Fixtures.Where(f => f.IsPlayed && f.CompetitionId / 10 == season && !IsCup(f)))
                 {
                     table.Add(f);
                 }
@@ -613,6 +667,7 @@ namespace Football.Core.Career
         private void EndSeason()
         {
             CareerConfig cc = _cfg.Career;
+            ReviewSeasonWithTheBoard();
             List<int> ids = Data.Clubs.Select(c => c.Id).ToList();
             foreach (int clubId in BuildAverages().Worst(ids, Data.Season).Take(cc.RelegatedClubs))
             {
@@ -714,10 +769,17 @@ namespace Football.Core.Career
                 return;
             }
 
-            List<Club> others = Data.Clubs.Where(c => c.Id != Data.UserClubId).ToList();
+            double share = _cfg.Career.RivalOfferShare;
+            long cheapest = Squad(Data.UserClubId).Select(p => (long)(_market.Value(p, Data.Today) * share)).DefaultIfEmpty(long.MaxValue).Min();
+            // Solo ofertan los rivales que pueden pagar al menos a uno de los jugadores del usuario.
+            List<Club> others = Data.Clubs.Where(c => c.Id != Data.UserClubId && Data.Finances[c.Id].TransferBudget >= cheapest).ToList();
+            if (others.Count == 0)
+            {
+                return;
+            }
+
             Club buyer = others[_dayRng.NextInt(0, others.Count)];
             long budget = Data.Finances[buyer.Id].TransferBudget;
-            double share = _cfg.Career.RivalOfferShare;
             // El rival elige según su perfil, pero solo entre los que puede pagar y por los que no hay otra oferta.
             IEnumerable<Player> affordable = Squad(Data.UserClubId)
                 .Where(p => _market.Value(p, Data.Today) * share <= budget && _offers.All(o => o.Offer.PlayerId != p.Id));
@@ -806,6 +868,10 @@ namespace Football.Core.Career
             seller.Record(Data.Today, FinanceCategory.Transfers, offer.Fee);
             p.ClubId = offer.BuyerClubId;
             p.JoinedOn = Data.Today;
+            if (offer.BuyerClubId == Data.UserClubId)
+            {
+                Data.Signings.Add(new SigningRecord { PlayerId = p.Id, Name = FullName(p), Fee = offer.Fee, Date = Data.Today });
+            }
             if (p.Contract != null)
             {
                 p.Contract.ReleaseClause = (long)(offer.Fee * (double)_cfg.Career.ReleaseClauseFactor);
@@ -911,6 +977,7 @@ namespace Football.Core.Career
 
         private void OnMonthClosed(MonthClosed e)
         {
+            MonthlyClubReview(e.Date);
             _dressing.MonthlyReview(Data.UserClubId, Squad(Data.UserClubId), SquadConditions(Data.UserClubId), e.Date);
         }
 

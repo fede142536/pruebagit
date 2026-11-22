@@ -25,7 +25,11 @@ namespace Football.Core.Domain
         /// <summary>Comisión por mover dinero entre presupuestos.</summary>
         Commission,
         /// <summary>Premios por resultados.</summary>
-        Prizes
+        Prizes,
+        /// <summary>Ingresos del día de partido: gastronomía, estacionamiento y palcos.</summary>
+        Matchday,
+        /// <summary>Ventas de la tienda oficial.</summary>
+        Merchandise
     }
 
     /// <summary>Un movimiento de dinero (positivo = ingreso).</summary>
@@ -147,6 +151,10 @@ namespace Football.Core.Domain
     /// <summary>Se jugó un partido de local (para la taquilla).</summary>
     public struct HomeMatchPlayed
     {
+        /// <summary>Espectadores ya calculados por el modo carrera (0 = que los calcule el sistema de finanzas).</summary>
+        public int Spectators;
+        /// <summary>Precio de la entrada que se cobró (0 = el del club).</summary>
+        public long TicketPrice;
         /// <summary>Fecha.</summary>
         public DateTime Date;
         /// <summary>Club local.</summary>

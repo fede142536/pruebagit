@@ -155,8 +155,9 @@ namespace Football.Core.Management
                 return;
             }
 
-            long price = f.TicketPrice > 0 ? f.TicketPrice : _config.ReferenceTicketPrice;
-            f.Record(e.Date, FinanceCategory.Gate, Attendance(e.ClubId, e.OpponentReputation, e.Rivalry) * price);
+            long price = e.TicketPrice > 0 ? e.TicketPrice : f.TicketPrice > 0 ? f.TicketPrice : _config.ReferenceTicketPrice;
+            int spectators = e.Spectators > 0 ? e.Spectators : Attendance(e.ClubId, e.OpponentReputation, e.Rivalry);
+            f.Record(e.Date, FinanceCategory.Gate, spectators * price);
         }
 
         private void OnWeek(WeekPassed e)

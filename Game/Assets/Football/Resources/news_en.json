@@ -16,5 +16,14 @@
   "news.user_relegated": "We have been relegated on points average. The board expects a reaction.",
   "news.qualified": "{0} qualified for the international cup through the annual table.",
   "news.season_end": "Season {0} is over. Pre-season starts now.",
-  "news.champion": "{0} are the tournament champions!"
+  "news.champion": "{0} are the tournament champions!",
+  "news.supporters_request": "The supporters' group asks for cheaper tickets for the match against {0}: they cost ${1} and the reasonable maximum is ${2}. Answer from the Office.",
+  "news.supporters_thanks": "The supporters thank you for the cheaper tickets.",
+  "news.supporters_ignored": "The supporters regret that ticket prices were not lowered.",
+  "news.supporters_repudiation": "Supporters protest: \"${0} for a ticket is robbery\".",
+  "news.supporters_demand_exit": "The supporters demand the manager's exit. The board takes note.",
+  "news.manager_sacked": "The {0} board has decided to sack the manager.",
+  "news.stadium_work_done": "Stadium works finished: {0} (level {1}).",
+  "news.board_review": "Board review: your popularity is now {0}.",
+  "news.cup_champion": "{0} win the Copa Argentina {1}!"
 }

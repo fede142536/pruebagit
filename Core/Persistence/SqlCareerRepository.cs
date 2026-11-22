@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using Football.Core.Career;
 using Football.Core.Domain;
+using Football.Core.Management;
 using Football.Core.MatchCore;
 
 namespace Football.Core.Persistence
@@ -14,14 +15,15 @@ namespace Football.Core.Persistence
     /// El guardado es todo o nada (<see cref="AtomicSave.InTransaction"/>): si algo falla, la base queda como estaba. Para
     /// pasarlo a un archivo sin riesgo de dejarlo a medias, usar después <see cref="AtomicSave.SaveSqlite"/>.
     /// </summary>
-    public sealed class SqlCareerRepository : SqlRepositoryBase
+    public sealed partial class SqlCareerRepository : SqlRepositoryBase
     {
         private const string CareerGoalsPrefix = "goals.";
         private const char ArgsSeparator = '\u001f';
 
         private static readonly string[] TablesChildrenFirst =
         {
-            "career_meta", "player_season_stats", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
+            "career_meta", "management_history", "signings", "ticket_history", "supporters", "stadium_works", "club_stadiums", "club_info", "manager",
+            "player_season_stats", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
             "competitions", "facilities", "ledger", "club_finances", "contracts", "player_attributes", "players", "clubs"
         };
 
@@ -53,11 +55,13 @@ namespace Football.Core.Persistence
                 SaveCompetitions(data, tx);
                 SavePeople(data, tx);
                 SaveHistory(data, tx);
+                SaveClubManagement(data, tx);
                 UserTactics t = data.Tactics ?? new UserTactics();
                 SqlHelper.Execute(Connection,
                     @"INSERT INTO career_meta (id, seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style,
-                        fullback_duty, midfield_duty, striker_duty)
-                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st)", tx,
+                        fullback_duty, midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash)
+                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st, @level, @override, @startcash)", tx,
+                    ("@level", (int)data.TicketLevel), ("@override", data.NextPriceOverride), ("@startcash", data.SeasonStartCash),
                     ("@seed", data.Seed), ("@season", data.Season), ("@today", DateFormat.ToText(data.Today)), ("@user", data.UserClubId),
                     ("@tournament", data.TournamentOnly ? 1 : 0), ("@formation", t.Formation ?? string.Empty),
                     ("@defensive", t.DefensiveFormation ?? string.Empty), ("@style", t.Style ?? string.Empty), ("@fb", (int)t.FullbackDuty),
@@ -75,7 +79,7 @@ namespace Football.Core.Persistence
 
             var data = new CareerData();
             Read(@"SELECT seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style, fullback_duty,
-                     midfield_duty, striker_duty FROM career_meta", r =>
+                     midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash FROM career_meta", r =>
             {
                 data.Seed = r.GetInt32(0);
                 data.Season = r.GetInt32(1);
@@ -87,12 +91,16 @@ namespace Football.Core.Persistence
                     Formation = r.GetString(5), DefensiveFormation = r.GetString(6), Style = r.GetString(7),
                     FullbackDuty = (PlayerDuty)r.GetInt32(8), MidfieldDuty = (PlayerDuty)r.GetInt32(9), StrikerDuty = (PlayerDuty)r.GetInt32(10)
                 };
+                data.TicketLevel = (TicketLevel)r.GetInt32(11);
+                data.NextPriceOverride = r.GetInt64(12);
+                data.SeasonStartCash = r.GetInt64(13);
             });
             LoadClubs(data);
             LoadPlayers(data);
             LoadCompetitions(data);
             LoadPeople(data);
             LoadHistory(data);
+            LoadClubManagement(data);
             return data;
         }
 
