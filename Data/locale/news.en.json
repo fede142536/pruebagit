@@ -1,0 +1,12 @@
+{
+  "news.injury": "Injury: player {0} will be out for {1} days.",
+  "news.suspension": "Suspension: player {0} will miss {1} match(es).",
+  "news.promise_broken": "Player {0} is unhappy: his playing-time promise was not kept.",
+  "news.facility_upgraded": "Works finished: {0} is now level {1}.",
+  "news.youth_intake": "{0} youth players arrived from the academy. The most promising has potential {1}.",
+  "news.transfer_in": "Signing completed: player {0} joins for {1}.",
+  "news.transfer_out": "Sale completed: player {0} leaves for {1}.",
+  "news.record": "Record! {0}: {2} ({1}).",
+  "news.retired": "Player {0} has retired.",
+  "news.retired_to_staff": "Player {0} has retired and starts a coaching career."
+}

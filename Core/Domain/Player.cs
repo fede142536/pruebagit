@@ -35,6 +35,12 @@ namespace Football.Core.Domain
         /// <summary>Contrato vigente, o <c>null</c> si no tiene.</summary>
         public Contract Contract { get; set; }
 
+        /// <summary>Rasgo de personalidad.</summary>
+        public PersonalityTrait Personality { get; set; }
+
+        /// <summary>Fecha en que llegó al club (para la jerarquía del vestuario).</summary>
+        public DateTime JoinedOn { get; set; }
+
         /// <summary>Edad en años cumplidos en la fecha indicada.</summary>
         /// <param name="on">Fecha de referencia (normalmente <c>SimClock.Today</c>).</param>
         public int AgeOn(DateTime on)

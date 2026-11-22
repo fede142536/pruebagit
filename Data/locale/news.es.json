@@ -1,0 +1,12 @@
+{
+  "news.injury": "Lesión: el jugador {0} estará {1} días de baja.",
+  "news.suspension": "Sanción: el jugador {0} no podrá jugar {1} partido(s).",
+  "news.promise_broken": "El jugador {0} está molesto: no se cumplió la promesa de minutos.",
+  "news.facility_upgraded": "Obra terminada: {0} ya está en el nivel {1}.",
+  "news.youth_intake": "Llegaron {0} juveniles de la cantera. El de más proyección tiene potencial {1}.",
+  "news.transfer_in": "Fichaje cerrado: llega el jugador {0} por {1}.",
+  "news.transfer_out": "Venta cerrada: se va el jugador {0} por {1}.",
+  "news.record": "¡Récord! {0}: {2} ({1}).",
+  "news.retired": "Se retiró el jugador {0}.",
+  "news.retired_to_staff": "Se retiró el jugador {0} y empieza su carrera como entrenador."
+}

@@ -36,5 +36,63 @@ namespace Football.Core.Management
         public float BrokenPromiseMorale = 8f;
         /// <summary>Partidos mínimos antes de evaluar una promesa.</summary>
         public int PromiseGraceMatches = 6;
+
+        // ---- Scouting progresivo ----
+        /// <summary>Ancho del rango de un atributo sin ojear nada (puntos).</summary>
+        public float ScoutingMaxWidth = 30f;
+        /// <summary>Conocimiento ganado por día de ojeo con un ojeador de capacidad 10.</summary>
+        public float ScoutingPerDay = 0.05f;
+
+        // ---- Mercado ----
+        /// <summary>Valor de mercado de un jugador de media 60 y 25 años.</summary>
+        public long BaseValue = 400_000_000;
+        /// <summary>El valor se multiplica por e^(esto × (media − 60)).</summary>
+        public float ValuePerRating = 0.11f;
+        /// <summary>Edad de máximo valor.</summary>
+        public int PeakValueAge = 26;
+        /// <summary>Pérdida de valor por año de distancia a esa edad (fracción).</summary>
+        public float ValuePerYearFromPeak = 0.07f;
+        /// <summary>Cuánto pide el vendedor sobre el valor, por perfil (comprador, canterano-vendedor, defensivo).</summary>
+        public float[] AskFactor = { 1.1f, 1.5f, 1.25f };
+        /// <summary>Cuánto rebaja el vendedor el pedido por cada 10 % de porcentaje de venta futura.</summary>
+        public float SellOnDiscount = 0.06f;
+        /// <summary>Por debajo de esta fracción del pedido, rechaza sin contraoferta.</summary>
+        public float RejectBelow = 0.6f;
+        /// <summary>Sueldo semanal pedido por un jugador de media 60.</summary>
+        public long BaseWage = 1_500_000;
+        /// <summary>El sueldo pedido se multiplica por e^(esto × (media − 60)).</summary>
+        public float WagePerRating = 0.09f;
+        /// <summary>Sueldo extra pedido según la promesa de minutos (índice = promesa; ser figura cuesta más).</summary>
+        public float[] PromiseWageFactor = { 1f, 1.3f, 1.1f, 0.95f, 0.85f, 0.8f };
+        /// <summary>Cuánto puede rebajar su pedido según la personalidad (índice = rasgo).</summary>
+        public float[] WageFlexibility = { 0.1f, 0.1f, 0.08f, 0.02f, 0.25f, 0.05f };
+
+        // ---- Cantera ----
+        /// <summary>Juveniles por año.</summary>
+        public int[] YouthIntakeSize = { 3, 5 };
+        /// <summary>Potencial medio de los juveniles con cantera de nivel 1.</summary>
+        public float YouthPotentialBase = 52f;
+        /// <summary>Potencial extra por nivel de cantera.</summary>
+        public float YouthPotentialPerLevel = 4f;
+        /// <summary>Potencial extra por punto de capacidad del entrenador de juveniles sobre 10.</summary>
+        public float YouthPotentialPerCoach = 0.8f;
+        /// <summary>Media actual de un juvenil respecto de su potencial (fracción).</summary>
+        public float YouthCurrentShare = 0.7f;
+
+        // ---- Vestuario y química ----
+        /// <summary>Minutos juntos en el campo para que dos jugadores se entiendan del todo.</summary>
+        public float ChemistryFullMinutes = 1800f;
+        /// <summary>Atributos efectivos extra con química máxima en el once (fracción).</summary>
+        public float ChemistryBonus = 0.02f;
+        /// <summary>Cuánto arrastran los líderes la moral del resto hacia la suya (fracción por mes).</summary>
+        public float LeaderMoralePull = 0.25f;
+
+        // ---- Historia viva ----
+        /// <summary>Edad desde la que un jugador puede retirarse.</summary>
+        public int RetirementAge = 34;
+        /// <summary>Probabilidad anual de retirarse por cada año sobre esa edad.</summary>
+        public float RetirementChancePerYear = 0.25f;
+        /// <summary>Goles en la carrera para entrar al salón de la fama al retirarse.</summary>
+        public int HallOfFameGoals = 100;
     }
 }

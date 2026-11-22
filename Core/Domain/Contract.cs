@@ -10,5 +10,11 @@ namespace Football.Core.Domain
 
         /// <summary>Fecha de vencimiento del contrato.</summary>
         public DateTime ExpiresOn { get; set; }
+
+        /// <summary>Cláusula de rescisión (0 = sin cláusula).</summary>
+        public long ReleaseClause { get; set; }
+
+        /// <summary>Promesa de minutos acordada.</summary>
+        public PlayingTimePromise Promise { get; set; }
     }
 }
