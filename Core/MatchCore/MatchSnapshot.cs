@@ -1,3 +1,4 @@
+using Football.Core.Domain;
 namespace Football.Core.MatchCore
 {
     /// <summary>

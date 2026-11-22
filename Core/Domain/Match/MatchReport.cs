@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Football.Core.Domain;
 
-namespace Football.Core.MatchCore
+namespace Football.Core.Domain
 {
     /// <summary>Resultado de un jugador en el partido, para la gestión (forma, moral, fatiga, lesiones, sanciones).</summary>
     public sealed class PlayerReport

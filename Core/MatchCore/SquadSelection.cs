@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using Football.Core.Common;
 using Football.Core.Data;
+using Football.Core.Domain;
 
 namespace Football.Core.MatchCore
 {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Football.Core.Common;
+using Football.Core.Domain;
 
 namespace Football.Core.MatchCore
 {

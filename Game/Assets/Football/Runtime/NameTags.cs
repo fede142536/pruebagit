@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Football.Core.MatchCore;
+using Football.Core.Domain;
 
 namespace Football.Game
 {

@@ -1,6 +1,4 @@
-using Football.Core.Domain;
-
-namespace Football.Core.MatchCore
+namespace Football.Core.Domain
 {
     /// <summary>Puesto de una formación en el campo de ataque normalizado.</summary>
     public struct FormationSlot

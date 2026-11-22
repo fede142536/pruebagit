@@ -2,6 +2,7 @@ using System.Linq;
 using Football.Core.Common;
 using Football.Core.MatchCore;
 using NUnit.Framework;
+using Football.Core.Domain;
 
 namespace Football.Core.Tests.MatchCore
 {

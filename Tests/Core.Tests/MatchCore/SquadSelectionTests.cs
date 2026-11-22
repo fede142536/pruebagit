@@ -3,6 +3,7 @@ using Football.Core.Common;
 using Football.Core.Data;
 using Football.Core.MatchCore;
 using NUnit.Framework;
+using Football.Core.Domain;
 
 namespace Football.Core.Tests.MatchCore
 {

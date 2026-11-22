@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Football.Core.MatchCore;
+using Football.Core.Domain;
 
 namespace Football.Game
 {
