@@ -169,3 +169,19 @@ teléfono (inglés o, si no, español). Los textos antiguos de otras pantallas s
 elegibles en Ajustes y en los ajustes rápidos de la pausa; el cambio de modo es un paso suave (`TransitionSpeed`). Todas las
 cámaras usan `targetDisplay = 0` y solo hay una activa dibujando la pantalla. La repetición del gol se ve dos veces: plano de
 transmisión y luego a ras del césped detrás del arco. Valores en `view_tuning.json`.
+
+## D-19 · Cuerpos esculpidos continuos y shader de jugador mejorado — Aceptada (pedido del usuario)
+**Decisión:** los jugadores se arman con mallas continuas generadas por código (`AnatomyKit`): cada pieza es una sucesión de
+secciones ovaladas con distinta profundidad delante y detrás (`Ring`), con vértices compartidos para que las normales sean
+suaves. Tronco en V con trapecios y pectorales, pelvis con glúteos, pantalón que cae sobre el muslo, muslo con cuádriceps y
+rótula, pierna con gemelo y tobillo fino, botín con puntera, caña, lengüeta y suela, brazo con deltoides y bíceps, codo
+articulado (nuevo pivote animado), antebrazo, mano con pulgar, cuello, cráneo con pómulos, mandíbula y mentón, nariz, orejas y
+ojos. Peinados deterministas: corto, degradé, melena con vincha, rulos y rapado, con barba y bigote opcionales. El diseño de la
+camiseta (rayas, franja, banda, V, mitades) es una «piel» que sigue la forma del tronco, ya no cajas que asomaban.
+El shader `Football/Player` suma difuso envolvente, borde sutil, pliegues en la tela y brillo especular en botines y pelo; el
+tipo de material va en el alfa del color del vértice, así sigue habiendo un único material por jugador (SRP Batcher, sin
+`MaterialPropertyBlock`, sin objetos por fotograma). En calidad BAJA se apagan sombreado, pliegues y brillos.
+**Por qué:** las primitivas sueltas se veían como un muñeco de piezas; sin rig ni modelos importados, esta es la forma más
+liviana de lograr volumen anatómico en gama baja.
+**Consecuencias:** se eliminan `MeshKit.Limb` y `MeshKit.Torso`; geometría verificada por cálculo (mallas cerradas y orientadas
+hacia fuera), pero el aspecto final solo se puede juzgar en Unity.

@@ -25,7 +25,7 @@ namespace Football.Game
         public Color Hair;
         /// <summary>Botines.</summary>
         public Color Boots;
-        /// <summary>Peinado (0 corto, 1 rapado, 2 largo, 3 cresta, 4 calvo).</summary>
+        /// <summary>Peinado (0 corto, 1 degradé, 2 melena con vincha, 3 rulos, 4 rapado).</summary>
         public int HairStyle;
         /// <summary>Con barba.</summary>
         public bool Beard;
@@ -49,8 +49,18 @@ namespace Football.Game
         private const float ThighLength = 0.44f;
         private const float ShinLength = 0.42f;
         private const float ShoulderHeight = 1.42f;
-        private const float TorsoLength = 0.52f;
-        private const float ArmLength = 0.6f;
+        private const float UpperArmLength = 0.29f;
+        private const float ForearmLength = 0.235f;
+        private const float ElbowRest = 14f;
+        private const float ElbowRunFactor = 1.3f;
+        private const float ElbowStraight = 4f;
+        private const float ElbowHold = 70f;
+        // Material de cada pieza en el alfa del color del vértice: el shader da brillo a botines y pelo y pliegues a la tela.
+        private const float SkinId = 1f;
+        private const float FabricId = 0.75f;
+        private const float BootId = 0.5f;
+        private const float HairId = 0.25f;
+        private const int Curls = 9;
         private const float HipOffset = 0.11f;
         private const float ShoulderOffset = 0.26f;
         private const float IdleSpeed = 0.35f;
@@ -102,7 +112,7 @@ namespace Football.Game
         private readonly Transform _body;
         private readonly Transform _head;
         private readonly Transform _legL, _legR, _kneeL, _kneeR;
-        private readonly Transform _armL, _armR;
+        private readonly Transform _armL, _armR, _elbowL, _elbowR;
         private float _phase;
         private float _amplitude;
         private float _kickTimer;
@@ -137,21 +147,34 @@ namespace Football.Game
             _shadow = Part(Root, "Sombra", MeshKit.Disc, new Color(0.03f, 0.14f, 0.05f), new Vector3(0f, 0.025f, 0f), ShadowScale, false);
 
             _body = Pivot(Root, "Cuerpo", Vector3.zero);
-            Part(_body, "Tronco", MeshKit.Torso, look.Shirt, new Vector3(0f, ShoulderHeight + 0.03f, 0f), new Vector3(0.44f, TorsoLength, 0.25f));
-            Part(_body, "Pantalon", MeshKit.Capsule, look.Shorts, new Vector3(0f, HipHeight - 0.04f, 0f), new Vector3(0.42f, 0.26f, 0.28f));
-            Part(_body, "Cuello", MeshKit.Capsule, look.Skin, new Vector3(0f, ShoulderHeight + 0.06f, 0f), new Vector3(0.11f, 0.12f, 0.11f));
-            AddPattern(_body, look);
+            // Tronco, pelvis y cuello: mallas continuas esculpidas (AnatomyKit), sin primitivas sueltas.
+            Part(_body, "Tronco", AnatomyKit.Torso, Tag(look.Shirt, FabricId), Vector3.zero, Vector3.one);
+            Mesh pattern = AnatomyKit.Pattern(look.Pattern);
+            if (pattern != null)
+            {
+                Part(_body, "Diseno", pattern, Tag(look.Secondary, FabricId), Vector3.zero, Vector3.one);
+            }
+
+            Part(_body, "Pantalon", AnatomyKit.Pelvis, Tag(look.Shorts, FabricId), Vector3.zero, Vector3.one);
+            Part(_body, "Cuello", AnatomyKit.Neck, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
 
             _head = Pivot(_body, "Cabeza", new Vector3(0f, ShoulderHeight + 0.08f, 0f));
-            Part(_head, "Cara", MeshKit.Sphere, look.Skin, new Vector3(0f, 0.13f, 0f), new Vector3(0.21f, 0.25f, 0.23f));
-            Part(_head, "Nariz", MeshKit.Sphere, look.Skin, new Vector3(0f, 0.12f, 0.115f), new Vector3(0.04f, 0.05f, 0.05f));
+            Color skin = Tag(look.Skin, SkinId);
+            Part(_head, "Craneo", AnatomyKit.Skull, skin, Vector3.zero, Vector3.one);
+            Part(_head, "Nariz", AnatomyKit.Nose, skin, new Vector3(0f, 0f, 0.1f), Vector3.one);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Part(_head, "Oreja", MeshKit.Sphere, skin, new Vector3(side * 0.103f, 0.14f, -0.008f), new Vector3(0.024f, 0.058f, 0.04f));
+                Part(_head, "Ojo", MeshKit.Sphere, Tag(EyeColor, SkinId), new Vector3(side * 0.036f, 0.158f, 0.103f), new Vector3(0.02f, 0.014f, 0.01f));
+            }
+
             AddHair(_head, look);
 
             _legL = Leg(_body, "PiernaIzq", -HipOffset, look, out _kneeL);
             _legR = Leg(_body, "PiernaDer", HipOffset, look, out _kneeR);
 
-            _armL = Arm(_body, "BrazoIzq", -ShoulderOffset, look);
-            _armR = Arm(_body, "BrazoDer", ShoulderOffset, look);
+            _armL = Arm(_body, "BrazoIzq", -ShoulderOffset, look, out _elbowL);
+            _armR = Arm(_body, "BrazoDer", ShoulderOffset, look, out _elbowR);
             FlushBatches();
         }
 
@@ -174,94 +197,90 @@ namespace Football.Game
             _batches.Clear();
         }
 
-        /// <summary>Rayas, franja o banda de la camiseta: piezas finas que asoman por delante y por detrás del tronco.</summary>
-        private void AddPattern(Transform body, PlayerLook look)
+        /// <summary>Color con el material de la pieza en el alfa (lo lee el shader de jugadores).</summary>
+        private static Color Tag(Color color, float material)
         {
-            const float chest = ShoulderHeight - TorsoLength * 0.42f;
-            switch (look.Pattern)
-            {
-                case KitPattern.Stripes:
-                    for (int i = -1; i <= 1; i++)
-                    {
-                        Part(body, "Raya", MeshKit.Box, look.Secondary, new Vector3(i * 0.12f, chest, 0f), new Vector3(0.06f, TorsoLength * 0.92f, 0.27f));
-                    }
-
-                    break;
-                case KitPattern.Band:
-                    Part(body, "Franja", MeshKit.Box, look.Secondary, new Vector3(0f, chest + 0.04f, 0f), new Vector3(0.46f, 0.12f, 0.28f));
-                    break;
-                case KitPattern.Sash:
-                    Part(body, "Banda", MeshKit.Box, look.Secondary, new Vector3(0f, chest, 0f), new Vector3(0.1f, TorsoLength * 1.15f, 0.27f),
-                        true, Quaternion.Euler(0f, 0f, 38f));
-                    break;
-                case KitPattern.Chevron:
-                    // Dos brazos de la V que bajan desde los hombros hasta el centro del pecho.
-                    for (int side = -1; side <= 1; side += 2)
-                    {
-                        Part(body, "V", MeshKit.Box, look.Secondary, new Vector3(side * 0.1f, chest + 0.1f, 0f),
-                            new Vector3(0.08f, TorsoLength * 0.55f, 0.27f), true, Quaternion.Euler(0f, 0f, side * 35f));
-                    }
-
-                    break;
-                case KitPattern.Halves:
-                    Part(body, "Mitad", MeshKit.Box, look.Secondary, new Vector3(0.115f, chest, 0f), new Vector3(0.23f, TorsoLength * 0.92f, 0.27f));
-                    break;
-            }
+            color.a = material;
+            return color;
         }
 
+        private static readonly Color EyeColor = new Color(0.07f, 0.05f, 0.04f);
+
+        /// <summary>Pierna: muslo con cuádriceps y el pantalón encima; pierna con gemelo, media y botín con suela y lengüeta.</summary>
         private Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
         {
             Transform hip = Pivot(body, name, new Vector3(x, HipHeight, 0f));
-            // Muslo con la pierna del short, rodilla, pantorrilla con la media hasta debajo de la rodilla y botín redondeado.
-            Part(hip, "Muslo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.17f, ThighLength, 0.17f));
-            Part(hip, "PiernaShort", MeshKit.Limb, look.Shorts, Vector3.zero, new Vector3(0.19f, ThighLength * 0.42f, 0.19f));
+            Part(hip, "Muslo", AnatomyKit.Thigh, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Part(hip, "PiernaShort", AnatomyKit.ShortLeg, Tag(look.Shorts, FabricId), Vector3.zero, Vector3.one);
             knee = Pivot(hip, "Rodilla", new Vector3(0f, -ThighLength, 0f));
-            Part(knee, "Pantorrilla", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.14f, ShinLength, 0.15f));
-            Part(knee, "Media", MeshKit.Limb, look.Socks, new Vector3(0f, -0.07f, 0f), new Vector3(0.145f, ShinLength * 0.86f, 0.155f));
-            Part(knee, "Botin", MeshKit.Capsule, look.Boots, new Vector3(0f, -ShinLength - 0.01f, 0.05f), new Vector3(0.11f, 0.08f, 0.26f),
-                true, Quaternion.Euler(90f, 0f, 0f));
+            Part(knee, "Pierna", AnatomyKit.Shin, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Part(knee, "Media", AnatomyKit.Sock, Tag(look.Socks, FabricId), Vector3.zero, Vector3.one);
+            Color boot = Tag(look.Boots, BootId);
+            Part(knee, "Botin", AnatomyKit.Boot, boot, new Vector3(0f, -ShinLength - 0.025f, 0.045f), Vector3.one, true,
+                Quaternion.Euler(90f, 0f, 0f));
+            Part(knee, "Suela", MeshKit.Box, Tag(Color.Lerp(look.Boots, Color.white, SoleLighten), BootId),
+                new Vector3(0f, -ShinLength - 0.06f, 0.055f), new Vector3(0.072f, 0.01f, 0.26f));
+            Part(knee, "Lengueta", MeshKit.Box, boot, new Vector3(0f, -ShinLength + 0.005f, 0.075f), new Vector3(0.042f, 0.045f, 0.012f),
+                true, Quaternion.Euler(-25f, 0f, 0f));
             return hip;
         }
 
-        /// <summary>Brazo: manga de la camiseta, brazo y mano; el arquero lleva guantes.</summary>
-        private Transform Arm(Transform body, string name, float x, PlayerLook look)
+        private const float SoleLighten = 0.65f;
+
+        /// <summary>Brazo: deltoides y bíceps con la manga encima, codo, antebrazo y mano con pulgar; el arquero lleva guantes.</summary>
+        private Transform Arm(Transform body, string name, float x, PlayerLook look, out Transform elbow)
         {
             Transform shoulder = Pivot(body, name, new Vector3(x, ShoulderHeight - 0.02f, 0f));
-            Part(shoulder, "Brazo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.095f, ArmLength, 0.095f));
-            Part(shoulder, "Manga", MeshKit.Limb, look.Shirt, new Vector3(0f, 0.02f, 0f), new Vector3(0.12f, ArmLength * 0.36f, 0.12f));
-            Color hand = look.Keeper ? look.Gloves : look.Skin;
-            Vector3 handSize = look.Keeper ? new Vector3(0.11f, 0.13f, 0.08f) : new Vector3(0.075f, 0.09f, 0.06f);
-            Part(shoulder, "Mano", MeshKit.Sphere, hand, new Vector3(0f, -ArmLength - 0.03f, 0f), handSize);
+            Part(shoulder, "Brazo", AnatomyKit.UpperArm, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Part(shoulder, "Manga", AnatomyKit.Sleeve, Tag(look.Shirt, FabricId), Vector3.zero, Vector3.one);
+            elbow = Pivot(shoulder, "Codo", new Vector3(0f, -UpperArmLength, 0f));
+            Part(elbow, "Antebrazo", AnatomyKit.Forearm, Tag(look.Skin, SkinId), Vector3.zero, Vector3.one);
+            Color hand = look.Keeper ? Tag(look.Gloves, FabricId) : Tag(look.Skin, SkinId);
+            Vector3 handScale = look.Keeper ? new Vector3(1.35f, 1.25f, 1.5f) : Vector3.one;
+            Part(elbow, "Mano", AnatomyKit.Hand, hand, new Vector3(0f, -ForearmLength, 0f), handScale);
+            Part(elbow, "Pulgar", MeshKit.Sphere, hand, new Vector3(0f, -ForearmLength - 0.035f, 0.024f), new Vector3(0.018f, 0.045f, 0.018f) * handScale.y);
             return shoulder;
         }
 
         /// <summary>Peinado y barba según el aspecto (determinista: cada jugador siempre igual).</summary>
         private void AddHair(Transform head, PlayerLook look)
         {
+            Color hair = Tag(look.Hair, HairId);
             switch (look.HairStyle)
             {
-                case 1: // rapado: una capa fina
-                    Part(head, "Pelo", MeshKit.Sphere, look.Hair, new Vector3(0f, 0.17f, -0.01f), new Vector3(0.218f, 0.2f, 0.238f));
+                case 1: // degradé: casquete pegado y volumen arriba
+                    Part(head, "Pelo", AnatomyKit.HairCap, hair, Vector3.zero, new Vector3(0.985f, 0.97f, 0.985f));
+                    Part(head, "Volumen", MeshKit.Sphere, hair, new Vector3(0f, 0.255f, 0.012f), new Vector3(0.16f, 0.065f, 0.185f));
                     break;
-                case 2: // largo: cubre la nuca
-                    Part(head, "Pelo", MeshKit.Sphere, look.Hair, new Vector3(0f, 0.18f, -0.03f), new Vector3(0.245f, 0.22f, 0.26f));
-                    Part(head, "Melena", MeshKit.Capsule, look.Hair, new Vector3(0f, 0.04f, -0.09f), new Vector3(0.22f, 0.2f, 0.09f));
+                case 2: // melena con vincha
+                    Part(head, "Pelo", AnatomyKit.HairCap, hair, Vector3.zero, new Vector3(1.04f, 1.02f, 1.04f));
+                    Part(head, "Melena", MeshKit.Capsule, hair, new Vector3(0f, 0.1f, -0.1f), new Vector3(0.2f, 0.22f, 0.085f));
+                    Part(head, "Vincha", MeshKit.Cylinder, Tag(Color.white, FabricId), new Vector3(0f, 0.215f, 0.004f), new Vector3(0.236f, 0.03f, 0.248f));
                     break;
-                case 3: // cresta
-                    Part(head, "Pelo", MeshKit.Sphere, look.Hair, new Vector3(0f, 0.18f, -0.01f), new Vector3(0.22f, 0.18f, 0.24f));
-                    Part(head, "Cresta", MeshKit.Capsule, look.Hair, new Vector3(0f, 0.27f, 0f), new Vector3(0.06f, 0.08f, 0.22f),
-                        true, Quaternion.Euler(90f, 0f, 0f));
+                case 3: // rulos: casquete y bucles repartidos sobre la cabeza
+                    Part(head, "Pelo", AnatomyKit.HairCap, hair, Vector3.zero, new Vector3(1.03f, 1.02f, 1.03f));
+                    for (int i = 0; i < Curls; i++)
+                    {
+                        float a = i * Mathf.PI * 2f / (Curls - 1);
+                        Vector3 at = i == 0 ? new Vector3(0f, 0.29f, 0f) : new Vector3(Mathf.Cos(a) * 0.075f, 0.262f, Mathf.Sin(a) * 0.08f);
+                        Part(head, "Rulo", MeshKit.Sphere, hair, at, Vector3.one * 0.07f);
+                    }
+
                     break;
-                case 4: // calvo
+                case 4: // rapado: una capa fina
+                    Part(head, "Pelo", AnatomyKit.HairCap, hair, Vector3.zero, new Vector3(0.975f, 0.96f, 0.975f));
                     break;
                 default: // corto
-                    Part(head, "Pelo", MeshKit.Sphere, look.Hair, new Vector3(0f, 0.2f, -0.02f), new Vector3(0.235f, 0.17f, 0.25f));
+                    Part(head, "Pelo", AnatomyKit.HairCap, hair, Vector3.zero, Vector3.one);
+                    Part(head, "Volumen", MeshKit.Sphere, hair, new Vector3(0f, 0.25f, 0.02f), new Vector3(0.17f, 0.055f, 0.18f));
                     break;
             }
 
             if (look.Beard)
             {
-                Part(head, "Barba", MeshKit.Sphere, look.Hair, new Vector3(0f, 0.05f, 0.03f), new Vector3(0.19f, 0.12f, 0.2f));
+                Part(head, "Barba", MeshKit.Sphere, hair, new Vector3(0f, 0.055f, 0.035f), new Vector3(0.185f, 0.1f, 0.2f));
+                Part(head, "Bigote", MeshKit.Capsule, hair, new Vector3(0f, 0.085f, 0.112f), new Vector3(0.05f, 0.012f, 0.014f),
+                    true, Quaternion.Euler(0f, 0f, 90f));
             }
         }
 
@@ -296,6 +315,7 @@ namespace Football.Game
             go.transform.localRotation = localRotation;
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
+            color.a = 1f; // el alfa solo marca el material en el shader de jugadores
             renderer.sharedMaterial = Materials.Get(color);
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -489,6 +509,19 @@ namespace Football.Game
             _kneeR.localRotation = Quaternion.Euler(kneeR, 0f, 0f);
             _armL.localRotation = Quaternion.Euler(armL, 0f, armSpreadL);
             _armR.localRotation = Quaternion.Euler(armR, 0f, armSpreadR);
+            // Codo: algo doblado en reposo y más al correr; estirado al lanzarse, festejar o sacar de banda.
+            float elbow = ElbowRest + _amplitude * ElbowRunFactor;
+            if (action == PlayerAction.Dive || action == PlayerAction.Celebrate || holdingThrow || (_kickTimer > 0f && _strike == PlayerAction.ThrowIn))
+            {
+                elbow = ElbowStraight;
+            }
+            else if (holdingBall)
+            {
+                elbow = ElbowHold;
+            }
+
+            _elbowL.localRotation = Quaternion.Euler(-elbow, 0f, 0f);
+            _elbowR.localRotation = Quaternion.Euler(-elbow, 0f, 0f);
 
             roll += TurnLean(headingDegrees, speed, deltaTime);
             _body.localPosition = new Vector3(0f, lift, 0f);

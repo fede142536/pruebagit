@@ -13,29 +13,10 @@ namespace Football.Game
         private const int SphereRings = 7;
         private const int DiscSides = 14;
 
-        private static Mesh _limb;
-        private static Mesh _torso;
         private static Mesh _box;
         private static Mesh _sphere;
         private static Mesh _arrow;
         private static Mesh _disc;
-
-        /// <summary>
-        /// Extremidad: torno redondeado (cápsula que se afina hacia abajo, como un muslo o un antebrazo) de 1 m que cuelga
-        /// desde su pivote (y = 0) hasta y = -1. Sus extremos son redondos para que las articulaciones no muestren aristas.
-        /// </summary>
-        public static Mesh Limb => _limb != null ? _limb : (_limb = Lathe(new[]
-        {
-            new Vector2(0.04f, 0f), new Vector2(0.01f, 0.3f), new Vector2(-0.05f, 0.47f), new Vector2(-0.25f, 0.5f),
-            new Vector2(-0.6f, 0.44f), new Vector2(-0.92f, 0.38f), new Vector2(-0.99f, 0.28f), new Vector2(-1.02f, 0f)
-        }));
-
-        /// <summary>Tronco atlético: hombros anchos y redondeados, pecho y cintura más estrecha, de y = 0 a y = -1.</summary>
-        public static Mesh Torso => _torso != null ? _torso : (_torso = Lathe(new[]
-        {
-            new Vector2(0.05f, 0f), new Vector2(0.02f, 0.3f), new Vector2(-0.06f, 0.48f), new Vector2(-0.2f, 0.5f),
-            new Vector2(-0.5f, 0.46f), new Vector2(-0.85f, 0.41f), new Vector2(-1f, 0.4f), new Vector2(-1.03f, 0f)
-        }));
 
         private static Mesh _capsule;
 
