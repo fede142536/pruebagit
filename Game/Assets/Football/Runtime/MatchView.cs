@@ -140,10 +140,10 @@ namespace Football.Game
         /// <param name="awayKit">Equipación del visitante.</param>
         /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
         /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
-        /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio.</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook look, int[] shirtNumbers = null)
+        /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio; sin indicar, estadio lleno.</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook? look = null, int[] shirtNumbers = null)
         {
-            _look = look;
+            _look = look ?? StadiumLook.Full;
             _shirtNumbers = shirtNumbers;
             _pitch = pitch;
             _tickRate = tickRate;
