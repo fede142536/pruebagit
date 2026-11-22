@@ -225,6 +225,34 @@ namespace Football.Core.MatchCore
         public float ShotMinSpeed = 11f;
     }
 
+    /// <summary>Efecto de los roles individuales en el posicionamiento sin balón (x en fracción del largo, y en metros o factor).</summary>
+    [Serializable]
+    public sealed class RoleConfig
+    {
+        /// <summary>Lateral defensivo: cuánto menos sube en ataque (fracción del largo).</summary>
+        public float DefensiveHold = 0.08f;
+        /// <summary>Lateral defensivo: factor de su apertura (menos de 1 = cierra por dentro).</summary>
+        public float DefensiveWidth = 0.85f;
+        /// <summary>Carrilero: cuánto más sube en ataque.</summary>
+        public float WingBackAdvance = 0.10f;
+        /// <summary>Carrilero: factor de su apertura en ataque.</summary>
+        public float WingBackWidth = 1.2f;
+        /// <summary>Recuperador: cuánto se acerca al balón al defender (fracción de la distancia).</summary>
+        public float BallWinnerPull = 0.3f;
+        /// <summary>Recuperador: cuánto menos sube en ataque.</summary>
+        public float BallWinnerHold = 0.05f;
+        /// <summary>Organizador: cuánto se acerca al balón en ataque (fracción de la distancia).</summary>
+        public float PlaymakerPull = 0.25f;
+        /// <summary>Llegador: cuánto más sube en ataque.</summary>
+        public float BoxToBoxAdvance = 0.10f;
+        /// <summary>Pivote: factor de su apertura (centrado).</summary>
+        public float TargetManWidth = 0.4f;
+        /// <summary>Pivote: cuánto baja a recibir en ataque.</summary>
+        public float TargetManDrop = 0.04f;
+        /// <summary>Al espacio: cuánto más se adelanta en ataque (siempre sin pasar la línea del fuera de juego).</summary>
+        public float RunnerAdvance = 0.08f;
+    }
+
     /// <summary>Pesos de la nota de cada jugador en el informe del partido (escala 1–10).</summary>
     [Serializable]
     public sealed class ReportConfig
@@ -265,7 +293,7 @@ namespace Football.Core.MatchCore
         /// Factor que convierte el xG con el que decide la IA (un valor relativo) en una probabilidad de gol: medido para que
         /// la suma del xG de los remates coincida con los goles del motor (BALANCE.md §1.7).
         /// </summary>
-        public float XgCalibration = 5.0f;
+        public float XgCalibration = 5.9f;
         /// <summary>xG máximo de un remate en el informe.</summary>
         public float XgMax = 0.95f;
         /// <summary>Minutos mínimos para recibir nota (los demás quedan sin calificar).</summary>
@@ -675,6 +703,12 @@ namespace Football.Core.MatchCore
         public float Risk = 0.5f;
         /// <summary>Compactación entre líneas (0..1).</summary>
         public float Compactness = 0.5f;
+        /// <summary>Rol de los laterales cuando el jugador no tiene uno elegido.</summary>
+        public PlayerDuty FullbackDuty = PlayerDuty.Auto;
+        /// <summary>Rol de los mediocampistas centrales cuando no tienen uno elegido.</summary>
+        public PlayerDuty MidfieldDuty = PlayerDuty.Auto;
+        /// <summary>Rol de los delanteros centro cuando no tienen uno elegido.</summary>
+        public PlayerDuty StrikerDuty = PlayerDuty.Auto;
 
         /// <summary>Crea una copia independiente (para modificarla durante un partido sin tocar la configuración).</summary>
         public TeamStyle Clone() => (TeamStyle)MemberwiseClone();
@@ -698,6 +732,8 @@ namespace Football.Core.MatchCore
         public AiConfig Ai = new AiConfig();
         /// <summary>Informe del partido (notas de los jugadores).</summary>
         public ReportConfig Report = new ReportConfig();
+        /// <summary>Roles individuales.</summary>
+        public RoleConfig Roles = new RoleConfig();
 
         /// <summary>Niveles de dificultad: Principiante, Amateur, Profesional, Mundial, Leyenda.</summary>
         public DifficultyProfile[] Difficulties =
@@ -713,10 +749,14 @@ namespace Football.Core.MatchCore
         public TeamStyle[] Styles =
         {
             new TeamStyle { Name = "Balanced",       LineHeight = 0.50f, PressIntensity = 0.50f, Width = 0.50f, Directness = 0.50f, Risk = 0.50f, Compactness = 0.50f },
-            new TeamStyle { Name = "Possession",     LineHeight = 0.60f, PressIntensity = 0.55f, Width = 0.75f, Directness = 0.20f, Risk = 0.30f, Compactness = 0.50f },
-            new TeamStyle { Name = "Counter Attack", LineHeight = 0.30f, PressIntensity = 0.30f, Width = 0.50f, Directness = 0.90f, Risk = 0.70f, Compactness = 0.60f },
-            new TeamStyle { Name = "High Press",     LineHeight = 0.80f, PressIntensity = 0.95f, Width = 0.60f, Directness = 0.60f, Risk = 0.60f, Compactness = 0.75f },
-            new TeamStyle { Name = "Defensive",      LineHeight = 0.20f, PressIntensity = 0.25f, Width = 0.40f, Directness = 0.70f, Risk = 0.30f, Compactness = 0.80f }
+            new TeamStyle { Name = "Possession",     LineHeight = 0.60f, PressIntensity = 0.55f, Width = 0.75f, Directness = 0.20f, Risk = 0.30f, Compactness = 0.50f,
+                            MidfieldDuty = PlayerDuty.Playmaker },
+            new TeamStyle { Name = "Counter Attack", LineHeight = 0.30f, PressIntensity = 0.30f, Width = 0.50f, Directness = 0.90f, Risk = 0.70f, Compactness = 0.60f,
+                            StrikerDuty = PlayerDuty.Runner },
+            new TeamStyle { Name = "High Press",     LineHeight = 0.80f, PressIntensity = 0.95f, Width = 0.60f, Directness = 0.60f, Risk = 0.60f, Compactness = 0.75f,
+                            MidfieldDuty = PlayerDuty.BallWinner, FullbackDuty = PlayerDuty.WingBack },
+            new TeamStyle { Name = "Defensive",      LineHeight = 0.20f, PressIntensity = 0.25f, Width = 0.40f, Directness = 0.70f, Risk = 0.30f, Compactness = 0.80f,
+                            FullbackDuty = PlayerDuty.Defensive, StrikerDuty = PlayerDuty.TargetMan }
         };
 
         /// <summary>Duración de un paso de simulación (s).</summary>

@@ -139,6 +139,28 @@ namespace Football.Core.MatchCore
             return true;
         }
 
+        /// <summary>Elige el rol de un puesto de la formación (vale para quien ocupe el puesto, también tras un cambio).</summary>
+        /// <param name="team">Equipo.</param>
+        /// <param name="spot">Puesto (índice en la formación; el 0 es el arquero y no tiene roles).</param>
+        /// <param name="duty">Rol; <see cref="PlayerDuty.Auto"/> vuelve al del estilo.</param>
+        /// <returns>Falso si el puesto no existe o no admite ese rol.</returns>
+        public bool SetDuty(int team, int spot, PlayerDuty duty)
+        {
+            TeamState t = Teams[team];
+            if (spot <= 0 || spot >= t.Duties.Length || !Tactics.Allows(t.Formation.Slots[spot].Role, duty))
+            {
+                return false;
+            }
+
+            t.Duties[spot] = duty;
+            _planTimer = 0f; // se recolocan en el próximo paso
+            return true;
+        }
+
+        /// <summary>Rol con el que juega ahora un jugador (el elegido o, si no hay, el que le da el estilo).</summary>
+        /// <param name="p">Jugador.</param>
+        public PlayerDuty DutyOf(MatchPlayer p) => Tactics.Effective(p.Role, Teams[p.Team].Duties[p.Spot], Teams[p.Team].Style);
+
         /// <summary>
         /// Intercambia los puestos tácticos de dos jugadores de campo del mismo equipo (por ejemplo, un extremo pasa a
         /// mediapunta). El arquero no se intercambia.

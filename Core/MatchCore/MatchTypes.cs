@@ -347,5 +347,7 @@ namespace Football.Core.MatchCore
         public PlayerMatchView[] Players;
         /// <summary>Suplentes (opcional): pueden entrar con <see cref="MatchEngine.RequestSubstitution"/>.</summary>
         public PlayerMatchView[] Bench;
+        /// <summary>Rol de cada puesto de la formación (opcional; <see cref="PlayerDuty.Auto"/> = el del estilo).</summary>
+        public PlayerDuty[] Duties;
     }
 }

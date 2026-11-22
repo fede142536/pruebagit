@@ -292,9 +292,22 @@
     "RedPenalty": 1.5,
     "OwnGoalPenalty": 1,
     "ResultWeight": 0.3,
-    "XgCalibration": 5,
+    "XgCalibration": 5.9,
     "XgMax": 0.95,
     "MinMinutesForRating": 10
+  },
+  "Roles": {
+    "DefensiveHold": 0.08,
+    "DefensiveWidth": 0.85,
+    "WingBackAdvance": 0.1,
+    "WingBackWidth": 1.2,
+    "BallWinnerPull": 0.3,
+    "BallWinnerHold": 0.05,
+    "PlaymakerPull": 0.25,
+    "BoxToBoxAdvance": 0.1,
+    "TargetManWidth": 0.4,
+    "TargetManDrop": 0.04,
+    "RunnerAdvance": 0.08
   },
   "Difficulties": [
     {
@@ -356,7 +369,10 @@
       "Width": 0.5,
       "Directness": 0.5,
       "Risk": 0.5,
-      "Compactness": 0.5
+      "Compactness": 0.5,
+      "FullbackDuty": 0,
+      "MidfieldDuty": 0,
+      "StrikerDuty": 0
     },
     {
       "Name": "Possession",
@@ -365,7 +381,10 @@
       "Width": 0.75,
       "Directness": 0.2,
       "Risk": 0.3,
-      "Compactness": 0.5
+      "Compactness": 0.5,
+      "FullbackDuty": 0,
+      "MidfieldDuty": 4,
+      "StrikerDuty": 0
     },
     {
       "Name": "Counter Attack",
@@ -374,7 +393,10 @@
       "Width": 0.5,
       "Directness": 0.9,
       "Risk": 0.7,
-      "Compactness": 0.6
+      "Compactness": 0.6,
+      "FullbackDuty": 0,
+      "MidfieldDuty": 0,
+      "StrikerDuty": 7
     },
     {
       "Name": "High Press",
@@ -383,7 +405,10 @@
       "Width": 0.6,
       "Directness": 0.6,
       "Risk": 0.6,
-      "Compactness": 0.75
+      "Compactness": 0.75,
+      "FullbackDuty": 2,
+      "MidfieldDuty": 3,
+      "StrikerDuty": 0
     },
     {
       "Name": "Defensive",
@@ -392,7 +417,10 @@
       "Width": 0.4,
       "Directness": 0.7,
       "Risk": 0.3,
-      "Compactness": 0.8
+      "Compactness": 0.8,
+      "FullbackDuty": 1,
+      "MidfieldDuty": 0,
+      "StrikerDuty": 6
     }
   ]
 }

@@ -74,6 +74,8 @@ namespace Football.Core.MatchCore
             return true;
         }
 
+        internal Vec2 TestAnchor(MatchPlayer p, bool attacking) => ComputeAnchor(p, attacking ? PlayState.Attacking : PlayState.Defending);
+
         internal float TestFatigueError(MatchPlayer p) => FatigueError(p);
 
         internal float TestFatigueReaction(MatchPlayer p) => FatigueReaction(p);

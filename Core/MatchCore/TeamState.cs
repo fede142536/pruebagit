@@ -54,6 +54,8 @@ namespace Football.Core.MatchCore
         public float DefendBufferTimer;
         /// <summary>Compañero que presiona al poseedor por la segunda marca de la persona (null si no la pide).</summary>
         public MatchPlayer SecondPresser;
+        /// <summary>Rol elegido para cada puesto de la formación (sigue al puesto, no al jugador: el que entra lo hereda).</summary>
+        public readonly PlayerDuty[] Duties;
         /// <summary>Jugadores que salieron por un cambio (sus estadísticas siguen contando en el informe).</summary>
         public readonly List<MatchPlayer> Departed = new List<MatchPlayer>(8);
         /// <summary>Último compañero que dio un pase completado (para las asistencias); null tras perder el balón.</summary>
@@ -101,6 +103,11 @@ namespace Football.Core.MatchCore
             Players = new MatchPlayer[setup.Players.Length];
             Bench = setup.Bench ?? new PlayerMatchView[0];
             BenchUsed = new bool[Bench.Length];
+            Duties = new PlayerDuty[setup.Players.Length];
+            if (setup.Duties != null)
+            {
+                System.Array.Copy(setup.Duties, Duties, System.Math.Min(setup.Duties.Length, Duties.Length));
+            }
             for (int slot = 0; slot < Players.Length; slot++)
             {
                 var player = new MatchPlayer(index * Players.Length + slot, index, slot, setup.Players[slot], playerConfig);

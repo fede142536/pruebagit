@@ -154,6 +154,38 @@ por remate. La prueba `XgOverManyMatches_MatchesTheGoals` exige una relación en
 `dotnet run -c Release --project Tools/HeadlessSim -- --matches 1 --report` imprime el informe completo de un partido (equipos,
 jugadores con nota, remates con xG).
 
+### 1.8 Fatiga dinámica, lesiones y roles individuales (22/11/2026)
+
+**Fatiga.** El cansancio (1 − resistencia) ya no solo resta velocidad punta: resta aceleración (`StaminaAccelerationFloor`
+0,8), suma error de pase, centro y tiro (×(1 + `FatigueErrorWeight` 0,6 × cansancio)) y alarga el tiempo de decisión
+(×(1 + `FatigueReactionWeight` 0,5 × cansancio)). Como el partido dura 6 minutos reales, el gasto de resistencia se
+multiplicó por 2,2 para que el cansancio se note:
+
+| Gasto × (200 partidos) | 1 | 1,8 | **2,2** | 2,6 | 3 | 4 |
+|---|---|---|---|---|---|---|
+| Resistencia media al final (90') | 93 % | 79 % | **72 %** | 66 % | 61 % | 46 % |
+| La más baja de cada equipo | 77 % | 52 % | **41 %** | 31 % | 22 % | 7 % |
+| Goles por partido | 2,49 | 2,25 | 2,05 | 1,95 | 2,02 | 1,99 |
+
+Más cansancio = menos goles; se compensó con el arquero (`KeeperSaveBase` 0,90 → 0,80: 2,05 → 2,39 goles). En la cancha
+cerrada el gasto es el 40 % del de la cancha grande (`IndoorStaminaDrainFactor`): con 3 jugadores que corren todo el partido
+terminaban agotados.
+
+**Lesiones leves.** Desde el minuto 70 (`InjuryStartMinute`), una tirada por jugador de campo y minuto con probabilidad
+`InjuryBaseRate` 0,0002 × (1 + `InjuryFatigueWeight` 25 × cansancio²). Resultado: **0,15 lesiones por equipo y partido**.
+El árbitro para el juego para que se pueda hacer el cambio; la IA cambia primero al lesionado; el lesionado que sigue en el
+campo corre al 70 % (`InjurySpeedFactor`).
+
+**Roles individuales** (`PlayerDuty`, efecto en `RoleConfig`), medidos sobre el mismo partido y los mismos instantes
+(`RoleTests`): lateral carrilero (sube 10 % del largo y se abre ×1,2 en ataque) o defensivo (se queda 8 % más atrás y cierra
+×0,85); mediocampista recuperador (al defender se acerca al balón un 30 %), organizador (al atacar se acerca al poseedor un 25 %)
+o llegador (sube 10 %); delantero pivote (centrado ×0,4 y algo más atrás) o al espacio (8 % más arriba, nunca más allá del
+fuera de juego). Cada estilo trae roles por defecto: Posesión → organizadores; Contraataque → delantero al espacio; Presión alta →
+recuperadores y carrileros; Defensivo → laterales defensivos y pivote.
+
+**Medición** (1.000 partidos, semilla 1): **2,38 goles**, 85,7 % de pase, 0,15 lesiones por equipo, resistencia final 72 %;
+`XgCalibration` 5,0 → 5,9 para mantener goles / xG ≈ 1,0 (500 partidos: 1,01).
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

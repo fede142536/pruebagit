@@ -1,4 +1,5 @@
 using Football.Core.Common;
+using Football.Core.Domain;
 
 namespace Football.Core.MatchCore
 {
@@ -28,9 +29,79 @@ namespace Football.Core.MatchCore
         High = 1
     }
 
+    /// <summary>
+    /// Rol individual de un jugador según su puesto: cambia dónde se coloca sin balón. <see cref="Auto"/> usa el rol que el
+    /// estilo del equipo da a ese puesto (o ninguno).
+    /// </summary>
+    public enum PlayerDuty
+    {
+        /// <summary>El que marque el estilo del equipo.</summary>
+        Auto = 0,
+        /// <summary>Lateral defensivo: no pasa al ataque, cierra por dentro.</summary>
+        Defensive = 1,
+        /// <summary>Lateral carrilero: sube por la banda, muy abierto.</summary>
+        WingBack = 2,
+        /// <summary>Mediocampista recuperador: se pega al balón en defensa y no se adelanta.</summary>
+        BallWinner = 3,
+        /// <summary>Mediocampista organizador: se acerca al poseedor para recibir y distribuir.</summary>
+        Playmaker = 4,
+        /// <summary>Mediocampista llegador: pisa el área en ataque.</summary>
+        BoxToBox = 5,
+        /// <summary>Delantero pivote: se queda centrado y baja a recibir de espaldas.</summary>
+        TargetMan = 6,
+        /// <summary>Delantero al espacio: juega en la última línea, pegado al fuera de juego.</summary>
+        Runner = 7
+    }
+
     /// <summary>Ajustes tácticos en vivo sobre el estilo base de un equipo.</summary>
     public static class Tactics
     {
+        private static readonly PlayerDuty[] FullbackDuties = { PlayerDuty.Auto, PlayerDuty.Defensive, PlayerDuty.WingBack };
+        private static readonly PlayerDuty[] MidfieldDuties = { PlayerDuty.Auto, PlayerDuty.BallWinner, PlayerDuty.Playmaker, PlayerDuty.BoxToBox };
+        private static readonly PlayerDuty[] StrikerDuties = { PlayerDuty.Auto, PlayerDuty.TargetMan, PlayerDuty.Runner };
+        private static readonly PlayerDuty[] NoDuties = { PlayerDuty.Auto };
+
+        /// <summary>Es un lateral.</summary>
+        public static bool IsFullback(Position p) => p == Position.LeftBack || p == Position.RightBack;
+
+        /// <summary>Es un mediocampista central (defensivo, central u ofensivo).</summary>
+        public static bool IsCentralMidfielder(Position p) =>
+            p == Position.DefensiveMidfielder || p == Position.CentralMidfielder || p == Position.AttackingMidfielder;
+
+        /// <summary>Es un delantero centro.</summary>
+        public static bool IsStriker(Position p) => p == Position.Striker;
+
+        /// <summary>Roles que admite un puesto (siempre incluye <see cref="PlayerDuty.Auto"/>).</summary>
+        /// <param name="position">Puesto.</param>
+        public static PlayerDuty[] DutiesFor(Position position) =>
+            IsFullback(position) ? FullbackDuties : IsCentralMidfielder(position) ? MidfieldDuties : IsStriker(position) ? StrikerDuties : NoDuties;
+
+        /// <summary>Verdadero si el puesto admite el rol.</summary>
+        /// <param name="position">Puesto.</param>
+        /// <param name="duty">Rol.</param>
+        public static bool Allows(Position position, PlayerDuty duty) => System.Array.IndexOf(DutiesFor(position), duty) >= 0;
+
+        /// <summary>
+        /// Rol efectivo de un puesto: el elegido si es válido; si es <see cref="PlayerDuty.Auto"/>, el que el estilo da a ese
+        /// tipo de puesto.
+        /// </summary>
+        /// <param name="position">Puesto.</param>
+        /// <param name="chosen">Rol elegido.</param>
+        /// <param name="style">Estilo del equipo.</param>
+        public static PlayerDuty Effective(Position position, PlayerDuty chosen, TeamStyle style)
+        {
+            if (chosen != PlayerDuty.Auto && Allows(position, chosen))
+            {
+                return chosen;
+            }
+
+            PlayerDuty fromStyle = IsFullback(position) ? style.FullbackDuty
+                : IsCentralMidfielder(position) ? style.MidfieldDuty
+                : IsStriker(position) ? style.StrikerDuty
+                : PlayerDuty.Auto;
+            return Allows(position, fromStyle) ? fromStyle : PlayerDuty.Auto;
+        }
+
         /// <summary>Escribe en <paramref name="target"/> el estilo base modificado por la mentalidad y la presión.</summary>
         /// <param name="baseStyle">Estilo con el que el equipo empezó el partido (no se modifica).</param>
         /// <param name="mentality">Mentalidad elegida.</param>
@@ -42,6 +113,9 @@ namespace Football.Core.MatchCore
             float m = (int)mentality;
             target.Name = baseStyle.Name;
             target.Width = baseStyle.Width;
+            target.FullbackDuty = baseStyle.FullbackDuty;
+            target.MidfieldDuty = baseStyle.MidfieldDuty;
+            target.StrikerDuty = baseStyle.StrikerDuty;
             target.Compactness = baseStyle.Compactness;
             target.LineHeight = MathUtil.Clamp01(baseStyle.LineHeight + ai.MentalityLineStep * m);
             target.Risk = MathUtil.Clamp01(baseStyle.Risk + ai.MentalityRiskStep * m);

@@ -107,16 +107,62 @@ namespace Football.Core.MatchCore
             x += state == PlayState.Attacking ? ai.PossessionAdvance : (state == PlayState.Defending ? -ai.DefendRetreat : 0f);
             x += (style.LineHeight - 0.5f) * ai.LineHeightEffect;
             x += (ballProgress - x) * style.Compactness * ai.CompactnessEffect;
+            PlayerDuty duty = Tactics.Effective(p.Role, team.Duties[p.Spot], style);
+            x += DutyAdvance(duty, state);
             x = MathUtil.Clamp(x, AnchorMinX, AnchorMaxX);
 
             float width = state == PlayState.Attacking
                 ? AttackWidthBase + AttackWidthStyle * style.Width
                 : DefendWidthBase + DefendWidthStyle * style.Width;
-            float y = slot.Y * dir * Pitch.HalfWidth * AnchorWidthUse * width;
+            float y = slot.Y * dir * Pitch.HalfWidth * AnchorWidthUse * width * DutyWidth(duty, state);
             y = MathUtil.Clamp(y, -Pitch.HalfWidth + SideMargin, Pitch.HalfWidth - SideMargin);
             y += (Ball.Pos.Y - y) * ai.BallShiftY * (state == PlayState.Loose ? LooseShiftFactor : 1f);
 
-            return new Vec2(dir * MathUtil.Lerp(-Pitch.HalfLength, Pitch.HalfLength, x), y);
+            var anchor = new Vec2(dir * MathUtil.Lerp(-Pitch.HalfLength, Pitch.HalfLength, x), y);
+            float pull = DutyBallPull(duty, state);
+            return pull > 0f ? Vec2.Lerp(anchor, Ball.Pos.Horizontal, pull) : anchor;
+        }
+
+        /// <summary>Cuánto adelanta (o atrasa) el rol su posición, en fracción del largo del campo.</summary>
+        private float DutyAdvance(PlayerDuty duty, PlayState state)
+        {
+            RoleConfig r = Config.Roles;
+            bool attacking = state == PlayState.Attacking;
+            switch (duty)
+            {
+                case PlayerDuty.Defensive: return attacking ? -r.DefensiveHold : 0f;
+                case PlayerDuty.WingBack: return attacking ? r.WingBackAdvance : 0f;
+                case PlayerDuty.BallWinner: return attacking ? -r.BallWinnerHold : 0f;
+                case PlayerDuty.BoxToBox: return attacking ? r.BoxToBoxAdvance : 0f;
+                case PlayerDuty.TargetMan: return attacking ? -r.TargetManDrop : 0f;
+                case PlayerDuty.Runner: return attacking ? r.RunnerAdvance : 0f;
+                default: return 0f;
+            }
+        }
+
+        /// <summary>Factor de apertura del rol (1 = la de su puesto).</summary>
+        private float DutyWidth(PlayerDuty duty, PlayState state)
+        {
+            RoleConfig r = Config.Roles;
+            switch (duty)
+            {
+                case PlayerDuty.Defensive: return r.DefensiveWidth;
+                case PlayerDuty.WingBack: return state == PlayState.Attacking ? r.WingBackWidth : 1f;
+                case PlayerDuty.TargetMan: return r.TargetManWidth;
+                default: return 1f;
+            }
+        }
+
+        /// <summary>Cuánto se acerca el rol al balón (0 = nada): el recuperador al defender, el organizador al atacar.</summary>
+        private float DutyBallPull(PlayerDuty duty, PlayState state)
+        {
+            RoleConfig r = Config.Roles;
+            if (duty == PlayerDuty.BallWinner && state == PlayState.Defending)
+            {
+                return r.BallWinnerPull;
+            }
+
+            return duty == PlayerDuty.Playmaker && state == PlayState.Attacking ? r.PlaymakerPull : 0f;
         }
 
         private void PlanAttack(TeamState team)
