@@ -72,6 +72,15 @@ Belgrano, Rosario Central y Newell's), camisetas titular y alternativa (patrones
 se cargaron los nombres que aparecieron en búsquedas web, y cada plantel se completó hasta 22 con jugadores «Juvenil ficticio
 XXX-n» para que se pueda jugar. Están marcados para que el usuario los reemplace.
 
+**Actualización (22/11/2026, pedido del usuario): planteles completos de los nueve clubes nuevos.** Se quitaron todos los
+«Juvenil ficticio». Vélez, Defensa y Justicia, Banfield, Lanús, Gimnasia, Talleres, Belgrano, Rosario Central y Newell's
+tienen 20–22 jugadores reales con dorsal, tomados de la sección «Plantel 2026» de cada club en Wikipedia en español (leída el
+22/11/2026; los cedidos y los que figuran sin dorsal no se incluyen). Los jugadores que ya estaban conservan su media y su
+puesto; los nuevos llevan una media **estimada por nosotros** (algo por debajo de la del plantel, más alta para figuras
+conocidas) y el puesto general de la fuente (arquero, defensor central, mediocampista central, delantero) salvo casos
+conocidos. Se descartaron los que ya no figuran en esos planteles (por ejemplo, Guido Herrera en Talleres). Una prueba exige
+20–22 jugadores con dorsal y ningún ficticio en esos nueve clubes.
+
 ## D-13 · Defensa por posición y táctica en vivo — Aceptada (pedido del usuario: «enfocate en el gameplay del partido»)
 **Decisión:** la probabilidad de una entrada depende de la geometría (orientación del defensor, si está delante o detrás del
 poseedor y si este acaba de recortar), no solo de los atributos. La IA contiene (se planta entre el poseedor y su portería) y solo

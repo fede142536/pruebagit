@@ -129,6 +129,18 @@ namespace Football.Core.Tests.MatchCore
         }
 
         [Test]
+        public void NineNewClubs_HaveRealSquadsOf20To22_WithShirtNumbers_AndNoPlaceholders()
+        {
+            TeamDatabase db = LoadArgentina();
+            foreach (TeamDefinition t in db.Teams.Skip(6))
+            {
+                Assert.That(t.Players.Length, Is.InRange(20, 22), t.Name + ": tamaño del plantel");
+                Assert.That(t.Players.Any(p => p.Name.Contains("ficticio")), Is.False, t.Name + ": quedan jugadores ficticios");
+                Assert.That(t.Players.All(p => p.Number > 0), Is.True, t.Name + ": todos con dorsal");
+            }
+        }
+
+        [Test]
         public void Validate_RejectsUnplayableTeams()
         {
             var keeperOnly = Enumerable.Range(0, 11).Select(i => new PlayerDefinition { Name = "J" + i, Position = "DC", Rating = 60 }).ToArray();
