@@ -62,6 +62,12 @@ namespace Football.Game
         private const float DiveLift = 0.35f;
         private const float MaxLook = 70f;
         private const float TwoPi = Mathf.PI * 2f;
+        private const float Gravity = 9.81f;
+        private const float TurnLeanShare = 0.5f; // fracción del ángulo físico real (atan(v·ω/g)), que exagerado queda raro
+        private const float MaxTurnLean = 18f;
+        private const float TurnLeanResponse = 10f;
+        private const float ShadowLiftShrink = 0.9f; // la sombra se achica al despegarse del suelo (estirada, salto)
+        private static readonly Vector3 ShadowScale = new Vector3(0.95f, 1f, 0.95f);
 
         /// <summary>Raíz del jugador, a la altura de los pies.</summary>
         public readonly Transform Root;
@@ -74,19 +80,25 @@ namespace Football.Game
         private float _amplitude;
         private float _kickTimer;
         private PlayerAction _lastAction;
+        private readonly Transform _shadow;
+        private float _lastHeading;
+        private float _turnRoll;
+        private bool _hasHeading;
 
         /// <summary>Construye la figura.</summary>
         /// <param name="parent">Objeto padre.</param>
         /// <param name="name">Nombre del objeto.</param>
         /// <param name="look">Colores.</param>
         /// <param name="phaseSeed">Desfase de la zancada, para que no corran todos al compás.</param>
-        public PlayerModel(Transform parent, string name, PlayerLook look, float phaseSeed)
+        /// <param name="build">Contextura: escala de la figura (1 = normal), para que no sean todos iguales.</param>
+        public PlayerModel(Transform parent, string name, PlayerLook look, float phaseSeed, float build = 1f)
         {
             Root = Pivot(parent, name, Vector3.zero);
+            Root.localScale = new Vector3(build, build, build);
             _phase = phaseSeed;
 
-            // Sombra bajo los pies: ancla visualmente al jugador al césped.
-            Part(Root, "Sombra", MeshKit.Disc, new Color(0.03f, 0.14f, 0.05f), new Vector3(0f, 0.025f, 0f), new Vector3(0.95f, 1f, 0.95f));
+            // Sombra bajo los pies: ancla visualmente al jugador al césped. Material plano (no lleva borde ni suciedad).
+            _shadow = Part(Root, "Sombra", MeshKit.Disc, new Color(0.03f, 0.14f, 0.05f), new Vector3(0f, 0.025f, 0f), ShadowScale, false);
 
             _body = Pivot(Root, "Cuerpo", Vector3.zero);
             Part(_body, "Tronco", MeshKit.Torso, look.Shirt, new Vector3(0f, ShoulderHeight + 0.03f, 0f), new Vector3(0.44f, TorsoLength, 0.25f));
@@ -147,7 +159,8 @@ namespace Football.Game
             return go.transform;
         }
 
-        private static Transform Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale)
+        private static Transform Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale,
+            bool body = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -155,7 +168,7 @@ namespace Football.Game
             go.transform.localScale = scale;
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = Materials.Get(color);
+            renderer.sharedMaterial = body ? Materials.GetPlayer(color) : Materials.Get(color);
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             return go.transform;
@@ -249,9 +262,32 @@ namespace Football.Game
                 lean = -5f;
             }
 
+            roll += TurnLean(headingDegrees, speed, deltaTime);
             _body.localPosition = new Vector3(0f, lift, 0f);
             _body.localRotation = Quaternion.Euler(lean, 0f, roll);
+            _shadow.localScale = ShadowScale * (1f - Mathf.Min(lift, DiveLift) * ShadowLiftShrink);
             _head.localRotation = Quaternion.Euler(0f, Mathf.Clamp(lookYaw, -MaxLook, MaxLook), 0f);
+        }
+
+        /// <summary>
+        /// Inclinación hacia dentro de la curva, como un corredor real: proporcional a velocidad × giro,
+        /// suavizada para que no tiemble con los cambios bruscos de orientación.
+        /// </summary>
+        private float TurnLean(float headingDegrees, float speed, float deltaTime)
+        {
+            if (!_hasHeading || deltaTime <= 0f)
+            {
+                _hasHeading = true;
+                _lastHeading = headingDegrees;
+                return _turnRoll;
+            }
+
+            float turnRate = Mathf.DeltaAngle(_lastHeading, headingDegrees) * Mathf.Deg2Rad / deltaTime;
+            _lastHeading = headingDegrees;
+            float target = Mathf.Atan(speed * turnRate / Gravity) * Mathf.Rad2Deg * TurnLeanShare;
+            target = Mathf.Clamp(target, -MaxTurnLean, MaxTurnLean);
+            _turnRoll = Mathf.Lerp(_turnRoll, target, 1f - Mathf.Exp(-TurnLeanResponse * deltaTime));
+            return _turnRoll;
         }
     }
 }

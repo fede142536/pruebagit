@@ -62,7 +62,8 @@ namespace Football.Game
             for (int i = 0; i < _count; i++)
             {
                 MatchPlayer p = engine.Players[i];
-                _labels[i].text = p.Name;
+                // El dorsal delante del nombre (los jugadores son figuras sin textura: el número va en la etiqueta).
+                _labels[i].text = p.Number > 0 ? p.Number + " " + p.Name : p.Name;
                 _labels[i].color = p.Team == 0 ? HomeColor : AwayColor;
                 _labels[i].fontSize = FontSize;
             }

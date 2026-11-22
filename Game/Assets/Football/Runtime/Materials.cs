@@ -34,6 +34,74 @@ namespace Football.Game
             return material;
         }
 
+        private const string PlayerShaderName = "FootballPlayer";
+        private static readonly Dictionary<int, Material> PlayerCache = new Dictionary<int, Material>();
+        private static Shader _playerShader;
+        private static bool _playerShaderChecked;
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int RimId = Shader.PropertyToID("_FootballRim");
+        private static readonly int DirtId = Shader.PropertyToID("_FootballDirt");
+
+        /// <summary>
+        /// Material para el cuerpo de los jugadores: luz de borde y suciedad (shader Football/Player).
+        /// Si el dispositivo no admite ese shader, devuelve el material plano de <see cref="Get"/>.
+        /// </summary>
+        /// <param name="color">Color de la pieza.</param>
+        public static Material GetPlayer(Color color)
+        {
+            Shader shader = PlayerShader();
+            if (shader == null)
+            {
+                return Get(color);
+            }
+
+            Color32 c = color;
+            int key = c.r | (c.g << 8) | (c.b << 16) | (c.a << 24);
+            if (PlayerCache.TryGetValue(key, out Material cached))
+            {
+                return cached;
+            }
+
+            var material = new Material(shader);
+            material.SetColor(BaseColorId, color);
+            material.SetFloat("_Cull", 0f);
+            PlayerCache[key] = material;
+            return material;
+        }
+
+        /// <summary>Enciende o apaga la luz de borde de los jugadores (se apaga en calidad BAJA).</summary>
+        /// <param name="enabled">Verdadero para encenderla.</param>
+        public static void SetRim(bool enabled)
+        {
+            Shader.SetGlobalFloat(RimId, enabled ? 1f : 0f);
+        }
+
+        /// <summary>Cuánta suciedad muestran botines y medias (0 limpio, 1 muy sucio).</summary>
+        /// <param name="amount">Cantidad entre 0 y 1.</param>
+        public static void SetDirt(float amount)
+        {
+            Shader.SetGlobalFloat(DirtId, Mathf.Clamp01(amount));
+        }
+
+        private static Shader PlayerShader()
+        {
+            if (_playerShaderChecked)
+            {
+                return _playerShader;
+            }
+
+            _playerShaderChecked = true;
+            Shader shader = Resources.Load<Shader>(PlayerShaderName);
+            if (shader == null || !shader.isSupported)
+            {
+                Debug.LogWarning("El shader de jugadores no está disponible o no es compatible; se usa el material plano.");
+                return null;
+            }
+
+            _playerShader = shader;
+            return _playerShader;
+        }
+
         private static Material Template()
         {
             if (_template != null)

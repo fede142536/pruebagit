@@ -84,6 +84,18 @@ apoyo y un delantero; se eligen automáticamente los mejores del plantel.
 **Por qué:** reutiliza física, reglas, IA y controles ya probados, y el modo se calibra con la misma herramienta.
 **Consecuencias:** no hay saques de banda, de esquina ni de puerta en ese modo; las faltas y los penales sí existen.
 
+## D-15 · Visual de jugadores, cambios y ajustes construidos por código — Aceptada (pedido del usuario)
+**Decisión:** el juego no tiene prefabs, rigs ni texturas; todo se construye por código. Por eso se adaptan los pedidos:
+- Shader propio `Football/Player` (URP, sin texturas): luz de borde y suciedad en la parte baja que crece con los minutos. Un
+  solo material por color, con valores globales (`_FootballRim`, `_FootballDirt`) en lugar de `MaterialPropertyBlock`, que
+  rompería el agrupado SRP. Si el shader no es compatible, se usa el material plano de siempre. En calidad BAJA se apaga el borde.
+- Inclinación en curvas (física: atan(v·ω/g), a la mitad), sombra que se achica al despegarse, contextura determinista
+  (arqueros, más altos) y dorsal en la etiqueta del nombre (no hay atlas de números porque las figuras no tienen texturas).
+- Cambios y formaciones viven en el núcleo (`MatchEngine.Squad.cs`, `Formations`) como datos, no como ScriptableObjects, para
+  que los pruebe `dotnet test`. La pizarra para arrastrar jugadores se reemplaza por tocar dos jugadores para intercambiarlos.
+- Ajustes: catálogo único (`SettingsCatalog`) que marca cuáles se cambian en vivo; la pausa muestra solo esos.
+**Consecuencias:** no hay volumen de «relatos» (no hay relator) ni calidad de sombras (no hay sombras reales).
+
 ## D-07 · Ramas e hitos en la nube — Aceptada
 Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos se marcan con tags (`fase-N`) en lugar de una rama por hito.
 

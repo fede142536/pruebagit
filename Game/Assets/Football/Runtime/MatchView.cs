@@ -374,8 +374,17 @@ namespace Football.Game
 
         // ---- Jugadores, balón e indicadores -----------------------------------------------------------------------------
 
+        private const float KeeperBuild = 1.05f;
+        private const float MinBuild = 0.94f;
+        private const float BuildRange = 0.1f;
+        private const int BuildStep = 7;
+        private const int BuildSteps = 11;
+        private const float DirtFullMinute = 90f;
+        private const float MaxDirt = 0.85f;
+
         private void BuildPlayers(KitColors homeKit, KitColors awayKit)
         {
+            Materials.SetDirt(0f); // partido nuevo, ropa limpia
             for (int i = 0; i < _players.Length; i++)
             {
                 bool home = i < _perTeam;
@@ -399,7 +408,9 @@ namespace Football.Game
                     Hair = HairColors[(i * 5 + 1) % HairColors.Length],
                     Boots = new Color(0.08f, 0.08f, 0.08f)
                 };
-                _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f);
+                // Contextura: los arqueros, algo más altos; el resto varía un poco (determinista, sin azar).
+                float build = keeper ? KeeperBuild : MinBuild + (i * BuildStep % BuildSteps) * BuildRange / (BuildSteps - 1);
+                _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f, build);
             }
         }
 
@@ -468,6 +479,8 @@ namespace Football.Game
             float by = Mathf.Lerp(previous.BallY, current.BallY, alpha);
             float bz = Mathf.Lerp(previous.BallZ, current.BallZ, alpha);
 
+            // La ropa se va ensuciando a lo largo del partido.
+            Materials.SetDirt(current.Minute / DirtFullMinute * MaxDirt);
             for (int i = 0; i < _players.Length; i++)
             {
                 PlayerModel model = _players[i];
