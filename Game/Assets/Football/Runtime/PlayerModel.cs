@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Football.Core.MatchCore;
@@ -85,14 +86,22 @@ namespace Football.Game
         private float _turnRoll;
         private bool _hasHeading;
 
+        // Piezas agrupadas por articulación (una malla con color por vértice por cada una): ~9 objetos por jugador en lugar
+        // de 13-16. Solo con el shader de jugadores, que multiplica por el color del vértice; si no está, piezas sueltas.
+        private readonly bool _merge = Materials.PlayerShaderAvailable;
+        private readonly Dictionary<Transform, MeshMerge> _batches = new Dictionary<Transform, MeshMerge>();
+        private readonly List<Mesh> _ownedMeshes;
+
         /// <summary>Construye la figura.</summary>
         /// <param name="parent">Objeto padre.</param>
         /// <param name="name">Nombre del objeto.</param>
         /// <param name="look">Colores.</param>
         /// <param name="phaseSeed">Desfase de la zancada, para que no corran todos al compás.</param>
         /// <param name="build">Contextura: escala de la figura (1 = normal), para que no sean todos iguales.</param>
-        public PlayerModel(Transform parent, string name, PlayerLook look, float phaseSeed, float build = 1f)
+        /// <param name="ownedMeshes">Lista donde se anotan las mallas creadas, para destruirlas al cerrar la escena.</param>
+        public PlayerModel(Transform parent, string name, PlayerLook look, float phaseSeed, float build, List<Mesh> ownedMeshes)
         {
+            _ownedMeshes = ownedMeshes;
             Root = Pivot(parent, name, Vector3.zero);
             Root.localScale = new Vector3(build, build, build);
             _phase = phaseSeed;
@@ -116,10 +125,30 @@ namespace Football.Game
             Part(_armL, "Brazo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.1f, ArmLength, 0.1f));
             _armR = Pivot(_body, "BrazoDer", new Vector3(ShoulderOffset, ShoulderHeight - 0.02f, 0f));
             Part(_armR, "Brazo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.1f, ArmLength, 0.1f));
+            FlushBatches();
+        }
+
+        /// <summary>Crea un objeto por articulación con todas sus piezas juntas.</summary>
+        private void FlushBatches()
+        {
+            foreach (KeyValuePair<Transform, MeshMerge> batch in _batches)
+            {
+                Mesh mesh = batch.Value.Build();
+                _ownedMeshes?.Add(mesh);
+                var go = new GameObject("Piezas");
+                go.transform.SetParent(batch.Key, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = go.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial = Materials.GetPlayer(Color.white); // un solo material para todos los jugadores
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+            }
+
+            _batches.Clear();
         }
 
         /// <summary>Rayas, franja o banda de la camiseta: piezas finas que asoman por delante y por detrás del tronco.</summary>
-        private static void AddPattern(Transform body, PlayerLook look)
+        private void AddPattern(Transform body, PlayerLook look)
         {
             const float chest = ShoulderHeight - TorsoLength * 0.42f;
             switch (look.Pattern)
@@ -135,13 +164,13 @@ namespace Football.Game
                     Part(body, "Franja", MeshKit.Box, look.Secondary, new Vector3(0f, chest + 0.04f, 0f), new Vector3(0.46f, 0.12f, 0.28f));
                     break;
                 case KitPattern.Sash:
-                    Transform sash = Part(body, "Banda", MeshKit.Box, look.Secondary, new Vector3(0f, chest, 0f), new Vector3(0.1f, TorsoLength * 1.15f, 0.27f));
-                    sash.localRotation = Quaternion.Euler(0f, 0f, 38f);
+                    Part(body, "Banda", MeshKit.Box, look.Secondary, new Vector3(0f, chest, 0f), new Vector3(0.1f, TorsoLength * 1.15f, 0.27f),
+                        true, Quaternion.Euler(0f, 0f, 38f));
                     break;
             }
         }
 
-        private static Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
+        private Transform Leg(Transform body, string name, float x, PlayerLook look, out Transform knee)
         {
             Transform hip = Pivot(body, name, new Vector3(x, HipHeight, 0f));
             Part(hip, "Muslo", MeshKit.Limb, look.Skin, Vector3.zero, new Vector3(0.16f, ThighLength, 0.16f));
@@ -159,16 +188,30 @@ namespace Football.Game
             return go.transform;
         }
 
-        private static Transform Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale,
-            bool body = true)
+        private Transform Part(Transform parent, string name, Mesh mesh, Color color, Vector3 localPosition, Vector3 scale,
+            bool body = true, Quaternion? rotation = null)
         {
+            Quaternion localRotation = rotation ?? Quaternion.identity;
+            if (body && _merge)
+            {
+                if (!_batches.TryGetValue(parent, out MeshMerge batch))
+                {
+                    batch = new MeshMerge();
+                    _batches[parent] = batch;
+                }
+
+                batch.Add(mesh, localPosition, localRotation, scale, color);
+                return null;
+            }
+
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPosition;
             go.transform.localScale = scale;
+            go.transform.localRotation = localRotation;
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = body ? Materials.GetPlayer(color) : Materials.Get(color);
+            renderer.sharedMaterial = Materials.Get(color);
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             return go.transform;

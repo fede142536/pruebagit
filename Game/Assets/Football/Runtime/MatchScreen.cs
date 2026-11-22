@@ -86,6 +86,7 @@ namespace Football.Game
 
             // Marcador compacto arriba a la izquierda, estilo transmisión de TV: deja libre la vista del campo.
             RectTransform board = ScoreboardRoot(_canvas.transform);
+            _scoreboard = board;
             board.gameObject.AddComponent<Canvas>(); // lienzo propio: el reloj cambia seguido y no debe reconstruir el resto
             Color dark = new Color(0.05f, 0.06f, 0.09f, 0.85f);
             UiKit.Panel(board, "Fondo", new Vector2(ScoreboardWidth * 0.5f, ScoreboardHeight * 0.5f), new Vector2(ScoreboardWidth, ScoreboardHeight), dark);
@@ -393,6 +394,7 @@ namespace Football.Game
 
         private void UpdateUnsafe(float deltaTime)
         {
+            PlaceScoreboard();
 
             MatchInput input = _controls.Read(_pointers, Time.realtimeSinceStartup);
             if (_controls.PauseDown || _pointers.Keyboard.PauseDown)
@@ -827,7 +829,22 @@ namespace Football.Game
 
         private const float ScoreboardWidth = 500f;
         private const float ScoreboardHeight = 58f;
-        private const float ScoreboardMargin = 20f;
+        private static float ScoreboardMargin => ViewTuning.Current.Hud.ScoreboardMargin;
+
+        private RectTransform _scoreboard;
+        private Rect _scoreboardSafeArea;
+
+        /// <summary>Recoloca el marcador dentro de la zona segura si cambió (muesca a la izquierda o a la derecha según el giro).</summary>
+        private void PlaceScoreboard()
+        {
+            if (_scoreboard == null || Screen.safeArea == _scoreboardSafeArea)
+            {
+                return;
+            }
+
+            _scoreboardSafeArea = Screen.safeArea;
+            _scoreboard.anchoredPosition = new Vector2(UiKit.SafeLeft + ScoreboardMargin, -(UiKit.SafeTop + ScoreboardMargin));
+        }
 
         /// <summary>Contenedor del marcador anclado a la esquina superior izquierda de la pantalla real.</summary>
         private static RectTransform ScoreboardRoot(Transform parent)
@@ -1012,6 +1029,8 @@ namespace Football.Game
             SettingsCatalog.Apply(_settings);
             _controls.Layout(_settings.LeftHanded, _settings.BigButtons, _settings.ShowThrough, _settings.ShowCross);
             _controls.SetStyle(GameSettings.Opacities[_settings.ButtonOpacity], _settings.FixedJoystick);
+            float[] deadZones = ViewTuning.Current.Controls.DeadZones;
+            _controls.SetDeadZone(deadZones[Mathf.Clamp(_settings.DeadZone, 0, deadZones.Length - 1)]);
             _debug.SetVisible(_settings.ShowDebug || _benchmark);
             if (_engine != null)
             {

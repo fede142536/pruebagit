@@ -18,16 +18,16 @@ namespace Football.Game
         private const int CircleSegments = 40;
         private const int StripeCount = 14;
         private const float BallVisualSize = 0.3f;
-        private const float CameraHeight = 21f;
-        private const float CameraDistance = 30f;
-        private const float CameraFollowX = 0.8f;
-        private const float CameraFollowZ = 0.85f; // sigue casi del todo a lo ancho: así se ven las dos líneas laterales
-        private const float CameraEdgeMargin = 18.5f; // distancia al fondo donde la cámara deja de avanzar (cancha grande)
+        private static float CameraHeight => ViewTuning.Current.Camera.Height;
+        private static float CameraDistance => ViewTuning.Current.Camera.Distance;
+        private static float CameraFollowX => ViewTuning.Current.Camera.FollowX;
+        private static float CameraFollowZ => ViewTuning.Current.Camera.FollowZ; // sigue casi del todo a lo ancho: así se ven las dos líneas laterales
+        private static float CameraEdgeMargin => ViewTuning.Current.Camera.EdgeMargin; // distancia al fondo donde la cámara deja de avanzar (cancha grande)
         private const float FullPitchWidth = 68f;
         private const float MinCameraScale = 0.45f;
         private const float WallHeight = 1.1f;
-        private const float CameraFollowSpeed = 3f;
-        private const float CameraFov = 40f;
+        private static float CameraFollowSpeed => ViewTuning.Current.Camera.FollowSpeed;
+        private static float CameraFov => ViewTuning.Current.Camera.Fov;
         private const float ArrowHeight = 2.7f;
         private const float ArrowBob = 0.12f;
         private const float ReferenceTopSpeed = 9f;
@@ -71,8 +71,8 @@ namespace Football.Game
         private const float AimBaseLength = 3f;
         private const float AimChargeLength = 9f;
         private const float AimWidth = 0.35f;
-        private const float SetPieceLookAhead = 12f;
-        private const float SetPieceZoom = 1.25f;
+        private static float SetPieceLookAhead => ViewTuning.Current.Camera.SetPieceLookAhead;
+        private static float SetPieceZoom => ViewTuning.Current.Camera.SetPieceZoom;
         private TrailRenderer _trail;
         private readonly Transform[] _netBack = new Transform[2];
         private readonly Vector3[] _netRest = new Vector3[2];
@@ -88,7 +88,7 @@ namespace Football.Game
         private const float ShakeDecay = 6f;
         private const float ShakeFrequency = 37f;
         private const float IntroHeight = 70f;
-        private const float FocusZoom = 0.55f;
+        private static float FocusZoom => ViewTuning.Current.Camera.FocusZoom;
         private Confetti _confetti;
         private float _zoom = 1f;
         private float _lookAheadX;
@@ -101,12 +101,12 @@ namespace Football.Game
         private const float RingSpinDegrees = 60f;
         private const float TrailMinSpeed = 14f;      // m/s: solo los balones rápidos dejan estela
         private const float TrailSeconds = 0.18f;
-        private const float ZoomOut = 1.15f;           // balón largo o en el medio: se ve más campo
-        private const float ZoomIn = 0.88f;            // en el último tercio: más cerca para definir
-        private const float ZoomLongBallSpeed = 15f;
-        private const float ZoomSpeed = 1.5f;
-        private const float LookAheadSeconds = 0.7f;   // la cámara se adelanta hacia donde corre el poseedor
-        private const float LookAheadMax = 6f;
+        private static float ZoomOut => ViewTuning.Current.Camera.ZoomOut;           // balón largo o en el medio: se ve más campo
+        private static float ZoomIn => ViewTuning.Current.Camera.ZoomIn;            // en el último tercio: más cerca para definir
+        private static float ZoomLongBallSpeed => ViewTuning.Current.Camera.ZoomLongBallSpeed;
+        private static float ZoomSpeed => ViewTuning.Current.Camera.ZoomSpeed;
+        private static float LookAheadSeconds => ViewTuning.Current.Camera.LookAheadSeconds;   // la cámara se adelanta hacia donde corre el poseedor
+        private static float LookAheadMax => ViewTuning.Current.Camera.LookAheadMax;
 
         private float _cameraX;
         private float _cameraZ;
@@ -137,6 +137,7 @@ namespace Football.Game
             Safe("campo", BuildPitch);
             Safe("porterías", BuildGoals);
             Safe("estadio", BuildStadium);
+            Safe("agrupado", FlushStatic);
             Safe("jugadores", () => BuildPlayers(homeKit, awayKit));
             Safe("balón", BuildBall);
             Safe("indicadores", BuildIndicators);
@@ -177,6 +178,40 @@ namespace Football.Game
             cam.allowHDR = false;
             cam.allowMSAA = true; // el suavizado se activa o no desde Ajustes (GraphicsQuality)
             return cam; // el AudioListener único está en la cámara de los menús
+        }
+
+        // Piezas fijas (carteles, gradas, paredes, arcos): se juntan en una malla por color al terminar de construir.
+        private readonly Dictionary<Color, MeshMerge> _static = new Dictionary<Color, MeshMerge>();
+
+        /// <summary>Anota una pieza que nunca se mueve; se dibuja junto con las demás del mismo color.</summary>
+        private void StaticShape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale)
+        {
+            if (!_static.TryGetValue(color, out MeshMerge batch))
+            {
+                batch = new MeshMerge();
+                _static[color] = batch;
+            }
+
+            batch.Add(mesh, position, Quaternion.identity, scale, color);
+        }
+
+        /// <summary>Crea un objeto por color con todas las piezas fijas: de unas 40 llamadas de dibujo a menos de 10.</summary>
+        private void FlushStatic()
+        {
+            foreach (KeyValuePair<Color, MeshMerge> batch in _static)
+            {
+                Mesh mesh = batch.Value.Build();
+                _meshes.Add(mesh);
+                var go = new GameObject("Fijo");
+                go.transform.SetParent(_root.transform, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = go.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial = Materials.Get(batch.Key);
+                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+            }
+
+            _static.Clear();
         }
 
         private Transform Shape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale)
@@ -268,8 +303,8 @@ namespace Football.Game
                 float x0 = -halfL + i * (2f * halfL / segments);
                 float length = 2f * halfL / segments - 0.3f;
                 Color c = boards[i % boards.Length];
-                Shape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, -halfW), new Vector3(length, BoardHeight, 0.15f));
-                Shape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, halfW), new Vector3(length, BoardHeight, 0.15f));
+                StaticShape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, -halfW), new Vector3(length, BoardHeight, 0.15f));
+                StaticShape("Cartel", MeshKit.Box, c, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, halfW), new Vector3(length, BoardHeight, 0.15f));
             }
 
             // Gradas escalonadas detrás de los carteles (tonos variados para sugerir público).
@@ -278,9 +313,9 @@ namespace Football.Game
             {
                 float offset = 6f + t * 7f;
                 float height = 2.5f + t * 4f;
-                Shape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, 7f));
-                Shape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
-                Shape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, 7f));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
+                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(7f, height, 2f * halfW + 20f));
             }
         }
 
@@ -295,8 +330,8 @@ namespace Football.Game
             for (int side = -1; side <= 1; side += 2)
             {
                 float z = side * (halfW + thickness * 0.5f);
-                Shape("Pared", MeshKit.Box, wall, new Vector3(0f, WallHeight * 0.5f, z), new Vector3(2f * halfL + 2f * thickness, WallHeight, thickness));
-                Shape("Franja", MeshKit.Box, trim, new Vector3(0f, WallHeight + 0.03f, z), new Vector3(2f * halfL + 2f * thickness, 0.06f, thickness + 0.02f));
+                StaticShape("Pared", MeshKit.Box, wall, new Vector3(0f, WallHeight * 0.5f, z), new Vector3(2f * halfL + 2f * thickness, WallHeight, thickness));
+                StaticShape("Franja", MeshKit.Box, trim, new Vector3(0f, WallHeight + 0.03f, z), new Vector3(2f * halfL + 2f * thickness, 0.06f, thickness + 0.02f));
             }
 
             float sideLength = halfW - _pitch.GoalHalfWidth;
@@ -306,8 +341,8 @@ namespace Football.Game
                 for (int side = -1; side <= 1; side += 2)
                 {
                     float z = side * (_pitch.GoalHalfWidth + sideLength * 0.5f);
-                    Shape("Pared", MeshKit.Box, wall, new Vector3(x, WallHeight * 0.5f, z), new Vector3(thickness, WallHeight, sideLength));
-                    Shape("Franja", MeshKit.Box, trim, new Vector3(x, WallHeight + 0.03f, z), new Vector3(thickness + 0.02f, 0.06f, sideLength));
+                    StaticShape("Pared", MeshKit.Box, wall, new Vector3(x, WallHeight * 0.5f, z), new Vector3(thickness, WallHeight, sideLength));
+                    StaticShape("Franja", MeshKit.Box, trim, new Vector3(x, WallHeight + 0.03f, z), new Vector3(thickness + 0.02f, 0.06f, sideLength));
                 }
             }
         }
@@ -356,15 +391,15 @@ namespace Football.Game
             {
                 float x = end * _pitch.HalfLength;
                 float back = x + end * GoalDepth;
-                Shape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, -halfGoal), new Vector3(post, height, post));
-                Shape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, halfGoal), new Vector3(post, height, post));
-                Shape("Larguero", MeshKit.Box, white, new Vector3(x, height, 0f), new Vector3(post, post, halfGoal * 2f + post));
+                StaticShape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, -halfGoal), new Vector3(post, height, post));
+                StaticShape("Poste", MeshKit.Box, white, new Vector3(x, height * 0.5f, halfGoal), new Vector3(post, height, post));
+                StaticShape("Larguero", MeshKit.Box, white, new Vector3(x, height, 0f), new Vector3(post, post, halfGoal * 2f + post));
                 // Armazón de la red.
-                Shape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, -halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
-                Shape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
-                Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, -halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
-                Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
-                Shape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height * 0.995f, 0f), new Vector3(GoalDepth, 0.02f, halfGoal * 2f));
+                StaticShape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, -halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
+                StaticShape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, halfGoal), new Vector3(0.05f, height * 0.8f, 0.05f));
+                StaticShape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, -halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
+                StaticShape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height, halfGoal), new Vector3(GoalDepth, 0.04f, 0.04f));
+                StaticShape("Red", MeshKit.Box, net, new Vector3((x + back) * 0.5f, height * 0.995f, 0f), new Vector3(GoalDepth, 0.02f, halfGoal * 2f));
                 Transform backNet = Shape("Red", MeshKit.Box, net, new Vector3(back, height * 0.4f, 0f), new Vector3(0.02f, height * 0.8f, halfGoal * 2f));
                 int k = end < 0 ? 0 : 1;
                 _netBack[k] = backNet;
@@ -410,7 +445,7 @@ namespace Football.Game
                 };
                 // Contextura: los arqueros, algo más altos; el resto varía un poco (determinista, sin azar).
                 float build = keeper ? KeeperBuild : MinBuild + (i * BuildStep % BuildSteps) * BuildRange / (BuildSteps - 1);
-                _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f, build);
+                _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f, build, _meshes);
             }
         }
 
@@ -676,7 +711,7 @@ namespace Football.Game
         }
 
         private int _cameraMode = 1;
-        private const float CloseZoom = 0.75f;
+        private static float CloseZoom => ViewTuning.Current.Camera.CloseZoom;
 
         /// <summary>Tipo de cámara: 0 transmisión de TV (fija, sin zoom ni anticipación), 1 dinámica, 2 cercana.</summary>
         public void SetCameraMode(int mode)

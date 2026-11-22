@@ -17,14 +17,21 @@ namespace Football.Game
     /// </summary>
     public sealed class TouchControls
     {
-        private const float JoystickRadius = 130f;
-        private const float ShootChargeSeconds = 0.8f;
-        private const float PassChargeSeconds = 0.7f;
-        private const float PassTapSeconds = 0.2f; // un toque más corto es un pase automático
+        private static float JoystickRadius => ViewTuning.Current.Controls.JoystickRadius;
+        private static float ShootChargeSeconds => ViewTuning.Current.Controls.ShootChargeSeconds;
+        private static float PassChargeSeconds => ViewTuning.Current.Controls.PassChargeSeconds;
+        private static float PassTapSeconds => ViewTuning.Current.Controls.PassTapSeconds; // un toque más corto es un pase automático
         private const float ChargeBarHeight = 14f;
-        private const float ShootMinPower = 0.35f;
-        private const float DeadZone = 0.12f;
-        private const float BigScale = 1.2f;
+        private static float ShootMinPower => ViewTuning.Current.Controls.ShootMinPower;
+        private float _deadZone = ViewTuning.Current.Controls.DeadZones[System.Math.Min(1, ViewTuning.Current.Controls.DeadZones.Length - 1)];
+
+        /// <summary>Elige la zona muerta del joystick (fracción del radio donde no se mueve).</summary>
+        /// <param name="fraction">Fracción del radio, entre 0 y 0,5.</param>
+        public void SetDeadZone(float fraction)
+        {
+            _deadZone = Mathf.Clamp(fraction, 0f, 0.5f);
+        }
+        private static float BigScale => ViewTuning.Current.Controls.BigScale;
         private const int NoPointer = -1;
 
         // Posiciones (para diestros) y tamaños de las cuatro casillas de acción y del esprint.
@@ -80,7 +87,8 @@ namespace Football.Game
         private RectTransform _passBar, _shootBar;
         private float _width = UiKit.Reference.x;
         private int _layoutScreenWidth;
-        private const float PauseMargin = 75f;
+        private Rect _layoutSafeArea;
+        private static float PauseMargin => ViewTuning.Current.Controls.PauseMargin;
 
         /// <summary>Dirección del joystick (longitud hasta 1) con la zona muerta ya aplicada.</summary>
         public Vector2 Stick { get; private set; }
@@ -167,8 +175,11 @@ namespace Football.Game
             _showCross = showCross;
             _width = UiKit.CanvasWidth;
             _layoutScreenWidth = Screen.width;
-            float pauseX = leftHanded ? PauseMargin : _width - PauseMargin;
-            _pause.Ui.Place(new Vector2(pauseX, UiKit.CanvasHeight - PauseMargin), new Vector2(_pause.Size, _pause.Size));
+            _layoutSafeArea = Screen.safeArea;
+            // Zona segura: la muesca o la cámara frontal no deben tapar ningún botón.
+            float safeLeft = UiKit.SafeLeft, safeRight = UiKit.SafeRight, safeBottom = UiKit.SafeBottom;
+            float pauseX = leftHanded ? safeLeft + PauseMargin : _width - safeRight - PauseMargin;
+            _pause.Ui.Place(new Vector2(pauseX, UiKit.CanvasHeight - UiKit.SafeTop - PauseMargin), new Vector2(_pause.Size, _pause.Size));
             for (int i = 0; i < _controls.Length; i++)
             {
                 Control c = _controls[i];
@@ -187,8 +198,8 @@ namespace Football.Game
 
                 // Misma distancia al borde derecho que en 1920 de ancho, sea cual sea el ancho real de la pantalla.
                 float fromRight = UiKit.Reference.x - slot.x;
-                float x = leftHanded ? fromRight : _width - fromRight;
-                c.Ui.Place(new Vector2(x, slot.y), new Vector2(size, size));
+                float x = leftHanded ? safeLeft + fromRight : _width - safeRight - fromRight;
+                c.Ui.Place(new Vector2(x, slot.y + safeBottom), new Vector2(size, size));
             }
 
             if (_joystickPointer == NoPointer)
@@ -242,12 +253,13 @@ namespace Football.Game
             }
         }
 
-        private const float FixedJoystickMargin = 250f;
+        private static float FixedJoystickMargin => ViewTuning.Current.Controls.FixedJoystickMargin;
         private const float FixedCatchFactor = 1.8f;
         private bool _fixedJoystick;
         private float _opacity = 0.55f;
 
-        private Vector2 FixedCenter => new Vector2(_leftHanded ? _width - FixedJoystickMargin : FixedJoystickMargin, FixedJoystickMargin);
+        private Vector2 FixedCenter => new Vector2(_leftHanded ? _width - UiKit.SafeRight - FixedJoystickMargin : UiKit.SafeLeft + FixedJoystickMargin,
+            UiKit.SafeBottom + FixedJoystickMargin);
 
         /// <summary>Estilo de los controles: opacidad de los botones y joystick fijo o flotante.</summary>
         /// <param name="opacity">Opacidad de 0 a 1.</param>
@@ -328,7 +340,7 @@ namespace Football.Game
                 _controls[i].JustUp = false;
             }
 
-            if (Screen.width != _layoutScreenWidth)
+            if (Screen.width != _layoutScreenWidth || Screen.safeArea != _layoutSafeArea)
             {
                 Layout(_leftHanded, _big, _showThrough, _showCross); // cambió la pantalla (giro o ventana)
             }
@@ -503,7 +515,7 @@ namespace Football.Game
         private MatchInput Compose(KeyboardState kb, float realTime)
         {
             Vector2 stick = _joystick.sqrMagnitude > 1f ? _joystick.normalized : _joystick;
-            if (stick.magnitude < DeadZone)
+            if (stick.magnitude < _deadZone)
             {
                 stick = Vector2.zero;
             }

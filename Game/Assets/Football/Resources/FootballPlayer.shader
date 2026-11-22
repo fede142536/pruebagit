@@ -1,4 +1,4 @@
-// Material de los jugadores (URP): color plano + luz de borde (rim) + suciedad en la parte baja del cuerpo.
+// Material de los jugadores (URP): color por vértice + luz de borde (rim) + suciedad en la parte baja del cuerpo.
 // Barato a propósito para gama baja: sin texturas, sin luces reales, solo cálculos por vértice y por píxel simples.
 // Si el dispositivo no lo admite, Materials.cs usa el material plano de siempre (no aparece la pantalla rosa).
 // Los valores globales los pone el juego: _FootballRim (0 = apagado en calidad BAJA) y _FootballDirt (crece con los minutos).
@@ -48,6 +48,7 @@ Shader "Football/Player"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                half4 color : COLOR; // color de cada pieza (las piezas de un jugador van juntas en una malla)
             };
 
             struct Varyings
@@ -55,6 +56,7 @@ Shader "Football/Player"
                 float4 positionCS : SV_POSITION;
                 half rim : TEXCOORD0;
                 half dirt : TEXCOORD1;
+                half3 color : TEXCOORD2;
             };
 
             Varyings Vert(Attributes input)
@@ -73,12 +75,13 @@ Shader "Football/Player"
                 half low = saturate(1.0h - positionWS.y / max(_DirtHeight, 0.01h));
                 half noise = frac(sin(dot(floor(positionWS.xz * 7.0), float2(12.9898, 78.233))) * 43758.5453);
                 output.dirt = saturate(low * low * _FootballDirt * (0.6h + 0.4h * noise));
+                output.color = input.color.rgb * _BaseColor.rgb;
                 return output;
             }
 
             half4 Frag(Varyings input) : SV_Target
             {
-                half3 color = lerp(_BaseColor.rgb, _DirtColor.rgb, input.dirt);
+                half3 color = lerp(input.color, _DirtColor.rgb, input.dirt);
                 color += _RimColor.rgb * input.rim;
                 return half4(color, 1.0h);
             }

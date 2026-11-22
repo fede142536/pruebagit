@@ -186,7 +186,7 @@ namespace Football.Game
                     SettingsCatalog.CategoryLabels[i], 28, UiTheme.Button);
             }
 
-            _list = new SettingsList(Root, new Vector2(560f, 800f), new Vector2(880f, 64f), 74f, 9, 0f, 1);
+            _list = new SettingsList(Root, new Vector2(560f, 800f), new Vector2(880f, 60f), 68f, 10, 0f, 1);
             Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 500f), new Vector2(820f, 700f), UiTheme.Panel);
             UiKit.Label(panel.transform, "Texto", new Vector2(410f, 350f), new Vector2(760f, 660f), Guide, 24, UiTheme.Text, TextAnchor.MiddleLeft);
             _keys = UiKit.Button(Root, "Teclas", new Vector2(560f, 100f), new Vector2(880f, 64f), "CONTROLES DE TECLADO (ORDENADOR) ›", 26, UiTheme.Button);

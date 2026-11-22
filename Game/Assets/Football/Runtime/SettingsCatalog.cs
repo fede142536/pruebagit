@@ -56,6 +56,8 @@ namespace Football.Game
 
             Item(SettingCategory.Controls, true, s => "CÁMARA: " + GameSettings.CameraLabels[s.CameraMode], s => s.CameraMode = (s.CameraMode + 1) % 3),
             Item(SettingCategory.Controls, true, s => "JOYSTICK: " + (s.FixedJoystick ? "FIJO" : "FLOTANTE"), s => s.FixedJoystick = !s.FixedJoystick),
+            Item(SettingCategory.Controls, true, s => "ZONA MUERTA DEL JOYSTICK: " + GameSettings.DeadZoneLabels[s.DeadZone],
+                s => s.DeadZone = (s.DeadZone + 1) % GameSettings.DeadZoneLabels.Length),
             Item(SettingCategory.Controls, true, s => "TAMAÑO DE LOS BOTONES: " + (s.BigButtons ? "GRANDE" : "NORMAL"), s => s.BigButtons = !s.BigButtons),
             Item(SettingCategory.Controls, true, s => "OPACIDAD DE LOS BOTONES: " + GameSettings.OpacityLabels[s.ButtonOpacity], s => s.ButtonOpacity = (s.ButtonOpacity + 1) % 3),
             Item(SettingCategory.Controls, true, s => "ASISTENCIA DE PASE: " + GameSettings.AssistLabels[s.PassAssist], s => s.PassAssist = (s.PassAssist + 1) % 4),

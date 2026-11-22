@@ -28,6 +28,7 @@ namespace Football.Game
         private const string OpacityKey = "football.opacity";
         private const string AssistKey = "football.assist";
         private const string CameraKey = "football.camera";
+        private const string DeadZoneKey = "football.deadzone";
         private const string VibrationKey = "football.vibration";
 
         /// <summary>Velocidades del juego: fracción del tiempo real que avanza la simulación.</summary>
@@ -83,6 +84,10 @@ namespace Football.Game
         public int PassAssist;
         /// <summary>Cámara: 0 transmisión de TV (fija), 1 dinámica, 2 cercana.</summary>
         public int CameraMode = 1;
+        /// <summary>Zona muerta del joystick: índice de <c>ViewTuning.Controls.DeadZones</c> (0 sensible, 1 normal, 2 firme).</summary>
+        public int DeadZone = 1;
+        /// <summary>Nombres de las zonas muertas.</summary>
+        public static readonly string[] DeadZoneLabels = { "SENSIBLE", "NORMAL", "FIRME" };
 
         /// <summary>Etiquetas de volumen.</summary>
         public static readonly string[] VolumeLabels = { "0 %", "25 %", "50 %", "75 %", "100 %" };
@@ -139,6 +144,7 @@ namespace Football.Game
                 ButtonOpacity = Mathf.Clamp(PlayerPrefs.GetInt(OpacityKey, 1), 0, 2),
                 PassAssist = Mathf.Clamp(PlayerPrefs.GetInt(AssistKey, 0), 0, 3),
                 CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 1), 0, 2),
+                DeadZone = Mathf.Clamp(PlayerPrefs.GetInt(DeadZoneKey, 1), 0, DeadZoneLabels.Length - 1),
                 Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1
             };
 
@@ -176,6 +182,7 @@ namespace Football.Game
             PlayerPrefs.SetInt(OpacityKey, ButtonOpacity);
             PlayerPrefs.SetInt(AssistKey, PassAssist);
             PlayerPrefs.SetInt(CameraKey, CameraMode);
+            PlayerPrefs.SetInt(DeadZoneKey, DeadZone);
             PlayerPrefs.SetInt(VibrationKey, Vibration ? 1 : 0);
             PlayerPrefs.Save();
         }

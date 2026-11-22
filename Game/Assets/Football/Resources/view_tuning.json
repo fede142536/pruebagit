@@ -1,0 +1,35 @@
+{
+  "Camera": {
+    "Height": 21.0,
+    "Distance": 30.0,
+    "Fov": 40.0,
+    "FollowX": 0.8,
+    "FollowZ": 0.85,
+    "FollowSpeed": 3.0,
+    "EdgeMargin": 18.5,
+    "ZoomOut": 1.15,
+    "ZoomIn": 0.88,
+    "ZoomLongBallSpeed": 15.0,
+    "ZoomSpeed": 1.5,
+    "LookAheadSeconds": 0.7,
+    "LookAheadMax": 6.0,
+    "SetPieceZoom": 1.25,
+    "SetPieceLookAhead": 12.0,
+    "FocusZoom": 0.55,
+    "CloseZoom": 0.75
+  },
+  "Controls": {
+    "JoystickRadius": 130.0,
+    "DeadZones": [0.06, 0.12, 0.2],
+    "ShootChargeSeconds": 0.8,
+    "PassChargeSeconds": 0.7,
+    "PassTapSeconds": 0.2,
+    "ShootMinPower": 0.35,
+    "BigScale": 1.2,
+    "FixedJoystickMargin": 250.0,
+    "PauseMargin": 75.0
+  },
+  "Hud": {
+    "ScoreboardMargin": 20.0
+  }
+}

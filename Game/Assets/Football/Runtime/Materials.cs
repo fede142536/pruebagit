@@ -42,6 +42,9 @@ namespace Football.Game
         private static readonly int RimId = Shader.PropertyToID("_FootballRim");
         private static readonly int DirtId = Shader.PropertyToID("_FootballDirt");
 
+        /// <summary>Verdadero si el shader de jugadores funciona en este dispositivo (permite agrupar piezas con color por vértice).</summary>
+        public static bool PlayerShaderAvailable => PlayerShader() != null;
+
         /// <summary>
         /// Material para el cuerpo de los jugadores: luz de borde y suciedad (shader Football/Player).
         /// Si el dispositivo no admite ese shader, devuelve el material plano de <see cref="Get"/>.

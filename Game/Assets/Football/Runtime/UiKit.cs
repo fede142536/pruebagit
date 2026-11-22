@@ -113,6 +113,21 @@ namespace Football.Game
         /// <summary>Alto real del lienzo en unidades (1080, o más en pantallas más angostas que 16:9).</summary>
         public static float CanvasHeight => Screen.height / Scale;
 
+        /// <summary>
+        /// Margen que ocupa la muesca o la cámara frontal a la izquierda, en unidades del lienzo (0 si la pantalla no tiene).
+        /// Sale de <c>Screen.safeArea</c>: en un 20:9 apaisado la muesca queda a la izquierda o a la derecha según el giro.
+        /// </summary>
+        public static float SafeLeft => Screen.width > 0 ? Mathf.Max(0f, Screen.safeArea.xMin) / Scale : 0f;
+
+        /// <summary>Margen inseguro a la derecha (unidades del lienzo).</summary>
+        public static float SafeRight => Screen.width > 0 ? Mathf.Max(0f, Screen.width - Screen.safeArea.xMax) / Scale : 0f;
+
+        /// <summary>Margen inseguro arriba (unidades del lienzo).</summary>
+        public static float SafeTop => Screen.height > 0 ? Mathf.Max(0f, Screen.height - Screen.safeArea.yMax) / Scale : 0f;
+
+        /// <summary>Margen inseguro abajo (barra de gestos; unidades del lienzo).</summary>
+        public static float SafeBottom => Screen.height > 0 ? Mathf.Max(0f, Screen.safeArea.yMin) / Scale : 0f;
+
         /// <summary>Desplazamiento del área de diseño de 1920×1080, centrada en el lienzo real.</summary>
         public static Vector2 AreaOffset => new Vector2((CanvasWidth - Reference.x) * 0.5f, (CanvasHeight - Reference.y) * 0.5f);
 
