@@ -86,7 +86,7 @@ namespace Football.Game
         ToeR
     }
 
-    /// <summary>Lo que define el aspecto de un jugador para armar su malla (colores, peinado, vello facial y ropa).</summary>
+    /// <summary>Lo que define el aspecto de un jugador para armar su malla (colores, peinado, vello facial, ropa y decales).</summary>
     public struct BodySpec
     {
         /// <summary>Camiseta.</summary>
@@ -117,23 +117,28 @@ namespace Football.Game
         public bool Trousers;
         /// <summary>Manga larga.</summary>
         public bool LongSleeves;
+        /// <summary>Dorsal de la espalda (1–99); 0 o menos = sin dorsal.</summary>
+        public int Number;
+        /// <summary>Escudo del pecho: variante del atlas (0–<see cref="PlayerAtlasData.CrestCount"/> − 1); negativo = sin escudo.</summary>
+        public int Crest;
     }
 
     /// <summary>
-    /// Malla única del jugador para un <c>SkinnedMeshRenderer</c> de 20 huesos, armada sin Unity (solo listas): tronco con
-    /// ruedo de la camiseta sobre el pantalón, pantalón con botamanga abierta, mangas con borde, medias con puño enrollado y
-    /// franja, botines con suela, lengüeta y tapones, cara con arco superciliar, nariz, pómulos, mentón y orejas, pelo
-    /// volumétrico y barba o candado. Cada vértice lleva hasta dos huesos con pesos suaves en codos, rodillas, hombros,
-    /// cuello e ingle (las piezas se solapan en las articulaciones y los pesos repartidos las mantienen cerradas al doblar).
-    /// En el color del vértice va el material (alfa: 1 piel, 0,75 tela, 0,5 botín, 0,25 pelo) y en la UV dos máscaras para
-    /// el shader: x = sudor (piel), y = pliegues (tela). Pose de reposo con rotaciones identidad: cada pose de enlace es una
-    /// traslación.
+    /// Malla única del jugador para un <c>SkinnedMeshRenderer</c> de 20 huesos, armada sin Unity (solo listas). Cada pierna y
+    /// cada brazo es **una sola superficie continua** de la cadera al tobillo y del hombro a la muñeca, con tres anillos de
+    /// soporte en cada flexión (sobre, en y bajo la articulación) y pesos de dos huesos que se interpolan con suavidad; la ropa
+    /// (short, medias, mangas) son capas por encima. El tronco, el cuello y la cabeza llevan oclusión ambiental pintada en el color de
+    /// los vértices (sin costo de GPU). La camiseta lleva proyección plana para el dorsal y el escudo (los lee el shader del atlas
+    /// <see cref="PlayerAtlasData"/>). La cara tiene cuencas oculares, arco superciliar, pómulos, labios y mentón esculpidos y
+    /// ojos, iris y labios en el color de los vértices; el pelo y la barba son mechones volumétricos. Hay dos niveles de detalle
+    /// (<c>lod</c> 0 completo, 1 simplificado, mismo esqueleto). En el alfa del color va el material (1 piel, 0,75 tela, 0,5 botín,
+    /// 0,25 pelo); UV0 = máscaras (x sudor, y pliegues); UV2 = proyección del decal; UV3 = dorsal y escudo; UV4 = color de la tinta.
     /// </summary>
     public sealed class SkinnedBodyGeometry
     {
         /// <summary>Cantidad de huesos.</summary>
         public const int BoneCount = 20;
-        /// <summary>Escala de la cabeza (figura de unas 7,5 cabezas).</summary>
+        /// <summary>Escala de la cabeza (figura de unas 7,6 cabezas).</summary>
         public const float HeadScale = 0.8f;
         /// <summary>Material piel (alfa del color del vértice).</summary>
         public const float SkinId = 1f;
@@ -143,6 +148,8 @@ namespace Football.Game
         public const float BootId = 0.5f;
         /// <summary>Material pelo.</summary>
         public const float HairId = 0.25f;
+        /// <summary>Oscurecimiento máximo que puede sumar la oclusión ambiental (0,25 = 25 %).</summary>
+        public const float MaxOcclusion = 0.25f;
 
         /// <summary>Padre de cada hueso (−1 para la raíz).</summary>
         public static readonly int[] Parents = { -1, 0, 1, 2, 3, 4, 3, 6, 7, 3, 9, 10, 1, 12, 13, 14, 1, 16, 17, 18 };
@@ -166,20 +173,29 @@ namespace Football.Game
         };
 
         // Radio de mezcla de cada hueso con su padre (m) y dirección del segmento (hacia el hijo).
-        private static readonly float[] BlendRadius = { 0f, 0f, 0.07f, 0.08f, 0.035f, 0.02f, 0.09f, 0.05f, 0.03f, 0.09f, 0.05f, 0.03f, 0.07f, 0.06f, 0.03f, 0.04f, 0.07f, 0.06f, 0.03f, 0.04f };
+        private static readonly float[] BlendRadius = { 0f, 0f, 0.07f, 0.08f, 0.035f, 0.02f, 0.09f, 0.06f, 0.03f, 0.09f, 0.06f, 0.03f, 0.07f, 0.06f, 0.03f, 0.04f, 0.07f, 0.06f, 0.03f, 0.04f };
         private static readonly int[] BlendChild = { -1, 2, 3, 4, 5, -1, 7, 8, -1, 10, 11, -1, 13, 14, 15, -1, 17, 18, 19, -1 };
         private static readonly Vector3 Up = new Vector3(0f, 1f, 0f), Down = new Vector3(0f, -1f, 0f), Forward = new Vector3(0f, 0f, 1f);
         private static readonly Vector3[] Axis = { Up, Up, Up, Up, Up, Up, Down, Down, Down, Down, Down, Down, Down, Down, Down, Forward, Down, Down, Down, Forward };
+        private static readonly int[] ArmChainL = { (int)BodyBone.ShoulderL, (int)BodyBone.ElbowL, (int)BodyBone.WristL };
+        private static readonly int[] ArmChainR = { (int)BodyBone.ShoulderR, (int)BodyBone.ElbowR, (int)BodyBone.WristR };
+        private static readonly int[] LegChainL = { (int)BodyBone.HipL, (int)BodyBone.KneeL, (int)BodyBone.AnkleL };
+        private static readonly int[] LegChainR = { (int)BodyBone.HipR, (int)BodyBone.KneeR, (int)BodyBone.AnkleR };
         private const int TrunkBone = -1; // la pieza del tronco toma el hueso según la altura
         private const float ShoulderBlendFrom = 0.13f, ShoulderBlendTo = 0.23f, ShoulderBlendHeight = 1.3f, ShoulderBlendMax = 0.8f;
         private const float GroinTop = 0.88f, GroinBottom = 0.8f, GroinInner = 0.03f, GroinOuter = 0.09f, GroinMax = 0.6f;
+        private const float ToeBlendFrom = 0.07f, ToeBlendTo = 0.15f;
 
-        private const int TorsoSides = 14, LimbSides = 9, ArmSides = 8, HeadSides = 12;
-        private const int PatchRows = 6, PatchColumns = 2;
         private const float PatternInflate = 1.035f, PatternOffset = 0.003f;
-        private static readonly Color EyeColor = new Color(0.07f, 0.05f, 0.04f);
-        private static readonly Color MouthColor = new Color(0.45f, 0.22f, 0.2f);
+        private static readonly Color Sclera = new Color(0.93f, 0.93f, 0.9f), Iris = new Color(0.16f, 0.1f, 0.06f), LipColor = new Color(0.55f, 0.27f, 0.25f);
+        private static readonly Color MouthLine = new Color(0.32f, 0.15f, 0.14f);
         private const float SoleLighten = 0.65f;
+
+        // Decales: parche del dorsal (centro, ancho, alto) en la espalda y del escudo en el pecho izquierdo del jugador.
+        private const float BackPatchY = 1.285f, BackPatchW = 0.26f, BackPatchH = 0.2f;
+        private const float CrestPatchX = 0.095f, CrestPatchY = 1.34f, CrestPatchW = 0.075f, CrestPatchH = 0.09f;
+        private const float DecalFlagRamp = 0.04f;
+        private const float InkDark = 0.07f, InkLight = 0.96f, InkContrast = 0.35f;
 
         // ---- perfiles (en metros; tronco desde el suelo, el resto en el espacio de su articulación) ----
 
@@ -191,10 +207,21 @@ namespace Football.Game
             new BodyRing(0.985f, 0.176f, 0.12f, 0.115f), new BodyRing(0.975f, 0.168f, 0.11f, 0.106f), BodyRing.Pole(0.97f) // ruedo sobre el pantalón
         };
 
+        private static readonly BodyRing[] TorsoLow =
+        {
+            BodyRing.Pole(1.525f), new BodyRing(1.485f, 0.165f, 0.085f, 0.095f), new BodyRing(1.37f, 0.212f, 0.135f, 0.115f), new BodyRing(1.29f, 0.198f, 0.138f, 0.115f),
+            new BodyRing(1.2f, 0.178f, 0.122f, 0.108f), new BodyRing(1.02f, 0.162f, 0.106f, 0.101f), new BodyRing(0.98f, 0.172f, 0.115f, 0.11f), BodyRing.Pole(0.97f)
+        };
+
         private static readonly BodyRing[] Pelvis =
         {
             BodyRing.Pole(1.01f), new BodyRing(1.0f, 0.166f, 0.108f, 0.104f), new BodyRing(0.93f, 0.186f, 0.115f, 0.13f),
             new BodyRing(0.86f, 0.19f, 0.112f, 0.128f), new BodyRing(0.81f, 0.17f, 0.1f, 0.112f), BodyRing.Pole(0.79f)
+        };
+
+        private static readonly BodyRing[] PelvisLow =
+        {
+            BodyRing.Pole(1.01f), new BodyRing(0.93f, 0.186f, 0.115f, 0.13f), new BodyRing(0.82f, 0.18f, 0.105f, 0.12f), BodyRing.Pole(0.79f)
         };
 
         private static readonly BodyRing[] ShortLeg =
@@ -204,33 +231,46 @@ namespace Football.Game
             BodyRing.Pole(-0.18f) // botamanga abierta
         };
 
-        private static readonly BodyRing[] Thigh =
+        private static readonly BodyRing[] ShortLegLow =
         {
-            BodyRing.Pole(-0.11f), new BodyRing(-0.12f, 0.084f, 0.096f, 0.081f), new BodyRing(-0.18f, 0.081f, 0.092f, 0.078f), new BodyRing(-0.3f, 0.068f, 0.076f, 0.065f),
-            new BodyRing(-0.39f, 0.056f, 0.06f, 0.055f), new BodyRing(-0.43f, 0.052f, 0.064f, 0.05f), BodyRing.Pole(-0.46f)
+            BodyRing.Pole(0.035f), new BodyRing(0.0f, 0.095f, 0.095f, 0.094f), new BodyRing(-0.17f, 0.106f, 0.106f, 0.102f), BodyRing.Pole(-0.18f)
         };
 
-        private static readonly BodyRing[] Shin =
+        // Pierna de la cadera al tobillo, una sola superficie. Anillos de soporte de la rodilla (y = −0,44): −0,38, −0,44 y −0,50.
+        private static readonly BodyRing[] LegSkin =
         {
-            BodyRing.Pole(0.02f), new BodyRing(0.0f, 0.052f, 0.055f, 0.05f), new BodyRing(-0.06f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.1f, 0.055f, 0.049f, 0.073f),
-            BodyRing.Pole(-0.105f)
+            BodyRing.Pole(-0.10f), new BodyRing(-0.18f, 0.081f, 0.092f, 0.078f), new BodyRing(-0.22f, 0.076f, 0.084f, 0.072f),
+            new BodyRing(-0.30f, 0.068f, 0.076f, 0.065f), new BodyRing(-0.38f, 0.056f, 0.062f, 0.056f), new BodyRing(-0.44f, 0.052f, 0.064f, 0.05f),
+            new BodyRing(-0.50f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.58f, 0.054f, 0.048f, 0.071f), new BodyRing(-0.69f, 0.044f, 0.042f, 0.048f),
+            new BodyRing(-0.79f, 0.032f, 0.033f, 0.032f), new BodyRing(-0.84f, 0.03f, 0.031f, 0.03f), BodyRing.Pole(-0.865f)
         };
 
-        private static readonly BodyRing[] SockProfile =
+        private static readonly BodyRing[] LegSkinLow =
         {
-            BodyRing.Pole(-0.066f), new BodyRing(-0.07f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.14f, 0.057f, 0.051f, 0.075f),
-            new BodyRing(-0.25f, 0.047f, 0.045f, 0.051f), new BodyRing(-0.35f, 0.034f, 0.035f, 0.034f), new BodyRing(-0.405f, 0.032f, 0.033f, 0.032f),
-            BodyRing.Pole(-0.41f)
+            BodyRing.Pole(-0.10f), new BodyRing(-0.14f, 0.083f, 0.094f, 0.08f), new BodyRing(-0.30f, 0.068f, 0.076f, 0.065f), new BodyRing(-0.38f, 0.056f, 0.062f, 0.056f),
+            new BodyRing(-0.44f, 0.052f, 0.064f, 0.05f), new BodyRing(-0.50f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.69f, 0.044f, 0.042f, 0.048f),
+            new BodyRing(-0.84f, 0.03f, 0.031f, 0.03f), BodyRing.Pole(-0.865f)
+        };
+
+        private static readonly BodyRing[] Sock =
+        {
+            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.58f, 0.057f, 0.051f, 0.075f), new BodyRing(-0.69f, 0.047f, 0.045f, 0.051f),
+            new BodyRing(-0.79f, 0.034f, 0.035f, 0.034f), new BodyRing(-0.845f, 0.032f, 0.033f, 0.032f), BodyRing.Pole(-0.85f)
+        };
+
+        private static readonly BodyRing[] SockLow =
+        {
+            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.69f, 0.047f, 0.045f, 0.051f), new BodyRing(-0.845f, 0.032f, 0.033f, 0.032f), BodyRing.Pole(-0.85f)
         };
 
         private static readonly BodyRing[] SockCuff = // borde superior enrollado de la media
         {
-            BodyRing.Pole(-0.058f), new BodyRing(-0.06f, 0.064f, 0.06f, 0.085f), new BodyRing(-0.082f, 0.064f, 0.059f, 0.084f), BodyRing.Pole(-0.084f)
+            BodyRing.Pole(-0.498f), new BodyRing(-0.5f, 0.064f, 0.06f, 0.085f), new BodyRing(-0.522f, 0.064f, 0.059f, 0.084f), BodyRing.Pole(-0.524f)
         };
 
         private static readonly BodyRing[] SockBand =
         {
-            BodyRing.Pole(-0.096f), new BodyRing(-0.098f, 0.062f, 0.057f, 0.083f), new BodyRing(-0.122f, 0.061f, 0.055f, 0.081f), BodyRing.Pole(-0.124f)
+            BodyRing.Pole(-0.536f), new BodyRing(-0.538f, 0.062f, 0.057f, 0.083f), new BodyRing(-0.562f, 0.061f, 0.055f, 0.081f), BodyRing.Pole(-0.564f)
         };
 
         // Botín a lo largo de Y (talón en −Y, puntera en +Y); se gira 90° en X para que la puntera mire hacia delante.
@@ -241,29 +281,48 @@ namespace Football.Game
             new BodyRing(0.185f, 0.027f, 0.023f, 0.016f), BodyRing.Pole(0.2f)
         };
 
-        private static readonly BodyRing[] UpperArm =
+        private static readonly BodyRing[] BootLow =
         {
-            BodyRing.Pole(-0.095f), new BodyRing(-0.1f, 0.048f, 0.055f, 0.046f), new BodyRing(-0.16f, 0.043f, 0.05f, 0.042f),
-            new BodyRing(-0.22f, 0.04f, 0.042f, 0.038f), new BodyRing(-0.28f, 0.037f, 0.035f, 0.037f), BodyRing.Pole(-0.31f)
+            BodyRing.Pole(-0.078f), new BodyRing(-0.05f, 0.04f, 0.032f, 0.056f), new BodyRing(0.035f, 0.046f, 0.033f, 0.056f), new BodyRing(0.15f, 0.039f, 0.029f, 0.026f), BodyRing.Pole(0.2f)
+        };
+
+        // Brazo del hombro a la muñeca, una sola superficie. Anillos de soporte del codo (y = −0,29): −0,24, −0,29 y −0,34.
+        private static readonly BodyRing[] ArmSkin =
+        {
+            BodyRing.Pole(-0.095f), new BodyRing(-0.1f, 0.048f, 0.055f, 0.046f), new BodyRing(-0.2f, 0.041f, 0.044f, 0.039f),
+            new BodyRing(-0.24f, 0.038f, 0.039f, 0.037f), new BodyRing(-0.29f, 0.037f, 0.036f, 0.037f), new BodyRing(-0.34f, 0.041f, 0.04f, 0.038f),
+            new BodyRing(-0.44f, 0.032f, 0.03f, 0.03f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
+        };
+
+        private static readonly BodyRing[] ArmSkinLow =
+        {
+            BodyRing.Pole(-0.095f), new BodyRing(-0.12f, 0.046f, 0.052f, 0.044f), new BodyRing(-0.24f, 0.038f, 0.039f, 0.037f), new BodyRing(-0.29f, 0.037f, 0.036f, 0.037f),
+            new BodyRing(-0.34f, 0.041f, 0.04f, 0.038f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
         };
 
         private static readonly BodyRing[] Sleeve =
         {
             BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f),
-            new BodyRing(-0.115f, 0.066f, 0.068f, 0.063f), new BodyRing(-0.126f, 0.071f, 0.073f, 0.068f), new BodyRing(-0.131f, 0.062f, 0.063f, 0.06f),
-            BodyRing.Pole(-0.133f) // borde de la manga
+            new BodyRing(-0.118f, 0.066f, 0.068f, 0.063f), new BodyRing(-0.128f, 0.071f, 0.073f, 0.068f),
+            BodyRing.Pole(-0.133f) // borde de la manga (vuelo y dobladillo)
         };
 
-        private static readonly BodyRing[] LongSleeveProfile =
+        private static readonly BodyRing[] SleeveLow =
         {
-            BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f),
-            new BodyRing(-0.15f, 0.058f, 0.062f, 0.055f), new BodyRing(-0.29f, 0.046f, 0.046f, 0.046f), BodyRing.Pole(-0.31f)
+            BodyRing.Pole(0.062f), new BodyRing(0.0f, 0.069f, 0.069f, 0.066f), new BodyRing(-0.125f, 0.068f, 0.07f, 0.065f), BodyRing.Pole(-0.133f)
         };
 
-        private static readonly BodyRing[] Forearm =
+        private static readonly BodyRing[] LongSleeve =
         {
-            BodyRing.Pole(0.025f), new BodyRing(0.0f, 0.037f, 0.036f, 0.037f), new BodyRing(-0.05f, 0.041f, 0.04f, 0.038f),
-            new BodyRing(-0.15f, 0.032f, 0.03f, 0.03f), new BodyRing(-0.235f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.25f)
+            BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f), new BodyRing(-0.12f, 0.062f, 0.064f, 0.058f),
+            new BodyRing(-0.2f, 0.05f, 0.052f, 0.048f), new BodyRing(-0.24f, 0.047f, 0.048f, 0.046f), new BodyRing(-0.29f, 0.046f, 0.046f, 0.046f),
+            new BodyRing(-0.34f, 0.047f, 0.047f, 0.046f), new BodyRing(-0.44f, 0.04f, 0.04f, 0.04f), new BodyRing(-0.52f, 0.034f, 0.034f, 0.034f), BodyRing.Pole(-0.53f)
+        };
+
+        private static readonly BodyRing[] LongSleeveLow =
+        {
+            BodyRing.Pole(0.062f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f), new BodyRing(-0.24f, 0.047f, 0.048f, 0.046f), new BodyRing(-0.34f, 0.047f, 0.047f, 0.046f),
+            new BodyRing(-0.52f, 0.034f, 0.034f, 0.034f), BodyRing.Pole(-0.53f)
         };
 
         private static readonly BodyRing[] Hand =
@@ -271,6 +330,8 @@ namespace Football.Game
             BodyRing.Pole(0.008f), new BodyRing(-0.01f, 0.03f, 0.016f, 0.016f), new BodyRing(-0.05f, 0.036f, 0.018f, 0.018f),
             new BodyRing(-0.09f, 0.03f, 0.015f, 0.014f), BodyRing.Pole(-0.108f)
         };
+
+        private static readonly BodyRing[] HandLow = { BodyRing.Pole(0.008f), new BodyRing(-0.05f, 0.035f, 0.018f, 0.018f), BodyRing.Pole(-0.108f) };
 
         private static readonly BodyRing[] Neck =
         {
@@ -285,6 +346,11 @@ namespace Football.Game
             new BodyRing(0.032f, 0.062f, 0.096f, 0.06f), new BodyRing(0.012f, 0.036f, 0.07f, 0.028f), BodyRing.Pole(0.0f)
         };
 
+        // Alturas de los anillos de la cara (cuencas 0,16 y 0,148, arco 0,185, labios 0,085 / 0,075 / 0,065, mentón 0,032 y 0,012).
+        private static readonly float[] FaceRows =
+            { 0.262f, 0.22f, 0.2f, 0.185f, 0.172f, 0.16f, 0.148f, 0.12f, 0.1f, 0.085f, 0.075f, 0.065f, 0.05f, 0.032f, 0.012f };
+        private static readonly float[] FaceRowsLow = { 0.262f, 0.22f, 0.17f, 0.12f, 0.07f, 0.03f };
+
         private static readonly BodyRing[] Nose =
         {
             BodyRing.Pole(0.158f), new BodyRing(0.145f, 0.011f, 0.01f, 0.004f), new BodyRing(0.115f, 0.016f, 0.026f, 0.006f), BodyRing.Pole(0.104f)
@@ -297,14 +363,55 @@ namespace Football.Game
             BodyRing.Pole(0.11f)
         };
 
+        private static readonly BodyRing[] HairCapLow = { BodyRing.Pole(0.29f), new BodyRing(0.248f, 0.097f, 0.106f, 0.11f), new BodyRing(0.16f, 0.112f, 0.075f, 0.122f), BodyRing.Pole(0.11f) };
+
+        // ---- oclusión ambiental pintada (centro, radios, fuerza); los marcados se espejan en x ----
+
+        private struct Occluder
+        {
+            public Vector3 Centre, Radii;
+            public float Strength;
+            public bool Mirror;
+
+            public Occluder(float x, float y, float z, float rx, float ry, float rz, float strength, bool mirror)
+            {
+                Centre = new Vector3(x, y, z);
+                Radii = new Vector3(rx, ry, rz);
+                Strength = strength;
+                Mirror = mirror;
+            }
+        }
+
+        private static readonly Occluder[] Occluders =
+        {
+            new Occluder(0f, 1.52f, 0.05f, 0.08f, 0.06f, 0.08f, 0.22f, false),     // bajo el mentón y la base del cuello
+            new Occluder(0.2f, 1.3f, 0f, 0.06f, 0.08f, 0.09f, 0.25f, true),        // axilas
+            new Occluder(0f, 0.85f, 0f, 0.1f, 0.08f, 0.1f, 0.25f, false),          // entrepierna
+            new Occluder(0.19f, 1.285f, 0f, 0.05f, 0.05f, 0.07f, 0.18f, true),     // borde interno de las mangas
+            new Occluder(0f, 0.96f, 0f, 0.3f, 0.04f, 0.3f, 0.2f, false),           // bajo el ruedo de la camiseta
+            new Occluder(0.11f, 0.7f, 0f, 0.12f, 0.05f, 0.12f, 0.22f, true),       // bajo el ruedo del short
+            new Occluder(0.11f, 0.42f, 0f, 0.1f, 0.05f, 0.1f, 0.2f, true),         // pliegue superior de las medias
+            new Occluder(0.11f, 0.48f, -0.05f, 0.07f, 0.05f, 0.05f, 0.15f, true),  // hueco detrás de la rodilla
+        };
+
         // ---- salida ----
 
+        /// <summary>Nivel de detalle con el que se armó.</summary>
+        public int Lod { get; }
         /// <summary>Posiciones (espacio del jugador, en reposo).</summary>
         public readonly List<Vector3> Vertices = new List<Vector3>();
-        /// <summary>Color por vértice (alfa = material).</summary>
+        /// <summary>Color por vértice con la oclusión ambiental aplicada (alfa = material).</summary>
         public readonly List<Color> Colors = new List<Color>();
+        /// <summary>Color por vértice sin oclusión (para el material plano de respaldo).</summary>
+        public readonly List<Color> BaseColors = new List<Color>();
         /// <summary>Máscaras para el shader: x sudor, y pliegues.</summary>
         public readonly List<Vector2> Masks = new List<Vector2>();
+        /// <summary>Proyección del decal (x, y = coordenadas del parche; z = −1 dorsal, +1 escudo, 0 ninguno).</summary>
+        public readonly List<Vector3> DecalUv = new List<Vector3>();
+        /// <summary>Contenido del decal: x = decena (−1 si no hay), y = unidad (−1 si no hay dorsal), z = variante de escudo (−1 si no hay).</summary>
+        public readonly List<Vector3> DecalData = new List<Vector3>();
+        /// <summary>Color de la tinta del decal.</summary>
+        public readonly List<Vector3> DecalInk = new List<Vector3>();
         /// <summary>Triángulos.</summary>
         public readonly List<int> Triangles = new List<int>();
         /// <summary>Hueso principal de cada vértice.</summary>
@@ -313,178 +420,381 @@ namespace Football.Game
         public readonly List<int> Bone1 = new List<int>();
         /// <summary>Peso del hueso principal (el segundo pesa 1 − este).</summary>
         public readonly List<float> Weight0 = new List<float>();
+        /// <summary>Cada vértice pertenece a un tramo continuo de brazo o pierna (para medir costuras y deformación).</summary>
+        public readonly List<int> Group = new List<int>();
 
         private readonly List<Vector3> _local = new List<Vector3>();
         private readonly List<int> _localTris = new List<int>();
+        private readonly bool _low;
+        private BodySpec _spec;
+        private Vector3 _ink;
+        private int _tens, _units;
+        private int _group;
+
+        private SkinnedBodyGeometry(int lod)
+        {
+            Lod = lod;
+            _low = lod > 0;
+        }
 
         /// <summary>Cantidad de triángulos.</summary>
         public int TriangleCount => Triangles.Count / 3;
 
+        private int TorsoSides => _low ? 9 : 12;
+        private int LimbSides => _low ? 7 : 8;
+        private int ArmSides => _low ? 6 : 8;
+        private int HeadSides => _low ? 10 : 12;
+
         /// <summary>Arma la malla de un jugador.</summary>
-        public static SkinnedBodyGeometry Build(BodySpec spec)
+        /// <param name="spec">Aspecto.</param>
+        /// <param name="lod">0 = detalle completo (~2.500 triángulos), 1 = simplificado (~800–900).</param>
+        public static SkinnedBodyGeometry Build(BodySpec spec, int lod = 0)
         {
-            var g = new SkinnedBodyGeometry();
-            g.BuildTrunk(spec);
+            var g = new SkinnedBodyGeometry(lod) { _spec = spec };
+            g.PrepareDecals();
+            g.BuildTrunk();
             for (int side = -1; side <= 1; side += 2)
             {
-                g.BuildLeg(spec, side);
-                g.BuildArm(spec, side);
+                g.BuildLeg(side);
+                g.BuildArm(side);
             }
 
-            g.BuildHead(spec);
+            g.BuildHead();
             return g;
+        }
+
+        private void PrepareDecals()
+        {
+            int n = _spec.Number;
+            _tens = n >= 10 ? (n / 10 > 9 ? 9 : n / 10) : -1;
+            _units = n > 0 ? n % 10 : -1;
+            // Tinta: el color secundario si contrasta con la camiseta; si no, blanco u oscuro según la luminosidad.
+            Color shirt = _spec.Shirt, second = _spec.Secondary;
+            float diff = Mathf.Abs(shirt.grayscale - second.grayscale);
+            Color ink = diff >= InkContrast ? second : (shirt.grayscale > 0.5f ? new Color(InkDark, InkDark, InkDark) : new Color(InkLight, InkLight, InkLight));
+            _ink = new Vector3(ink.r, ink.g, ink.b);
         }
 
         // ------------------------------------------------------------------ partes
 
-        private void BuildTrunk(BodySpec s)
+        private void BuildTrunk()
         {
-            Color shirt = Tag(s.Shirt, FabricId), shorts = Tag(s.Shorts, FabricId);
-            Sculpt(Torso, TorsoSides, Place.Identity, shirt, TrunkBone, FoldWaist, true, true);
-            if (s.Pattern != 0)
+            Color shirt = Tag(_spec.Shirt, FabricId), shorts = Tag(_spec.Shorts, FabricId);
+            _group = 0;
+            Sculpt(_low ? TorsoLow : Torso, TorsoSides, null, Place.Identity, shirt, Bind.Auto, FoldWaist, true, true, DecalMode.Torso);
+            if (_spec.Pattern != 0 && !_low)
             {
-                BuildPattern(s.Pattern, Tag(s.Secondary, FabricId));
+                BuildPattern(_spec.Pattern, Tag(_spec.Secondary, FabricId));
             }
 
-            Sculpt(Pelvis, TorsoSides, Place.Identity, shorts, TrunkBone, FoldGroin, false, true);
-            Sculpt(Neck, LimbSides, Place.Identity, Tag(s.Skin, SkinId), TrunkBone, SweatNeck, false, false);
+            Sculpt(_low ? PelvisLow : Pelvis, TorsoSides, null, Place.Identity, shorts, Bind.Auto, FoldGroin, false, true);
+            Sculpt(Neck, _low ? 6 : 8, null, Place.Identity, Tag(_spec.Skin, SkinId), Bind.Auto, SweatNeck, false, false);
         }
 
-        private void BuildLeg(BodySpec s, int side)
+        private void BuildLeg(int side)
         {
             int hip = side < 0 ? (int)BodyBone.HipL : (int)BodyBone.HipR;
-            int knee = hip + 1, ankle = hip + 2, toe = hip + 3;
-            Color skin = Tag(s.Skin, SkinId), shorts = Tag(s.Shorts, FabricId), socks = Tag(s.Socks, FabricId);
-            Color leg = s.Trousers ? shorts : skin;
-            Sculpt(ShortLeg, LimbSides, At(hip), shorts, hip, FoldGroin, false, true);
-            Sculpt(Thigh, LimbSides, At(hip), leg, hip, s.Trousers ? FoldKnee : SweatLimb, false, false);
-            Sculpt(Shin, LimbSides, At(knee), leg, knee, s.Trousers ? FoldKnee : SweatLimb, false, false);
-            Sculpt(SockProfile, LimbSides, At(knee), socks, knee, FoldAnkle, false, false);
-            Sculpt(SockCuff, LimbSides, At(knee), s.Trousers ? leg : socks, knee, FoldAnkle, false, false);
-            if (!s.Trousers)
+            int ankle = hip + 2;
+            int[] chain = side < 0 ? LegChainL : LegChainR;
+            Color skin = Tag(_spec.Skin, SkinId), shorts = Tag(_spec.Shorts, FabricId), socks = Tag(_spec.Socks, FabricId);
+            Color leg = _spec.Trousers ? shorts : skin;
+            Place at = At(hip);
+            _group = side < 0 ? 1 : 2;
+            Sculpt(_low ? LegSkinLow : LegSkin, LimbSides, null, at, leg, Bind.Joints(chain), _spec.Trousers ? FoldKnee : SweatLimb, false, false);
+            _group = 0;
+            Sculpt(_low ? ShortLegLow : ShortLeg, LimbSides, null, at, shorts, Bind.Single(hip), FoldGroin, false, true);
+            if (!_spec.Trousers)
             {
-                Sculpt(SockBand, LimbSides, At(knee), Tag(SockStripe(s), FabricId), knee, FoldAnkle, false, false);
+                Sculpt(_low ? SockLow : Sock, LimbSides, null, at, socks, Bind.Joints(chain), FoldAnkle, false, false);
+                if (!_low)
+                {
+                    Sculpt(SockCuff, LimbSides, null, at, socks, Bind.Joints(chain), FoldAnkle, false, false);
+                    Sculpt(SockBand, LimbSides, null, at, Tag(SockStripe(), FabricId), Bind.Joints(chain), FoldAnkle, false, false);
+                }
             }
 
-            Color boot = Tag(s.Boots, BootId), sole = Tag(Color.Lerp(s.Boots, Color.white, SoleLighten), BootId);
+            Color boot = Tag(_spec.Boots, BootId), sole = Tag(Color.Lerp(_spec.Boots, Color.white, SoleLighten), BootId);
             Place b = At(ankle).Then(new Vector3(0f, -0.025f, 0.045f), new Vector3(90f, 0f, 0f), Vector3.one);
-            Sculpt(Boot, LimbSides, b, boot, ankle, NoMask, true, true);
-            Box(At(ankle).Then(new Vector3(0f, -0.06f, 0.055f), Vector3.zero, new Vector3(0.072f, 0.01f, 0.26f)), sole, ankle);
-            Box(At(ankle).Then(new Vector3(0f, 0.005f, 0.075f), new Vector3(-25f, 0f, 0f), new Vector3(0.042f, 0.045f, 0.012f)), boot, ankle);
-            // Tapones: dos en la planta, uno al costado de cada lado y uno en el talón.
+            Bind boots = Bind.Boot(ankle);
+            Sculpt(_low ? BootLow : Boot, _low ? 6 : 8, null, b, boot, boots, NoMask, true, true);
+            if (_low)
+            {
+                return;
+            }
+
+            Box(At(ankle).Then(new Vector3(0f, -0.06f, 0.055f), Vector3.zero, new Vector3(0.072f, 0.01f, 0.26f)), sole, boots);
+            Box(At(ankle).Then(new Vector3(0f, 0.005f, 0.075f), new Vector3(-25f, 0f, 0f), new Vector3(0.042f, 0.045f, 0.012f)), boot, boots);
             for (int i = 0; i < Studs.Length; i++)
             {
-                Box(At(ankle).Then(Studs[i], Vector3.zero, StudSize), sole, ankle);
+                Box(At(ankle).Then(Studs[i], Vector3.zero, StudSize), sole, boots);
             }
         }
 
         private static readonly Vector3[] Studs =
         {
-            new Vector3(-0.02f, -0.07f, 0.14f), new Vector3(0.02f, -0.07f, 0.14f), new Vector3(0f, -0.07f, 0.07f), new Vector3(0f, -0.07f, -0.045f)
+            new Vector3(-0.02f, -0.07f, 0.14f), new Vector3(0.02f, -0.07f, 0.14f), new Vector3(0f, -0.07f, -0.045f)
         };
 
         private static readonly Vector3 StudSize = new Vector3(0.014f, 0.012f, 0.014f);
 
-        private void BuildArm(BodySpec s, int side)
+        private void BuildArm(int side)
         {
             int shoulder = side < 0 ? (int)BodyBone.ShoulderL : (int)BodyBone.ShoulderR;
-            int elbow = shoulder + 1, wrist = shoulder + 2;
-            Color skin = Tag(s.Skin, SkinId), shirt = Tag(s.Shirt, FabricId);
-            Color arm = s.LongSleeves ? shirt : skin;
-            Sculpt(s.LongSleeves ? LongSleeveProfile : Sleeve, LimbSides, At(shoulder), shirt, shoulder, FoldElbow, false, true);
-            if (!s.LongSleeves)
+            int wrist = shoulder + 2;
+            int[] chain = side < 0 ? ArmChainL : ArmChainR;
+            Color skin = Tag(_spec.Skin, SkinId), shirt = Tag(_spec.Shirt, FabricId);
+            Color arm = _spec.LongSleeves ? shirt : skin;
+            Place at = At(shoulder);
+            _group = side < 0 ? 3 : 4;
+            Sculpt(_low ? ArmSkinLow : ArmSkin, ArmSides, null, at, arm, Bind.Joints(chain), _spec.LongSleeves ? FoldElbowFull : SweatLimb, false, false);
+            _group = 0;
+            if (_spec.LongSleeves)
             {
-                Sculpt(UpperArm, ArmSides, At(shoulder), arm, shoulder, SweatLimb, false, false);
+                Sculpt(_low ? LongSleeveLow : LongSleeve, LimbSides, null, at, shirt, Bind.Joints(chain), FoldElbowFull, false, true);
+            }
+            else
+            {
+                Sculpt(_low ? SleeveLow : Sleeve, LimbSides, null, at, shirt, Bind.Single(shoulder), FoldSleeve, false, true);
             }
 
-            Sculpt(Forearm, ArmSides, At(elbow), arm, elbow, s.LongSleeves ? FoldElbow : SweatLimb, false, false);
-            Color hand = s.Keeper ? Tag(s.Gloves, FabricId) : skin;
-            float glove = s.Keeper ? 1.3f : 1f;
-            Sculpt(Hand, ArmSides, At(wrist).Then(Vector3.zero, Vector3.zero, new Vector3(glove, glove, glove)), hand, wrist, NoMask, true, true);
-            Ellipsoid(At(wrist).Then(new Vector3(0f, -0.035f, 0.024f), Vector3.zero, new Vector3(0.012f, 0.026f, 0.012f) * glove), hand, wrist, 2, 5);
+            Color hand = _spec.Keeper ? Tag(_spec.Gloves, FabricId) : skin;
+            float glove = _spec.Keeper ? 1.3f : 1f;
+            Sculpt(_low ? HandLow : Hand, _low ? 5 : 6, null, At(wrist).Then(Vector3.zero, Vector3.zero, new Vector3(glove, glove, glove)), hand, Bind.Single(wrist), NoMask, true, true);
+            if (!_low)
+            {
+                Ellipsoid(At(wrist).Then(new Vector3(0f, -0.035f, 0.024f), Vector3.zero, new Vector3(0.012f, 0.026f, 0.012f) * glove), hand, Bind.Single(wrist), 2, 5);
+            }
         }
 
-        private void BuildHead(BodySpec s)
+        private void BuildHead()
         {
             const int head = (int)BodyBone.Head;
-            Color skin = Tag(s.Skin, SkinId), hair = Tag(s.Hair, HairId);
-            Sculpt(Skull, HeadSides, HeadAt(Vector3.zero, Vector3.zero, Vector3.one), skin, head, SweatForehead, true, true);
-            Sculpt(Nose, 6, HeadAt(new Vector3(0f, 0f, 0.1f), Vector3.zero, Vector3.one), skin, head, NoMask, true, true);
-            // Arco superciliar, pómulos y mentón: el relieve que da la luz de los focos.
-            Ellipsoid(HeadAt(new Vector3(0f, 0.183f, 0.093f), Vector3.zero, new Vector3(0.078f, 0.016f, 0.026f)), skin, head, 2, 8);
-            Ellipsoid(HeadAt(new Vector3(0f, 0.028f, 0.083f), Vector3.zero, new Vector3(0.034f, 0.024f, 0.028f)), skin, head, 2, 6);
+            Bind bind = Bind.Single(head);
+            Color skin = Tag(_spec.Skin, SkinId), hair = Tag(_spec.Hair, HairId);
+            float[] rows = _low ? FaceRowsLow : FaceRows;
+            var rings = new BodyRing[rows.Length + 2];
+            rings[0] = BodyRing.Pole(Skull[0].Y);
+            for (int i = 0; i < rows.Length; i++)
+            {
+                rings[i + 1] = Sample(Skull, rows[i]);
+            }
+
+            rings[rows.Length + 1] = BodyRing.Pole(0f);
+            Sculpt(rings, HeadSides, _low ? null : FaceAngles(), HeadAt(Vector3.zero, Vector3.zero, Vector3.one), skin, bind, SweatForehead, true, true,
+                DecalMode.None, _low ? null : (Func<Vector3, Vector3>)FaceWarp, _low ? null : (Func<Vector3, Color, Color>)FaceTint);
+            if (!_low)
+            {
+                Sculpt(Nose, 6, null, HeadAt(new Vector3(0f, 0f, 0.1f), Vector3.zero, Vector3.one), skin, bind, NoMask, true, true);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Ellipsoid(HeadAt(new Vector3(side * 0.104f, 0.14f, -0.008f), new Vector3(0f, side * 15f, 0f), new Vector3(0.016f, 0.03f, 0.022f)), skin, bind, 2, 5);
+                }
+            }
+
+            BuildHair(hair);
+            BuildFacialHair(hair);
+        }
+
+        private static float[] _faceAngles;
+
+        /// <summary>Columnas de la cabeza: densas al frente (cada 7°, donde van ojos y labios) y espaciadas atrás.</summary>
+        private static float[] FaceAngles()
+        {
+            if (_faceAngles != null)
+            {
+                return _faceAngles;
+            }
+
+            const int frontColumns = 13, backSteps = 4;
+            const float step = 7f * Mathf.Deg2Rad;
+            var list = new List<float>();
+            float start = Mathf.PI * 0.5f - 6f * step; // el frente es +Z (90°)
+            for (int i = 0; i < frontColumns; i++)
+            {
+                list.Add(start + i * step);
+            }
+
+            float end = start + (frontColumns - 1) * step;
+            float restStep = (start + Mathf.PI * 2f - end) / backSteps;
+            for (int i = 1; i < backSteps; i++)
+            {
+                list.Add(end + i * restStep);
+            }
+
+            _faceAngles = list.ToArray();
+            return _faceAngles;
+        }
+
+        // Relieve de la cara (espacio de la cabeza, sin escala): cuencas hundidas, arco superciliar, pómulos, labios y mentón.
+        private static Vector3 FaceWarp(Vector3 v)
+        {
+            if (v.z <= 0.02f)
+            {
+                return v;
+            }
+
+            float depth = 0f;
             for (int side = -1; side <= 1; side += 2)
             {
-                Ellipsoid(HeadAt(new Vector3(side * 0.06f, 0.13f, 0.085f), Vector3.zero, new Vector3(0.028f, 0.02f, 0.024f)), skin, head, 2, 6);
-                Ellipsoid(HeadAt(new Vector3(side * 0.104f, 0.14f, -0.008f), new Vector3(0f, side * 15f, 0f), new Vector3(0.016f, 0.03f, 0.022f)), skin, head, 3, 6);
-                Box(HeadAt(new Vector3(side * 0.036f, 0.158f, 0.104f), Vector3.zero, new Vector3(0.02f, 0.013f, 0.008f)), Tag(EyeColor, SkinId), head);
-                Box(HeadAt(new Vector3(side * 0.037f, 0.18f, 0.111f), new Vector3(0f, 0f, side * -8f), new Vector3(0.038f, 0.008f, 0.01f)), hair, head);
+                float ex = (v.x - side * 0.036f) / 0.022f, ey = (v.y - 0.158f) / 0.017f;
+                depth -= 0.0075f * Mathf.Exp(-(ex * ex + ey * ey) * 1.2f);                       // cuenca ocular
+                float cx = (v.x - side * 0.062f) / 0.026f, cy = (v.y - 0.128f) / 0.022f;
+                depth += 0.004f * Mathf.Exp(-(cx * cx + cy * cy));                              // pómulo
             }
 
-            Box(HeadAt(new Vector3(0f, 0.075f, 0.104f), Vector3.zero, new Vector3(0.04f, 0.007f, 0.01f)), Tag(MouthColor, SkinId), head);
-            BuildHair(s, hair);
-            BuildFacialHair(s, hair);
+            float by = (v.y - 0.186f) / 0.011f, bx = v.x / 0.06f;
+            depth += 0.0065f * Mathf.Exp(-by * by) * Mathf.Exp(-bx * bx);                      // arco superciliar
+            float lx = v.x / 0.024f;
+            float up = (v.y - 0.085f) / 0.0055f, line = (v.y - 0.075f) / 0.0045f, low = (v.y - 0.065f) / 0.006f;
+            depth += (0.0035f * Mathf.Exp(-up * up) + 0.0045f * Mathf.Exp(-low * low) - 0.003f * Mathf.Exp(-line * line)) * Mathf.Exp(-lx * lx); // labios
+            float chy = (v.y - 0.022f) / 0.02f, chx = v.x / 0.03f;
+            depth += 0.005f * Mathf.Exp(-(chy * chy + chx * chx));                              // mentón
+            var n = new Vector3(v.x, (v.y - 0.13f) * 0.6f, v.z);
+            float len = Mathf.Max(1e-4f, n.magnitude);
+            return v + n * (depth / len);
         }
 
-        private const int Curls = 6;
+        // Esclerótica, iris, cejas y labios en el color de los vértices de la cara.
+        private static Color FaceTint(Vector3 l, Color baseColor)
+        {
+            if (l.z <= 0.03f)
+            {
+                return baseColor;
+            }
 
-        private void BuildHair(BodySpec s, Color hair)
+            Color c = baseColor;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float ex = (l.x - side * 0.036f) / 0.02f, ey = (l.y - 0.158f) / 0.0135f;
+                float e = ex * ex + ey * ey;
+                if (e < 1f)
+                {
+                    c = Color.Lerp(c, new Color(Sclera.r, Sclera.g, Sclera.b, c.a), (1f - Smooth01(0.45f, 1f, e)) * 0.95f);
+                }
+
+                float ix = (l.x - side * 0.036f) / 0.0085f, iy = (l.y - 0.158f) / 0.0085f;
+                float i2 = ix * ix + iy * iy;
+                if (i2 < 1f)
+                {
+                    c = Color.Lerp(c, new Color(Iris.r, Iris.g, Iris.b, c.a), 1f - Smooth01(0.35f, 1f, i2));
+                }
+            }
+
+            float lx = l.x / 0.026f;
+            float u1 = (l.y - 0.085f) / 0.0075f, u2 = (l.y - 0.065f) / 0.0085f, u3 = (l.y - 0.075f) / 0.0045f;
+            float lip = Mathf.Max(1f - Smooth01(0.3f, 1f, lx * lx + u1 * u1), 1f - Smooth01(0.3f, 1f, lx * lx + u2 * u2));
+            c = Color.Lerp(c, new Color(LipColor.r, LipColor.g, LipColor.b, c.a), lip * 0.8f);
+            float line = 1f - Smooth01(0.2f, 1f, lx * lx + u3 * u3);
+            return Color.Lerp(c, new Color(MouthLine.r, MouthLine.g, MouthLine.b, c.a), line * 0.6f);
+        }
+
+        // ------------------------------------------------------------------ pelo y barba (mechones)
+
+        private void BuildHair(Color hair)
         {
             const int head = (int)BodyBone.Head;
-            switch (s.HairStyle)
+            Bind bind = Bind.Single(head);
+            BodyRing[] cap = _low ? HairCapLow : HairCap;
+            Vector3 capScale;
+            switch (_spec.HairStyle)
             {
-                case 1: // degradé: casquete pegado y volumen arriba
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, new Vector3(0.985f, 0.97f, 0.985f)), hair, head, NoMask, true, false);
-                    Ellipsoid(HeadAt(new Vector3(0f, 0.255f, 0.012f), Vector3.zero, new Vector3(0.08f, 0.033f, 0.092f)), hair, head, 2, 8);
-                    break;
-                case 2: // melena con vincha
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, new Vector3(1.04f, 1.02f, 1.04f)), hair, head, NoMask, true, false);
-                    Ellipsoid(HeadAt(new Vector3(0f, 0.1f, -0.1f), Vector3.zero, new Vector3(0.1f, 0.12f, 0.045f)), hair, head, 3, 8);
-                    Sculpt(Band(0.118f, 0.124f), HeadSides, HeadAt(new Vector3(0f, 0.215f, 0.004f), Vector3.zero, Vector3.one), Tag(Color.white, FabricId),
-                        head, NoMask, false, false);
-                    break;
-                case 3: // rulos: casquete y bucles repartidos
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, new Vector3(1.03f, 1.02f, 1.03f)), hair, head, NoMask, true, false);
-                    for (int i = 0; i < Curls; i++)
+                case 1: capScale = new Vector3(0.985f, 0.97f, 0.985f); break;
+                case 2: capScale = new Vector3(1.04f, 1.02f, 1.04f); break;
+                case 3: capScale = new Vector3(1.03f, 1.02f, 1.03f); break;
+                case 4: capScale = new Vector3(0.975f, 0.96f, 0.975f); break;
+                case 5: capScale = new Vector3(0.98f, 0.97f, 0.98f); break;
+                default: capScale = Vector3.one; break;
+            }
+
+            Sculpt(cap, HeadSides, null, HeadAt(Vector3.zero, Vector3.zero, capScale), hair, bind, NoMask, true, false);
+            int low = _low ? 1 : 0;
+            switch (_spec.HairStyle)
+            {
+                case 1: // degradé: copete corto peinado hacia delante
+                    for (int i = -2; i <= 2; i += 1 + low)
                     {
-                        float a = i * Mathf.PI * 2f / (Curls - 1);
-                        Vector3 at = i == 0 ? new Vector3(0f, 0.29f, 0f) : new Vector3(Mathf.Cos(a) * 0.075f, 0.262f, Mathf.Sin(a) * 0.08f);
-                        Ellipsoid(HeadAt(at, Vector3.zero, new Vector3(0.035f, 0.035f, 0.035f)), hair, head, 2, 5);
+                        Lock(new Vector3(i * 0.032f, 0.262f, -0.02f), new Vector3(i * 0.022f, 0.287f, 0.085f), 0.045f, 0.03f, 0.018f, hair);
                     }
 
                     break;
-                case 4: // rapado
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, new Vector3(0.975f, 0.96f, 0.975f)), hair, head, NoMask, true, false);
+                case 2: // melena con vincha: mechones largos sobre la nuca y los costados
+                    Sculpt(Band(0.118f, 0.124f), HeadSides, null, HeadAt(new Vector3(0f, 0.215f, 0.004f), Vector3.zero, Vector3.one), Tag(Color.white, FabricId), bind, NoMask, false, false);
+                    for (int i = -3; i <= 3; i += 1 + low)
+                    {
+                        float x = i * 0.028f;
+                        Lock(new Vector3(x, 0.17f, -0.1f), new Vector3(x * 1.1f, -0.035f - Mathf.Abs(i) * 0.012f, -0.118f), 0.042f, 0.03f, 0.02f, hair);
+                    }
+
+                    if (!_low)
+                    {
+                        Lock(new Vector3(-0.1f, 0.16f, -0.02f), new Vector3(-0.108f, 0.04f, -0.05f), 0.04f, 0.026f, 0.018f, hair);
+                        Lock(new Vector3(0.1f, 0.16f, -0.02f), new Vector3(0.108f, 0.04f, -0.05f), 0.04f, 0.026f, 0.018f, hair);
+                    }
+
                     break;
-                case 5: // jopo: costados cortos y volumen hacia arriba y adelante
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, new Vector3(0.98f, 0.97f, 0.98f)), hair, head, NoMask, true, false);
-                    Ellipsoid(HeadAt(new Vector3(0f, 0.27f, 0.05f), new Vector3(-30f, 0f, 0f), new Vector3(0.07f, 0.045f, 0.075f)), hair, head, 3, 8);
+                case 3: // rulos: mechones cortos que salen en todas direcciones desde la coronilla
+                    for (int i = 0; i < (_low ? 4 : 7); i++)
+                    {
+                        float a = i * Mathf.PI * 2f / (_low ? 4 : 7);
+                        var root = new Vector3(Mathf.Cos(a) * 0.06f, 0.262f, Mathf.Sin(a) * 0.065f);
+                        Lock(root, root + new Vector3(Mathf.Cos(a) * 0.04f, 0.035f, Mathf.Sin(a) * 0.04f), 0.05f, 0.036f, 0.03f, hair);
+                    }
+
                     break;
-                default: // corto
-                    Sculpt(HairCap, HeadSides, HeadAt(Vector3.zero, Vector3.zero, Vector3.one), hair, head, NoMask, true, false);
-                    Ellipsoid(HeadAt(new Vector3(0f, 0.25f, 0.02f), Vector3.zero, new Vector3(0.085f, 0.028f, 0.09f)), hair, head, 2, 8);
+                case 4: // rapado: solo el casquete
+                    break;
+                case 5: // jopo: flequillo alto hacia arriba y adelante
+                    for (int i = -2; i <= 2; i += 1 + low)
+                    {
+                        Lock(new Vector3(i * 0.028f, 0.255f, 0.01f), new Vector3(i * 0.018f, 0.305f, 0.095f), 0.05f, 0.032f, 0.02f, hair);
+                    }
+
+                    break;
+                default: // corto: flequillo sobre la frente y mechones en la nuca
+                    for (int i = -2; i <= 2; i += 1 + low)
+                    {
+                        Lock(new Vector3(i * 0.03f, 0.225f, 0.075f), new Vector3(i * 0.033f, 0.19f, 0.123f), 0.032f, 0.016f, 0.012f, hair);
+                    }
+
+                    if (!_low)
+                    {
+                        for (int i = -1; i <= 1; i++)
+                        {
+                            Lock(new Vector3(i * 0.045f, 0.13f, -0.1f), new Vector3(i * 0.05f, 0.075f, -0.117f), 0.04f, 0.026f, 0.016f, hair);
+                        }
+
+                        Lock(new Vector3(0f, 0.255f, 0.02f), new Vector3(0f, 0.292f, 0.03f), 0.06f, 0.036f, 0.018f, hair);
+                    }
+
                     break;
             }
         }
 
-        private void BuildFacialHair(BodySpec s, Color hair)
+        private void BuildFacialHair(Color hair)
         {
-            const int head = (int)BodyBone.Head;
-            if (s.FacialHair == 0)
+            if (_spec.FacialHair == 0 || _low)
             {
                 return;
             }
 
-            if (s.FacialHair == 1) // barba: cubre la mandíbula
+            if (_spec.FacialHair == 1) // barba: mechones a lo largo de la mandíbula y el mentón
             {
-                Ellipsoid(HeadAt(new Vector3(0f, 0.055f, 0.035f), Vector3.zero, new Vector3(0.092f, 0.05f, 0.1f)), hair, head, 3, 8);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Lock(new Vector3(side * 0.088f, 0.1f, 0f), new Vector3(side * 0.078f, 0.025f, 0.045f), 0.036f, 0.026f, 0.014f, hair);
+                    Lock(new Vector3(side * 0.066f, 0.07f, 0.07f), new Vector3(side * 0.056f, 0.008f, 0.1f), 0.034f, 0.024f, 0.014f, hair);
+                    Lock(new Vector3(side * 0.03f, 0.05f, 0.09f), new Vector3(side * 0.026f, -0.012f, 0.108f), 0.032f, 0.022f, 0.014f, hair);
+                }
+
+                Lock(new Vector3(0f, 0.04f, 0.095f), new Vector3(0f, -0.02f, 0.108f), 0.04f, 0.026f, 0.014f, hair);
             }
-            else // candado: mentón y comisuras
+            else // candado: mentón
             {
-                Ellipsoid(HeadAt(new Vector3(0f, 0.035f, 0.092f), Vector3.zero, new Vector3(0.03f, 0.03f, 0.022f)), hair, head, 2, 6);
+                Lock(new Vector3(0f, 0.045f, 0.094f), new Vector3(0f, -0.005f, 0.108f), 0.03f, 0.02f, 0.012f, hair);
             }
 
-            Ellipsoid(HeadAt(new Vector3(0f, 0.086f, 0.112f), Vector3.zero, new Vector3(0.026f, 0.007f, 0.008f)), hair, head, 2, 5);
+            // Bigote: un mechón horizontal bajo la nariz.
+            LockWide(new Vector3(-0.026f, 0.089f, 0.108f), new Vector3(0.026f, 0.089f, 0.108f), 0.012f, 0.012f, 0.009f, hair);
         }
 
         private static BodyRing[] Band(float rx, float depth) => new[]
@@ -492,11 +802,52 @@ namespace Football.Game
             BodyRing.Pole(0.016f), new BodyRing(0.015f, rx, depth, depth), new BodyRing(-0.015f, rx, depth, depth), BodyRing.Pole(-0.016f)
         };
 
-        private static Color SockStripe(BodySpec s)
+        private Color SockStripe()
         {
-            Color c = s.Secondary;
-            float diff = Mathf.Abs(c.r - s.Socks.r) + Mathf.Abs(c.g - s.Socks.g) + Mathf.Abs(c.b - s.Socks.b);
-            return diff > 0.3f ? c : (s.Socks.grayscale > 0.5f ? new Color(0.1f, 0.1f, 0.12f) : Color.white);
+            Color c = _spec.Secondary;
+            float diff = Mathf.Abs(c.r - _spec.Socks.r) + Mathf.Abs(c.g - _spec.Socks.g) + Mathf.Abs(c.b - _spec.Socks.b);
+            return diff > 0.3f ? c : (_spec.Socks.grayscale > 0.5f ? new Color(0.1f, 0.1f, 0.12f) : Color.white);
+        }
+
+        /// <summary>Mechón: placa volumétrica que se afina de la raíz a la punta (espacio de la cabeza).</summary>
+        private void Lock(Vector3 root, Vector3 tip, float rootWidth, float tipWidth, float thickness, Color color)
+        {
+            Vector3 axis = tip - root;
+            Vector3 reference = Mathf.Abs(axis.y) > Mathf.Abs(axis.z) * 1.5f && Mathf.Abs(axis.y) > Mathf.Abs(axis.x) ? Forward : Up;
+            Vector3 side = Vector3.Cross(axis, reference);
+            side = side / Mathf.Max(1e-5f, side.magnitude);
+            TaperedBox(root, tip, side, rootWidth, tipWidth, thickness, color);
+        }
+
+        private void LockWide(Vector3 root, Vector3 tip, float rootWidth, float tipWidth, float thickness, Color color)
+        {
+            TaperedBox(root, tip, Up, rootWidth, tipWidth, thickness, color);
+        }
+
+        private void TaperedBox(Vector3 a, Vector3 b, Vector3 side, float w0, float w1, float thick, Color color)
+        {
+            Vector3 axis = b - a;
+            Vector3 normal = Vector3.Cross(axis, side);
+            normal = normal / Mathf.Max(1e-5f, normal.magnitude);
+            BeginShell();
+            for (int e = 0; e < 2; e++)
+            {
+                Vector3 c = e == 0 ? a : b;
+                float w = (e == 0 ? w0 : w1) * 0.5f, t = thick * (e == 0 ? 0.5f : 0.3f);
+                _local.Add(c - side * w - normal * t);
+                _local.Add(c + side * w - normal * t);
+                _local.Add(c + side * w + normal * t);
+                _local.Add(c - side * w + normal * t);
+            }
+
+            for (int k = 0; k < 4; k++)
+            {
+                int n = (k + 1) % 4;
+                Quad(k, n, 4 + n, 4 + k);
+            }
+
+            Quad(4, 5, 6, 7); // la punta; la raíz queda dentro del casquete
+            EndShell(HeadAt(Vector3.zero, Vector3.zero, Vector3.one), color, Bind.Single((int)BodyBone.Head), NoMask, Orientation.Centroid);
         }
 
         // ------------------------------------------------------------------ diseño de la camiseta
@@ -534,6 +885,8 @@ namespace Football.Game
             }
         }
 
+        private const int PatchRows = 6, PatchColumns = 2;
+
         private void Strip(float yTop, float yBottom, Func<float, float> centre, float halfWidth, Color color)
         {
             for (int side = 0; side < 2; side++)
@@ -553,7 +906,7 @@ namespace Football.Game
                 }
 
                 Grid(PatchRows, PatchColumns);
-                EndShell(Place.Identity, color, TrunkBone, FoldWaist, Orientation.Axis);
+                EndShell(Place.Identity, color, Bind.Auto, FoldWaist, Orientation.Axis, DecalMode.Torso);
             }
         }
 
@@ -572,7 +925,7 @@ namespace Football.Game
             }
 
             Grid(rows, columns);
-            EndShell(Place.Identity, color, TrunkBone, FoldWaist, Orientation.Axis);
+            EndShell(Place.Identity, color, Bind.Auto, FoldWaist, Orientation.Axis, DecalMode.Torso);
         }
 
         private void Grid(int rows, int columns)
@@ -615,9 +968,10 @@ namespace Football.Game
         private static readonly MaskFn SweatForehead = (l, m) => new Vector2(Smooth01(0.12f, 0.22f, l.y) * Smooth01(0f, 0.08f, l.z) * 0.9f + 0.1f, 0f);
         private static readonly MaskFn FoldWaist = (l, m) => new Vector2(0f, 0.25f + 0.75f * Smooth01(1.15f, 0.99f, m.y) + 0.5f * Smooth01(1.34f, 1.42f, m.y) * Smooth01(0.14f, 0.2f, Mathf.Abs(m.x)));
         private static readonly MaskFn FoldGroin = (l, m) => new Vector2(0f, 0.6f + 0.4f * Smooth01(0.9f, 0.78f, m.y));
-        private static readonly MaskFn FoldElbow = (l, m) => new Vector2(0f, 0.4f + 0.6f * Smooth01(-0.06f, -0.12f, l.y));
+        private static readonly MaskFn FoldElbowFull = (l, m) => new Vector2(0f, 0.3f + 0.7f * (1f - Mathf.Clamp01(Mathf.Abs(m.y - 1.11f) / 0.1f)));
+        private static readonly MaskFn FoldSleeve = (l, m) => new Vector2(0f, 0.4f + 0.6f * Smooth01(1.33f, 1.27f, m.y));
         private static readonly MaskFn FoldKnee = (l, m) => new Vector2(0f, 0.3f + 0.7f * (1f - Mathf.Clamp01(Mathf.Abs(m.y - 0.48f) / 0.1f)));
-        private static readonly MaskFn FoldAnkle = (l, m) => new Vector2(0f, 0.3f + 0.7f * Smooth01(-0.3f, -0.4f, l.y));
+        private static readonly MaskFn FoldAnkle = (l, m) => new Vector2(0f, 0.3f + 0.7f * Smooth01(0.18f, 0.08f, m.y));
 
         /// <summary>Transición suave entre dos bordes (0 en <paramref name="e0"/>, 1 en <paramref name="e1"/>; acepta bordes invertidos).</summary>
         public static float Smooth01(float e0, float e1, float x)
@@ -628,8 +982,80 @@ namespace Football.Game
 
         // ------------------------------------------------------------------ pesos
 
+        /// <summary>Cómo se pesa cada vértice de una pieza: un hueso con mezcla hacia su padre, una cadena de huesos o el botín.</summary>
+        private struct Bind
+        {
+            public int Bone;
+            public int[] Chain;
+            public bool IsBoot;
+
+            public static Bind Auto => new Bind { Bone = TrunkBone };
+
+            public static Bind Single(int bone) => new Bind { Bone = bone };
+
+            public static Bind Joints(int[] chain) => new Bind { Bone = chain[0], Chain = chain };
+
+            public static Bind Boot(int ankle) => new Bind { Bone = ankle, IsBoot = true };
+        }
+
+        private void Weigh(Bind bind, Vector3 p, out int b0, out int b1, out float w0)
+        {
+            if (bind.Chain != null)
+            {
+                WeighChain(bind.Chain, p, out b0, out b1, out w0);
+                return;
+            }
+
+            if (bind.IsBoot)
+            {
+                // El botín sigue al tobillo y su puntera, a medida que avanza, al hueso del pie (se dobla al despegar).
+                int toe = bind.Bone + 1;
+                float wt = Smooth01(ToeBlendFrom, ToeBlendTo, p.z);
+                b0 = wt > 0f ? toe : bind.Bone;
+                b1 = bind.Bone;
+                w0 = wt > 0f ? wt : 1f;
+                if (wt >= 1f)
+                {
+                    b1 = toe;
+                }
+
+                return;
+            }
+
+            WeighSingle(bind.Bone, p, out b0, out b1, out w0);
+        }
+
+        /// <summary>Cadena cadera–rodilla–tobillo u hombro–codo–muñeca: cada articulación mezcla con suavidad los dos huesos que une.</summary>
+        private static void WeighChain(int[] chain, Vector3 p, out int b0, out int b1, out float w0)
+        {
+            b0 = chain[0];
+            b1 = chain[0];
+            w0 = 1f;
+            for (int i = 1; i < chain.Length; i++)
+            {
+                float r = BlendRadius[chain[i]];
+                float below = BindPositions[chain[i]].y - p.y; // cuánto por debajo de la articulación está el vértice
+                float w = Smooth01(-r, r, below);
+                if (w >= 1f)
+                {
+                    b0 = chain[i];
+                    b1 = chain[i];
+                    continue;
+                }
+
+                if (w > 0f)
+                {
+                    b0 = chain[i];
+                    b1 = chain[i - 1];
+                    w0 = w;
+                }
+
+                return;
+            }
+        }
+
         /// <summary>Huesos y peso de un vértice: mezcla suave con el padre o el hijo cerca de cada articulación.</summary>
-        private void Weigh(int bone, Vector3 p, out int b0, out int b1, out float w0)
+        private static void WeighSingle(int bone, Vector3 p, out int b0, out int b1, out float w0)
         {
             if (bone < 0)
             {
@@ -653,10 +1079,9 @@ namespace Football.Game
                 float tc = Vector3.Dot(p - BindPositions[child], Axis[child]);
                 if (tc > -rc)
                 {
-                    float wc = Smooth01(-rc, rc, tc);
                     b0 = child;
                     b1 = bone;
-                    w0 = wc;
+                    w0 = Smooth01(-rc, rc, tc);
                 }
             }
 
@@ -695,9 +1120,35 @@ namespace Football.Game
             return (int)BodyBone.Head;
         }
 
+        // ------------------------------------------------------------------ oclusión ambiental
+
+        /// <summary>Factor de luz ambiente (1 = abierto, hasta 1 − <see cref="MaxOcclusion"/> en rincones) de un punto del cuerpo.</summary>
+        public static float Occlusion(Vector3 p)
+        {
+            float ao = 1f;
+            for (int i = 0; i < Occluders.Length; i++)
+            {
+                Occluder o = Occluders[i];
+                for (int s = 0; s < (o.Mirror ? 2 : 1); s++)
+                {
+                    float cx = s == 0 ? o.Centre.x : -o.Centre.x;
+                    float dx = (p.x - cx) / o.Radii.x, dy = (p.y - o.Centre.y) / o.Radii.y, dz = (p.z - o.Centre.z) / o.Radii.z;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy + dz * dz);
+                    if (d < 1f)
+                    {
+                        ao *= 1f - o.Strength * (1f - Smooth01(0f, 1f, d));
+                    }
+                }
+            }
+
+            return Mathf.Max(1f - MaxOcclusion, ao);
+        }
+
         // ------------------------------------------------------------------ armado de cáscaras
 
         private enum Orientation { Axis, Centroid }
+
+        private enum DecalMode { None, Torso }
 
         /// <summary>Lugar de una pieza: traslación del hueso más posición, giro (Euler en grados, orden de Unity) y escala locales.</summary>
         private struct Place
@@ -755,16 +1206,20 @@ namespace Football.Game
             Tri(a, c, d);
         }
 
-        /// <summary>Malla esculpida por secciones; las tapas que quedan dentro de otra pieza se omiten (ahorran triángulos).</summary>
-        private void Sculpt(BodyRing[] rings, int sides, Place place, Color color, int bone, MaskFn mask, bool capTop, bool capBottom)
+        /// <summary>Malla esculpida por secciones (con columnas uniformes o en los ángulos dados); las tapas que quedan dentro de otra pieza se omiten.</summary>
+        private void Sculpt(BodyRing[] rings, int sides, float[] angles, Place place, Color color, Bind bind, MaskFn mask, bool capTop, bool capBottom,
+            DecalMode decal = DecalMode.None, Func<Vector3, Vector3> warp = null, Func<Vector3, Color, Color> tint = null)
         {
             BeginShell();
+            int columns = angles != null ? angles.Length : sides;
             int ringCount = rings.Length - 2;
             for (int r = 0; r < ringCount; r++)
             {
-                for (int i = 0; i < sides; i++)
+                for (int i = 0; i < columns; i++)
                 {
-                    _local.Add(rings[r + 1].Point(i * Mathf.PI * 2f / sides));
+                    float a = angles != null ? angles[i] : i * Mathf.PI * 2f / sides;
+                    Vector3 v = rings[r + 1].Point(a);
+                    _local.Add(warp != null ? warp(v) : v);
                 }
             }
 
@@ -781,9 +1236,9 @@ namespace Football.Game
                 _local.Add(new Vector3(0f, rings[rings.Length - 1].Y, 0f));
             }
 
-            for (int i = 0; i < sides; i++)
+            for (int i = 0; i < columns; i++)
             {
-                int j = (i + 1) % sides;
+                int j = (i + 1) % columns;
                 if (capTop)
                 {
                     Tri(top, j, i);
@@ -791,21 +1246,21 @@ namespace Football.Game
 
                 if (capBottom)
                 {
-                    Tri(bottom, (ringCount - 1) * sides + i, (ringCount - 1) * sides + j);
+                    Tri(bottom, (ringCount - 1) * columns + i, (ringCount - 1) * columns + j);
                 }
 
                 for (int r = 0; r < ringCount - 1; r++)
                 {
-                    int a = r * sides;
-                    Quad(a + i, a + j, a + sides + j, a + sides + i);
+                    int a = r * columns;
+                    Quad(a + i, a + j, a + columns + j, a + columns + i);
                 }
             }
 
-            EndShell(place, color, bone, mask, Orientation.Axis);
+            EndShell(place, color, bind, mask, Orientation.Axis, decal, tint);
         }
 
-        /// <summary>Elipsoide de pocas caras (rasgos de la cara, pelo, pulgar).</summary>
-        private void Ellipsoid(Place place, Color color, int bone, int rings, int sides)
+        /// <summary>Elipsoide de pocas caras (orejas, pulgar).</summary>
+        private void Ellipsoid(Place place, Color color, Bind bind, int rings, int sides)
         {
             var profile = new BodyRing[rings + 2];
             profile[0] = BodyRing.Pole(1f);
@@ -842,11 +1297,11 @@ namespace Football.Game
                 }
             }
 
-            EndShell(place, color, bone, NoMask, Orientation.Centroid);
+            EndShell(place, color, bind, NoMask, Orientation.Centroid);
         }
 
-        /// <summary>Caja de caras planas (24 vértices): suela, lengüeta, tapones, ojos, cejas y boca.</summary>
-        private void Box(Place place, Color color, int bone)
+        /// <summary>Caja de caras planas (24 vértices): suela, lengüeta y tapones.</summary>
+        private void Box(Place place, Color color, Bind bind)
         {
             BeginShell();
             for (int axis = 0; axis < 3; axis++)
@@ -865,11 +1320,12 @@ namespace Football.Game
                 }
             }
 
-            EndShell(place, color, bone, NoMask, Orientation.Centroid);
+            EndShell(place, color, bind, NoMask, Orientation.Centroid);
         }
 
-        /// <summary>Orienta las caras hacia fuera (en el espacio de la pieza), las lleva al espacio del jugador y les pone pesos.</summary>
-        private void EndShell(Place place, Color color, int bone, MaskFn mask, Orientation orientation)
+        /// <summary>Orienta las caras hacia fuera (en el espacio de la pieza), las lleva al espacio del jugador, les pone pesos, oclusión y decal.</summary>
+        private void EndShell(Place place, Color color, Bind bind, MaskFn mask, Orientation orientation, DecalMode decal = DecalMode.None,
+            Func<Vector3, Color, Color> tint = null)
         {
             Vector3 centroid = Vector3.zero;
             float minY = float.MaxValue, maxY = float.MinValue;
@@ -905,19 +1361,52 @@ namespace Football.Game
             for (int i = 0; i < _local.Count; i++)
             {
                 Vector3 model = place.Apply(_local[i]);
+                Color tinted = tint != null ? tint(_local[i], color) : color;
+                float ao = Occlusion(model);
                 Vertices.Add(model);
-                Colors.Add(color);
+                BaseColors.Add(tinted);
+                Colors.Add(new Color(tinted.r * ao, tinted.g * ao, tinted.b * ao, tinted.a));
                 Masks.Add(mask(_local[i], model));
-                Weigh(bone, model, out int b0, out int b1, out float w0);
+                Weigh(bind, model, out int b0, out int b1, out float w0);
                 Bone0.Add(b0);
                 Bone1.Add(b1);
                 Weight0.Add(w0);
+                Group.Add(_group);
+                AddDecal(decal, model);
             }
 
             for (int i = 0; i < _localTris.Count; i++)
             {
                 Triangles.Add(offset + _localTris[i]);
             }
+        }
+
+        /// <summary>Proyección plana de los decales sobre la camiseta: dorsal en la espalda y escudo en el pecho izquierdo.</summary>
+        private void AddDecal(DecalMode decal, Vector3 p)
+        {
+            if (decal == DecalMode.None)
+            {
+                DecalUv.Add(Vector3.zero);
+                DecalData.Add(new Vector3(-1f, -1f, -1f));
+                DecalInk.Add(Vector3.zero);
+                return;
+            }
+
+            // El frente se ve desde +Z mirando hacia −Z (su derecha es +X); la espalda se ve desde −Z (su derecha es −X).
+            float flag = Mathf.Clamp(p.z / DecalFlagRamp, -1f, 1f);
+            Vector3 uv;
+            if (flag < 0f)
+            {
+                uv = new Vector3(0.5f - p.x / BackPatchW, (p.y - (BackPatchY - BackPatchH * 0.5f)) / BackPatchH, flag);
+            }
+            else
+            {
+                uv = new Vector3(0.5f + (p.x - CrestPatchX) / CrestPatchW, (p.y - (CrestPatchY - CrestPatchH * 0.5f)) / CrestPatchH, flag);
+            }
+
+            DecalUv.Add(uv);
+            DecalData.Add(new Vector3(_tens, _units, _spec.Crest));
+            DecalInk.Add(_ink);
         }
 
         private static Color Tag(Color color, float material)

@@ -318,3 +318,13 @@ la piel por GPU/CPU y confirmar 0 B de basura por fotograma con el perfilador.
 **Consecuencias:** `career.json` gana `ZoneSplitFrom`; `ClubInfo` gana `City`, `ParkingSpaces` y `Pitch` (opcionales: sin ellos
 valen los de la jerarquía); las partidas guardadas con 15 clubes siguen cargando porque el fixture ya está guardado.
 
+
+## D-25 · Jugador: extremidades continuas, AO pintado, decales por atlas, sombra proyectada, anclaje de pies y LOD — Aceptada (pedido del usuario)
+**Decisión (amplía D-23 y reemplaza la parte de D-15 que decía «sin texturas ni atlas de números»):**
+- **Extremidades** de una sola superficie (cadera–tobillo, hombro–muñeca) con tres anillos de soporte en cada flexión y pesos de dos huesos por cadena; el botín mezcla con el hueso de la puntera. Oclusión ambiental pintada en el color de los vértices (14–25 % bajo el mentón, axilas, entrepierna, mangas, ruedos y medias).
+- **Atlas R8 de 256×256 (64 KB)** generado por código (`PlayerAtlasData`/`PlayerAtlas`) y publicado como textura global `_FootballAtlas`; la camiseta trae proyección plana en UV2–UV4 (dorsal de 1 o 2 dígitos en la espalda y escudo en el pecho). Un solo material, sin `MaterialPropertyBlock`.
+- **Cara** con cuencas, arco superciliar, pómulos, labios y mentón en la geometría (columnas cada 7° al frente) e iris, esclerótica y labios en el color de los vértices; **pelo y barba** de mechones.
+- **Sombra proyectada**: segunda pasada `PlanarShadow` (`SRPDefaultUnlit`, stencil) en `FootballPlayer.shader`, solo en calidad MEDIA y ALTA; el público usa `Football/Crowd` (`UsePass` del cuerpo). Los jugadores se dibujan en la cola 2100 para quedar después de la cancha.
+- **Animación**: cadencia acompasada con la velocidad del suelo, amortiguación `1 − e^(−λ·dt)` de la pose pedida respecto de la zancada base y anclaje de pies con IK de dos huesos (el pie de apoyo también al patear).
+- **LOD** de dos niveles sobre el mismo esqueleto: ~2.520 triángulos de cerca y ~840 desde 24 m de la cámara (histéresis de 2 m).
+**Sin ejecutar en Unity:** el `UsePass`, el stencil (requiere buffer de profundidad con stencil), `SetShaderPassEnabled` y la IK son lo que más probablemente necesite ajustes en el dispositivo. Medido sin Unity (`Tools/SkinCheck`): triángulos, pesos, una sola superficie por extremidad, AO y proyección de decales.

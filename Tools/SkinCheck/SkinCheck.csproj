@@ -2,5 +2,6 @@
   <!-- Banco de prueba de la malla del jugador sin Unity: cuenta triángulos, revisa pesos y mide costuras al doblar.
        Uso (desde la raíz): dotnet run, proyecto Tools/SkinCheck. -->
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>disable</Nullable><ImplicitUsings>disable</ImplicitUsings></PropertyGroup>
-  <ItemGroup><Compile Include="../../Game/Assets/Football/Runtime/SkinnedBodyGeometry.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../Game/Assets/Football/Runtime/SkinnedBodyGeometry.cs" />
+    <Compile Include="../../Game/Assets/Football/Runtime/PlayerAtlasData.cs" /></ItemGroup>
 </Project>

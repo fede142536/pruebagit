@@ -99,6 +99,8 @@ namespace Football.Game
         private Confetti _confetti;
         private readonly KitColors _homeKit, _awayKit;
         private readonly StadiumLook _look;
+        private readonly int[] _shirtNumbers;
+        private const float LodHysteresis = 2f;
         private GrassBurst _grass;
         /// <summary>Cantidad de peinados distintos.</summary>
         public const int HairStyles = 6;
@@ -139,9 +141,10 @@ namespace Football.Game
         /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
         /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
         /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio.</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook look)
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook look, int[] shirtNumbers = null)
         {
             _look = look;
+            _shirtNumbers = shirtNumbers;
             _pitch = pitch;
             _tickRate = tickRate;
             _homeKit = homeKit;
@@ -624,7 +627,7 @@ namespace Football.Game
             go.transform.SetParent(_crowd, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = Materials.GetPlayer(Color.white); // colores por vértice, un solo material
+            renderer.sharedMaterial = Materials.GetCrowd(Color.white); // colores por vértice, sin sombra proyectada
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
         }
@@ -777,6 +780,8 @@ namespace Football.Game
                     // Aspecto determinista: cada jugador tiene siempre el mismo peinado y barba.
                     HairStyle = (i * 13 + 5) % HairStyles,
                     FacialHair = FacialHairFor(i),
+                    Number = _shirtNumbers != null && i < _shirtNumbers.Length ? _shirtNumbers[i] : 0,
+                    Crest = (int)kit.Pattern % PlayerAtlasData.CrestCount,
                     Keeper = keeper,
                     Gloves = home ? new Color(0.95f, 0.9f, 0.2f) : new Color(0.25f, 0.8f, 0.95f)
                 };
@@ -796,6 +801,19 @@ namespace Football.Game
         {
             int bucket = (int)(((uint)(index + 1) * FacialHairHash >> 16) % FacialHairBuckets);
             return bucket < BeardBuckets ? 1 : bucket < BeardBuckets + GoateeBuckets ? 2 : 0;
+        }
+
+        /// <summary>LOD de dos niveles: pasados 24 m de la cámara activa (con 2 m de histéresis) el jugador se dibuja con la malla simplificada.</summary>
+        private void UpdateDetail(PlayerModel model, Vector3 position)
+        {
+            if (_camera == null)
+            {
+                return;
+            }
+
+            float far = PlayerModel.FarDistance;
+            float limit = model.IsFar ? far - LodHysteresis : far;
+            model.SetFar((position - _camera.transform.position).sqrMagnitude > limit * limit);
         }
 
         private void BuildBall()
@@ -912,6 +930,7 @@ namespace Football.Game
                 bool holdingBall = current.OwnerIndex == i && i % _perTeam == 0 && current.BallZ > HoldBallHeight;
                 float ballDistance = Mathf.Max(MinLookDistance, Mathf.Sqrt((bx - x) * (bx - x) + (by - y) * (by - y)));
                 float lookPitch = Mathf.Atan2(bz - EyeHeight, ballDistance) * Mathf.Rad2Deg;
+                UpdateDetail(model, ToUnity(x, y, 0f));
                 model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, relative < 0f, deltaTime,
                     current.DiveHeight[i], holdingThrow, holdingBall, lookPitch);
                 _heads[i] = ToUnity(x, y, NameHeight);

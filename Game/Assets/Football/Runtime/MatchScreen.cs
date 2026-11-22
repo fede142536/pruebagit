@@ -274,7 +274,14 @@ namespace Football.Game
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full);
+            var numbers = new int[home.Players.Length + away.Players.Length];
+            for (int n = 0; n < home.Players.Length; n++)
+            {
+                numbers[n] = home.Players[n].Number;
+                numbers[home.Players.Length + n] = away.Players[n].Number;
+            }
+
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full, numbers);
             _nameTags.Setup(_engine);
             _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize); // en 3 contra 3 no hace falta
             _playerHud.SetVisible(!benchmark);

@@ -39,16 +39,22 @@ namespace Football.Game
         public bool Keeper;
         /// <summary>Color de los guantes del arquero.</summary>
         public Color Gloves;
+        /// <summary>Dorsal de la espalda (1–99); 0 o menos = sin dorsal.</summary>
+        public int Number;
+        /// <summary>Escudo del pecho: variante del atlas (0–5); negativo = sin escudo. Por defecto 0 (con escudo).</summary>
+        public int Crest;
     }
 
     /// <summary>
-    /// Figura humana: una sola malla con un <see cref="SkinnedMeshRenderer"/> de 20 huesos (<see cref="BodyBone"/>) armada por
-    /// <see cref="SkinnedBodyGeometry"/>, con pesos suaves en codos, rodillas, hombros, cuello e ingle. Animación procedural sin
-    /// basura por fotograma: zancada con rodillas, brazos en oposición, giro de pelvis y contragiro del pecho, inclinación en
-    /// las curvas repartida entre pelvis y columna, apoyo del pie (suela paralela al césped, puntera que se dobla al despegar y
-    /// pelvis que baja para que el pie de apoyo toque el suelo), mirada al balón repartida entre cuello y cabeza con límites
-    /// anatómicos, y los gestos de patada, barrida, estirada, achique, saque de banda y festejo. Si el shader de jugadores no
-    /// está, la misma malla se dibuja con un material plano por color (submallas).
+    /// Figura humana: una malla con un <see cref="SkinnedMeshRenderer"/> de 20 huesos (<see cref="BodyBone"/>) armada por
+    /// <see cref="SkinnedBodyGeometry"/> en dos niveles de detalle (LOD0 de ~2.500 triángulos y LOD1 de ~850, mismo esqueleto: el
+    /// partido pasa al LOD1 pasados 24 m de la cámara). Animación procedural sin basura por fotograma: zancada acompasada con la
+    /// velocidad del suelo, giro de pelvis y contragiro del pecho, inclinación de las curvas repartida entre pelvis y columna,
+    /// brazos en oposición y gestos de patada, barrida, estirada, achique, saque de banda y festejo, todo suavizado con
+    /// amortiguación exponencial (<c>1 − e^(−λ·dt)</c>) para que los cambios de estado tengan peso. Durante el apoyo de cada paso el
+    /// pie se fija en el césped (anclaje de pies con cinemática inversa de dos huesos en el plano de la pierna; el pie de apoyo
+    /// también se ancla al patear) y la puntera se dobla al despegar; la mirada al balón se reparte entre cuello y cabeza con
+    /// límites anatómicos. Si el shader de jugadores no está, la misma malla se dibuja con un material plano por color (submallas).
     /// </summary>
     public sealed class PlayerModel
     {
@@ -119,6 +125,25 @@ namespace Football.Game
         private static readonly Vector3 RendererBoundsCenter = new Vector3(0f, 0.9f, 0f);
         private static readonly Vector3 RendererBoundsSize = new Vector3(2.4f, 2.4f, 2.4f);
 
+        // Amortiguación exponencial (λ por segundo) de la diferencia entre la pose pedida y la zancada base.
+        private const float LegLambda = 18f, KneeLambda = 20f, ArmLambda = 14f, SpreadLambda = 12f, ElbowLambda = 12f;
+        private const float LeanLambda = 9f, TwistLambda = 14f, RollLambda = 10f, LiftLambda = 12f, LegOutLambda = 16f;
+        private const int ChLegL = 0, ChLegR = 1, ChKneeL = 2, ChKneeR = 3, ChArmL = 4, ChArmR = 5, ChSpreadL = 6, ChSpreadR = 7, ChElbow = 8,
+            ChLean = 9, ChTwist = 10, ChRoll = 11, ChLift = 12, ChLegOut = 13, Channels = 14;
+
+        // Anclaje de pies: largos del hueso del muslo y la pierna (m, sin escala), rampa de entrada y salida del apoyo y alcance máximo.
+        private const float ThighLength = 0.44f, ShinLength = 0.42f;
+        private const float StanceRampIn = 0.08f, StanceRampOut = 0.72f;
+        private const float PinEnableLambda = 14f;
+        private const float ReachLimit = 0.985f;
+        private const float MinStrideReach = 0.05f;
+        private const float StrideLength = 0.86f;       // largo de la pierna estirada (muslo + pierna)
+        private const float HalfPi = Mathf.PI * 0.5f;
+        private const float StillAmplitude = 2f;        // grados: por debajo, el jugador está parado
+
+        /// <summary>Distancia a la cámara (m) desde la que el partido pasa al LOD1 (se usa con histéresis de 2 m).</summary>
+        public const float FarDistance = 24f;
+
         /// <summary>Raíz del jugador, a la altura de los pies.</summary>
         public readonly Transform Root;
 
@@ -127,6 +152,14 @@ namespace Football.Game
         private readonly Transform _legL, _legR, _kneeL, _kneeR, _ankleL, _ankleR, _toeL, _toeR;
         private readonly Transform _armL, _armR, _elbowL, _elbowR;
         private readonly Transform _shadow;
+        private readonly SkinnedMeshRenderer _near, _far;
+        private readonly float[] _delta = new float[Channels];
+        private readonly bool[] _pinned = new bool[2];
+        private readonly bool[] _wasStance = new bool[2];
+        private readonly float[] _pinEnable = new float[2];
+        private readonly Vector3[] _pinPosition = new Vector3[2];
+        private bool _hasPose;
+        private bool _isFar;
         private readonly float _pelvisHeight;
         private readonly float _ankleHeight;
         private float _phase;
@@ -192,10 +225,18 @@ namespace Football.Game
             _pelvisHeight = SkinnedBodyGeometry.BindPositions[(int)BodyBone.Pelvis].y;
             _ankleHeight = SkinnedBodyGeometry.BindPositions[(int)BodyBone.AnkleL].y;
 
-            SkinnedBodyGeometry geometry = SkinnedBodyGeometry.Build(SpecOf(look));
+            // Dos niveles de detalle sobre el mismo esqueleto: se alterna encendiendo y apagando el renderer (el apagado no se anima ni se dibuja).
+            BodySpec spec = SpecOf(look);
+            _near = CreateRenderer(SkinnedBodyGeometry.Build(spec, 0), "MallaLOD0", ownedMeshes);
+            _far = CreateRenderer(SkinnedBodyGeometry.Build(spec, 1), "MallaLOD1", ownedMeshes);
+            _far.enabled = false;
+        }
+
+        private SkinnedMeshRenderer CreateRenderer(SkinnedBodyGeometry geometry, string name, List<Mesh> ownedMeshes)
+        {
             Mesh mesh = BuildMesh(geometry, out Material[] materials);
             ownedMeshes?.Add(mesh);
-            var go = new GameObject("Malla");
+            var go = new GameObject(name);
             go.transform.SetParent(Root, false);
             var skin = go.AddComponent<SkinnedMeshRenderer>();
             skin.sharedMesh = mesh;
@@ -208,7 +249,27 @@ namespace Football.Game
             skin.localBounds = new Bounds(RendererBoundsCenter, RendererBoundsSize);
             skin.shadowCastingMode = ShadowCastingMode.Off;
             skin.receiveShadows = false;
+            return skin;
         }
+
+        /// <summary>
+        /// Cambia entre el detalle completo (LOD0) y el simplificado (LOD1). Solo toca los renderers cuando el estado cambia.
+        /// </summary>
+        /// <param name="far">Verdadero para usar el LOD1 (jugador lejos de la cámara).</param>
+        public void SetFar(bool far)
+        {
+            if (_isFar == far)
+            {
+                return;
+            }
+
+            _isFar = far;
+            _near.enabled = !far;
+            _far.enabled = far;
+        }
+
+        /// <summary>Está dibujado con el LOD1.</summary>
+        public bool IsFar => _isFar;
 
         private Transform Bone(BodyBone bone) => _bones[(int)bone];
 
@@ -217,7 +278,7 @@ namespace Football.Game
             Shirt = look.Shirt, Secondary = look.Secondary, Pattern = (int)look.Pattern, Shorts = look.Shorts, Socks = look.Socks,
             Skin = look.Skin, Hair = look.Hair, Boots = look.Boots, Gloves = look.Gloves, HairStyle = look.HairStyle,
             FacialHair = look.FacialHair != 0 ? look.FacialHair : (look.Beard ? 1 : 0),
-            Keeper = look.Keeper, Trousers = look.Trousers, LongSleeves = look.LongSleeves
+            Keeper = look.Keeper, Trousers = look.Trousers, LongSleeves = look.LongSleeves, Number = look.Number, Crest = look.Crest
         };
 
         /// <summary>
@@ -231,6 +292,9 @@ namespace Football.Game
             mesh.SetColors(g.Colors);
             mesh.SetUVs(0, g.Masks);
             mesh.SetUVs(1, g.Vertices); // reposo: el shader pega pliegues y trama a la tela
+            mesh.SetUVs(2, g.DecalUv);   // dorsal y escudo: proyección plana sobre la camiseta
+            mesh.SetUVs(3, g.DecalData);
+            mesh.SetUVs(4, g.DecalInk);
             var weights = new BoneWeight[g.Vertices.Count];
             for (int i = 0; i < weights.Length; i++)
             {
@@ -269,7 +333,7 @@ namespace Football.Game
             var colors = new List<Color>();
             for (int t = 0; t < g.Triangles.Count; t += 3)
             {
-                Color c = g.Colors[g.Triangles[t]];
+                Color c = g.BaseColors[g.Triangles[t]];
                 c.a = 1f;
                 int k = colors.IndexOf(c);
                 if (k < 0)
@@ -334,7 +398,11 @@ namespace Football.Game
             float relative = Mathf.Clamp01(speed / topSpeed);
             float target = speed < IdleSpeed ? 0f : Mathf.Lerp(MinSwing, MaxSwing, relative);
             _amplitude = Mathf.Lerp(_amplitude, target, 1f - Mathf.Exp(-SwingResponse * deltaTime));
-            _phase += deltaTime * Mathf.Lerp(MinCadence, MaxCadence, relative) * TwoPi;
+            // La cadencia sale de la velocidad del suelo y del largo de la zancada (cuatro alcances por ciclo): así el pie de apoyo
+            // recorre hacia atrás justo lo que avanza el cuerpo y puede quedar fijo sin estirar la pierna.
+            float strideReach = StrideLength * Mathf.Sin(_amplitude * Mathf.Deg2Rad);
+            float cadence = speed < IdleSpeed ? MinCadence : Mathf.Clamp(speed / (4f * Mathf.Max(strideReach, MinStrideReach)), MinCadence * 0.75f, MaxCadence * 1.25f);
+            _phase += deltaTime * cadence * TwoPi;
             if (_phase > TwoPi)
             {
                 _phase -= TwoPi;
@@ -367,6 +435,8 @@ namespace Football.Game
             float lean = relative * MaxLean;
             float roll = 0f;
             float lift = Mathf.Abs(Mathf.Sin(_phase)) * Bob * relative;
+            float baseLegL = legL, baseLegR = legR, baseKneeL = kneeL, baseKneeR = kneeR, baseArmL = armL, baseArmR = armR;
+            float baseSpreadL = armSpreadL, baseSpreadR = armSpreadR, baseLean = lean, baseLift = lift;
 
             if (_kickTimer > 0f && _strike != PlayerAction.ThrowIn)
             {
@@ -485,14 +555,9 @@ namespace Football.Game
                 armSpreadR = 18f;
             }
 
-            _legL.localRotation = Quaternion.Euler(legL, 0f, 0f);
-            _legR.localRotation = Quaternion.Euler(legR, -legOut, 0f);
-            _kneeL.localRotation = Quaternion.Euler(kneeL, 0f, 0f);
-            _kneeR.localRotation = Quaternion.Euler(kneeR, 0f, 0f);
-            _armL.localRotation = Quaternion.Euler(armL, 0f, armSpreadL);
-            _armR.localRotation = Quaternion.Euler(armR, 0f, armSpreadR);
             // Codo: algo doblado en reposo y más al correr; estirado al lanzarse, festejar o sacar de banda.
-            float elbow = ElbowRest + _amplitude * ElbowRunFactor;
+            float baseElbow = ElbowRest + _amplitude * ElbowRunFactor;
+            float elbow = baseElbow;
             if (action == PlayerAction.Dive || action == PlayerAction.Celebrate || holdingThrow || (_kickTimer > 0f && _strike == PlayerAction.ThrowIn))
             {
                 elbow = ElbowStraight;
@@ -502,6 +567,26 @@ namespace Football.Game
                 elbow = ElbowHold;
             }
 
+            // Amortiguación exponencial: la pose pedida se suaviza respecto de la zancada base (1 − e^(−λ·dt)), así los cambios de
+            // estado (correr, frenar, girar, patear, barrer, festejar) tienen peso e inercia sin apagar el vaivén de la marcha.
+            legL = Damp(ChLegL, legL, baseLegL, LegLambda, deltaTime);
+            legR = Damp(ChLegR, legR, baseLegR, LegLambda, deltaTime);
+            kneeL = Damp(ChKneeL, kneeL, baseKneeL, KneeLambda, deltaTime);
+            kneeR = Damp(ChKneeR, kneeR, baseKneeR, KneeLambda, deltaTime);
+            armL = Damp(ChArmL, armL, baseArmL, ArmLambda, deltaTime);
+            armR = Damp(ChArmR, armR, baseArmR, ArmLambda, deltaTime);
+            armSpreadL = Damp(ChSpreadL, armSpreadL, baseSpreadL, SpreadLambda, deltaTime);
+            armSpreadR = Damp(ChSpreadR, armSpreadR, baseSpreadR, SpreadLambda, deltaTime);
+            elbow = Damp(ChElbow, elbow, baseElbow, ElbowLambda, deltaTime);
+            lean = Damp(ChLean, lean, baseLean, LeanLambda, deltaTime);
+            twist = Damp(ChTwist, twist, 0f, TwistLambda, deltaTime);
+            roll = Damp(ChRoll, roll, 0f, RollLambda, deltaTime);
+            lift = Damp(ChLift, lift, baseLift, LiftLambda, deltaTime);
+            legOut = Damp(ChLegOut, legOut, 0f, LegOutLambda, deltaTime);
+            _hasPose = true;
+
+            _armL.localRotation = Quaternion.Euler(armL, 0f, armSpreadL);
+            _armR.localRotation = Quaternion.Euler(armR, 0f, armSpreadR);
             _elbowL.localRotation = Quaternion.Euler(-elbow, 0f, 0f);
             _elbowR.localRotation = Quaternion.Euler(-elbow, 0f, 0f);
 
@@ -515,32 +600,124 @@ namespace Football.Game
             _spine.localRotation = Quaternion.Euler(lean * LeanSpineShare, twist * 0.25f - stride * 0.5f, bank * BankSpineShare);
             _chest.localRotation = Quaternion.Euler(lean * LeanChestShare, twist * 0.25f - swing * ChestCounterYaw, 0f);
 
-            bool grounded = action != PlayerAction.Dive && action != PlayerAction.Slide && action != PlayerAction.Celebrate;
-            PlantFeet(legL, kneeL, legR, kneeR, lean, grounded);
+            bool grounded = action != PlayerAction.Dive && action != PlayerAction.Slide && action != PlayerAction.Celebrate && action != PlayerAction.Stumble;
+            bool still = speed < IdleSpeed && _amplitude < StillAmplitude;
+            bool kicking = _kickTimer > 0f && _strike != PlayerAction.ThrowIn;
+            PlantFeet(legL, kneeL, legR, kneeR, legOut, lean, grounded, still, kicking, deltaTime);
             _shadow.localScale = ShadowScale * (1f - Mathf.Clamp(lift, 0f, HighDiveLift) * ShadowLiftShrink);
+            bool disc = !Materials.PlanarShadowsEnabled; // con la sombra proyectada, el disco de contacto sobra
+            if (_shadow.gameObject.activeSelf != disc)
+            {
+                _shadow.gameObject.SetActive(disc);
+            }
+
             Look(lookYaw, lookPitch);
         }
 
-        /// <summary>
-        /// Apoyo del pie: con la pierna casi estirada, la suela queda paralela al césped (el tobillo compensa el giro de la
-        /// cadera, la rodilla y el tronco); al quedar atrás, la puntera se dobla para despegar. Después, la pelvis sube o
-        /// baja lo justo para que el pie más bajo toque el suelo.
-        /// </summary>
-        private void PlantFeet(float legL, float kneeL, float legR, float kneeR, float lean, bool grounded)
+        /// <summary>Suaviza la diferencia entre la pose pedida y la base de la zancada; el primer fotograma salta directo a la pose.</summary>
+        private float Damp(int channel, float target, float baseValue, float lambda, float deltaTime)
         {
+            float delta = target - baseValue;
+            _delta[channel] = _hasPose ? _delta[channel] + (delta - _delta[channel]) * (1f - Mathf.Exp(-lambda * deltaTime)) : delta;
+            return baseValue + _delta[channel];
+        }
+
+        /// <summary>
+        /// Apoyo de los pies. Primero se pone la pose procedural de las piernas y la pelvis sube o baja lo justo para que el pie más
+        /// bajo toque el suelo; después, mientras cada pie está en apoyo, se ancla donde aterrizó (<see cref="PinFoot"/>); por último,
+        /// la suela queda paralela al césped y la puntera se dobla al despegar.
+        /// </summary>
+        private void PlantFeet(float legL, float kneeL, float legR, float kneeR, float legOut, float lean, bool grounded, bool still, bool kicking, float deltaTime)
+        {
+            _legL.localRotation = Quaternion.Euler(legL, 0f, 0f);
+            _legR.localRotation = Quaternion.Euler(legR, -legOut, 0f);
+            _kneeL.localRotation = Quaternion.Euler(kneeL, 0f, 0f);
+            _kneeR.localRotation = Quaternion.Euler(kneeR, 0f, 0f);
             float trunk = lean * LeanRootShare;
             Foot(_ankleL, _toeL, legL, kneeL, trunk, grounded);
             Foot(_ankleR, _toeR, legR, kneeR, trunk, grounded);
             _pelvis.localPosition = new Vector3(0f, _pelvisHeight, 0f);
-            if (!grounded)
+            if (grounded)
+            {
+                float scale = Mathf.Max(Root.lossyScale.y, 1e-4f);
+                float lowest = Mathf.Min(_ankleL.position.y, _ankleR.position.y) - Root.position.y;
+                float drop = Mathf.Clamp(_ankleHeight - lowest / scale, -MaxPelvisDrop, MaxPelvisDrop);
+                _pelvis.localPosition = new Vector3(0f, _pelvisHeight + drop, 0f);
+            }
+
+            float hipL = legL, hipR = legR, bendL = kneeL, bendR = kneeR;
+            PinFoot(0, _legL, _kneeL, _ankleL, ref hipL, ref bendL, 0f, grounded, still, kicking, deltaTime);
+            PinFoot(1, _legR, _kneeR, _ankleR, ref hipR, ref bendR, -legOut, grounded, still, kicking, deltaTime);
+            Foot(_ankleL, _toeL, hipL, bendL, trunk, grounded);
+            Foot(_ankleR, _toeR, hipR, bendR, trunk, grounded);
+        }
+
+        /// <summary>
+        /// Anclaje de un pie (foot locking). Mientras dura el apoyo (media zancada, o siempre si el jugador está parado, o el pie de
+        /// apoyo al patear) se guarda dónde aterrizó el botín y cada fotograma se resuelven la cadera y la rodilla para que el tobillo
+        /// vuelva a ese punto del césped: no patina aunque el cuerpo avance. La cinemática inversa es de dos huesos, en el plano de la
+        /// pierna, con ley de cosenos; la fuerza del anclaje sube y baja en las puntas del apoyo para mezclarse sin saltos con la
+        /// pose procedural, y se suelta si el punto queda fuera de alcance.
+        /// </summary>
+        private void PinFoot(int foot, Transform hip, Transform knee, Transform ankle, ref float hipPitch, ref float kneeBend, float hipYaw,
+            bool grounded, bool still, bool kicking, float deltaTime)
+        {
+            bool inStance;
+            float progress = 0.5f;
+            if (still || kicking)
+            {
+                inStance = !kicking || foot == 0; // al patear con la derecha, la izquierda apoya
+            }
+            else
+            {
+                float q = Mathf.Repeat(foot == 1 ? _phase + HalfPi : _phase - HalfPi, TwoPi); // la derecha apoya con cos(fase) > 0
+                inStance = q < Mathf.PI;
+                progress = q / Mathf.PI;
+            }
+
+            float ramp = !inStance ? 0f : progress < StanceRampIn ? progress / StanceRampIn : progress > StanceRampOut ? (1f - progress) / (1f - StanceRampOut) : 1f;
+            _pinEnable[foot] = Mathf.Lerp(_pinEnable[foot], grounded ? 1f : 0f, 1f - Mathf.Exp(-PinEnableLambda * deltaTime));
+            float weight = ramp * _pinEnable[foot];
+            if (!inStance)
+            {
+                _pinned[foot] = false;
+            }
+            else if (!_pinned[foot] && weight > 0.001f)
+            {
+                Vector3 at = ankle.position; // donde aterrizó con la pose procedural
+                at.y = Root.position.y + _ankleHeight * Mathf.Max(Root.lossyScale.y, 1e-4f);
+                _pinPosition[foot] = at;
+                _pinned[foot] = true;
+            }
+
+            if (!_pinned[foot] || weight <= 0.001f)
             {
                 return;
             }
 
-            float scale = Mathf.Max(Root.lossyScale.y, 1e-4f);
-            float lowest = Mathf.Min(_ankleL.position.y, _ankleR.position.y) - Root.position.y;
-            float drop = Mathf.Clamp(_ankleHeight - lowest / scale, -MaxPelvisDrop, MaxPelvisDrop);
-            _pelvis.localPosition = new Vector3(0f, _pelvisHeight + drop, 0f);
+            Vector3 d = _pelvis.InverseTransformPoint(_pinPosition[foot]) - hip.localPosition;
+            float reach = d.magnitude;
+            if (reach > (ThighLength + ShinLength) * ReachLimit)
+            {
+                _pinned[foot] = false; // fuera de alcance: se suelta y sigue la pose procedural
+                return;
+            }
+
+            reach = Mathf.Max(reach, Mathf.Abs(ThighLength - ShinLength) + 0.001f);
+            Vector3 toTarget = d / Mathf.Max(d.magnitude, 1e-5f);
+            float cosHip = Mathf.Clamp((ThighLength * ThighLength + reach * reach - ShinLength * ShinLength) / (2f * ThighLength * reach), -1f, 1f);
+            float hipOffset = Mathf.Acos(cosHip); // cuánto se adelanta el muslo respecto de la línea cadera–tobillo
+            float cosKnee = Mathf.Clamp((ThighLength * ThighLength + ShinLength * ShinLength - reach * reach) / (2f * ThighLength * ShinLength), -1f, 1f);
+            float bend = (Mathf.PI - Mathf.Acos(cosKnee)) * Mathf.Rad2Deg; // la rodilla dobla hacia atrás
+            Vector3 axis = Vector3.Cross(toTarget, Vector3.forward);
+            axis = axis.sqrMagnitude < 1e-6f ? new Vector3(-1f, 0f, 0f) : axis.normalized;
+            Vector3 thigh = toTarget * Mathf.Cos(hipOffset) + Vector3.Cross(axis, toTarget) * Mathf.Sin(hipOffset);
+            float roll = Mathf.Asin(Mathf.Clamp(thigh.x, -1f, 1f)) * Mathf.Rad2Deg;
+            float pitch = Mathf.Atan2(-thigh.z, -thigh.y) * Mathf.Rad2Deg;
+            hipPitch = Mathf.Lerp(hipPitch, pitch, weight);
+            kneeBend = Mathf.Lerp(kneeBend, bend, weight);
+            hip.localRotation = Quaternion.Euler(hipPitch, hipYaw * (1f - weight), roll * weight);
+            knee.localRotation = Quaternion.Euler(kneeBend, 0f, 0f);
         }
 
         private static void Foot(Transform ankle, Transform toe, float hip, float knee, float trunk, bool grounded)

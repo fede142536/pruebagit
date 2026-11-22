@@ -18,7 +18,7 @@ namespace UnityEngine
         public float grayscale => 0.299f * r + 0.587f * g + 0.114f * b; public static Color white => new Color(1, 1, 1);
         public static Color Lerp(Color x, Color y, float t) => new Color(x.r + (y.r - x.r) * t, x.g + (y.g - x.g) * t, x.b + (y.b - x.b) * t, x.a + (y.a - x.a) * t); }
     public static class Mathf { public const float PI = (float)Math.PI; public const float Deg2Rad = PI / 180f;
-        public static float Sin(float a) => (float)Math.Sin(a); public static float Cos(float a) => (float)Math.Cos(a); public static float Sqrt(float a) => (float)Math.Sqrt(a);
+        public static float Exp(float a) => (float)Math.Exp(a); public static float Sin(float a) => (float)Math.Sin(a); public static float Cos(float a) => (float)Math.Cos(a); public static float Sqrt(float a) => (float)Math.Sqrt(a);
         public static float Acos(float a) => (float)Math.Acos(a); public static float Abs(float a) => Math.Abs(a); public static float Sign(float a) => a >= 0 ? 1 : -1;
         public static float Min(float a, float b) => Math.Min(a, b); public static float Max(float a, float b) => Math.Max(a, b); public static int Max(int a, int b) => Math.Max(a, b);
         public static float Clamp(float v, float a, float b) => v < a ? a : v > b ? b : v; public static float Clamp01(float v) => Clamp(v, 0, 1);

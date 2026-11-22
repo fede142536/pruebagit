@@ -35,6 +35,18 @@ namespace Football.Game
         }
 
         private const string PlayerShaderName = "FootballPlayer";
+        private const string CrowdShaderName = "FootballCrowd";
+        private const string ShadowPassName = "SRPDefaultUnlit";
+        /// <summary>
+        /// Cola de dibujo de los jugadores: después de la cancha y del estadio (2000), así la sombra proyectada, que no escribe
+        /// profundidad, no queda tapada por el césped que se dibuje más tarde.
+        /// </summary>
+        public const int PlayerRenderQueue = 2100;
+        private static readonly Dictionary<int, Material> CrowdCache = new Dictionary<int, Material>();
+        private static Shader _crowdShader;
+        private static bool _crowdShaderChecked;
+        private static bool _planarShadows = true;
+        private static readonly int ShadowId = Shader.PropertyToID("_FootballShadow");
         private static readonly Dictionary<int, Material> PlayerCache = new Dictionary<int, Material>();
         private static Shader _playerShader;
         private static bool _playerShaderChecked;
@@ -69,9 +81,62 @@ namespace Football.Game
             var material = new Material(shader);
             material.SetColor(BaseColorId, color);
             material.SetFloat("_Cull", 0f);
+            material.renderQueue = PlayerRenderQueue;
+            material.SetShaderPassEnabled(ShadowPassName, _planarShadows);
             PlayerCache[key] = material;
             return material;
         }
+
+        /// <summary>
+        /// Material del público, los bancos y los fotógrafos: el mismo cuerpo del shader de jugadores pero sin la pasada de sombra
+        /// proyectada (<c>Football/Crowd</c>). Si ese shader no está, usa el de jugadores.
+        /// </summary>
+        /// <param name="color">Color base (blanco: los colores van por vértice).</param>
+        public static Material GetCrowd(Color color)
+        {
+            if (!_crowdShaderChecked)
+            {
+                _crowdShaderChecked = true;
+                Shader crowd = Resources.Load<Shader>(CrowdShaderName);
+                _crowdShader = crowd != null && crowd.isSupported ? crowd : null;
+            }
+
+            if (_crowdShader == null)
+            {
+                return GetPlayer(color);
+            }
+
+            Color32 c = color;
+            int key = c.r | (c.g << 8) | (c.b << 16) | (c.a << 24);
+            if (CrowdCache.TryGetValue(key, out Material cached))
+            {
+                return cached;
+            }
+
+            var material = new Material(_crowdShader);
+            material.SetColor(BaseColorId, color);
+            material.SetFloat("_Cull", 0f);
+            CrowdCache[key] = material;
+            return material;
+        }
+
+        /// <summary>
+        /// Enciende o apaga la sombra proyectada de los jugadores (calidad MEDIA y ALTA). Apagada, la pasada no se dibuja y el disco de
+        /// contacto de cada jugador hace de sombra.
+        /// </summary>
+        /// <param name="enabled">Verdadero para encenderla.</param>
+        public static void SetPlanarShadows(bool enabled)
+        {
+            _planarShadows = enabled;
+            Shader.SetGlobalFloat(ShadowId, enabled ? 1f : 0f);
+            foreach (Material m in PlayerCache.Values)
+            {
+                m.SetShaderPassEnabled(ShadowPassName, enabled);
+            }
+        }
+
+        /// <summary>La sombra proyectada está encendida (los jugadores ocultan entonces su disco de contacto).</summary>
+        public static bool PlanarShadowsEnabled => _planarShadows && PlayerShaderAvailable;
 
         /// <summary>Enciende o apaga la luz de borde de los jugadores (se apaga en calidad BAJA).</summary>
         /// <param name="enabled">Verdadero para encenderla.</param>
@@ -122,6 +187,8 @@ namespace Football.Game
             }
 
             _playerShader = shader;
+            PlayerAtlas.Publish();
+            Shader.SetGlobalFloat(ShadowId, _planarShadows ? 1f : 0f);
             return _playerShader;
         }
 
