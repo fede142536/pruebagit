@@ -119,5 +119,7 @@ con pruebas, **sin interfaz todavía**:
 | Ciclo gestión ↔ partido (forma, moral, físico, lesiones, sanciones, ventaja de local) | ✅ ida y vuelta probada |
 | Cuerpo técnico, scouting progresivo, mercado con cláusulas y perfiles de rivales, cantera, personalidad, química, vestuario, promesas, buzón, historia viva | ✅ como sistemas sueltos con pruebas |
 | Migraciones 3 a 7 y guardado atómico | ✅ |
-| Falta | Orquestador de la temporada (une todo día a día), copas nacionales y continentales con su calendario real, IA de fichajes de los rivales en el mercado, repositorios SQL de las tablas nuevas, interfaz de la carrera |
+| Orquestador de la temporada (`CareerSession`), repositorios SQL de todas las tablas, archivo de partida para el teléfono, Modo Torneo | ✅ 22/11/2026, con pruebas (temporada completa, determinismo al cargar) |
+| Pantallas de Modo Carrera y Torneo en Unity (inicio, plantel y táctica, mercado y ojeadores, club y finanzas) | ✅ escritas; **sin probar en Unity** |
+| Falta | Copas nacionales y continentales con su calendario real, segunda división (hoy el descenso solo baja reputación), IA de fichajes entre rivales, renovaciones de contrato |
 

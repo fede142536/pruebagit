@@ -1,0 +1,55 @@
+namespace Football.Core.Career
+{
+    /// <summary>
+    /// Parámetros del modo carrera que no son de economía ni de plantel (esos están en <c>finance.json</c> y
+    /// <c>management.json</c>): calendario, ventanas de pases, descensos, clasificación a copas, ojeadores y valores iniciales de
+    /// los clubes. Se guarda en <c>Data/balance/career.json</c> (HeadlessSim <c>--dump-career-config</c>).
+    /// </summary>
+    public sealed class CareerConfig
+    {
+        /// <summary>Mes de la primera jornada de cada temporada.</summary>
+        public int SeasonStartMonth = 1;
+        /// <summary>Día de la primera jornada de cada temporada.</summary>
+        public int SeasonStartDay = 25;
+        /// <summary>Días entre jornadas.</summary>
+        public int DaysBetweenRounds = 7;
+        /// <summary>Días de descanso entre el Apertura y el Clausura.</summary>
+        public int BreakBetweenTournaments = 21;
+        /// <summary>Meses con el libro de pases abierto (1 = enero).</summary>
+        public int[] TransferWindowMonths = { 1, 2, 7 };
+        /// <summary>Probabilidad semanal de que un rival ofrezca por un jugador del usuario con el libro abierto.</summary>
+        public float RivalOfferChancePerWeek = 0.3f;
+        /// <summary>Fracción del valor de mercado que ofrece un rival (antes de negociar).</summary>
+        public float RivalOfferShare = 0.85f;
+        /// <summary>Clubes que descienden por promedios al terminar la temporada.</summary>
+        public int RelegatedClubs = 2;
+        /// <summary>Clubes que se clasifican a la copa internacional por la tabla anual.</summary>
+        public int CupQualifiers = 4;
+        /// <summary>Temporadas que cuenta la tabla de promedios.</summary>
+        public int AveragesSeasons = 3;
+        /// <summary>Días que tarda un ojeador en entregar su informe.</summary>
+        public int ScoutDays = 14;
+        /// <summary>Formación con la que juega la IA de cada club.</summary>
+        public string Formation = "4-4-2";
+        /// <summary>Media del plantel que corresponde a una reputación de 50.</summary>
+        public float ReputationPivotRating = 66f;
+        /// <summary>Puntos de reputación por punto de media del plantel.</summary>
+        public float ReputationPerRating = 4f;
+        /// <summary>Dinero en caja inicial por punto de reputación.</summary>
+        public long CashPerReputation = 40_000_000;
+        /// <summary>Fracción de la caja que se reserva para fichajes al empezar.</summary>
+        public float TransferBudgetShare = 0.3f;
+        /// <summary>Margen del presupuesto de sueldos sobre la masa salarial inicial.</summary>
+        public float WageBudgetMargin = 1.1f;
+        /// <summary>Socios por punto de reputación.</summary>
+        public int MembersPerReputation = 900;
+        /// <summary>Años de contrato iniciales (mínimo y máximo).</summary>
+        public int[] ContractYears = { 1, 4 };
+        /// <summary>Cláusula de rescisión inicial, en veces el valor de mercado.</summary>
+        public float ReleaseClauseFactor = 2.5f;
+        /// <summary>Capacidad (1–20) del cuerpo técnico inicial de un club de reputación 50.</summary>
+        public int StaffAbilityPivot = 10;
+        /// <summary>Sueldo semanal de un integrante del cuerpo técnico por punto de capacidad.</summary>
+        public long StaffWagePerAbility = 150_000;
+    }
+}

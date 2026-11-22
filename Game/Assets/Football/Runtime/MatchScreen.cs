@@ -206,8 +206,44 @@ namespace Football.Game
         /// <summary>Motivo por el que no arrancó el último partido, o null.</summary>
         public string LastError { get; private set; }
 
+        /// <summary>
+        /// Empieza un partido del modo carrera con los equipos que armó el núcleo (forma, moral y físico ya aplicados). El
+        /// usuario es el lado 0.
+        /// </summary>
+        /// <param name="userTeam">Club del usuario (nombre y camisetas).</param>
+        /// <param name="rivalTeam">Rival.</param>
+        /// <param name="user">Equipo del usuario para el motor.</param>
+        /// <param name="rival">Equipo rival para el motor.</param>
+        /// <param name="userKit">Camiseta del usuario.</param>
+        /// <param name="rivalKit">Camiseta del rival.</param>
+        /// <param name="difficulty">Índice de dificultad.</param>
+        /// <param name="halfMinutes">Minutos reales por parte.</param>
+        /// <returns>Verdadero si arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
+        public bool BeginCareer(TeamDefinition userTeam, TeamDefinition rivalTeam, MatchTeamSetup user, MatchTeamSetup rival,
+            KitColors userKit, KitColors rivalKit, int difficulty, int halfMinutes)
+        {
+            try
+            {
+                BeginUnsafe(userTeam, rivalTeam, null, null, userKit, rivalKit, difficulty, halfMinutes, false, false, user, rival);
+                LastError = null;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                LastError = e.GetType().Name + ": " + e.Message;
+                End();
+                _engine = null;
+                return false;
+            }
+        }
+
+        /// <summary>Informe completo del partido que terminó (para el modo carrera); null si no hay partido.</summary>
+        public MatchReport BuildReport() => _engine?.BuildReport();
+
         private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, SquadSelection homeSquad, SquadSelection awaySquad,
-            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor)
+            KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor,
+            MatchTeamSetup prebuiltHome = null, MatchTeamSetup prebuiltAway = null)
         {
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
@@ -226,8 +262,8 @@ namespace Football.Game
             ulong seed = benchmark ? BenchmarkSeed : (ulong)DateTime.Now.Ticks;
             var rng = new SeededRandom(seed);
             IRandom teams = rng.Fork("teams");
-            MatchTeamSetup home = TeamBuilder.Build(homeTeam, config, teams.Fork("home"), homeSquad);
-            MatchTeamSetup away = TeamBuilder.Build(awayTeam, config, teams.Fork("away"), awaySquad);
+            MatchTeamSetup home = prebuiltHome ?? TeamBuilder.Build(homeTeam, config, teams.Fork("home"), homeSquad);
+            MatchTeamSetup away = prebuiltAway ?? TeamBuilder.Build(awayTeam, config, teams.Fork("away"), awaySquad);
             _engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, difficulty);
             _engine.SetHuman(0, !benchmark);
 

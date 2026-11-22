@@ -8,5 +8,13 @@
   "news.transfer_out": "Venta cerrada: se va el jugador {0} por {1}.",
   "news.record": "¡Récord! {0}: {2} ({1}).",
   "news.retired": "Se retiró el jugador {0}.",
-  "news.retired_to_staff": "Se retiró el jugador {0} y empieza su carrera como entrenador."
+  "news.retired_to_staff": "Se retiró el jugador {0} y empieza su carrera como entrenador.",
+  "news.result": "Resultado: {0} {1} - {2} {3}.",
+  "news.scout_report": "Informe del ojeador: ya conocemos al {1} % a {0}.",
+  "news.offer_received": "{0} ofrece {2} por {1}. Respondé desde Mercado.",
+  "news.relegated": "{0} desciende por promedios.",
+  "news.user_relegated": "Descendimos por promedios. La directiva espera una reacción.",
+  "news.qualified": "{0} se clasificó a la copa internacional por la tabla anual.",
+  "news.season_end": "Terminó la temporada {0}. Arranca la pretemporada.",
+  "news.champion": "¡{0} es el campeón del torneo!"
 }

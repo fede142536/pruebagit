@@ -19,10 +19,12 @@ namespace Football.Core.Management
         /// <summary>Crea el reloj.</summary>
         /// <param name="clock">Reloj de simulación.</param>
         /// <param name="bus">Bus de eventos.</param>
-        public SeasonClock(SimClock clock, EventBus bus)
+        /// <param name="dayOfWeek">Días ya transcurridos de la semana en curso (0 a 6), para retomar una partida guardada.</param>
+        public SeasonClock(SimClock clock, EventBus bus, int dayOfWeek = 0)
         {
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+            _dayOfWeek = ((dayOfWeek % DaysPerWeek) + DaysPerWeek) % DaysPerWeek;
         }
 
         /// <summary>Fecha actual.</summary>

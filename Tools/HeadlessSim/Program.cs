@@ -41,6 +41,7 @@ namespace Football.Tools.HeadlessSim
             string simDumpPath = null;
             string financeDumpPath = null;
             string managementDumpPath = null;
+            string careerDumpPath = null;
             for (int i = 0; i < args.Length; i++)
             {
                 bool needsValue = args[i] != "--verbose" && args[i] != "--indoor" && args[i] != "--report" && args[i] != "--sim";
@@ -66,6 +67,7 @@ namespace Football.Tools.HeadlessSim
                     case "--dump-sim-config": simDumpPath = args[++i]; break;
                     case "--dump-finance-config": financeDumpPath = args[++i]; break;
                     case "--dump-management-config": managementDumpPath = args[++i]; break;
+                    case "--dump-career-config": careerDumpPath = args[++i]; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                     default:
@@ -84,6 +86,13 @@ namespace Football.Tools.HeadlessSim
             {
                 Console.Error.WriteLine($"Valores fuera de rango: --difficulty y --away-difficulty van de 0 a {levels - 1}; --matches debe ser positivo.");
                 return 2;
+            }
+
+            if (careerDumpPath != null)
+            {
+                File.WriteAllText(careerDumpPath, JsonSerializer.Serialize(new Football.Core.Career.CareerConfig(), Json) + "\n");
+                Console.WriteLine("Carrera escrita en " + careerDumpPath);
+                return 0;
             }
 
             if (managementDumpPath != null)

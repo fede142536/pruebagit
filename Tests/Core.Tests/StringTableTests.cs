@@ -44,6 +44,31 @@ namespace Football.Core.Tests
             Assert.Throws<FormatException>(() => StringTable.Parse(json));
         }
 
+        [TestCase("career.json")]
+        [TestCase("finance.json")]
+        [TestCase("management.json")]
+        [TestCase("matchsim.json")]
+        public void UnityCopyOfTheCareerBalance_IsUpToDate(string file)
+        {
+            string from = Find("Data", "balance", file);
+            string to = Find("Game", "Assets", "Football", "Resources", file);
+            Assert.That(to, Is.Not.Null, "falta la copia para Unity: ejecutar Tools/build-core.sh");
+            Assert.That(File.ReadAllText(to), Is.EqualTo(File.ReadAllText(from)));
+        }
+
+        [Test]
+        public void NewsInSpanishAndEnglish_HaveTheSameKeys_IncludingTheCareerOnes()
+        {
+            var es = StringTable.Parse(File.ReadAllText(Find("Data", "locale", "news.es.json")));
+            var en = StringTable.Parse(File.ReadAllText(Find("Data", "locale", "news.en.json")));
+            Assert.That(es.Keys, Is.EquivalentTo(en.Keys));
+            foreach (string key in new[] { "news.result", "news.scout_report", "news.offer_received", "news.relegated", "news.user_relegated",
+                         "news.qualified", "news.season_end", "news.champion" })
+            {
+                Assert.That(es.ContainsKey(key), Is.True, key);
+            }
+        }
+
         [Test]
         public void SpanishAndEnglish_HaveTheSameKeys_AndTheGameIsCalledPotrero()
         {
@@ -56,6 +81,8 @@ namespace Football.Core.Tests
 
         [TestCase("ui.es.json", "ui_es.json")]
         [TestCase("ui.en.json", "ui_en.json")]
+        [TestCase("news.es.json", "news_es.json")]
+        [TestCase("news.en.json", "news_en.json")]
         public void UnityCopyOfTheTexts_IsUpToDate(string source, string copy)
         {
             string from = Find("Data", "locale", source);

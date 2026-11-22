@@ -1,0 +1,62 @@
+{
+  "BaseGoals": 1.33,
+  "StrengthSensitivity": 0.074,
+  "Openness": 0.3,
+  "StrengthSaturation": 80,
+  "BaseShots": 4.7,
+  "ShotShare": 0.35,
+  "DirectnessShots": 0.3,
+  "MaxShotXg": 0.9,
+  "OnTargetShare": 0.43,
+  "AssistShare": 0.42,
+  "PossessionSensitivity": 0.012,
+  "BasePasses": 60,
+  "PassAccuracy": 0.857,
+  "PassAccuracyPerPoint": 0.003,
+  "Fouls": 1.75,
+  "Yellows": 0.32,
+  "Reds": 0.02,
+  "RivalryFoulStep": 0.15,
+  "Corners": 0.4,
+  "Injuries": 0.13,
+  "Recoveries": 16.8,
+  "StaminaLeft": 0.72,
+  "StaminaPerPoint": 0.006,
+  "DistanceKm": 1,
+  "Substitutions": 3,
+  "SubstitutionFrom": 58,
+  "SubstitutionTo": 82,
+  "StyleNames": [
+    "Balanced",
+    "Possession",
+    "Counter Attack",
+    "High Press",
+    "Defensive"
+  ],
+  "StyleAttack": [
+    1,
+    0.8,
+    0.87,
+    1.3,
+    0.75
+  ],
+  "StyleDefense": [
+    1,
+    1,
+    0.9,
+    1.1,
+    0.7
+  ],
+  "ShotWeights": [
+    0,
+    0.4,
+    1.2,
+    3.5
+  ],
+  "PassWeights": [
+    0.4,
+    1,
+    1.8,
+    1.2
+  ]
+}

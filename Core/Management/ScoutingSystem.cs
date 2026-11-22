@@ -24,6 +24,24 @@ namespace Football.Core.Management
         /// <summary>Cuánto conoce un club a un jugador (0 nada, 1 todo).</summary>
         public float Knowledge(int clubId, int playerId) => _knowledge.TryGetValue((clubId, playerId), out float k) ? k : 0f;
 
+        /// <summary>Todo lo que cada club sabe de cada jugador (para guardarlo).</summary>
+        public IEnumerable<(int ClubId, int PlayerId, float Knowledge)> Entries
+        {
+            get
+            {
+                foreach (KeyValuePair<(int club, int player), float> e in _knowledge)
+                {
+                    yield return (e.Key.club, e.Key.player, e.Value);
+                }
+            }
+        }
+
+        /// <summary>Carga un conocimiento guardado.</summary>
+        /// <param name="clubId">Club.</param>
+        /// <param name="playerId">Jugador.</param>
+        /// <param name="knowledge">Conocimiento de 0 a 1.</param>
+        public void Restore(int clubId, int playerId, float knowledge) => _knowledge[(clubId, playerId)] = Math.Max(0f, Math.Min(1f, knowledge));
+
         /// <summary>Un ojeador sigue a un jugador durante unos días.</summary>
         /// <param name="clubId">Club del ojeador.</param>
         /// <param name="playerId">Jugador.</param>

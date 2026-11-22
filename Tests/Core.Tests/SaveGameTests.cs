@@ -48,7 +48,7 @@ namespace Football.Core.Tests
                 Run(db, "INSERT INTO contracts (player_id, weekly_wage, expires_on) VALUES (7, 100, '2028-06-30')");
                 Migrator.Default.MigrateToLatest(db);
 
-                Assert.That(Migrator.Default.GetCurrentVersion(db), Is.EqualTo(7));
+                Assert.That(Migrator.Default.GetCurrentVersion(db), Is.EqualTo(Migrator.Default.LatestVersion));
                 Assert.That(Convert.ToInt64(Scalar(db, "SELECT transfer_budget FROM club_finances WHERE club_id = 1")), Is.EqualTo(5000));
                 Assert.That(Convert.ToInt64(Scalar(db, "SELECT weekly_wage_budget FROM club_finances WHERE club_id = 1")), Is.EqualTo(300));
                 Assert.That(Convert.ToInt64(Scalar(db, "SELECT COUNT(*) FROM facilities WHERE club_id = 1 AND level = 1")), Is.EqualTo(4));

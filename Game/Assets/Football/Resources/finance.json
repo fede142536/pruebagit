@@ -1,0 +1,39 @@
+{
+  "BudgetTransferCommission": 0.1,
+  "WeeksPerSeason": 52,
+  "ReferenceTicketPrice": 8000,
+  "BaseOccupancy": 0.55,
+  "OccupancyPerReputation": 0.006,
+  "OccupancyPerOpponentReputation": 0.003,
+  "RivalryOccupancy": [
+    0,
+    0.1,
+    0.2,
+    0.35
+  ],
+  "PriceElasticity": 0.8,
+  "StadiumCapacity": [
+    18000,
+    28000,
+    40000,
+    52000,
+    65000
+  ],
+  "MembershipFee": 6000,
+  "TelevisionPerReputation": 900000,
+  "SponsorPerReputation": 700000,
+  "MaintenancePerLevel": 1500000,
+  "UpgradeCost": [
+    1500000000,
+    3500000000,
+    7000000000,
+    12000000000
+  ],
+  "UpgradeWeeks": [
+    8,
+    12,
+    18,
+    26
+  ],
+  "MaxFacilityLevel": 5
+}

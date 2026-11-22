@@ -8,5 +8,13 @@
   "news.transfer_out": "Sale completed: player {0} leaves for {1}.",
   "news.record": "Record! {0}: {2} ({1}).",
   "news.retired": "Player {0} has retired.",
-  "news.retired_to_staff": "Player {0} has retired and starts a coaching career."
+  "news.retired_to_staff": "Player {0} has retired and starts a coaching career.",
+  "news.result": "Result: {0} {1} - {2} {3}.",
+  "news.scout_report": "Scout report: we now know {0} at {1} %.",
+  "news.offer_received": "{0} offer {2} for {1}. Answer from the Market screen.",
+  "news.relegated": "{0} are relegated on points average.",
+  "news.user_relegated": "We have been relegated on points average. The board expects a reaction.",
+  "news.qualified": "{0} qualified for the international cup through the annual table.",
+  "news.season_end": "Season {0} is over. Pre-season starts now.",
+  "news.champion": "{0} are the tournament champions!"
 }

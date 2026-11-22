@@ -265,18 +265,31 @@ namespace Football.Game
             Image panel = UiKit.Panel(Root, "Estadisticas", new Vector2(960f, 480f), new Vector2(1300f, 520f), UiTheme.Panel);
             _body = UiKit.Label(panel.transform, "Texto", new Vector2(650f, 260f), new Vector2(1240f, 500f), string.Empty, 34, UiTheme.Text);
             _again = UiKit.Button(Root, "Otra", new Vector2(640f, 110f), new Vector2(520f, 110f), "REVANCHA", 44, UiTheme.AccentDark);
-            _menu = UiKit.Button(Root, "Menu", new Vector2(1280f, 110f), new Vector2(520f, 110f), "MENÚ PRINCIPAL", 44, UiTheme.Button);
+            _menu = UiKit.Button(Root, "Menu", new Vector2(1280f, 110f), new Vector2(520f, 110f), MenuLabel, 44, UiTheme.Button);
         }
 
         /// <summary>Muestra el resultado.</summary>
         public void Show(string result, string summary)
         {
+            Show(result, summary, false);
+        }
+
+        /// <summary>Muestra el resultado; en el modo carrera no hay revancha y el botón vuelve a la carrera.</summary>
+        /// <param name="result">Marcador.</param>
+        /// <param name="summary">Estadísticas.</param>
+        /// <param name="career">Partido del modo carrera o del torneo.</param>
+        public void Show(string result, string summary, bool career)
+        {
             AgainRequested = false;
             MenuRequested = false;
             _score.text = result;
             _body.text = summary;
+            _again.SetVisible(!career);
+            _menu.Label.text = career ? Locale.Get("career.continue_button") : MenuLabel;
             Show();
         }
+
+        private const string MenuLabel = "MENÚ PRINCIPAL";
 
         /// <summary>Procesa los toques del fotograma.</summary>
         public void Update()

@@ -14,6 +14,11 @@ cp "$root/Data/teams/argentina.json" "$root/Game/Assets/Football/Resources/teams
 cp "$root/Data/balance/match.json" "$root/Game/Assets/Football/Resources/match.json"
 cp "$root/Data/balance/match_indoor.json" "$root/Game/Assets/Football/Resources/match_indoor.json"
 cp "$root/Data/locale/ui.es.json" "$root/Game/Assets/Football/Resources/ui_es.json"
+for f in matchsim finance management career; do
+  cp "$root/Data/balance/$f.json" "$root/Game/Assets/Football/Resources/$f.json"
+done
+cp "$root/Data/locale/news.es.json" "$root/Game/Assets/Football/Resources/news_es.json"
+cp "$root/Data/locale/news.en.json" "$root/Game/Assets/Football/Resources/news_en.json"
 cp "$root/Data/locale/ui.en.json" "$root/Game/Assets/Football/Resources/ui_en.json"
 rm -f "$dest/Football.Core.xml"
 echo "Núcleo copiado a: $dest (y equipos y balance a Game/Assets/Football/Resources/)"

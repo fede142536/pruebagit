@@ -194,3 +194,18 @@ tipo de material va en el alfa del color del vértice, así sigue habiendo un ú
 liviana de lograr volumen anatómico en gama baja.
 **Consecuencias:** se eliminan `MeshKit.Limb` y `MeshKit.Torso`; geometría verificada por cálculo (mallas cerradas y orientadas
 hacia fuera), pero el aspecto final solo se puede juzgar en Unity.
+
+## D-20 · Orquestador de carrera, Torneo y guardado en el teléfono — Aceptada (pedido del usuario)
+**Decisión:** `CareerSession` une todos los sistemas de gestión día a día. Temporada argentina simplificada: Apertura y
+Clausura a una rueda (localía invertida), tabla del torneo, tabla anual y promedios de 3 temporadas; al final descienden 2
+por promedios (sin segunda división todavía: bajan reputación y lo anuncia el buzón) y se clasifican 4 por la tabla anual.
+El Torneo usa el mismo orquestador con una sola rueda y campeón. Edad, potencial y atributos detallados de los jugadores del
+archivo se generan con la semilla a partir de su media (el archivo no los trae). El perfil de mercado de cada club es fijo
+por club; los rivales ofrecen solo por jugadores que pueden pagar. La partida se guarda en SQLite (`SqlCareerRepository`,
+migración 8 con el estado de la partida) y, en Unity, en un archivo binario propio (`CareerFile`) porque Unity en Android no
+trae SQLite; los dos guardan lo mismo y hay prueba de que una partida cargada continúa idéntica. El usuario juega siempre
+como lado 0 del motor 3D; si es visitante, el informe se da vuelta antes de cargarlo. Abandonar un partido de carrera lo
+simula. Los seguimientos de ojeadores en curso y las ofertas recibidas sin responder no se guardan (se pierden al cerrar).
+**Por qué:** cerrar el ciclo jugable de la carrera sin dependencias nativas nuevas.
+**Consecuencias:** `career.json` nuevo en `Data/balance`; `build-core.sh` copia a `Resources` también `career`, `finance`,
+`management`, `matchsim` y las noticias.

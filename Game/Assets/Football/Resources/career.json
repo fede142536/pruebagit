@@ -1,0 +1,31 @@
+{
+  "SeasonStartMonth": 1,
+  "SeasonStartDay": 25,
+  "DaysBetweenRounds": 7,
+  "BreakBetweenTournaments": 21,
+  "TransferWindowMonths": [
+    1,
+    2,
+    7
+  ],
+  "RivalOfferChancePerWeek": 0.3,
+  "RivalOfferShare": 0.85,
+  "RelegatedClubs": 2,
+  "CupQualifiers": 4,
+  "AveragesSeasons": 3,
+  "ScoutDays": 14,
+  "Formation": "4-4-2",
+  "ReputationPivotRating": 66,
+  "ReputationPerRating": 4,
+  "CashPerReputation": 40000000,
+  "TransferBudgetShare": 0.3,
+  "WageBudgetMargin": 1.1,
+  "MembersPerReputation": 900,
+  "ContractYears": [
+    1,
+    4
+  ],
+  "ReleaseClauseFactor": 2.5,
+  "StaffAbilityPivot": 10,
+  "StaffWagePerAbility": 150000
+}

@@ -156,7 +156,22 @@ namespace Football.Core.Persistence
                     season INTEGER NOT NULL)",
                 @"CREATE TABLE hall_of_fame (
                     player_id INTEGER PRIMARY KEY,
-                    inducted_season INTEGER NOT NULL)")
+                    inducted_season INTEGER NOT NULL)"),
+
+            new SqlMigration(8, "Estado de la partida del modo carrera (fecha, temporada, club del usuario y semilla)",
+                @"CREATE TABLE career_meta (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    seed INTEGER NOT NULL,
+                    season INTEGER NOT NULL,
+                    today TEXT NOT NULL,
+                    user_club_id INTEGER NOT NULL REFERENCES clubs(id),
+                    tournament_only INTEGER NOT NULL DEFAULT 0,
+                    formation TEXT NOT NULL DEFAULT '4-4-2',
+                    defensive_formation TEXT NOT NULL DEFAULT '',
+                    style TEXT NOT NULL DEFAULT 'Balanced',
+                    fullback_duty INTEGER NOT NULL DEFAULT 0,
+                    midfield_duty INTEGER NOT NULL DEFAULT 0,
+                    striker_duty INTEGER NOT NULL DEFAULT 0)")
         };
     }
 }

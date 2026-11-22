@@ -42,6 +42,11 @@ namespace Football.Core.Tests.Management
             squad.ToDictionary(p => p.Id, p => new PlayerCondition { PlayerId = p.Id });
 
         [Test]
+        public void CareerFile_MatchesTheDefaults() =>
+            TestFiles.AssertMatchesDefaults<Football.Core.Career.CareerConfig>("career.json",
+                "regenerar con: dotnet run --project Tools/HeadlessSim -- --dump-career-config Data/balance/career.json");
+
+        [Test]
         public void ManagementFile_MatchesTheDefaults() =>
             TestFiles.AssertMatchesDefaults<ManagementConfig>("management.json",
                 "regenerar con: dotnet run --project Tools/HeadlessSim -- --dump-management-config Data/balance/management.json");

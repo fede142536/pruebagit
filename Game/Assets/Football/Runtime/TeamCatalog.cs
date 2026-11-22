@@ -95,6 +95,23 @@ namespace Football.Game
         /// <summary>Motivo por el que no se pudo leer el archivo de equipos, o null.</summary>
         public static string LoadError { get; private set; }
 
+        private static TeamDatabase _database;
+
+        /// <summary>Equipos válidos y clásicos (para el modo carrera y el torneo).</summary>
+        public static TeamDatabase Database
+        {
+            get
+            {
+                TeamDefinition[] teams = Teams; // carga el archivo (y los clásicos) si hace falta
+                if (_database == null)
+                {
+                    _database = new TeamDatabase { Teams = teams, Rivalries = Array.Empty<RivalryDefinition>() };
+                }
+
+                return _database;
+            }
+        }
+
         /// <summary>Equipos disponibles.</summary>
         public static TeamDefinition[] Teams
         {
@@ -171,6 +188,7 @@ namespace Football.Game
                     if (valid.Count >= 2)
                     {
                         _teams = valid.ToArray();
+                        _database = new TeamDatabase { Teams = _teams, Rivalries = db.Rivalries ?? Array.Empty<RivalryDefinition>() };
                         return;
                     }
 

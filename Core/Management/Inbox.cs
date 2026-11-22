@@ -64,6 +64,25 @@ namespace Football.Core.Management
         public static string Format(NewsItem item, IReadOnlyDictionary<string, string> templates) =>
             templates.TryGetValue(item.Key, out string template) ? string.Format(CultureInfo.InvariantCulture, template, item.Args) : item.Key;
 
+        /// <summary>Publica una noticia propia del orquestador (informe de ojeador, oferta recibida, fin de temporada...).</summary>
+        /// <param name="key">Clave del texto en <c>Data/locale/news.*.json</c>.</param>
+        /// <param name="args">Datos que se insertan en el texto.</param>
+        public void Post(string key, params string[] args) => Add(key, args);
+
+        /// <summary>Noticias en orden de llegada (la más vieja primero), para guardarlas.</summary>
+        public IReadOnlyList<NewsItem> Chronological => _items;
+
+        /// <summary>Reemplaza el buzón por noticias guardadas (en orden de llegada).</summary>
+        /// <param name="items">Noticias.</param>
+        public void Restore(IEnumerable<NewsItem> items)
+        {
+            _items.Clear();
+            _items.AddRange(items);
+        }
+
+        /// <summary>Marca todas las noticias como leídas.</summary>
+        public void MarkAllRead() => _items.ForEach(i => i.Read = true);
+
         private void AddIfMine(int playerId, string key, params string[] args)
         {
             if (_clubOfPlayer(playerId) == _clubId)

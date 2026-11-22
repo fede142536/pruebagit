@@ -1,3 +1,5 @@
+using Football.Core.Data;
+using Football.Core.Domain;
 using UnityEngine;
 
 namespace Football.Game
@@ -8,7 +10,7 @@ namespace Football.Game
     /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
-        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Controls, Match, Result }
+        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Controls, Match, Result, Career }
 
         private readonly PointerInput _pointers = new PointerInput();
         private GameSettings _settings;
@@ -26,6 +28,8 @@ namespace Football.Game
         private bool _indoor;
         private GameAudio _audio;
         private readonly TitleStage _title = new TitleStage();
+        private CareerController _career;
+        private bool _careerMatch; // el partido en curso (y su resultado) es del modo carrera o del torneo
 
         /// <summary>Cámara única del juego fuera del partido (menús); el partido la apaga mientras usa la suya.</summary>
         public static Camera MenuCamera { get; private set; }
@@ -54,6 +58,7 @@ namespace Football.Game
             _audio = new GameAudio(gameObject, _settings);
             _match = new MatchScreen(transform, _pointers, _settings, _audio);
             _result = new ResultScreen(transform, _pointers);
+            _career = new CareerController(new CareerScreen(transform, _pointers));
             Go(State.MainMenu);
         }
 
@@ -126,6 +131,11 @@ namespace Football.Game
             _settingsScreen.Hide();
             _controlsScreen.Hide();
             _result.Hide();
+            if (next != State.Career)
+            {
+                _career.Hide();
+            }
+
             if (next != State.Match)
             {
                 _match.End();
@@ -179,6 +189,29 @@ namespace Football.Game
             _mainMenu.SetError("No se pudo empezar el partido. Manda una captura de este mensaje:\n" + _match.LastError);
         }
 
+        /// <summary>Partido del día del modo carrera o del torneo, en 3D, con los equipos que armó el núcleo.</summary>
+        private void StartCareerMatch()
+        {
+            _career.PrepareMatch(out MatchTeamSetup user, out MatchTeamSetup rival, out TeamDefinition userTeam, out TeamDefinition rivalTeam);
+            KitColors userKit = KitColors.From(userTeam.Home);
+            KitColors rivalKit = KitColors.From(rivalTeam.Home);
+            if (userKit.Distance(rivalKit) < TeamCatalog.KitClashDistance)
+            {
+                rivalKit = KitColors.From(rivalTeam.Away); // si se confunden, el rival usa la alternativa
+            }
+
+            _careerMatch = true;
+            Go(State.Match);
+            if (_match.BeginCareer(userTeam, rivalTeam, user, rival, userKit, rivalKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length]))
+            {
+                return;
+            }
+
+            _careerMatch = false;
+            Go(State.Career);
+            _career.Resume();
+        }
+
         private void Update()
         {
             _pointers.Update();
@@ -213,6 +246,11 @@ namespace Football.Game
                     else if (_mainMenu.Choice == MainMenuChoice.Settings)
                     {
                         Go(State.Settings);
+                    }
+                    else if (_mainMenu.Choice == MainMenuChoice.Career || _mainMenu.Choice == MainMenuChoice.Tournament)
+                    {
+                        Go(State.Career);
+                        _career.Open(_mainMenu.Choice == MainMenuChoice.Tournament, _settings.HomeTeam);
                     }
                     else if (_mainMenu.Choice == MainMenuChoice.Benchmark)
                     {
@@ -277,18 +315,46 @@ namespace Football.Game
 
                     break;
 
+                case State.Career:
+                    _career.Update();
+                    if (_career.ExitRequested)
+                    {
+                        Go(State.MainMenu);
+                    }
+                    else if (_career.PlayRequested)
+                    {
+                        StartCareerMatch();
+                    }
+
+                    break;
+
                 case State.Match:
                     _match.Update(Time.unscaledDeltaTime);
                     if (_match.QuitRequested)
                     {
-                        Go(State.MainMenu);
+                        if (_careerMatch)
+                        {
+                            _careerMatch = false;
+                            _career.AbandonMatch();
+                            Go(State.Career);
+                            _career.Resume();
+                        }
+                        else
+                        {
+                            Go(State.MainMenu);
+                        }
                     }
                     else if (_match.Finished)
                     {
                         string line = _match.BuildResultLine();
                         string summary = _match.BuildSummary();
+                        if (_careerMatch)
+                        {
+                            _career.CompleteMatch(_match.BuildReport());
+                        }
+
                         Go(State.Result);
-                        _result.Show(line, summary);
+                        _result.Show(line, summary, _careerMatch);
                     }
 
                     break;
@@ -302,6 +368,12 @@ namespace Football.Game
                     else if (_result.AgainRequested)
                     {
                         StartMatch(_lastWasBenchmark);
+                    }
+                    else if (_result.MenuRequested && _careerMatch)
+                    {
+                        _careerMatch = false;
+                        Go(State.Career);
+                        _career.Resume();
                     }
                     else if (_result.MenuRequested)
                     {

@@ -44,6 +44,28 @@ namespace Football.Core.Management
         /// <summary>Miembros del salón de la fama (identificadores de jugadores).</summary>
         public IReadOnlyList<int> HallOfFame => _hallOfFame;
 
+        /// <summary>Todos los récords vigentes (para guardarlos).</summary>
+        public IEnumerable<RecordEntry> Records => _records.Values;
+
+        /// <summary>Goles de carrera de cada jugador (para guardarlos).</summary>
+        public IReadOnlyDictionary<int, int> AllCareerGoals => _careerGoals;
+
+        /// <summary>Carga un récord guardado.</summary>
+        /// <param name="record">Récord.</param>
+        public void RestoreRecord(RecordEntry record) => _records[record.Key] = record;
+
+        /// <summary>Carga los goles de carrera guardados de un jugador.</summary>
+        public void RestoreCareerGoals(int playerId, int goals) => _careerGoals[playerId] = goals;
+
+        /// <summary>Carga un miembro del salón de la fama.</summary>
+        public void RestoreHallOfFame(int playerId)
+        {
+            if (!_hallOfFame.Contains(playerId))
+            {
+                _hallOfFame.Add(playerId);
+            }
+        }
+
         /// <summary>Goles de un jugador en toda su carrera registrada.</summary>
         public int CareerGoalsOf(int playerId) => _careerGoals.TryGetValue(playerId, out int g) ? g : 0;
 

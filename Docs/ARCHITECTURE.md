@@ -111,6 +111,13 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
   Scouting, mercado, cantera, vestuario e historia viva son clases independientes que se comunican por eventos.
 - **`Competitions`**: calendario, tablas, promedios, zonas y eliminatorias.
 - **Textos**: el núcleo guarda claves (`news.injury`); los textos están en `Data/locale/news.es.json` y `news.en.json`.
+  Los de la interfaz, en `Data/locale/ui.es.json` y `ui.en.json` (lector `Common/StringTable`).
+- **`Career`** (22/11/2026): `CareerSession` orquesta la temporada día a día sobre `SeasonClock`: partidos ajenos con
+  `MatchSim`, el del usuario en 3D (`PrepareUserMatch` / `CompleteUserMatch`) o simulado, finanzas, obras, ojeadores, ofertas
+  de rivales con el libro abierto, vestuario, buzón y fin de temporada (descensos por promedios, clasificados por la tabla
+  anual, retiros al cuerpo técnico, juveniles). Todo el estado vive en `CareerData`; el azar sale de la semilla y la fecha,
+  así una partida cargada sigue igual que si nunca se hubiera guardado (hay prueba). Modo Torneo: el mismo orquestador con
+  una sola rueda. Parámetros en `Data/balance/career.json`.
 
 ## 5. Persistencia
 
@@ -118,7 +125,11 @@ Tres capas por jugador: **posicionamiento** (zona dinámica según formación, r
 - Repositorios detrás de interfaces (`IClubRepository`…); el dominio no conoce SQL.
 - Guardado atómico (transacción + archivo temporal) y copia de seguridad rotativa: `AtomicSave` (hecho, con pruebas).
 - Migraciones actuales: v1 inicial, v2 contratos, v3 cláusulas y personalidad, v4 finanzas e instalaciones, v5
-  competiciones, v6 estado del plantel, cuerpo técnico y scouting, v7 noticias e historia.
+  competiciones, v6 estado del plantel, cuerpo técnico y scouting, v7 noticias e historia, v8 estado de la partida
+  (fecha, temporada, club, semilla, modo y táctica del usuario).
+- `SqlCareerRepository` guarda y lee una partida completa sobre todas las tablas, en una transacción (`AtomicSave`).
+- En el teléfono, Unity no trae un proveedor de SQLite: la partida se guarda con `CareerFile` (binario propio con versión,
+  mismo contenido que las tablas) y `AtomicSave.WriteFile` (temporal, reemplazo atómico y respaldos).
 
 ## 6. Capa Unity
 

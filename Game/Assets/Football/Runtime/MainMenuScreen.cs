@@ -15,6 +15,10 @@ namespace Football.Game
         Indoor,
         /// <summary>Ajustes.</summary>
         Settings,
+        /// <summary>Modo carrera.</summary>
+        Career,
+        /// <summary>Torneo.</summary>
+        Tournament,
         /// <summary>Prueba de rendimiento.</summary>
         Benchmark
     }
@@ -33,8 +37,8 @@ namespace Football.Game
         {
             new Entry { Key = "menu.friendly", Choice = MainMenuChoice.Friendly, Available = true },
             new Entry { Key = "menu.potrero", Choice = MainMenuChoice.Indoor, Available = true },
-            new Entry { Key = "menu.career", Choice = MainMenuChoice.None, Available = false },
-            new Entry { Key = "menu.tournament", Choice = MainMenuChoice.None, Available = false },
+            new Entry { Key = "menu.career", Choice = MainMenuChoice.Career, Available = true },
+            new Entry { Key = "menu.tournament", Choice = MainMenuChoice.Tournament, Available = true },
             new Entry { Key = "menu.settings", Choice = MainMenuChoice.Settings, Available = true },
             new Entry { Key = "menu.benchmark", Choice = MainMenuChoice.Benchmark, Available = true }
         };
@@ -135,7 +139,7 @@ namespace Football.Game
 
             _cardTitle.text = Locale.Get(e.Key + ".title");
             _cardText.text = Locale.Get(e.Key + ".desc");
-            bool play = e.Choice == MainMenuChoice.Friendly || e.Choice == MainMenuChoice.Indoor;
+            bool play = e.Choice == MainMenuChoice.Friendly || e.Choice == MainMenuChoice.Indoor || e.Choice == MainMenuChoice.Tournament;
             _action.Label.text = Locale.Get(e.Available ? (play ? "menu.play" : "menu.enter") : "menu.soon");
             _action.Background.color = e.Available ? UiTheme.AccentDark : UiTheme.Button;
         }
