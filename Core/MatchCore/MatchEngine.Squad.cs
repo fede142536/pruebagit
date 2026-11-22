@@ -193,6 +193,9 @@ namespace Football.Core.MatchCore
                 incoming.Role = t.Formation.Slots[incoming.Spot].Role; // juega en el puesto del que sale, con resistencia llena
                 Replace(old, incoming);
                 t.SubstitutedOut.Add(old.Name);
+                old.MinuteOff = Minute;
+                incoming.MinuteOn = Minute;
+                t.Departed.Add(old);
                 t.SubstitutionsUsed++;
                 AddEvent(MatchEventType.Substitution, team, incoming.Index, incoming.Pos);
             }
@@ -207,6 +210,7 @@ namespace Football.Core.MatchCore
             Players[old.Index] = incoming;
             t.Players[old.Slot] = incoming;
             if (t.Controlled == old) t.Controlled = incoming;
+            if (t.LastPasser == old || t.LastReceiver == old) t.LastPasser = t.LastReceiver = null;
             if (t.Presser == old) t.Presser = null;
             if (t.Presser2 == old) t.Presser2 = null;
             if (t.SecondPresser == old) t.SecondPresser = null;

@@ -25,6 +25,8 @@ namespace Football.Core.MatchCore
 
         private void PlaceForKickoff(int kickingTeam)
         {
+            _ballTeam = kickingTeam;
+            Teams[0].LastPasser = Teams[0].LastReceiver = Teams[1].LastPasser = Teams[1].LastReceiver = null;
             Ball.PlaceAt(Vec2.Zero);
             _prevBallPos = Ball.Pos;
             Owner = null;
@@ -96,6 +98,8 @@ namespace Football.Core.MatchCore
             _shotLive = false;
             _saveRolled = false;
             _restart = restart;
+            _ballTeam = restart.Team; // recibir un saque propio no es una recuperación
+            Teams[0].LastPasser = Teams[0].LastReceiver = Teams[1].LastPasser = Teams[1].LastReceiver = null;
             Ball.PlaceAt(restart.Position);
             _prevBallPos = Ball.Pos;
             Phase = MatchPhase.SetPiece;

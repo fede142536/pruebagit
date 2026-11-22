@@ -148,6 +148,74 @@ namespace Football.Core.MatchCore
         public int Tackles;
         /// <summary>Entradas que ganaron el balón.</summary>
         public int TacklesWon;
+        /// <summary>Goles esperados acumulados (suma del xG de cada remate).</summary>
+        public float Xg;
+        /// <summary>Balones recuperados (robos, intercepciones y balones sueltos tras una posesión rival).</summary>
+        public int Recoveries;
+        /// <summary>Lesiones sufridas.</summary>
+        public int Injuries;
+        /// <summary>Distancia recorrida por todo el equipo (m).</summary>
+        public float Distance;
+    }
+
+    /// <summary>Estadísticas de un jugador en el partido (se actualizan sin generar basura).</summary>
+    public sealed class PlayerMatchStats
+    {
+        /// <summary>Goles (sin contar en propia puerta).</summary>
+        public int Goals;
+        /// <summary>Goles en propia puerta.</summary>
+        public int OwnGoals;
+        /// <summary>Asistencias (último pase antes del gol de un compañero).</summary>
+        public int Assists;
+        /// <summary>Remates.</summary>
+        public int Shots;
+        /// <summary>Remates que iban entre los tres palos al salir del pie.</summary>
+        public int ShotsOnTarget;
+        /// <summary>Goles esperados acumulados.</summary>
+        public float Xg;
+        /// <summary>Pases intentados.</summary>
+        public int Passes;
+        /// <summary>Pases completados.</summary>
+        public int PassesCompleted;
+        /// <summary>Balones recuperados.</summary>
+        public int Recoveries;
+        /// <summary>Entradas intentadas.</summary>
+        public int Tackles;
+        /// <summary>Entradas ganadas.</summary>
+        public int TacklesWon;
+        /// <summary>Faltas cometidas.</summary>
+        public int Fouls;
+        /// <summary>Paradas (arqueros).</summary>
+        public int Saves;
+        /// <summary>Amarillas.</summary>
+        public int Yellows;
+        /// <summary>Rojas (directa o doble amarilla).</summary>
+        public int Reds;
+        /// <summary>Se lesionó.</summary>
+        public bool Injured;
+        /// <summary>Distancia recorrida (m).</summary>
+        public float Distance;
+    }
+
+    /// <summary>Un remate del partido.</summary>
+    public struct ShotRecord
+    {
+        /// <summary>Equipo que remata.</summary>
+        public int Team;
+        /// <summary>Índice global del jugador.</summary>
+        public int PlayerIndex;
+        /// <summary>Identificador del jugador en el modelo de datos.</summary>
+        public int PlayerId;
+        /// <summary>Minuto de juego.</summary>
+        public float Minute;
+        /// <summary>Distancia a la portería (m).</summary>
+        public float Distance;
+        /// <summary>Goles esperados del remate.</summary>
+        public float Xg;
+        /// <summary>Iba entre los tres palos al salir del pie.</summary>
+        public bool OnTarget;
+        /// <summary>Terminó en gol.</summary>
+        public bool Goal;
     }
 
     /// <summary>Registro de eventos con capacidad reservada (no genera basura en régimen normal).</summary>

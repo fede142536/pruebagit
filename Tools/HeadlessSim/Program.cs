@@ -35,9 +35,10 @@ namespace Football.Tools.HeadlessSim
             float asciiEvery = 0f;
             string teamsPath = null;
             bool indoor = false;
+            bool printReport = false;
             for (int i = 0; i < args.Length; i++)
             {
-                bool needsValue = args[i] != "--verbose" && args[i] != "--indoor";
+                bool needsValue = args[i] != "--verbose" && args[i] != "--indoor" && args[i] != "--report";
                 if (needsValue && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine($"Falta el valor de {args[i]}.");
@@ -55,6 +56,7 @@ namespace Football.Tools.HeadlessSim
                     case "--dump-config": dumpPath = args[++i]; break;
                     case "--verbose": verbose = true; break;
                     case "--indoor": indoor = true; break;
+                    case "--report": printReport = true; break;
                     case "--teams": teamsPath = args[++i]; break;
                     case "--ascii": asciiEvery = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); break;
                     default:
@@ -93,12 +95,15 @@ namespace Football.Tools.HeadlessSim
                 return Ascii(config, seed, difficulty, rating, asciiEvery);
             }
 
-            return Run(config, matches, seed, difficulty, awayDifficulty < 0 ? difficulty : awayDifficulty, rating, verbose);
+            return Run(config, matches, seed, difficulty, awayDifficulty < 0 ? difficulty : awayDifficulty, rating, verbose, printReport);
         }
 
-        private static int Run(MatchConfig config, int matches, ulong seed, int difficulty, int awayDifficulty, float rating, bool verbose)
+        private static int Run(MatchConfig config, int matches, ulong seed, int difficulty, int awayDifficulty, float rating, bool verbose,
+            bool printReport)
         {
-            var total = new double[2, 17];
+            var total = new double[2, Columns];
+            double assists = 0, scoredGoals = 0;
+            MatchReport last = null;
             int failures = 0, unfinished = 0, homeWins = 0, draws = 0, awayWins = 0, outOfBounds = 0;
             double goals = 0, maxMs = 0, totalMs = 0;
             var goalHistogram = new int[10];
@@ -138,7 +143,17 @@ namespace Football.Tools.HeadlessSim
                         unfinished++;
                     }
 
-                    Accumulate(total, engine);
+                    MatchReport report = engine.BuildReport();
+                    Accumulate(total, report);
+                    last = report;
+                    foreach (TeamReport tr in report.Teams)
+                    {
+                        foreach (PlayerReport pr in tr.Players)
+                        {
+                            assists += pr.Stats.Assists;
+                            scoredGoals += pr.Stats.Goals;
+                        }
+                    }
                     int g0 = engine.Teams[0].Stats.Goals, g1 = engine.Teams[1].Stats.Goals;
                     goals += g0 + g1;
                     goalHistogram[Math.Min(9, g0 + g1)]++;
@@ -161,7 +176,7 @@ namespace Football.Tools.HeadlessSim
                 return 1;
             }
 
-            string[] names = { "Goles", "Tiros", "A puerta", "Paradas", "Pases", "Pases ok", "Interceptados", "Perdidos fuera", "Faltas", "Amarillas", "Rojas", "Córners", "Fueras de juego", "Posesiones", "Entradas", "Entradas ganadas" };
+            string[] names = { "Goles", "Tiros", "A puerta", "Paradas", "Pases", "Pases ok", "Interceptados", "Perdidos fuera", "Faltas", "Amarillas", "Rojas", "Córners", "Fueras de juego", "Posesiones", "Entradas", "Entradas ganadas", null, "xG", "Recuperaciones", "Lesiones", "Distancia (km)" };
             Console.WriteLine($"Partidos: {matches}  semilla: {seed}  dificultad: {config.Difficulties[difficulty].Name} (local) vs {config.Difficulties[awayDifficulty].Name} (visitante)  calidad media: {rating}");
             Console.WriteLine($"Excepciones: {failures}  sin terminar: {unfinished}  estados inválidos (NaN/fuera del campo): {outOfBounds}");
             Console.WriteLine($"Tiempo por partido: media {totalMs / ok:F0} ms, máximo {maxMs:F0} ms");
@@ -170,6 +185,11 @@ namespace Football.Tools.HeadlessSim
             Console.WriteLine($"{"Por equipo y partido",-22}");
             for (int k = 0; k < names.Length; k++)
             {
+                if (names[k] == null)
+                {
+                    continue;
+                }
+
                 double v = (total[0, k] + total[1, k]) / (2.0 * ok);
                 Console.WriteLine($"  {names[k],-18} {v,8:F2}");
             }
@@ -179,6 +199,14 @@ namespace Football.Tools.HeadlessSim
             Console.WriteLine($"  Duración media de una posesión {(total[0, 16] + total[1, 16]) / possessions / config.TickRate,6:F1} s (tiempo de simulación)");
             Console.WriteLine($"  Pases por posesión             {(total[0, 5] + total[1, 5]) / possessions,6:F2}");
             Console.WriteLine($"  Acierto de las entradas        {100.0 * (total[0, 15] + total[1, 15]) / Math.Max(1.0, total[0, 14] + total[1, 14]),6:F1}%");
+            Console.WriteLine($"  Goles / xG                     {(total[0, 0] + total[1, 0]) / Math.Max(0.01, total[0, 17] + total[1, 17]),6:F2}");
+            Console.WriteLine($"  Remates al arco                {100.0 * (total[0, 2] + total[1, 2]) / Math.Max(1.0, total[0, 1] + total[1, 1]),6:F1}% de los tiros");
+            Console.WriteLine($"  Goles con asistencia           {100.0 * assists / Math.Max(1.0, scoredGoals),6:F1}%");
+            if (printReport && last != null)
+            {
+                PrintReport(last);
+            }
+
             return failures == 0 && unfinished == 0 && outOfBounds == 0 ? 0 : 1;
         }
 
@@ -287,11 +315,13 @@ namespace Football.Tools.HeadlessSim
             return sb.ToString();
         }
 
-        private static void Accumulate(double[,] total, MatchEngine e)
+        private const int Columns = 21;
+
+        private static void Accumulate(double[,] total, MatchReport report)
         {
             for (int t = 0; t < 2; t++)
             {
-                TeamStats s = e.Teams[t].Stats;
+                TeamStats s = report.Teams[t].Stats;
                 total[t, 0] += s.Goals;
                 total[t, 1] += s.Shots;
                 total[t, 2] += s.ShotsOnTarget;
@@ -309,6 +339,58 @@ namespace Football.Tools.HeadlessSim
                 total[t, 14] += s.Tackles;
                 total[t, 15] += s.TacklesWon;
                 total[t, 16] += s.PossessionTicks;
+                total[t, 17] += s.Xg;
+                total[t, 18] += s.Recoveries;
+                total[t, 19] += s.Injuries;
+                total[t, 20] += s.Distance / 1000.0;
+            }
+        }
+
+        /// <summary>Imprime el informe completo de un partido: equipos, jugadores y remates.</summary>
+        private static void PrintReport(MatchReport r)
+        {
+            Console.WriteLine($"\nInforme del último partido: {r.Teams[0].Name} {r.HomeGoals} - {r.AwayGoals} {r.Teams[1].Name}");
+            foreach (TeamReport t in r.Teams)
+            {
+                TeamStats s = t.Stats;
+                Console.WriteLine($"\n{t.Name}: posesión {100 * t.Possession:F0}%  tiros {s.Shots} ({s.ShotsOnTarget} al arco)  xG {s.Xg:F2}  " +
+                                  $"pases {s.PassesCompleted}/{s.Passes}  recuperaciones {s.Recoveries}  faltas {s.Fouls}  " +
+                                  $"tarjetas {s.Yellows}A {s.Reds}R  lesiones {s.Injuries}  distancia {s.Distance / 1000f:F1} km");
+                Console.WriteLine("  #   Jugador               Pos  Min  Nota  G  A  Tir(arco)  xG    Pases   Rec  Entr  Km   Res  Tarj");
+                foreach (PlayerReport p in t.Players)
+                {
+                    PlayerMatchStats ps = p.Stats;
+                    string name = p.Name.Length > 20 ? p.Name.Substring(0, 20) : p.Name;
+                    string rating = p.Rating > 0f ? p.Rating.ToString("F1") : "  - ";
+                    string cards = (ps.Yellows > 0 ? ps.Yellows + "A" : "") + (ps.Reds > 0 ? "R" : "") + (ps.Injured ? " les." : "");
+                    Console.WriteLine($"  {p.Number,-3} {name,-20} {Abbrev(p.Role),-4} {p.Minutes,3:F0}  {rating,4}  {ps.Goals}  {ps.Assists}  {ps.Shots,3}({ps.ShotsOnTarget})" +
+                                      $"    {ps.Xg,4:F2}  {ps.PassesCompleted,3}/{ps.Passes,-3}  {ps.Recoveries,3}  {ps.TacklesWon,2}/{ps.Tackles,-2} {ps.Distance / 1000f,4:F1}  {100 * p.StaminaLeft,3:F0}%  {cards}");
+                }
+            }
+
+            Console.WriteLine("\nRemates (minuto, equipo, distancia, xG, al arco, gol):");
+            foreach (ShotRecord shot in r.Shots)
+            {
+                Console.WriteLine($"  {shot.Minute,5:F1}'  {r.Teams[shot.Team].Name,-6} {shot.Distance,5:F1} m  xG {shot.Xg:F2}  {(shot.OnTarget ? "al arco" : "afuera "),-7} {(shot.Goal ? "GOL" : "")}");
+            }
+        }
+
+        private static string Abbrev(Football.Core.Domain.Position p)
+        {
+            switch (p)
+            {
+                case Football.Core.Domain.Position.Goalkeeper: return "ARQ";
+                case Football.Core.Domain.Position.CenterBack: return "DFC";
+                case Football.Core.Domain.Position.LeftBack: return "LI";
+                case Football.Core.Domain.Position.RightBack: return "LD";
+                case Football.Core.Domain.Position.DefensiveMidfielder: return "MCD";
+                case Football.Core.Domain.Position.CentralMidfielder: return "MC";
+                case Football.Core.Domain.Position.AttackingMidfielder: return "MCO";
+                case Football.Core.Domain.Position.LeftMidfielder: return "MI";
+                case Football.Core.Domain.Position.RightMidfielder: return "MD";
+                case Football.Core.Domain.Position.LeftWinger: return "EI";
+                case Football.Core.Domain.Position.RightWinger: return "ED";
+                default: return "DC";
             }
         }
 

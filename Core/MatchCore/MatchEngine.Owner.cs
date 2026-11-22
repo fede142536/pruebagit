@@ -684,12 +684,14 @@ namespace Football.Core.MatchCore
             if (kind == KickKind.Shot)
             {
                 team.Stats.Shots++;
+                RecordShot(p);
                 _shotStartTick = TickCount;
                 AddEvent(MatchEventType.Shot, p.Team, p.Index, Ball.Pos.Horizontal);
             }
             else if (_passActive)
             {
                 team.Stats.Passes++;
+                p.Stats.Passes++;
             }
 
             // El fuera de juego se juzga en cualquier envío de un compañero: pase, centro, despeje o tiro que rebota.

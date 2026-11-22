@@ -353,6 +353,9 @@ namespace Football.Core.MatchCore
                     }
                 }
 
+                float run = p.Speed * dt;
+                p.Stats.Distance += run;
+                Teams[p.Team].Stats.Distance += run;
                 p.Pos = Pitch.Clamp(p.Pos, margin);
                 KeepKeeperInFrontOfHisLine(p);
                 FaceTheBall(p, dt);

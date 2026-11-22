@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Football.Core.Common;
 
 namespace Football.Core.MatchCore
@@ -53,6 +54,12 @@ namespace Football.Core.MatchCore
         public float DefendBufferTimer;
         /// <summary>Compañero que presiona al poseedor por la segunda marca de la persona (null si no la pide).</summary>
         public MatchPlayer SecondPresser;
+        /// <summary>Jugadores que salieron por un cambio (sus estadísticas siguen contando en el informe).</summary>
+        public readonly List<MatchPlayer> Departed = new List<MatchPlayer>(8);
+        /// <summary>Último compañero que dio un pase completado (para las asistencias); null tras perder el balón.</summary>
+        public MatchPlayer LastPasser;
+        /// <summary>Receptor de ese pase.</summary>
+        public MatchPlayer LastReceiver;
         /// <summary>Tiempo hasta el próximo cambio automático de jugador (s).</summary>
         public float SwitchTimer;
         /// <summary>Asistencia de pase elegida por la persona (0..1), o negativa para usar la de la dificultad.</summary>

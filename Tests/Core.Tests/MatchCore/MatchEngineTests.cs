@@ -20,7 +20,7 @@ namespace Football.Core.Tests.MatchCore
             return new MatchEngine(cfg, rng.Fork("engine"), home, away);
         }
 
-        private static void RunToEnd(MatchEngine e)
+        internal static void RunToEnd(MatchEngine e)
         {
             int guard = 0;
             while (!e.IsFinished && guard++ < 100000)
@@ -160,7 +160,7 @@ namespace Football.Core.Tests.MatchCore
             }
         }
 
-        private const double TargetGoals = 2.2;
+        private const double TargetGoals = 2.5;
         private const double GoalsStandardError = 0.15;
 
         [Test]
@@ -182,12 +182,12 @@ namespace Football.Core.Tests.MatchCore
                 }
             }
 
-            // Objetivo medido en Docs/BALANCE.md (1.000 partidos): ≈2,2 goles y ≈93 % de acierto de pase. Con 100 partidos el
+            // Objetivo medido en Docs/BALANCE.md (1.000 partidos): ≈2,5 goles y ≈85 % de acierto de pase (real: 82–87 %). Con 100 partidos el
             // error típico de la media de goles es ≈0,15: se admite ±3 errores típicos, así un cambio que mueva el
             // equilibrio de verdad hace fallar la prueba, y el ruido de la semilla no.
             Assert.That(goals / n, Is.InRange(TargetGoals - 3 * GoalsStandardError, TargetGoals + 3 * GoalsStandardError), "goles por partido (A4)");
             Assert.That(shots / n, Is.InRange(8.0, 14.0), "tiros por partido (ambos equipos)");
-            Assert.That(completed / passes, Is.InRange(0.85, 0.97), "acierto de pase");
+            Assert.That(completed / passes, Is.InRange(0.82, 0.89), "acierto de pase (BALANCE.md §1.1: 82–87 % real)");
         }
 
         [Test]

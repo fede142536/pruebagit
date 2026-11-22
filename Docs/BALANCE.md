@@ -113,6 +113,47 @@ de 1 de cada 8 (prueba `AiNeverKeepsDribblingInsideTheBox`). Goles 11 contra 11:
 acomode; en el lateral los dos compañeros más cercanos se acercan a pedirla. Los saques de la persona (lateral, arco, córner
 y tiro libre) esperan a que apunte y elija; si no hace nada en `HumanRestartTimeout` 8 s, saca la IA.
 
+### 1.7 Acierto de pase, informe del partido y xG (22/11/2026)
+
+**Mal control.** Antes, un balón por debajo de la velocidad controlable se controlaba siempre: el receptor corregía cualquier
+error de dirección y el acierto de pase no bajaba del 92 % aunque se triplicara `PassAngleErrorDeg` (7° → 15°: 93,2 % → 90,8 %).
+Ahora un control puede fallar (el balón sigue de largo, más lento): probabilidad `MiscontrolChance` × (velocidad / máxima
+controlable)² × (1 − `MiscontrolSkillWeight` × FirstTouch), ×(1 + `MiscontrolPressureWeight`) con un rival a menos de 2,5 m, y
+escalada por la dificultad (error de pase de la IA, error del humano para la persona). Un rebote en un compañero tampoco cuenta
+como pase completado.
+
+| `MiscontrolChance` (200 partidos) | 0 | 0,25 | 0,4 | **0,6** |
+|---|---|---|---|---|
+| Acierto de pase | 92,8 % | 89,9 % | 88,1 % | **85,3 %** |
+| Goles por partido | 2,51 | 2,35 | 2,57 | 2,56 |
+
+**Tiros al arco sin sesgo.** Un remate cuenta «al arco» si su trayectoria al salir del pie (simulada sin jugadores) cruza la línea
+entre los palos y bajo el larguero; también si termina en gol o lo ataja el arquero. Antes, un desvío de un defensor lo borraba.
+Con la definición nueva, el 52 % de los remates va al arco (real ≈ 33 %: la IA patea pocos tiros lejanos y casi siempre con línea
+limpia; se revisará en la Fase 6).
+
+**xG del informe.** Es el mismo modelo con el que decide la IA (distancia, ángulo, definición, bloqueo y presión), multiplicado
+por `XgCalibration` = 5,0 para que la suma del xG coincida con los goles del motor (goles / xG = **1,01**), con un máximo de 0,95
+por remate. La prueba `XgOverManyMatches_MatchesTheGoals` exige una relación entre 0,75 y 1,3.
+
+**Medición final** (`--matches 1000 --seed 1`, dificultad Profesional, calidad 65):
+
+| Métrica | Antes (§1.6) | Ahora | Referencia |
+|---|---|---|---|
+| Goles por partido | 2,35 | **2,54** | [2,0 ; 3,5] ✅ |
+| Acierto de pase | 93,4 % | **85,4 %** | 82–87 % ✅ |
+| Tiros por equipo | 5,2 | 6,0 | ≈ 12 (partido comprimido) |
+| Remates al arco por equipo | — (con sesgo) | 3,1 (52 %) | ≈ 4 |
+| xG por equipo | — | 1,25 | ≈ goles ✅ |
+| Recuperaciones por equipo | — | 17,6 | — |
+| Distancia recorrida por equipo | — | 11,0 km | ≈ 110 km reales (partido de 6 min reales) |
+| Goles con asistencia | — | 39 % | ≈ 75 % (faltan asistencias de centros y rebotes) |
+| Duración de una posesión / pases por posesión | 9,0 s / 3,3 | 7,4 s / 2,3 | más pérdidas por mal control |
+| Cancha cerrada (200 partidos) | 6,0 goles | 5,6 goles, 82 % de pase | 4–9 goles ✅ |
+
+`dotnet run -c Release --project Tools/HeadlessSim -- --matches 1 --report` imprime el informe completo de un partido (equipos,
+jugadores con nota, remates con xG).
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.
@@ -183,7 +224,7 @@ partidos por medición, porque con 50 partidos por equipo el ruido es de unos ±
 - Ventaja de local (Fase 3, junto con estadio y afición).
 - Brecha de dificultad: mejoró (85/12/4) pero sigue amplia (Fase 6).
 - Equilibrio entre estilos: «Presión alta» todavía algo por encima (ver 1.1).
-- Acierto de pase alto (93 %) frente al real (80–88 %).
+- Remates al arco altos (52 %) y pocas asistencias (39 %) frente al fútbol real.
 - La sensación del regate y de la contención con el dedo solo se puede validar en el teléfono.
 - Consistencia *Jugar* / *Ver* / *Simular*: el motor estadístico `MatchSim` aún no existe (Fase 2); se calibrará contra `MatchCore`.
 - Economía de la carrera (Fase 2 en adelante).

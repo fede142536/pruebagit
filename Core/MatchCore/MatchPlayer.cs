@@ -22,6 +22,14 @@ namespace Football.Core.MatchCore
         public readonly string Name;
         /// <summary>Dorsal.</summary>
         public readonly int Number;
+        /// <summary>Identificador del jugador en el modelo de datos (el de <see cref="PlayerMatchView.Id"/>).</summary>
+        public readonly int PlayerId;
+        /// <summary>Estadísticas del partido.</summary>
+        public readonly PlayerMatchStats Stats = new PlayerMatchStats();
+        /// <summary>Minuto en que entró (0 si fue titular).</summary>
+        public float MinuteOn;
+        /// <summary>Minuto en que salió (cambio o expulsión), o negativo si terminó el partido en el campo.</summary>
+        public float MinuteOff = -1f;
 
         /// <summary>Posición en el campo.</summary>
         public Vec2 Pos;
@@ -101,6 +109,7 @@ namespace Football.Core.MatchCore
             Attr = view.Attributes;
             Name = view.Name;
             Number = view.Number;
+            PlayerId = view.Id;
 
             TopSpeed = MathUtil.Lerp(c.MinTopSpeed, c.MaxTopSpeed, MathUtil.Skill01(Attr[AttributeId.Pace]));
             Acceleration = MathUtil.Lerp(c.MinAcceleration, c.MaxAcceleration, MathUtil.Skill01(Attr[AttributeId.Acceleration]));

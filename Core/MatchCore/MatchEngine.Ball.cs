@@ -148,7 +148,14 @@ namespace Football.Core.MatchCore
 
             if (best != null)
             {
-                GainPossession(best);
+                if (best.IsKeeper || !Miscontrols(best, ballSpeed, from, to))
+                {
+                    GainPossession(best);
+                }
+                else
+                {
+                    HeavyTouch(best);
+                }
             }
             else if (blocker != null)
             {
@@ -158,13 +165,63 @@ namespace Football.Core.MatchCore
 
         private int _possessionTeam = -1;
 
-        private void CountPossessionChange(int team)
+        /// <summary>
+        /// ¿Se le escapa el balón al controlarlo? Más probable con balones rápidos (cerca del máximo controlable), con poco
+        /// FirstTouch y con un rival encima. Es la principal causa de pases no completados entre compañeros.
+        /// </summary>
+        private bool Miscontrols(MatchPlayer p, float ballSpeed, Vec2 from, Vec2 to)
         {
+            PlayerConfig c = Config.Player;
+            float firstTouch = p.Skill(AttributeId.FirstTouch);
+            float maxControl = c.ControlMaxBallSpeed * (1f + c.ControlSpeedSpread * (2f * firstTouch - 1f));
+            float relative = MathUtil.Clamp01(ballSpeed / MathF.Max(maxControl, 0.1f));
+            TeamState team = Teams[p.Team];
+            float difficulty = team.IsHuman && team.Controlled == p ? team.Difficulty.PlayerErrorScale : team.Difficulty.PassErrorScale;
+            float chance = c.MiscontrolChance * relative * relative * (1f - c.MiscontrolSkillWeight * firstTouch) * difficulty;
+            if (NearestOpponentDistance(p.Pos, p.Team) < c.MiscontrolPressureRange)
+            {
+                chance *= 1f + c.MiscontrolPressureWeight;
+            }
+
+            return _rng.NextFloat() < chance;
+        }
+
+        /// <summary>Mal control: el balón sigue hacia delante, más lento y algo desviado; nadie lo tiene.</summary>
+        private void HeavyTouch(MatchPlayer p)
+        {
+            if (OnTouch(p, true, false))
+            {
+                return;
+            }
+
+            PlayerConfig c = Config.Player;
+            Vec2 velocity = Ball.Vel.Horizontal.Rotated(_rng.NextGaussian(0f, c.MiscontrolNoise)) * c.MiscontrolSpeedFactor;
+            Ball.Pos = new Vec3(p.Pos.X, p.Pos.Y, 0f);
+            Ball.Vel = new Vec3(velocity.X, velocity.Y, 0f);
+            p.KickTimer = BlockLockout;
+        }
+
+        // Equipo que tenía el balón por última vez, para contar recuperaciones (un saque lo asigna a quien saca).
+        private int _ballTeam = -1;
+
+        private void CountPossessionChange(MatchPlayer p)
+        {
+            int team = p.Team;
             if (team != _possessionTeam)
             {
                 _possessionTeam = team;
                 Teams[team].Stats.Possessions++;
             }
+
+            if (_ballTeam >= 0 && _ballTeam != team)
+            {
+                p.Stats.Recoveries++;
+                Teams[team].Stats.Recoveries++;
+                TeamState losers = Teams[_ballTeam];
+                losers.LastPasser = losers.LastReceiver = null; // perder el balón anula la asistencia pendiente
+            }
+
+            _ballTeam = team;
         }
 
         private void GainPossession(MatchPlayer p)
@@ -174,7 +231,7 @@ namespace Football.Core.MatchCore
                 return;
             }
 
-            CountPossessionChange(p.Team);
+            CountPossessionChange(p);
             Owner = p;
             _holder = null;
             _boxOwner = null;
@@ -193,7 +250,7 @@ namespace Football.Core.MatchCore
         /// </summary>
         private void Deflect(MatchPlayer p, Vec2 contact)
         {
-            if (OnTouch(p, false))
+            if (OnTouch(p, false, false))
             {
                 return;
             }
@@ -226,7 +283,8 @@ namespace Football.Core.MatchCore
         /// <param name="p">Jugador que toca el balón.</param>
         /// <param name="deliberate">Juega el balón a propósito (control, entrada). Un rebote o una parada no lo es: según el
         /// reglamento, tras ellos sigue valiendo la posición de fuera de juego del último envío.</param>
-        private bool OnTouch(MatchPlayer p, bool deliberate)
+        /// <param name="clean">El jugador se quedó con el balón. Un mal control o un rebote en un compañero no completan el pase.</param>
+        private bool OnTouch(MatchPlayer p, bool deliberate, bool clean = true)
         {
             if (_offsideActive)
             {
@@ -247,9 +305,15 @@ namespace Football.Core.MatchCore
             if (_passActive)
             {
                 _passActive = false;
-                if (p.Team == _passTeam && p != _lastKicker)
+                if (p.Team == _passTeam && p != _lastKicker && clean)
                 {
                     Teams[_passTeam].Stats.PassesCompleted++;
+                    if (_lastKicker != null && _lastKicker.Team == p.Team)
+                    {
+                        _lastKicker.Stats.PassesCompleted++;
+                        Teams[p.Team].LastPasser = _lastKicker;
+                        Teams[p.Team].LastReceiver = p;
+                    }
                 }
                 else if (p.Team != _passTeam)
                 {
@@ -310,7 +374,8 @@ namespace Football.Core.MatchCore
             if (_shotLive)
             {
                 Teams[keeper.Team].Stats.Saves++;
-                Teams[1 - keeper.Team].Stats.ShotsOnTarget++;
+                keeper.Stats.Saves++;
+                CountShotOnTarget(); // si salió desviado y lo ataja igual, también fue al arco
                 AddEvent(MatchEventType.Save, keeper.Team, keeper.Index, Ball.Pos.Horizontal);
             }
             keeper.Action = PlayerAction.Dive;
@@ -464,6 +529,7 @@ namespace Football.Core.MatchCore
                 p.ActionDisplayTimer = ActionDisplay;
 
                 Teams[p.Team].Stats.Tackles++;
+                p.Stats.Tackles++;
                 float tackling = p.Skill(AttributeId.Tackling);
                 float winChance = ContextTackleChance(p, owner, out bool behind, out bool front) + (human ? rules.HumanTackleBonus : 0f);
                 // De frente y mirando al balón es una entrada limpia casi siempre; por detrás, falta fácil.
@@ -480,6 +546,7 @@ namespace Football.Core.MatchCore
                 if (outcome == TackleOutcome.Won)
                 {
                     Teams[p.Team].Stats.TacklesWon++;
+                    p.Stats.TacklesWon++;
                     WinBall(p, owner);
                     return;
                 }
@@ -530,6 +597,7 @@ namespace Football.Core.MatchCore
 
                     p.SlideResolved = true;
                     Teams[p.Team].Stats.Tackles++;
+                    p.Stats.Tackles++;
                     float win = MathUtil.Clamp(ContextTackleChance(p, owner, out bool fromBehind) + rules.SlideWinBonus, 0f, 0.95f);
                     float foul = Rules.FoulChance(rules, p.Skill(AttributeId.Tackling), p.Skill(AttributeId.Aggression))
                                  * rules.SlideFoulMultiplier * (fromBehind ? rules.BehindFoulMultiplier : 1f);
@@ -543,6 +611,7 @@ namespace Football.Core.MatchCore
                     if (outcome == TackleOutcome.Won)
                     {
                         Teams[p.Team].Stats.TacklesWon++;
+                        p.Stats.TacklesWon++;
                         Owner = null;
                         owner.KickTimer = DispossessedLockout;
                         KnockBall(p);
@@ -609,6 +678,7 @@ namespace Football.Core.MatchCore
         {
             TeamState team = Teams[fouler.Team];
             team.Stats.Fouls++;
+            fouler.Stats.Fouls++;
             Vec2 at = victim.Pos;
             AddEvent(MatchEventType.Foul, fouler.Team, fouler.Index, at);
 
@@ -621,6 +691,7 @@ namespace Football.Core.MatchCore
             if (card == CardResult.Yellow || card == CardResult.SecondYellow)
             {
                 fouler.Yellows++;
+                fouler.Stats.Yellows++;
                 team.Stats.Yellows++;
                 AddEvent(MatchEventType.YellowCard, fouler.Team, fouler.Index, at);
             }
@@ -637,6 +708,8 @@ namespace Football.Core.MatchCore
         private void SendOff(MatchPlayer p, Vec2 at)
         {
             p.SentOff = true;
+            p.MinuteOff = Minute;
+            p.Stats.Reds++;
             Teams[p.Team].Stats.Reds++;
             AddEvent(MatchEventType.RedCard, p.Team, p.Index, at);
             if (Teams[p.Team].Controlled == p)
@@ -755,11 +828,16 @@ namespace Football.Core.MatchCore
             Teams[scoring].Stats.Goals++;
             if (_shotLive)
             {
-                Teams[scoring].Stats.ShotsOnTarget++;
+                CountShotOnTarget();
+                if (_shotCount > 0)
+                {
+                    _shots[_shotCount - 1].Goal = true;
+                }
             }
 
             _offsideActive = false;
             int scorer = ScorerIndex(scoring);
+            CreditGoal(scoring, scorer);
             _celebrator = scorer >= 0 && Players[scorer].Team == scoring ? Players[scorer] : null;
             AddEvent(MatchEventType.Goal, scoring, scorer, at);
             Owner = null;
