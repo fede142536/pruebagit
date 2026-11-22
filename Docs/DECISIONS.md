@@ -264,3 +264,27 @@ simula. Los seguimientos de ojeadores en curso y las ofertas recibidas sin respo
 **Consecuencias:** las partidas guardadas antes de esta versión se leen con datos de fábrica para lo nuevo (DT sin nombre,
 estadio inicial del club). Todos los números de estos sistemas están en `Data/balance/career.json`.
 
+## D-23 · Jugador con una sola malla y 20 huesos (`SkinnedMeshRenderer`) — Aceptada (pedido del usuario)
+**Decisión:** el jugador deja de ser un conjunto de mallas por articulación (`AnatomyKit`, D-19, eliminado) y pasa a ser
+**una sola malla** dibujada por un `SkinnedMeshRenderer` con 20 huesos (raíz, pelvis, columna, pecho, cuello, cabeza,
+hombro/codo/muñeca y cadera/rodilla/tobillo/puntera de cada lado). La arma `SkinnedBodyGeometry` sin Unity:
+- Piezas esculpidas por secciones que se solapan en las articulaciones; cada vértice lleva hasta dos huesos con pesos
+  suaves según su distancia a la articulación (codos, rodillas, hombros, cuello e ingle), así las costuras no se abren al
+  doblar. Calidad de piel `Bone2`.
+- Ropa con bordes: ruedo de la camiseta sobre el pantalón, botamanga abierta, borde de la manga, puño enrollado de la media
+  y franja; pliegues y trama en el shader. Botines con suela, lengüeta y cuatro tapones.
+- Cara con arco superciliar, nariz, pómulos, mentón y orejas aparte; seis peinados (corto, degradé, melena con vincha, rulos,
+  rapado y jopo) y barba o candado elegidos por hash. Proporción de 7,6 cabezas (cabeza al 80 %).
+- Shader (sigue compatible con el agrupado SRP, sin `MaterialPropertyBlock`): calidez subdérmica en la penumbra de la piel,
+  brillo de sudor que crece con los minutos, tela mate con trama fina y pliegues según una máscara por zona (UV0) y pegados a
+  la tela con la posición de reposo (UV1). Si el shader no está, la misma malla se dibuja con un material plano por color.
+- Animación procedural sin basura por fotograma: la de antes más giro de pelvis y contragiro del pecho, inclinación en las
+  curvas repartida entre raíz, pelvis y columna, apoyo del pie (suela paralela al césped, puntera que se dobla al despegar y
+  pelvis que baja para que el pie de apoyo toque el suelo; no es IK completa ni bloquea el deslizamiento) y mirada al balón
+  repartida entre cuello y cabeza con topes anatómicos (también hacia arriba y abajo).
+**Mediciones sin Unity** (`dotnet run --project Tools/SkinCheck`): 2.394–2.582 triángulos con camiseta lisa según peinado
+y vello (hasta 2.570 con rayas; 2.326 el DT de traje); 0 pesos inválidos; al doblar 100° el hueco en codo y rodilla queda en
+0,5–1,5 cm con pesos contra 4,5–6,1 cm con piel rígida; hombro a 80°: 2,6 cm contra 3,7 cm.
+**Consecuencias:** 22 mallas con huesos por partido (antes ~9 objetos por jugador). Falta medir en el Galaxy A13 el costo de
+la piel por GPU/CPU y confirmar 0 B de basura por fotograma con el perfilador.
+

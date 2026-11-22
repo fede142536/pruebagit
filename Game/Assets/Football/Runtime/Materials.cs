@@ -41,6 +41,7 @@ namespace Football.Game
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int RimId = Shader.PropertyToID("_FootballRim");
         private static readonly int DirtId = Shader.PropertyToID("_FootballDirt");
+        private static readonly int SweatId = Shader.PropertyToID("_FootballSweat");
 
         /// <summary>Verdadero si el shader de jugadores funciona en este dispositivo (permite agrupar piezas con color por vértice).</summary>
         public static bool PlayerShaderAvailable => PlayerShader() != null;
@@ -96,6 +97,13 @@ namespace Football.Game
         public static void SetDirt(float amount)
         {
             Shader.SetGlobalFloat(DirtId, Mathf.Clamp01(amount));
+        }
+
+        /// <summary>Cuánto brilla el sudor en la piel de los jugadores (0 al empezar, 1 al final).</summary>
+        /// <param name="amount">Cantidad entre 0 y 1.</param>
+        public static void SetSweat(float amount)
+        {
+            Shader.SetGlobalFloat(SweatId, Mathf.Clamp01(amount));
         }
 
         private static Shader PlayerShader()

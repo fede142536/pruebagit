@@ -19,6 +19,7 @@ Documentos de referencia: `Docs/GDD.md`, `Docs/ARCHITECTURE.md`, `Docs/ROADMAP.m
 | Simulador rápido (`MatchSim`) con las mismas métricas | `dotnet run -c Release --project Tools/HeadlessSim -- --sim --matches 1000 --seed 1` | Fase 2 ✅ |
 | Regenerar archivos de balance | `--dump-config`, `--indoor --dump-config`, `--dump-sim-config`, `--dump-finance-config`, `--dump-management-config`, `--dump-career-config` (cada uno con la ruta en `Data/balance/`) | ✅ |
 | Alineaciones y torneo entre equipos de un archivo | `dotnet run -c Release --project Tools/HeadlessSim -- --teams Data/teams/argentina.json --matches 10` | Fase 1 ✅ |
+| Malla del jugador sin Unity (triángulos, pesos, costuras) | `dotnet run --project Tools/SkinCheck` | ✅ |
 | Pruebas Unity (EditMode/PlayMode) | desde el editor, o `Unity -runTests -batchmode -projectPath Game` | Fase 1 |
 | Benchmark reproducible | escena `Game/Benchmark` + script `Tools/benchmark.md` | Fase 1 |
 

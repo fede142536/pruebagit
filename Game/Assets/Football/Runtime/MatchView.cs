@@ -101,8 +101,7 @@ namespace Football.Game
         private readonly StadiumLook _look;
         private GrassBurst _grass;
         /// <summary>Cantidad de peinados distintos.</summary>
-        public const int HairStyles = 5;
-        private const int BeardEvery = 4;
+        public const int HairStyles = 6;
         private const float RunUpDistance = 2.4f;   // el sacador de córner o de saque de arco toma carrera en diagonal
         private const float RunUpSeconds = 0.22f;
         private const float HoldBallHeight = 0.5f;
@@ -752,6 +751,7 @@ namespace Football.Game
         private void BuildPlayers(KitColors homeKit, KitColors awayKit)
         {
             Materials.SetDirt(0f); // partido nuevo, ropa limpia
+            Materials.SetSweat(0f);
             for (int i = 0; i < _players.Length; i++)
             {
                 bool home = i < _perTeam;
@@ -776,7 +776,7 @@ namespace Football.Game
                     Boots = new Color(0.08f, 0.08f, 0.08f),
                     // Aspecto determinista: cada jugador tiene siempre el mismo peinado y barba.
                     HairStyle = (i * 13 + 5) % HairStyles,
-                    Beard = i % BeardEvery == 2,
+                    FacialHair = FacialHairFor(i),
                     Keeper = keeper,
                     Gloves = home ? new Color(0.95f, 0.9f, 0.2f) : new Color(0.25f, 0.8f, 0.95f)
                 };
@@ -784,6 +784,18 @@ namespace Football.Game
                 float build = keeper ? KeeperBuild : MinBuild + (i * BuildStep % BuildSteps) * BuildRange / (BuildSteps - 1);
                 _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f, build, _meshes);
             }
+        }
+
+        private const uint FacialHairHash = 2654435761u;
+        private const float EyeHeight = 1.65f;      // altura de los ojos para mirar el balón arriba o abajo
+        private const float MinLookDistance = 0.5f;
+        private const int FacialHairBuckets = 10, BeardBuckets = 2, GoateeBuckets = 2; // de cada 10: 2 con barba y 2 con candado
+
+        /// <summary>Barba o candado de un jugador, elegido por hash (siempre el mismo para el mismo lugar).</summary>
+        private static int FacialHairFor(int index)
+        {
+            int bucket = (int)(((uint)(index + 1) * FacialHairHash >> 16) % FacialHairBuckets);
+            return bucket < BeardBuckets ? 1 : bucket < BeardBuckets + GoateeBuckets ? 2 : 0;
         }
 
         private void BuildBall()
@@ -856,6 +868,7 @@ namespace Football.Game
 
             // La ropa se va ensuciando a lo largo del partido.
             Materials.SetDirt(current.Minute / DirtFullMinute * MaxDirt);
+            Materials.SetSweat(current.Minute / DirtFullMinute);
             for (int i = 0; i < _players.Length; i++)
             {
                 PlayerModel model = _players[i];
@@ -897,8 +910,10 @@ namespace Football.Game
 
                 bool holdingThrow = current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && current.Restart == RestartKind.ThrowIn;
                 bool holdingBall = current.OwnerIndex == i && i % _perTeam == 0 && current.BallZ > HoldBallHeight;
+                float ballDistance = Mathf.Max(MinLookDistance, Mathf.Sqrt((bx - x) * (bx - x) + (by - y) * (by - y)));
+                float lookPitch = Mathf.Atan2(bz - EyeHeight, ballDistance) * Mathf.Rad2Deg;
                 model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, relative < 0f, deltaTime,
-                    current.DiveHeight[i], holdingThrow, holdingBall);
+                    current.DiveHeight[i], holdingThrow, holdingBall, lookPitch);
                 _heads[i] = ToUnity(x, y, NameHeight);
             }
 

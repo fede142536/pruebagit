@@ -194,7 +194,7 @@ namespace Football.Game
                 Skin = MatchView.SkinTones[(club * 3 + slot) % MatchView.SkinTones.Length],
                 Hair = MatchView.HairColors[(club + slot * 2) % MatchView.HairColors.Length],
                 Boots = new Color(0.06f, 0.06f, 0.07f),
-                HairStyle = (club + slot) % 5,
+                HairStyle = (club + slot) % MatchView.HairStyles,
                 Beard = ((club + slot) & 1) == 0
             };
             _models[slot] = new PlayerModel(_root.transform, "Figura" + slot, look, slot * 0.37f, 0.98f + 0.03f * slot, _figureMeshes[slot]);

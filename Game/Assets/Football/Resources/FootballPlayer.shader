@@ -5,7 +5,10 @@
 //  - luz de borde sutil para recortar la silueta sobre el césped;
 //  - pliegues suaves en la tela (camiseta, pantalón, medias) según la posición en la malla;
 //  - brillo especular en botines (fino e intenso) y en el pelo (ancho y suave);
-//  - suciedad en la parte baja del cuerpo que crece con los minutos.
+//  - suciedad en la parte baja del cuerpo que crece con los minutos;
+//  - piel con calidez subdérmica en la zona de penumbra y brillo de sudor que crece con los minutos (máscara en la UV.x);
+//  - tela mate con trama fina y pliegues más marcados donde la máscara lo indica (UV.y: cintura, codos, ingle, tobillos).
+// Las máscaras las pone SkinnedBodyGeometry; las mallas sin UV (público) usan los pliegues de siempre y no sudan.
 // Todas las propiedades del material están en el CBUFFER UnityPerMaterial (compatible con el agrupado SRP Batcher); los
 // valores que cambian en juego son globales (_FootballRim, _FootballDirt, _FootballLightDir, _FootballLightAmount), así no
 // hace falta MaterialPropertyBlock ni se crean objetos por fotograma.
@@ -29,6 +32,12 @@ Shader "Football/Player"
         _BootGloss ("Dureza del brillo de los botines", Range(4, 128)) = 48
         _HairSpecular ("Brillo del pelo", Range(0, 1)) = 0.22
         _HairGloss ("Dureza del brillo del pelo", Range(2, 64)) = 10
+        _SubsurfaceColor ("Color subdérmico", Color) = (0.85, 0.25, 0.15, 1)
+        _Subsurface ("Intensidad subdérmica", Range(0, 1)) = 0.18
+        _SweatSpecular ("Brillo del sudor", Range(0, 1)) = 0.35
+        _SweatGloss ("Dureza del brillo del sudor", Range(4, 128)) = 40
+        _WeaveStrength ("Trama de la tela", Range(0, 0.3)) = 0.05
+        _WeaveFrequency ("Frecuencia de la trama", Range(50, 600)) = 260
         _Cull ("Caras", Float) = 0
     }
 
@@ -63,6 +72,12 @@ Shader "Football/Player"
                 half _BootGloss;
                 half _HairSpecular;
                 half _HairGloss;
+                half4 _SubsurfaceColor;
+                half _Subsurface;
+                half _SweatSpecular;
+                half _SweatGloss;
+                half _WeaveStrength;
+                half _WeaveFrequency;
                 half _Cull;
             CBUFFER_END
 
@@ -71,12 +86,15 @@ Shader "Football/Player"
             half _FootballDirt;
             half4 _FootballLightDir;   // dirección hacia la luz principal (focos del estadio), normalizada
             half _FootballLightAmount; // 0 = sin sombreado ni brillos (calidad baja), 1 = volumen completo
+            half _FootballSweat;       // 0 al empezar, 1 al final del partido
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 half4 color : COLOR; // rgb: color de la pieza; a: tipo de material
+                float2 masks : TEXCOORD0; // x: sudor (piel), y: pliegues (tela); 0 si la malla no las trae
+                float3 rest : TEXCOORD1;  // posición en reposo (malla con huesos): pliegues y trama pegados a la tela
             };
 
             struct Varyings
@@ -87,6 +105,8 @@ Shader "Football/Player"
                 half3 viewWS : TEXCOORD2;
                 half dirt : TEXCOORD3;
                 half fold : TEXCOORD4;
+                half2 masks : TEXCOORD5;
+                half weave : TEXCOORD6;
             };
 
             Varyings Vert(Attributes input)
@@ -103,9 +123,14 @@ Shader "Football/Player"
                 half noise = frac(sin(dot(floor(positionWS.xz * 7.0), float2(12.9898, 78.233))) * 43758.5453);
                 output.dirt = saturate(low * low * _FootballDirt * (0.6h + 0.4h * noise));
 
-                // Pliegues: ondas suaves e inclinadas en el espacio de la pieza (se mueven con el cuerpo, no «nadan»).
-                float3 p = input.positionOS.xyz;
+                // Pliegues: ondas suaves e inclinadas en el espacio de la pieza. En la malla con huesos se usa la posición de
+                // reposo, así acompañan a la tela al moverse en lugar de «nadar»; las mallas sin ese canal usan la suya.
+                float hasRest = step(1e-6, dot(input.rest, input.rest));
+                float3 p = lerp(input.positionOS.xyz, input.rest, hasRest);
                 output.fold = (half)(p.y * _FoldFrequency + p.x * _FoldFrequency * 0.6 + sin(p.z * _FoldFrequency * 0.5) * 1.5);
+                output.masks = (half2)input.masks;
+                // Trama: dos ondas cruzadas finas en el espacio de la pieza (se interpolan; no hace falta textura).
+                output.weave = (half)(sin(p.x * _WeaveFrequency + p.y * _WeaveFrequency) * sin(p.y * _WeaveFrequency - p.z * _WeaveFrequency));
                 return output;
             }
 
@@ -118,22 +143,31 @@ Shader "Football/Player"
                 half fabric = step(0.6h, id) * step(id, 0.9h);
                 half boots = step(0.4h, id) * step(id, 0.6h);
                 half hair = step(id, 0.4h);
+                half skin = step(0.9h, id);
+                half sweatMask = input.masks.x;
+                half foldMask = input.masks.y + step(input.masks.y, 0.0001h); // sin máscara: pliegues de siempre
 
                 // Difuso envolvente: la luz «da la vuelta» un poco, como en la piel y la tela reales.
                 half ndl = dot(n, l);
                 half wrapped = saturate((ndl + _Wrap) / (1.0h + _Wrap));
                 half diffuse = lerp(1.0h, wrapped * _LightGain + _Ambient, _FootballLightAmount);
 
-                half fold = 1.0h - _FoldStrength * fabric * (0.5h + 0.5h * sin(input.fold)) * _FootballLightAmount;
+                half fold = 1.0h - _FoldStrength * fabric * foldMask * (0.5h + 0.5h * sin(input.fold)) * _FootballLightAmount;
+                fold *= 1.0h - _WeaveStrength * fabric * (0.5h + 0.5h * input.weave) * _FootballLightAmount;
+
+                // Piel: la luz que atraviesa la piel calienta la penumbra (subdérmica, barata: sin texturas ni pasadas).
+                half terminator = saturate(1.0h - abs(ndl)) * skin * _Subsurface * _FootballLightAmount;
 
                 half3 h = normalize(l + v);
                 half nh = saturate(dot(n, h));
-                half specular = (boots * pow(nh, _BootGloss) * _BootSpecular + hair * pow(nh, _HairGloss) * _HairSpecular)
+                half specular = (boots * pow(nh, _BootGloss) * _BootSpecular + hair * pow(nh, _HairGloss) * _HairSpecular
+                                 + skin * sweatMask * _FootballSweat * pow(nh, _SweatGloss) * _SweatSpecular)
                                 * _FootballLightAmount * step(0.0h, ndl);
 
                 half rim = pow(1.0h - saturate(abs(dot(n, v))), _RimPower) * _RimStrength * _FootballRim;
 
                 half3 color = lerp(input.color.rgb, _DirtColor.rgb, input.dirt) * diffuse * fold;
+                color += input.color.rgb * _SubsurfaceColor.rgb * terminator;
                 color += specular.xxx + _RimColor.rgb * rim;
                 return half4(color, 1.0h);
             }

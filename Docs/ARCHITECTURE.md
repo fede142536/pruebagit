@@ -151,6 +151,7 @@ Implementada en `Game/Assets/Football/Runtime` (Fase 1; **sin ejecutar aún en U
 | `DebugPanel` | FPS, tiempo de fotograma p99, recolecciones de basura, asignaciones, memoria, latencia estimada |
 | `Materials` | Materiales planos sin iluminación a partir de un material base en `Resources` |
 | `CareerScreen` + `CareerPage` | Contenedor de la carrera (cabecera, barra de 5 secciones, área segura) y base de cada pantalla: `ManagerCreationScreen`, `CareerClubSelectScreen`, `CareerHubScreen`, `CareerObjectivesScreen`, `CareerFinanceScreen`, `CareerStadiumScreen`; `CareerController` las une con `CareerSession` |
+| `PlayerModel` + `SkinnedBodyGeometry` | Jugador: una malla con `SkinnedMeshRenderer` de 20 huesos y animación procedural sin basura (D-23); la geometría y los pesos se arman sin Unity y se prueban con `Tools/SkinCheck` |
 | `StadiumLook` | Ocupación, anillos de tribuna y andamios del estadio; lo comparten `MatchView` y la vista isométrica |
 
 Principios generales de la capa Unity:
