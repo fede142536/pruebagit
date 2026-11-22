@@ -21,15 +21,26 @@ namespace Football.Game
         EditAwayLineup
     }
 
-    /// <summary>Elección de equipos para el amistoso: una tarjeta por lado con club, valoración, figura y camiseta.</summary>
+    /// <summary>
+    /// Elección de equipos para el amistoso, al estilo EA FC: a los costados, un jugador 3D de cuerpo entero con la
+    /// equipación elegida; en el centro, dos paneles (TU EQUIPO / RIVAL) con el selector de club y un carrusel de camisetas
+    /// (la elegida en grande y la otra en miniatura a los costados).
+    /// </summary>
     public sealed class TeamSelectScreen : MenuScreenBase
     {
+        private const float PanelWidth = 500f;
+        private const float PanelHeight = 800f;
+        private const float MainKitScale = 1.15f;
+        private const float SideKitScale = 0.45f;
+        private static readonly Vector2 KitBoxSize = new Vector2(300f, 330f);
+
         private sealed class Card
         {
             public UiButton Previous, Next, KitPrevious, KitNext, Lineup;
-            public Text Name, Info, Star, KitName;
+            public Text Name, Info, Star, KitName, Figure;
             public StarRating Stars;
-            public KitPreview Kit;
+            public KitPreview Kit, LeftKit, RightKit;
+            public KitShowroom Showroom;
         }
 
         private readonly FriendlySetup _setup;
@@ -46,32 +57,40 @@ namespace Football.Game
         {
             _setup = setup;
             Title("PARTIDO AMISTOSO", "Elige los clubes y sus camisetas");
-            _cards[0] = BuildCard(new Vector2(530f, 500f), "TU EQUIPO");
-            _cards[1] = BuildCard(new Vector2(1390f, 500f), "RIVAL");
-            UiKit.Label(Root, "Vs", new Vector2(960f, 640f), new Vector2(120f, 80f), "VS", 56, UiTheme.TextDim);
-            _clash = UiKit.Label(Root, "Choque", new Vector2(960f, 115f), new Vector2(1400f, 40f), string.Empty, 26, UiTheme.Warning);
+            _cards[0] = BuildCard(new Vector2(700f, 480f), "TU EQUIPO");
+            _cards[1] = BuildCard(new Vector2(1220f, 480f), "RIVAL");
+            _cards[0].Showroom = new KitShowroom(Root, new Vector2(225f, 520f), new Vector2(360f, 600f), 0, 200f);
+            _cards[1].Showroom = new KitShowroom(Root, new Vector2(1695f, 520f), new Vector2(360f, 600f), 1, 160f);
+            _cards[0].Figure = UiKit.Label(Root, "FiguraLocal", new Vector2(225f, 195f), new Vector2(400f, 40f), string.Empty, 26, UiTheme.Text);
+            _cards[1].Figure = UiKit.Label(Root, "FiguraRival", new Vector2(1695f, 195f), new Vector2(400f, 40f), string.Empty, 26, UiTheme.Text);
+            UiKit.Label(Root, "Vs", new Vector2(960f, 785f), new Vector2(120f, 60f), "VS", 44, UiTheme.TextDim);
+            _clash = UiKit.Label(Root, "Choque", new Vector2(960f, 55f), new Vector2(1000f, 40f), string.Empty, 24, UiTheme.Warning);
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
             _continue = UiKit.Button(Root, "Continuar", new Vector2(1680f, 60f), new Vector2(400f, 84f), "CONTINUAR", 38, UiTheme.AccentDark);
         }
 
         private Card BuildCard(Vector2 center, string heading)
         {
-            Image panel = UiKit.Panel(Root, "Tarjeta" + heading, center, new Vector2(800f, 780f), UiTheme.Panel);
+            Image panel = UiKit.Panel(Root, "Tarjeta" + heading, center, new Vector2(PanelWidth, PanelHeight), UiTheme.Panel);
             Transform t = panel.transform;
-            Vector2 c = new Vector2(400f, 390f);
+            Vector2 c = new Vector2(PanelWidth * 0.5f, PanelHeight * 0.5f);
             var card = new Card();
-            UiKit.Label(t, "Encabezado", c + new Vector2(0f, 345f), new Vector2(700f, 50f), heading, 34, UiTheme.Accent);
-            card.Previous = UiKit.Button(t, "Anterior", c + new Vector2(-330f, 270f), new Vector2(90f, 90f), "<", 50, UiTheme.Button);
-            card.Next = UiKit.Button(t, "Siguiente", c + new Vector2(330f, 270f), new Vector2(90f, 90f), ">", 50, UiTheme.Button);
-            card.Name = UiKit.Label(t, "Nombre", c + new Vector2(0f, 270f), new Vector2(560f, 80f), string.Empty, 44, UiTheme.Text);
-            card.Stars = new StarRating(t, c + new Vector2(0f, 205f));
-            card.Info = UiKit.Label(t, "Info", c + new Vector2(0f, 155f), new Vector2(740f, 40f), string.Empty, 28, UiTheme.TextDim);
-            card.Star = UiKit.Label(t, "Figura", c + new Vector2(0f, 112f), new Vector2(740f, 40f), string.Empty, 26, UiTheme.TextDim);
-            card.Kit = new KitPreview(t, c + new Vector2(0f, -40f));
-            card.KitPrevious = UiKit.Button(t, "CamisetaAnterior", c + new Vector2(-230f, -195f), new Vector2(76f, 70f), "<", 40, UiTheme.Button);
-            card.KitNext = UiKit.Button(t, "CamisetaSiguiente", c + new Vector2(230f, -195f), new Vector2(76f, 70f), ">", 40, UiTheme.Button);
-            card.KitName = UiKit.Label(t, "NombreCamiseta", c + new Vector2(0f, -195f), new Vector2(360f, 60f), string.Empty, 30, UiTheme.Text);
-            card.Lineup = UiKit.Button(t, "Alineacion", c + new Vector2(0f, -310f), new Vector2(460f, 80f), "EDITAR ALINEACIÓN", 30, UiTheme.Button);
+            UiKit.Label(t, "Encabezado", c + new Vector2(0f, 360f), new Vector2(460f, 50f), heading, 34, UiTheme.Accent);
+            // Selector de club.
+            card.Previous = UiKit.Button(t, "Anterior", c + new Vector2(-200f, 290f), new Vector2(76f, 76f), "<", 44, UiTheme.Button);
+            card.Next = UiKit.Button(t, "Siguiente", c + new Vector2(200f, 290f), new Vector2(76f, 76f), ">", 44, UiTheme.Button);
+            card.Name = UiKit.Label(t, "Nombre", c + new Vector2(0f, 290f), new Vector2(320f, 80f), string.Empty, 32, UiTheme.Text);
+            card.Stars = new StarRating(t, c + new Vector2(0f, 228f));
+            card.Info = UiKit.Label(t, "Info", c + new Vector2(0f, 182f), new Vector2(470f, 40f), string.Empty, 24, UiTheme.TextDim);
+            card.Star = UiKit.Label(t, "Figura", c + new Vector2(0f, 146f), new Vector2(470f, 40f), string.Empty, 22, UiTheme.TextDim);
+            // Carrusel de camisetas: la otra en miniatura a cada lado, la elegida grande al centro.
+            card.LeftKit = KitBox(t, c + new Vector2(-185f, -20f), SideKitScale);
+            card.RightKit = KitBox(t, c + new Vector2(185f, -20f), SideKitScale);
+            card.Kit = KitBox(t, c + new Vector2(0f, -10f), MainKitScale);
+            card.KitPrevious = UiKit.Button(t, "CamisetaAnterior", c + new Vector2(-185f, -215f), new Vector2(76f, 70f), "<", 40, UiTheme.Button);
+            card.KitNext = UiKit.Button(t, "CamisetaSiguiente", c + new Vector2(185f, -215f), new Vector2(76f, 70f), ">", 40, UiTheme.Button);
+            card.KitName = UiKit.Label(t, "NombreCamiseta", c + new Vector2(0f, -215f), new Vector2(260f, 60f), string.Empty, 28, UiTheme.Text);
+            card.Lineup = UiKit.Button(t, "Alineacion", c + new Vector2(0f, -330f), new Vector2(420f, 80f), "EDITAR ALINEACIÓN", 28, UiTheme.Button);
             // Las zonas táctiles de los botones de la tarjeta se miden en coordenadas del lienzo.
             Offset(card.Previous, center, c);
             Offset(card.Next, center, c);
@@ -79,6 +98,21 @@ namespace Football.Game
             Offset(card.KitNext, center, c);
             Offset(card.Lineup, center, c);
             return card;
+        }
+
+        /// <summary>Camiseta dentro de un recuadro escalado (grande en el centro del carrusel, chica a los lados).</summary>
+        private static KitPreview KitBox(Transform parent, Vector2 center, float scale)
+        {
+            var go = new GameObject("CarruselCamiseta", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = center;
+            rect.sizeDelta = KitBoxSize;
+            rect.localScale = new Vector3(scale, scale, 1f);
+            return new KitPreview(go.transform, KitBoxSize * 0.5f);
         }
 
         private static void Offset(UiButton button, Vector2 panelCenter, Vector2 localCenter)
@@ -94,6 +128,20 @@ namespace Football.Game
             Action = TeamSelectAction.None;
             base.Show();
             Refresh();
+            for (int side = 0; side < 2; side++)
+            {
+                _cards[side].Showroom.SetVisible(true);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void Hide()
+        {
+            base.Hide();
+            for (int side = 0; side < 2; side++)
+            {
+                _cards[side].Showroom?.SetVisible(false); // sin pantalla a la vista, las cámaras de las vitrinas no dibujan
+            }
         }
 
         private void Refresh()
@@ -117,8 +165,14 @@ namespace Football.Game
                 }
 
                 card.Star.text = "Figura: " + best.Name + " (" + best.Rating + ")";
-                card.Kit.Set(_setup.KitOf(side));
+                KitColors chosen = _setup.KitOf(side);
+                KitColors other = KitColors.From(_setup.Kit(side) == 0 ? team.Away : team.Home);
+                card.Kit.Set(chosen);
+                card.LeftKit.Set(other);
+                card.RightKit.Set(other);
                 card.KitName.text = _setup.Kit(side) == 0 ? "TITULAR" : "ALTERNATIVA";
+                card.Showroom.SetKit(chosen);
+                card.Figure.text = (best.Number > 0 ? best.Number + "  ·  " : string.Empty) + TeamBuilder.DisplayName(best).ToUpperInvariant();
             }
 
             _clash.text = _setup.KitsClash ? "Las camisetas se parecen: el rival usará la otra para distinguir a los equipos." : string.Empty;
@@ -128,6 +182,11 @@ namespace Football.Game
         public void Update()
         {
             Action = TeamSelectAction.None;
+            for (int side = 0; side < 2; side++)
+            {
+                _cards[side].Showroom.Update(Time.unscaledDeltaTime);
+            }
+
             if (BackKey)
             {
                 Action = TeamSelectAction.Back;

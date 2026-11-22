@@ -36,13 +36,13 @@ namespace Football.Game
         private const float BoardHeight = 0.9f;
         private const float GoalDepth = 1.6f;
 
-        private static readonly Color[] SkinTones =
+        internal static readonly Color[] SkinTones =
         {
             new Color(0.96f, 0.80f, 0.69f), new Color(0.87f, 0.67f, 0.51f), new Color(0.76f, 0.57f, 0.42f),
             new Color(0.55f, 0.38f, 0.26f), new Color(0.36f, 0.24f, 0.17f)
         };
 
-        private static readonly Color[] HairColors =
+        internal static readonly Color[] HairColors =
         {
             new Color(0.07f, 0.06f, 0.05f), new Color(0.2f, 0.12f, 0.07f), new Color(0.35f, 0.22f, 0.12f),
             new Color(0.78f, 0.63f, 0.32f), new Color(0.5f, 0.24f, 0.1f)

@@ -224,7 +224,7 @@ namespace Football.Game
         }
 
         /// <summary>Oculta la pantalla.</summary>
-        public void Hide()
+        public virtual void Hide()
         {
             Canvas.gameObject.SetActive(false);
         }
