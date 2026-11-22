@@ -295,7 +295,7 @@ namespace Football.Core.MatchCore
         {
             TeamState opponents = Teams[1 - team];
             float best = float.MaxValue;
-            for (int i = 1; i < opponents.Players.Length; i++)
+            for (int i = opponents.FirstOutfield; i < opponents.Players.Length; i++)
             {
                 MatchPlayer o = opponents.Players[i];
                 if (o.SentOff)
@@ -598,11 +598,11 @@ namespace Football.Core.MatchCore
             Vec2 origin = Ball.Pos.Horizontal;
             Vec2 goal = Pitch.GoalCenter(team.AttackDirection);
             float distance = Vec2.Distance(origin, goal);
-            MatchPlayer keeper = Teams[1 - p.Team].Players[0];
+            float guardY = GoalGuardY(1 - p.Team);
 
             if (float.IsNaN(aimY))
             {
-                float side = MathF.Abs(keeper.Pos.Y) < 0.5f ? (_rng.NextFloat() < 0.5f ? -1f : 1f) : (keeper.Pos.Y > 0f ? -1f : 1f);
+                float side = MathF.Abs(guardY) < 0.5f ? (_rng.NextFloat() < 0.5f ? -1f : 1f) : (guardY > 0f ? -1f : 1f);
                 aimY = side * (Pitch.GoalHalfWidth - ai.ShotCornerMargin);
             }
 

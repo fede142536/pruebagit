@@ -16,7 +16,17 @@
     "SetPieceZoom": 1.25,
     "SetPieceLookAhead": 12.0,
     "FocusZoom": 0.55,
-    "CloseZoom": 0.75
+    "TransitionSpeed": 4.0,
+    "TacticalHeight": 40.0,
+    "TacticalDistance": 20.0,
+    "LowHeight": 5.5,
+    "LowDistance": 17.0,
+    "ProHeight": 4.2,
+    "ProBehind": 8.5,
+    "ProLookAhead": 9.0,
+    "ProTurnSpeed": 2.2,
+    "GoalCamHeight": 0.35,
+    "GoalCamBehind": 3.2
   },
   "Controls": {
     "JoystickRadius": 130.0,

@@ -41,8 +41,9 @@ namespace Football.Core.Domain
         /// <summary>Cancha cerrada, 3 contra 3: arquero, un jugador de apoyo atrás y un delantero, en diagonal.</summary>
         public static readonly Formation Indoor3 = new Formation("3v3", new[]
         {
-            new FormationSlot(Position.Goalkeeper, 0.05f, 0f),
-            new FormationSlot(Position.CentralMidfielder, 0.36f, 0.35f),
+            // Potrero: nadie ataja. Cierre (el último), armador y pivote; el cierre tapa el arco sin manos.
+            new FormationSlot(Position.CenterBack, 0.14f, 0f),
+            new FormationSlot(Position.CentralMidfielder, 0.38f, 0.35f),
             new FormationSlot(Position.Striker, 0.62f, -0.30f)
         });
 

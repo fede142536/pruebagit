@@ -10,7 +10,7 @@ using Football.Core.Domain;
 
 namespace Football.Core.Tests.MatchCore
 {
-    /// <summary>Modo cancha cerrada (3 contra 3): paredes, sin fuera de juego, partidos completos y archivo de balance.</summary>
+    /// <summary>Modo potrero (3 contra 3 sin arqueros): paredes, sin fuera de juego, partidos completos y archivo de balance.</summary>
     public class IndoorTests
     {
         private static MatchEngine NewIndoor(ulong seed, MatchConfig config = null)
@@ -30,7 +30,54 @@ namespace Football.Core.Tests.MatchCore
             Assert.That(e.PlayersPerTeam, Is.EqualTo(3));
             Assert.That(e.Players, Has.Length.EqualTo(6));
             Assert.That(e.Teams[1].Players[0].Index, Is.EqualTo(3));
-            Assert.That(e.Teams[1].Players[0].IsKeeper, Is.True);
+            Assert.That(e.Players.Any(p => p.IsKeeper), Is.False, "potrero: nadie ataja");
+            Assert.That(e.Teams[0].HasKeeper || e.Teams[1].HasKeeper, Is.False);
+            Assert.That(e.Teams[0].FirstOutfield, Is.Zero);
+        }
+
+        [Test]
+        public void IndoorFullMatches_NobodyUsesTheirHands_AndThereAreNoKeeperSaves()
+        {
+            for (ulong seed = 0; seed < 6; seed++)
+            {
+                MatchEngine e = NewIndoor(300 + seed);
+                while (!e.IsFinished)
+                {
+                    e.Tick();
+                }
+
+                for (int t = 0; t < 2; t++)
+                {
+                    Assert.That(e.Teams[t].Stats.Saves, Is.Zero, "sin arquero no hay atajadas con las manos");
+                    Assert.That(e.Teams[t].KeeperLock, Is.False);
+                }
+            }
+        }
+
+        [Test]
+        public void WithoutKeeper_TheGoalGuardStaysBetweenTheBallAndItsGoal()
+        {
+            MatchEngine e = NewIndoor(7);
+            e.TestBeginOpenPlay();
+            TeamState defenders = e.Teams[1];
+            MatchPlayer carrier = e.Teams[0].Players[2];
+            float attack = e.Teams[0].AttackDirection;
+            e.TestPlaceBall(new Vec3(attack * 8f, 3f, 0.11f), new Vec3(0f, 0f, 0f), carrier);
+            e.TestPlace(carrier, new Vec2(attack * 8f, 3f));
+            for (int i = 0; i < 6; i++)
+            {
+                e.TestPlace(e.Players[i], e.Players[i] == carrier ? carrier.Pos : new Vec2(0f, -8f + 3f * i));
+            }
+
+            for (int i = 0; i < 360; i++) // 6 s: tiempo de volver trotando desde el medio
+            {
+                e.TestPlace(carrier, new Vec2(attack * 8f, 3f)); // el poseedor se queda quieto
+                e.Tick();
+            }
+
+            Vec2 goal = e.Pitch.GoalCenter(defenders.DefendedEnd);
+            float best = defenders.Players.Min(p => Vec2.Distance(p.Pos, goal));
+            Assert.That(best, Is.LessThan(6f), "alguien vuelve a tapar el arco vacío");
         }
 
         [Test]
@@ -141,7 +188,7 @@ namespace Football.Core.Tests.MatchCore
         }
 
         [Test]
-        public void RealSquad_PicksKeeperAndTwoOutfieldPlayers_AndPlaysIndoor()
+        public void RealSquad_PicksThreeOutfieldPlayers_AndPlaysIndoor()
         {
             string[] positions = { "POR", "DFC", "DFC", "LI", "LD", "MC", "MC", "MCO", "EI", "ED", "DC", "DC", "POR" };
             TeamDefinition Team(string name) => new TeamDefinition
@@ -157,7 +204,7 @@ namespace Football.Core.Tests.MatchCore
             MatchTeamSetup home = TeamBuilder.Build(a, config, new SeededRandom(1), SquadSelection.Auto(a, Formations.Indoor3, 0));
             MatchTeamSetup away = TeamBuilder.Build(b, config, new SeededRandom(2), SquadSelection.Auto(b, Formations.Indoor3, 0));
             Assert.That(home.Players, Has.Length.EqualTo(3));
-            Assert.That(home.Players[0].Role, Is.EqualTo(Football.Core.Domain.Position.Goalkeeper));
+            Assert.That(home.Players.Any(p => p.Role == Football.Core.Domain.Position.Goalkeeper), Is.False, "potrero: sin arquero");
 
             var e = new MatchEngine(config, new SeededRandom(3), home, away);
             e.SetHuman(0, true);

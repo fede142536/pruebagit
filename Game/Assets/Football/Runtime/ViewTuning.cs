@@ -39,8 +39,28 @@ namespace Football.Game
         public float SetPieceLookAhead = 12f;
         /// <summary>Zoom al enfocar a un jugador (festejo).</summary>
         public float FocusZoom = 0.55f;
-        /// <summary>Zoom del modo de cámara «cercana».</summary>
-        public float CloseZoom = 0.75f;
+        /// <summary>Rapidez del paso suave de un modo de cámara a otro (1/s).</summary>
+        public float TransitionSpeed = 4f;
+        /// <summary>Táctica panorámica: altura (m).</summary>
+        public float TacticalHeight = 40f;
+        /// <summary>Táctica panorámica: distancia horizontal (m).</summary>
+        public float TacticalDistance = 20f;
+        /// <summary>Lateral baja: altura (m).</summary>
+        public float LowHeight = 5.5f;
+        /// <summary>Lateral baja: distancia horizontal al balón (m).</summary>
+        public float LowDistance = 17f;
+        /// <summary>Profesional: altura detrás del jugador controlado (m).</summary>
+        public float ProHeight = 4.2f;
+        /// <summary>Profesional: distancia detrás del jugador controlado (m).</summary>
+        public float ProBehind = 8.5f;
+        /// <summary>Profesional: cuánto por delante del jugador mira (m).</summary>
+        public float ProLookAhead = 9f;
+        /// <summary>Profesional: rapidez con la que la cámara gira detrás del jugador (1/s).</summary>
+        public float ProTurnSpeed = 2.2f;
+        /// <summary>Repetición: altura de la cámara a ras del césped detrás del arco (m).</summary>
+        public float GoalCamHeight = 0.35f;
+        /// <summary>Repetición: distancia de esa cámara por detrás de la línea de gol (m).</summary>
+        public float GoalCamBehind = 3.2f;
     }
 
     /// <summary>Ajustes de los controles táctiles (se leen de <c>Resources/view_tuning.json</c>).</summary>

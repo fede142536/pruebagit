@@ -340,6 +340,7 @@ namespace Football.Game
             _audio.StopCrowd();
             AudioListener.pause = false;
             _replaying = false;
+            _view?.SetReplayAngle(-1, 0f);
             _celebrationTimer = 0f;
             _introTimer = 0f;
             _plate.Hide();
@@ -748,6 +749,8 @@ namespace Football.Game
         private bool _replaying;
         private float _replayCursor;
         private int _replayStart, _replayLength;
+        private int _replayPass; // 0 plano de transmisión, 1 a ras del césped detrás del arco
+        private const int ReplayPasses = 2;
         private float _lastBallSpeed;
         private Radar _radar;
         private PlayerHud _playerHud;
@@ -841,7 +844,9 @@ namespace Football.Game
 
             _replayStart = (end - _replayLength + _history.Length) % _history.Length;
             _replayCursor = 0f;
+            _replayPass = 0;
             _replaying = true;
+            _view.SetReplayAngle(0, _history[(end - 1 + _history.Length) % _history.Length].BallX);
             _hint.text = "REPETICIÓN  ·  toca para saltar";
             _controls.SetActive(false); // repetición limpia, como en la televisión: sin botones táctiles
             _playerHud.SetVisible(false);
@@ -852,9 +857,20 @@ namespace Football.Game
             bool skip = input.Pass || input.Shoot || input.Slide || input.Switch || input.Clear || TappedThisFrame();
             _replayCursor += deltaTime * _engine.Config.TickRate * ReplaySpeed;
             int i = (int)_replayCursor;
+            if (!skip && i >= _replayLength - 1 && _replayPass + 1 < ReplayPasses)
+            {
+                // Segunda pasada con el otro ángulo: la cámara a ras del césped, detrás del arco.
+                _replayPass++;
+                _replayCursor = 0f;
+                i = 0;
+                int end = (_replayStart + _replayLength - 1) % _history.Length;
+                _view.SetReplayAngle(_replayPass, _history[end].BallX);
+            }
+
             if (skip || i >= _replayLength - 1)
             {
                 _replaying = false;
+                _view.SetReplayAngle(-1, 0f);
                 _hint.text = string.Empty;
                 _playerHud.SetVisible(true);
                 ApplyControlsVisibility(); // vuelven los botones táctiles

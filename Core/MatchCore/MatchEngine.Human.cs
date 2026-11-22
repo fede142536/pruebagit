@@ -189,7 +189,7 @@ namespace Football.Core.MatchCore
                 MatchPlayer keeper = team.Players[0];
                 if (team.Input.Keeper)
                 {
-                    team.KeeperLock = !team.KeeperLock && !keeper.SentOff;
+                    team.KeeperLock = !team.KeeperLock && !keeper.SentOff && keeper.IsKeeper; // sin arquero no hay a quién tomar
                 }
 
                 if (Owner != null && Owner.Team == t)
@@ -354,7 +354,7 @@ namespace Football.Core.MatchCore
 
             MatchPlayer best = null;
             float bestDistance = Config.Player.SecondPressMaxDistance;
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff || p == team.Controlled)

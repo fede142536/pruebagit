@@ -578,6 +578,13 @@ namespace Football.Core.MatchCore
         /// <summary>Distancia máxima de un defensor al punto de cobertura para asignarle esa tarea (m).</summary>
         public float CoverRadius = 18f;
 
+        /// <summary>Sin arquero (potrero): distancia mínima del cierre a su línea de gol al tapar el arco (m).</summary>
+        public float GoalCoverMinDepth = 1.2f;
+        /// <summary>Sin arquero: distancia máxima del cierre a su línea de gol (m).</summary>
+        public float GoalCoverMaxDepth = 5f;
+        /// <summary>Sin arquero: fracción de la distancia balón-arco a la que se adelanta el cierre.</summary>
+        public float GoalCoverShare = 0.35f;
+
         /// <summary>Cambio de la altura de la línea por cada paso de mentalidad.</summary>
         public float MentalityLineStep = 0.12f;
         /// <summary>Cambio del riesgo por cada paso de mentalidad.</summary>
@@ -728,6 +735,9 @@ namespace Football.Core.MatchCore
         /// <summary>Duración de un paso de simulación (s).</summary>
         public float FixedDeltaTime() => 1f / TickRate;
 
+        /// <summary>Calibración del xG en el potrero (arco chico sin arquero).</summary>
+        private const float IndoorXgCalibration = 2.05f;
+
         /// <summary>Fracción del gasto de resistencia de la cancha grande que se usa en la cancha cerrada.</summary>
         public const float IndoorStaminaDrainFactor = 0.4f;
 
@@ -742,8 +752,8 @@ namespace Football.Core.MatchCore
             PitchConfig p = c.Pitch;
             p.Length = 40f;
             p.Width = 20f;
-            p.GoalWidth = 3f;
-            p.GoalHeight = 2f;
+            p.GoalWidth = 2.4f; // arco de potrero: sin arquero, más chico
+            p.GoalHeight = 1.4f;
             p.PenaltyAreaDepth = 6f;
             p.PenaltyAreaHalfWidth = 7f;
             p.GoalAreaDepth = 0f;
@@ -753,15 +763,12 @@ namespace Football.Core.MatchCore
             p.PlayerMargin = -0.4f;
             p.Walls = true;
 
-            // De cerca, un tiro fuerte castiga menos al arquero que en cancha grande (portería de 3 m).
-            c.Player.KeeperSaveSpeedPenalty = 0.015f;
-            // En una portería de 3 m casi todo es a quemarropa: el arquero apenas sufre la urgencia y ataja más de base.
-            c.Player.KeeperUrgencyPenalty = 0.05f;
-            c.Player.KeeperSaveBase = 0.87f;
-            c.Player.KeeperSaveEdgePenalty = 0.2f;
             // Tres jugadores que corren todo el partido: gastan menos por segundo para terminar cansados, no agotados.
             c.Player.StaminaDrainSprint *= IndoorStaminaDrainFactor;
             c.Player.StaminaDrainJog *= IndoorStaminaDrainFactor;
+
+            // Arco de 2,4 × 1,4 sin arquero: el modelo de xG de cancha grande sobrestima; se recalibra con 200 partidos.
+            c.Report.XgCalibration = IndoorXgCalibration;
 
             RulesConfig r = c.Rules;
             r.MinutesPerHalf = 20f;
@@ -770,10 +777,10 @@ namespace Football.Core.MatchCore
             r.FreeKickDirectMaxDistance = 14f;
 
             AiConfig a = c.Ai;
-            a.ShootMaxRange = 13f;
+            a.ShootMaxRange = 12f;
             a.ShootZoneDistance = 10f;
             a.XgDecay = 5f;
-            a.ShotEagerness = 0.8f;
+            a.ShotEagerness = 0.5f; // sin arquero el arco chico se busca tocando: menos remates forzados, más paredes
             a.ShotSpeedMax = 26f;
             a.PassMinDistance = 2.5f;
             a.PassMaxDistance = 28f;

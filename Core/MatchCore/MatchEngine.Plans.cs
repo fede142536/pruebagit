@@ -174,7 +174,7 @@ namespace Football.Core.MatchCore
             {
                 MatchPlayer best = null;
                 float bestDistance = float.MaxValue;
-                for (int i = 1; i < team.Players.Length; i++)
+                for (int i = team.FirstOutfield; i < team.Players.Length; i++)
                 {
                     MatchPlayer p = team.Players[i];
                     if (p == Owner || p.SentOff || IsInSupport(team, p))
@@ -218,7 +218,7 @@ namespace Football.Core.MatchCore
             float trigger = ai.PressTrigger * (0.5f + team.Style.PressIntensity) * team.Difficulty.PressScale;
             MatchPlayer first = null, second = null;
             float firstDistance = float.MaxValue, secondDistance = float.MaxValue;
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff)
@@ -251,7 +251,7 @@ namespace Football.Core.MatchCore
                 team.Presser2 = second;
             }
 
-            team.Cover = team.Presser != null ? PickCover(team) : null;
+            team.Cover = !team.HasKeeper ? PickGoalGuard(team) : team.Presser != null ? PickCover(team) : null;
 
             for (int i = 0; i < _claimed.Length; i++)
             {
@@ -259,7 +259,7 @@ namespace Football.Core.MatchCore
             }
 
             TeamState attackers = Teams[1 - team.Index];
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff || p == team.Presser || p == team.Presser2 || p == team.Cover)
@@ -269,7 +269,7 @@ namespace Football.Core.MatchCore
 
                 MatchPlayer mark = null;
                 float best = ai.MarkRadius;
-                for (int j = 1; j < attackers.Players.Length; j++)
+                for (int j = attackers.FirstOutfield; j < attackers.Players.Length; j++)
                 {
                     MatchPlayer a = attackers.Players[j];
                     if (a.SentOff || a == Owner || _claimed[a.Index])
@@ -300,13 +300,51 @@ namespace Football.Core.MatchCore
             return Owner.Pos + (goal - Owner.Pos).Normalized * Config.Ai.CoverDepth;
         }
 
+        /// <summary>
+        /// Sin arquero (3 contra 3 de potrero) el que cubre es el «cierre»: el jugador más cercano al arco propio que no
+        /// presiona. Nadie usa las manos, así que su trabajo es tapar la línea de remate entre el balón y el arco.
+        /// </summary>
+        private MatchPlayer PickGoalGuard(TeamState team)
+        {
+            Vec2 goal = Pitch.GoalCenter(team.DefendedEnd);
+            MatchPlayer best = null;
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < team.Players.Length; i++)
+            {
+                MatchPlayer p = team.Players[i];
+                if (p.SentOff || p == team.Presser || p == team.Presser2 || p == team.SecondPresser)
+                {
+                    continue;
+                }
+
+                float d = Vec2.Distance(p.Pos, goal);
+                if (d < bestDistance)
+                {
+                    bestDistance = d;
+                    best = p;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>Punto del cierre sin arquero: sobre la línea balón-arco, más adelantado cuanto más lejos está el balón.</summary>
+        private Vec2 GoalCoverPoint(TeamState team)
+        {
+            AiConfig ai = Config.Ai;
+            Vec2 goal = Pitch.GoalCenter(team.DefendedEnd);
+            Vec2 ball = Ball.Pos.Horizontal;
+            float depth = MathUtil.Clamp(Vec2.Distance(ball, goal) * ai.GoalCoverShare, ai.GoalCoverMinDepth, ai.GoalCoverMaxDepth);
+            return goal + (ball - goal).Normalized * depth;
+        }
+
         /// <summary>Elige al compañero más cercano al punto de cobertura (si hay uno a distancia razonable).</summary>
         private MatchPlayer PickCover(TeamState team)
         {
             Vec2 point = CoverPoint(team);
             MatchPlayer best = null;
             float bestDistance = Config.Ai.CoverRadius;
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff || p == team.Presser || p == team.Presser2)
@@ -518,7 +556,7 @@ namespace Football.Core.MatchCore
                 }
                 else if (p == team.Cover)
                 {
-                    target = CoverPoint(team);
+                    target = team.HasKeeper ? CoverPoint(team) : GoalCoverPoint(team);
                     speed = run;
                     positional = false;
                 }
@@ -534,6 +572,12 @@ namespace Football.Core.MatchCore
             {
                 target = team.InterceptPoint;
                 speed = 1f;
+                positional = false;
+            }
+            else if (ownerTeam < 0 && !team.HasKeeper && team.DefendedEnd * Ball.Pos.X > 0f && p == PickGoalGuard(team))
+            {
+                target = GoalCoverPoint(team); // balón suelto en campo propio: el cierre no deja el arco vacío
+                speed = run;
                 positional = false;
             }
 
@@ -640,7 +684,7 @@ namespace Football.Core.MatchCore
                 return false;
             }
 
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer d = team.Players[i];
                 if (d.SentOff)
@@ -743,7 +787,7 @@ namespace Football.Core.MatchCore
 
             float bestA = float.MaxValue, bestB = float.MaxValue;
             TeamState team = Teams[r.Team];
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff || p == _taker)

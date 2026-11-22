@@ -61,6 +61,12 @@ namespace Football.Core.MatchCore
         public Formation DefensiveFormation;
         /// <summary>Jugada de córner a favor.</summary>
         public CornerRoutine Corners;
+        /// <summary>El equipo juega con arquero (en el 3 contra 3 de potrero no hay).</summary>
+        public bool HasKeeper => Players.Length > 0 && Formation.Slots[0].Role == Position.Goalkeeper;
+
+        /// <summary>Primer puesto de campo: 1 si el puesto 0 es el arquero, 0 si no hay arquero.</summary>
+        public int FirstOutfield => HasKeeper ? 1 : 0;
+
         /// <summary>Rivalidad con el rival de este partido.</summary>
         public RivalryLevel Rivalry;
         /// <summary>Marcaje en las pelotas paradas en contra.</summary>

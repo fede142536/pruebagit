@@ -42,7 +42,7 @@ namespace Football.Core.MatchCore
         /// <summary>Jugadores no convocados.</summary>
         public readonly List<int> Reserves = new List<int>();
 
-        /// <summary>Convocatoria automática: el mejor once para la formación, los mejores restantes al banco (con un portero suplente si hay).</summary>
+        /// <summary>Convocatoria automática: el mejor once para la formación, los mejores restantes al banco (con un portero suplente si la formación lleva arquero).</summary>
         /// <param name="team">Equipo.</param>
         /// <param name="formation">Formación.</param>
         /// <param name="benchSize">Número de suplentes.</param>
@@ -61,7 +61,7 @@ namespace Football.Core.MatchCore
 
             rest.Sort((a, b) => team.Players[b].Rating.CompareTo(team.Players[a].Rating));
             int keeper = rest.FindIndex(i => TeamBuilder.ParsePosition(team.Players[i].Position) == Domain.Position.Goalkeeper);
-            if (keeper >= 0 && benchSize > 0)
+            if (keeper >= 0 && benchSize > 0 && formation.Slots[0].Role == Domain.Position.Goalkeeper) // en potrero no hay arquero suplente
             {
                 s.Bench.Add(rest[keeper]);
                 rest.RemoveAt(keeper);

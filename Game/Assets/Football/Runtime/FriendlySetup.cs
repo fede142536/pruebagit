@@ -119,7 +119,7 @@ namespace Football.Game
     public static class SquadStore
     {
         private const string Prefix = "football.squad.";
-        private const string IndoorSuffix = ".3v3";
+        private const string IndoorSuffix = ".potrero"; // las alineaciones 3v3 viejas (con arquero) no se reutilizan
         private const int IndoorBench = 3;
 
         /// <summary>

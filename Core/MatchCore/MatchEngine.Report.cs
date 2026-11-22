@@ -37,7 +37,7 @@ namespace Football.Core.MatchCore
             float xg = MathF.Min(Config.Report.XgMax,
                 Config.Report.XgCalibration * ExpectedGoal(p, origin, distance, NearestOpponentDistance(origin, p.Team)));
             bool onTarget = TrajectoryOnTarget(team.AttackDirection);
-            _keeperYAtShot = Teams[1 - p.Team].Players[0].Pos.Y; // para medir lo colocado del remate
+            _keeperYAtShot = GoalGuardY(1 - p.Team); // para medir lo colocado del remate
             p.Stats.Shots++;
             p.Stats.Xg += xg;
             team.Stats.Xg += xg;
@@ -55,6 +55,33 @@ namespace Football.Core.MatchCore
                     OnTarget = onTarget
                 };
             }
+        }
+
+        /// <summary>
+        /// Altura lateral de quien defiende el arco: el arquero o, sin arquero (potrero), el jugador más cercano a la portería.
+        /// </summary>
+        private float GoalGuardY(int team)
+        {
+            TeamState t = Teams[team];
+            if (t.HasKeeper)
+            {
+                return t.Players[0].Pos.Y;
+            }
+
+            Vec2 goal = Pitch.GoalCenter(t.DefendedEnd);
+            float best = float.MaxValue, y = 0f;
+            for (int i = 0; i < t.Players.Length; i++)
+            {
+                MatchPlayer p = t.Players[i];
+                float d = Vec2.Distance(p.Pos, goal);
+                if (!p.SentOff && d < best)
+                {
+                    best = d;
+                    y = p.Pos.Y;
+                }
+            }
+
+            return y;
         }
 
         /// <summary>Cuenta el remate en curso como al arco (una sola vez por remate).</summary>

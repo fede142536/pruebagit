@@ -82,8 +82,8 @@ namespace Football.Game
         public int ButtonOpacity = 1;
         /// <summary>Asistencia de pase: 0 según la dificultad, 1 baja, 2 media, 3 alta.</summary>
         public int PassAssist;
-        /// <summary>Cámara: 0 transmisión de TV (fija), 1 dinámica, 2 cercana.</summary>
-        public int CameraMode = 1;
+        /// <summary>Cámara: 0 transmisión de TV, 1 táctica panorámica, 2 lateral baja, 3 profesional (detrás del controlado).</summary>
+        public int CameraMode;
         /// <summary>Zona muerta del joystick: índice de <c>ViewTuning.Controls.DeadZones</c> (0 sensible, 1 normal, 2 firme).</summary>
         public int DeadZone = 1;
         /// <summary>Nombres de las zonas muertas.</summary>
@@ -102,7 +102,7 @@ namespace Football.Game
         /// <summary>Valor de la asistencia de cada nivel (el 0 usa la dificultad).</summary>
         public static readonly float[] AssistValues = { -1f, 0.2f, 0.55f, 0.9f };
         /// <summary>Etiquetas de los tipos de cámara.</summary>
-        public static readonly string[] CameraLabels = { "TRANSMISIÓN TV", "DINÁMICA", "CERCANA" };
+        public static readonly string[] CameraLabels = { "TRANSMISIÓN TV", "TÁCTICA", "LATERAL BAJA", "PRO" };
 
         /// <summary>Volumen de 0 a 1 de un nivel.</summary>
         public static float Volume(int level) => Mathf.Clamp01(level / 4f);
@@ -143,7 +143,7 @@ namespace Football.Game
                 FixedJoystick = PlayerPrefs.GetInt(FixedJoystickKey, 0) == 1,
                 ButtonOpacity = Mathf.Clamp(PlayerPrefs.GetInt(OpacityKey, 1), 0, 2),
                 PassAssist = Mathf.Clamp(PlayerPrefs.GetInt(AssistKey, 0), 0, 3),
-                CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 1), 0, 2),
+                CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 0), 0, CameraLabels.Length - 1),
                 DeadZone = Mathf.Clamp(PlayerPrefs.GetInt(DeadZoneKey, 1), 0, DeadZoneLabels.Length - 1),
                 Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1
             };

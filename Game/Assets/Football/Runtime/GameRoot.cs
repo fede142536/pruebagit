@@ -91,6 +91,7 @@ namespace Football.Game
             MenuCamera.cullingMask = 0; // los menús son interfaz superpuesta: la cámara solo limpia la pantalla
             MenuCamera.allowHDR = false;
             MenuCamera.allowMSAA = false;
+            MenuCamera.targetDisplay = 0; // siempre la pantalla 1: evita el aviso «Display 2: No cameras rendering»
             go.AddComponent<AudioListener>();
         }
 

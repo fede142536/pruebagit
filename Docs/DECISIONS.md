@@ -88,6 +88,11 @@ balón, porterías de 3 × 2 m, sin fuera de juego y distancias de la IA escalad
 apoyo y un delantero; se eligen automáticamente los mejores del plantel.
 **Por qué:** reutiliza física, reglas, IA y controles ya probados, y el modo se calibra con la misma herramienta.
 **Consecuencias:** no hay saques de banda, de esquina ni de puerta en ese modo; las faltas y los penales sí existen.
+**Actualización (22/11/2026, pedido del usuario): potrero sin arqueros.** La formación `3v3` pasa a ser cierre, armador y
+pivote (ningún puesto de arquero) y el arco mide 2,4 × 1,4 m. El motor detecta el equipo sin arquero (`TeamState.HasKeeper`)
+y entonces: no hay atajadas ni balón en las manos, el saque de puerta lo hace el más cercano, el remate apunta lejos del
+defensor más cercano al arco y el «cierre» tapa el arco. La alineación del 3v3 es 3 titulares + 3 suplentes sin puesto de
+arquero obligatorio; las alineaciones 3v3 guardadas antes (con arquero) se descartan.
 
 ## D-15 · Visual de jugadores, cambios y ajustes construidos por código — Aceptada (pedido del usuario)
 **Decisión:** el juego no tiene prefabs, rigs ni texturas; todo se construye por código. Por eso se adaptan los pedidos:

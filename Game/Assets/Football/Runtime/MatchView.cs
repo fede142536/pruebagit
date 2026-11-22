@@ -190,6 +190,7 @@ namespace Football.Game
             cam.farClipPlane = 300f;
             cam.allowHDR = false;
             cam.allowMSAA = true; // el suavizado se activa o no desde Ajustes (GraphicsQuality)
+            cam.targetDisplay = 0;
             return cam; // el AudioListener único está en la cámara de los menús
         }
 
@@ -822,6 +823,14 @@ namespace Football.Game
 
             if (_camera != null)
             {
+                _cameraTarget = controlled >= 0 && controlled < _players.Length && _visible[controlled] ? controlled : -1;
+                if (_cameraTarget >= 0)
+                {
+                    _cameraTargetHeading = Mathf.LerpAngle(previous.PlayerHeading[controlled] * Mathf.Rad2Deg,
+                        current.PlayerHeading[controlled] * Mathf.Rad2Deg, alpha);
+                    _cameraTargetSpeed = current.PlayerSpeed[controlled];
+                }
+
                 UpdateLookAhead(current, deltaTime);
                 UpdateCamera(bx, by, deltaTime);
             }
@@ -882,16 +891,41 @@ namespace Football.Game
             }
 
             float maxX = Mathf.Max(0f, _pitch.HalfLength - CameraEdgeMargin * _cameraScale);
-            float aheadX = _cameraMode == 0 ? 0f : _lookAheadX; // la transmisión de TV no se adelanta
-            float aheadZ = _cameraMode == 0 ? 0f : _lookAheadZ;
+            bool broadcastLike = _cameraMode != CameraTactical || _replayAngle != NoReplay;
+            float aheadX = broadcastLike ? _lookAheadX : 0f; // la panorámica táctica no se adelanta: muestra el bloque entero
+            float aheadZ = broadcastLike ? _lookAheadZ : 0f;
             _cameraX = Mathf.Lerp(_cameraX, Mathf.Clamp((ballX + aheadX) * CameraFollowX, -maxX, maxX), follow);
             _cameraZ = Mathf.Lerp(_cameraZ, (ballY + aheadZ) * CameraFollowZ, follow);
-            float baseZoom = _cameraMode == 0 ? 1f : _cameraMode == 2 ? _zoom * CloseZoom : _zoom;
-            float zoom = _focusPlayer >= 0 ? FocusZoom : _setPieceView ? SetPieceZoom : baseZoom;
+            float zoom = _focusPlayer >= 0 ? FocusZoom : _setPieceView ? SetPieceZoom : broadcastLike ? _zoom : 1f;
             float scale = _cameraScale * zoom;
+            CameraTuning c = ViewTuning.Current.Camera;
             Transform t = _camera.transform;
-            var position = new Vector3(_cameraX, CameraHeight * scale, _cameraZ - CameraDistance * scale);
-            var lookAt = new Vector3(_cameraX, 0f, _cameraZ + 2f);
+            Vector3 position, lookAt;
+            if (_replayAngle == ReplayBehindGoal)
+            {
+                // Repetición: a ras del césped, detrás del arco donde entró el gol, mirando hacia el balón (corte seco).
+                position = new Vector3(_replayGoalEnd * (_pitch.HalfLength + c.GoalCamBehind), c.GoalCamHeight, 0f);
+                lookAt = ToUnity(ballX, ballY, GoalCamLookHeight);
+                _camPosition = position;
+                _camLook = lookAt;
+            }
+            else
+            {
+                CameraPose(scale, c, out position, out lookAt, deltaTime);
+                if (!_camReady || _replayAngle != NoReplay)
+                {
+                    _camPosition = position; // primer fotograma o repetición: sin arrastre
+                    _camLook = lookAt;
+                    _camReady = true;
+                }
+
+                float blend = 1f - Mathf.Exp(-c.TransitionSpeed * deltaTime);
+                _camPosition = Vector3.Lerp(_camPosition, position, blend);
+                _camLook = Vector3.Lerp(_camLook, lookAt, blend);
+                position = _camPosition;
+                lookAt = _camLook;
+            }
+
             if (_introTime < _introDuration)
             {
                 // Presentación: el estadio desde arriba y la cámara baja hasta su sitio de transmisión.
@@ -956,13 +990,77 @@ namespace Football.Game
             _setPieceY = y + dirY * SetPieceLookAhead;
         }
 
-        private int _cameraMode = 1;
-        private static float CloseZoom => ViewTuning.Current.Camera.CloseZoom;
+        private const int CameraBroadcast = 0;
+        private const int CameraTactical = 1;
+        private const int CameraLowSideline = 2;
+        private const int CameraPro = 3;
+        private const int NoReplay = -1;
+        private const int ReplayBroadcast = 0;
+        private const int ReplayBehindGoal = 1;
+        private const float ProMinSpeed = 1.2f;
+        private const float GoalCamLookHeight = 0.6f;
+        private int _cameraMode = CameraBroadcast;
+        private int _replayAngle = NoReplay;
+        private float _replayGoalEnd = 1f;
+        private int _cameraTarget = -1;
+        private float _cameraTargetHeading, _cameraTargetSpeed;
+        private float _proYaw = float.NaN;
+        private Vector3 _camPosition, _camLook;
+        private bool _camReady;
 
-        /// <summary>Tipo de cámara: 0 transmisión de TV (fija, sin zoom ni anticipación), 1 dinámica, 2 cercana.</summary>
+        /// <summary>
+        /// Tipo de cámara: 0 transmisión de TV (zoom dinámico y anticipación), 1 táctica panorámica, 2 lateral baja,
+        /// 3 profesional (detrás del jugador controlado). El cambio se hace con un paso suave, sin saltos.
+        /// </summary>
+        /// <param name="mode">Modo.</param>
         public void SetCameraMode(int mode)
         {
-            _cameraMode = mode;
+            _cameraMode = Mathf.Clamp(mode, CameraBroadcast, CameraPro);
+        }
+
+        /// <summary>Ángulo de la repetición: -1 sin repetición, 0 el de la transmisión, 1 a ras del césped detrás del arco.</summary>
+        /// <param name="angle">Ángulo.</param>
+        /// <param name="goalEnd">Arco donde entró el gol (+1 o -1 en X del motor).</param>
+        public void SetReplayAngle(int angle, float goalEnd)
+        {
+            _replayAngle = angle;
+            _replayGoalEnd = goalEnd < 0f ? -1f : 1f;
+        }
+
+        /// <summary>Pose de la cámara del modo elegido (el paso suave entre modos se aplica después).</summary>
+        private void CameraPose(float scale, CameraTuning c, out Vector3 position, out Vector3 lookAt, float deltaTime)
+        {
+            int mode = _replayAngle != NoReplay ? CameraBroadcast : _cameraMode;
+            if (mode == CameraPro && _cameraTarget >= 0 && _focusPlayer < 0 && !_setPieceView)
+            {
+                Vector3 player = _heads[_cameraTarget];
+                player.y = 0f;
+                if (_cameraTargetSpeed > ProMinSpeed || float.IsNaN(_proYaw))
+                {
+                    float wanted = 90f - _cameraTargetHeading; // del ángulo del motor (X, Y) al giro de Unity
+                    _proYaw = float.IsNaN(_proYaw) ? wanted : Mathf.LerpAngle(_proYaw, wanted, 1f - Mathf.Exp(-c.ProTurnSpeed * deltaTime));
+                }
+
+                Vector3 forward = Quaternion.Euler(0f, _proYaw, 0f) * Vector3.forward;
+                position = player - forward * c.ProBehind + Vector3.up * c.ProHeight;
+                lookAt = player + forward * c.ProLookAhead;
+                return;
+            }
+
+            float height = CameraHeight, distance = CameraDistance;
+            if (mode == CameraTactical)
+            {
+                height = c.TacticalHeight;
+                distance = c.TacticalDistance;
+            }
+            else if (mode == CameraLowSideline)
+            {
+                height = c.LowHeight;
+                distance = c.LowDistance;
+            }
+
+            position = new Vector3(_cameraX, height * scale, _cameraZ - distance * scale);
+            lookAt = new Vector3(_cameraX, 0f, _cameraZ + 2f);
         }
 
         /// <summary>Empieza la presentación: plano aéreo del estadio que baja hasta la cámara de transmisión.</summary>

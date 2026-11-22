@@ -65,6 +65,7 @@ namespace Football.Game
             _camera.farClipPlane = CameraFarClip;
             _camera.allowHDR = false;
             _camera.targetTexture = _texture;
+            _camera.targetDisplay = 0;
             _camera.enabled = false;
 
             // Pedestal: un disco claro bajo los pies.

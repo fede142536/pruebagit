@@ -380,7 +380,7 @@ namespace Football.Core.MatchCore
                 }
 
                 MatchPlayer tired = null;
-                for (int i = 1; i < t.Players.Length; i++)
+                for (int i = t.FirstOutfield; i < t.Players.Length; i++)
                 {
                     MatchPlayer p = t.Players[i];
                     if (p.SentOff || IsPendingOut(team, p.Index))

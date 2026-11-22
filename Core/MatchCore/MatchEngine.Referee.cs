@@ -141,7 +141,7 @@ namespace Football.Core.MatchCore
         /// <summary>Saca del medio el último jugador de campo que no esté expulsado (el arquero solo si no queda nadie).</summary>
         private static MatchPlayer KickoffTaker(TeamState team)
         {
-            for (int i = team.Players.Length - 1; i > 0; i--)
+            for (int i = team.Players.Length - 1; i >= team.FirstOutfield; i--)
             {
                 if (!team.Players[i].SentOff)
                 {
@@ -155,7 +155,7 @@ namespace Football.Core.MatchCore
         private MatchPlayer ChooseTaker(Restart r)
         {
             TeamState team = Teams[r.Team];
-            if (r.Kind == RestartKind.GoalKick)
+            if (r.Kind == RestartKind.GoalKick && team.HasKeeper)
             {
                 return team.Players[0];
             }
@@ -164,7 +164,7 @@ namespace Football.Core.MatchCore
             bool nearGoal = Vec2.Distance(r.Position, goal) < Config.Rules.FreeKickDirectMaxDistance;
             MatchPlayer best = null;
             float bestScore = float.MinValue;
-            for (int i = 1; i < team.Players.Length; i++)
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
             {
                 MatchPlayer p = team.Players[i];
                 if (p.SentOff)

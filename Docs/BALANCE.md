@@ -96,6 +96,19 @@ Medición con `dotnet run -c Release --project Tools/HeadlessSim -- --indoor --m
 
 Las pruebas exigen entre 4 y 9 goles por partido, sin saques de banda, de esquina ni fueras de juego.
 
+**Potrero sin arqueros (22/11/2026).** Por pedido del usuario el 3 contra 3 pasa a jugarse sin arquero: cierre, armador y
+pivote; nadie usa las manos y el arco es de 2,4 × 1,4 m. Sin arquero, el jugador de campo más cercano al arco propio que no
+presiona hace de «cierre» y se coloca sobre la línea balón-arco (`GoalCoverShare` 0,35 de la distancia, entre
+`GoalCoverMinDepth` 1,2 m y `GoalCoverMaxDepth` 5 m). Medición (`--indoor --matches 200 --seed 1`):
+
+| Ajuste | Goles por partido | Tiros por equipo | Goles / xG |
+|---|---|---|---|
+| Arco 2,4 × 1,4 sin arquero, umbrales anteriores | 6,43 | 22,8 | 0,26 |
+| `ShotEagerness` 0,5 y alcance 12 m; xG recalibrado (`XgCalibration` 2,05 en el potrero) | **6,17** | 21,9 | **0,99** |
+
+Resultado final: 42 % / 16 % / 43 % (local/empate/visitante), 0 atajadas, 71 % de pases completados, resistencia al final 70 %.
+El xG de cancha grande sobrestimaba 4 veces el arco chico; por eso el potrero tiene su propia calibración.
+
 ### 1.6 Disparo de la IA en el área y saques (21/11/2026)
 
 **Problema medido** (60 partidos): el 22 % de las veces que la IA entraba al área con el balón se quedaba más de 1,5 s

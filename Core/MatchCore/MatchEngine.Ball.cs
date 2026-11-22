@@ -333,7 +333,7 @@ namespace Football.Core.MatchCore
             for (int t = 0; t < 2; t++)
             {
                 MatchPlayer keeper = Teams[t].Players[0];
-                if (keeper.SentOff || _saveRolled || Owner != null || LastToucher == null || LastToucher.Team == t)
+                if (!keeper.IsKeeper || keeper.SentOff || _saveRolled || Owner != null || LastToucher == null || LastToucher.Team == t)
                 {
                     continue;
                 }
