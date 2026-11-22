@@ -153,3 +153,19 @@ Las sesiones de nube desarrollan en la rama asignada por la sesión; los hitos s
 | Licencias | Assets "gratis" con licencia ambigua | Media / Medio | Solo CC0/MIT/equivalente con URL y fecha registradas |
 | Técnico | El A13 es gama baja (GPU modesta, poca RAM): el rendimiento es el principal riesgo de la Fase 1 | Alta / Alto | Medición temprana en el dispositivo; perfil Bajo por defecto; 30 FPS como objetivo |
 | Distribución | Compilar para iOS exige Mac + cuenta de desarrollador; instalar en tu propio dispositivo caduca (7 días con cuenta gratuita) | Media / Medio | Empezar por Android; iOS cuando haya Mac |
+
+## D-17 · Identidad POTRERO, portada en un túnel y textos es/en — Aceptada (pedido del usuario)
+**Decisión:** el juego se llama **POTRERO**. El menú ya no tiene un partido de fondo: una portada estilo consola (`TitleStage`)
+muestra el túnel de un estadio de noche con la salida al campo iluminada y tres jugadores de cuerpo entero; el del medio viste
+la camiseta del club favorito (el equipo local elegido) y los de los costados van rotando de club cada 6 s. Arriba a la derecha,
+tres tarjetas con la camiseta dibujada y el nombre de esos clubes (sin escudos oficiales). Los textos del menú y de las cámaras
+salen de `Data/locale/ui.es.json` / `ui.en.json` (lector propio `StringTable` en el núcleo, con pruebas); el idioma es el del
+teléfono (inglés o, si no, español). Los textos antiguos de otras pantallas se irán pasando a esos archivos.
+**Por qué:** la portada es más liviana que simular un partido de fondo y da identidad; los textos dejan de estar en el código.
+**Consecuencias:** se elimina `MenuBackdrop.cs`; `build-core.sh` copia `ui_es.json` y `ui_en.json` a `Resources`.
+
+## D-18 · Cuatro cámaras y repetición desde el césped — Aceptada (pedido del usuario)
+**Decisión:** modos TV (zoom dinámico y anticipación), táctica panorámica, lateral baja y PRO (detrás del jugador controlado),
+elegibles en Ajustes y en los ajustes rápidos de la pausa; el cambio de modo es un paso suave (`TransitionSpeed`). Todas las
+cámaras usan `targetDisplay = 0` y solo hay una activa dibujando la pantalla. La repetición del gol se ve dos veces: plano de
+transmisión y luego a ras del césped detrás del arco. Valores en `view_tuning.json`.

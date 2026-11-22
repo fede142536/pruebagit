@@ -54,7 +54,7 @@ namespace Football.Game
             Item(SettingCategory.Audio, true, s => "BALÓN, SILBATO Y RED: " + GameSettings.VolumeLabels[s.EffectsVolume], s => s.EffectsVolume = (s.EffectsVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "VIBRACIÓN (GOLES Y PALOS): " + YesNo(s.Vibration), s => s.Vibration = !s.Vibration),
 
-            Item(SettingCategory.Controls, true, s => "CÁMARA: " + GameSettings.CameraLabels[s.CameraMode], s => s.CameraMode = (s.CameraMode + 1) % GameSettings.CameraLabels.Length),
+            Item(SettingCategory.Controls, true, s => "CÁMARA: " + GameSettings.CameraLabel(s.CameraMode), s => s.CameraMode = (s.CameraMode + 1) % GameSettings.CameraLabelKeys.Length),
             Item(SettingCategory.Controls, true, s => "JOYSTICK: " + (s.FixedJoystick ? "FIJO" : "FLOTANTE"), s => s.FixedJoystick = !s.FixedJoystick),
             Item(SettingCategory.Controls, true, s => "ZONA MUERTA DEL JOYSTICK: " + GameSettings.DeadZoneLabels[s.DeadZone],
                 s => s.DeadZone = (s.DeadZone + 1) % GameSettings.DeadZoneLabels.Length),

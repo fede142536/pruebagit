@@ -168,7 +168,7 @@ namespace Football.Game
         /// <param name="difficulty">Índice de dificultad.</param>
         /// <param name="halfMinutes">Duración de cada parte en minutos reales.</param>
         /// <param name="benchmark">Partido IA contra IA con semilla fija para medir el rendimiento.</param>
-        /// <param name="indoor">3 contra 3 en cancha cerrada (se juega con los tres mejores: arquero y dos de campo).</param>
+        /// <param name="indoor">3 contra 3 en cancha cerrada (potrero sin arqueros: los tres mejores de campo).</param>
         /// <returns>Verdadero si el partido arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
         public bool Begin(TeamDefinition home, TeamDefinition away, SquadSelection homeSquad, SquadSelection awaySquad,
             KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor = false)

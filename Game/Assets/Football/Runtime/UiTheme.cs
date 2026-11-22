@@ -34,7 +34,7 @@ namespace Football.Game
         /// <summary>Fondo a pantalla completa con degradado vertical.</summary>
         public static void Background(Transform parent)
         {
-            // Semitransparente: detrás se ve el partido de fondo del menú (MenuBackdrop).
+            // Semitransparente: detrás se ve la portada del túnel (TitleStage).
             Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(1f, 1f, 1f, BackgroundAlpha));
             image.sprite = Gradient();
             // Líneas de cancha muy tenues como decoración.

@@ -102,7 +102,11 @@ namespace Football.Game
         /// <summary>Valor de la asistencia de cada nivel (el 0 usa la dificultad).</summary>
         public static readonly float[] AssistValues = { -1f, 0.2f, 0.55f, 0.9f };
         /// <summary>Etiquetas de los tipos de cámara.</summary>
-        public static readonly string[] CameraLabels = { "TRANSMISIÓN TV", "TÁCTICA", "LATERAL BAJA", "PRO" };
+        public static readonly string[] CameraLabelKeys = { "camera.broadcast", "camera.tactical", "camera.low", "camera.pro" };
+
+        /// <summary>Nombre de un tipo de cámara en el idioma del teléfono.</summary>
+        /// <param name="mode">Tipo de cámara.</param>
+        public static string CameraLabel(int mode) => Locale.Get(CameraLabelKeys[mode]);
 
         /// <summary>Volumen de 0 a 1 de un nivel.</summary>
         public static float Volume(int level) => Mathf.Clamp01(level / 4f);
@@ -143,7 +147,7 @@ namespace Football.Game
                 FixedJoystick = PlayerPrefs.GetInt(FixedJoystickKey, 0) == 1,
                 ButtonOpacity = Mathf.Clamp(PlayerPrefs.GetInt(OpacityKey, 1), 0, 2),
                 PassAssist = Mathf.Clamp(PlayerPrefs.GetInt(AssistKey, 0), 0, 3),
-                CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 0), 0, CameraLabels.Length - 1),
+                CameraMode = Mathf.Clamp(PlayerPrefs.GetInt(CameraKey, 0), 0, CameraLabelKeys.Length - 1),
                 DeadZone = Mathf.Clamp(PlayerPrefs.GetInt(DeadZoneKey, 1), 0, DeadZoneLabels.Length - 1),
                 Vibration = PlayerPrefs.GetInt(VibrationKey, 1) == 1
             };
