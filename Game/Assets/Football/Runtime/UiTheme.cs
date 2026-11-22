@@ -130,7 +130,8 @@ namespace Football.Game
     /// <summary>Dibujo de una camiseta con su diseño (lisa, rayas, franja o banda) y el pantalón.</summary>
     public sealed class KitPreview
     {
-        private readonly Image _body, _sleeveL, _sleeveR, _shorts, _band, _sash;
+        private readonly Image _body, _sleeveL, _sleeveR, _shorts, _band, _sash, _half;
+        private readonly Image[] _chevron = new Image[2];
         private readonly Image[] _stripes = new Image[3];
 
         /// <summary>Crea la camiseta centrada en el punto dado.</summary>
@@ -149,6 +150,13 @@ namespace Football.Game
             _band = UiKit.Panel(body, "Franja", new Vector2(65f, 85f), new Vector2(130f, 30f), Color.black);
             _sash = UiKit.Panel(body, "Banda", new Vector2(65f, 75f), new Vector2(30f, 230f), Color.black);
             _sash.transform.localRotation = Quaternion.Euler(0f, 0f, 38f);
+            _half = UiKit.Panel(body, "Mitad", new Vector2(97.5f, 75f), new Vector2(65f, 150f), Color.black);
+            for (int i = 0; i < _chevron.Length; i++)
+            {
+                int side = i == 0 ? -1 : 1;
+                _chevron[i] = UiKit.Panel(body, "V" + i, new Vector2(65f + side * 24f, 110f), new Vector2(18f, 80f), Color.black);
+                _chevron[i].transform.localRotation = Quaternion.Euler(0f, 0f, side * 35f);
+            }
             UiKit.Panel(body, "Cuello", new Vector2(65f, 146f), new Vector2(44f, 10f), new Color(0f, 0f, 0f, 0.35f));
             _shorts = UiKit.Panel(parent, "Pantalon", center + new Vector2(0f, -88f), new Vector2(120f, 56f), Color.white);
         }
@@ -177,6 +185,13 @@ namespace Football.Game
             _band.gameObject.SetActive(kit.Pattern == KitPattern.Band);
             _sash.color = kit.Secondary;
             _sash.gameObject.SetActive(kit.Pattern == KitPattern.Sash);
+            _half.color = kit.Secondary;
+            _half.gameObject.SetActive(kit.Pattern == KitPattern.Halves);
+            for (int i = 0; i < _chevron.Length; i++)
+            {
+                _chevron[i].color = kit.Secondary;
+                _chevron[i].gameObject.SetActive(kit.Pattern == KitPattern.Chevron);
+            }
         }
     }
 

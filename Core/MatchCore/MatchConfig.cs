@@ -213,13 +213,32 @@ namespace Football.Core.MatchCore
         /// <summary>Altura del centro de la esfera de alcance del portero (m).</summary>
         public float KeeperReachHeight = 1.0f;
         /// <summary>Probabilidad base de parada cuando el balón entra en el alcance.</summary>
-        public float KeeperSaveBase = 0.80f;
+        public float KeeperSaveBase = 0.45f;
         /// <summary>Variación de la parada según la habilidad del portero (±).</summary>
         public float KeeperSaveSkillSpread = 0.30f;
         /// <summary>Velocidad de tiro a partir de la cual la parada se vuelve más difícil (m/s).</summary>
         public float KeeperSaveSpeedRef = 14f;
         /// <summary>Penalización de la parada por cada m/s sobre la referencia.</summary>
-        public float KeeperSaveSpeedPenalty = 0.045f;
+        public float KeeperSaveSpeedPenalty = 0.015f;
+        /// <summary>Cuánto baja la atajada si el balón pasa al límite de su alcance (pegado al palo) en vez de al cuerpo.</summary>
+        public float KeeperSaveEdgePenalty = 0.8f;
+        /// <summary>
+        /// Tiempo de reacción del arquero (s). El tiempo que tiene ante un remate es distancia ÷ velocidad; la «urgencia»
+        /// es este valor dividido por ese tiempo (1 = no llega a reaccionar): mano a mano y remates potentes en el área.
+        /// </summary>
+        public float KeeperReactionTime = 0.5f;
+        /// <summary>Atajada que se pierde con urgencia máxima.</summary>
+        public float KeeperUrgencyPenalty = 0.8f;
+        /// <summary>Parte de esa pérdida que sufre también un remate directo al cuerpo (el resto crece hacia el palo).</summary>
+        public float KeeperUrgencyBodyShare = 0.25f;
+        /// <summary>Tiempo a partir del cual el arquero va cómodo (s): remates lejanos o lentos.</summary>
+        public float KeeperComfortTime = 0.8f;
+        /// <summary>Segundos más allá de ese tiempo en los que la comodidad llega al máximo.</summary>
+        public float KeeperComfortRange = 0.8f;
+        /// <summary>Atajada extra con comodidad máxima.</summary>
+        public float KeeperComfortBonus = 0.6f;
+        /// <summary>Alcance extra con comodidad máxima (fracción): llega a tiros colocados que de cerca no alcanza.</summary>
+        public float KeeperComfortReach = 1.2f;
         /// <summary>Velocidad máxima del balón que el portero puede atrapar (m/s).</summary>
         public float KeeperCatchMaxSpeed = 17f;
         /// <summary>Velocidad mínima del balón para considerarlo un tiro a portería (m/s).</summary>
@@ -407,11 +426,11 @@ namespace Football.Core.MatchCore
         /// <summary>Escala de la probabilidad de gol esperada.</summary>
         public float XgScale = 0.75f;
         /// <summary>Distancia a la que la probabilidad cae a 1/e (m).</summary>
-        public float XgDecay = 9.5f;
+        public float XgDecay = 7.5f;
         /// <summary>Valor de la posesión tras un tiro fallado.</summary>
         public float ShotMissValue = 0.045f;
         /// <summary>Multiplicador de las ganas de tirar (juego de fútbol: más tiros que en la realidad por menos tiempo de partido).</summary>
-        public float ShotEagerness = 2.2f;
+        public float ShotEagerness = 1.6f;
 
         /// <summary>Valor mínimo de tener el balón en cualquier punto.</summary>
         public float ThreatBase = 0.06f;
@@ -592,7 +611,7 @@ namespace Football.Core.MatchCore
         /// <summary>Profundidad mínima del portero respecto a la línea de gol (m).</summary>
         public float KeeperMinDepth = 1.0f;
         /// <summary>Profundidad máxima del portero respecto a la línea de gol (m).</summary>
-        public float KeeperMaxDepth = 6.5f;
+        public float KeeperMaxDepth = 3.5f;
         /// <summary>Cuánto se adelanta el portero por cada metro de distancia del balón.</summary>
         public float KeeperDepthPerMeter = 0.10f;
 
@@ -714,6 +733,10 @@ namespace Football.Core.MatchCore
 
             // De cerca, un tiro fuerte castiga menos al arquero que en cancha grande (portería de 3 m).
             c.Player.KeeperSaveSpeedPenalty = 0.015f;
+            // En una portería de 3 m casi todo es a quemarropa: el arquero apenas sufre la urgencia y ataja más de base.
+            c.Player.KeeperUrgencyPenalty = 0.05f;
+            c.Player.KeeperSaveBase = 0.87f;
+            c.Player.KeeperSaveEdgePenalty = 0.2f;
             // Tres jugadores que corren todo el partido: gastan menos por segundo para terminar cansados, no agotados.
             c.Player.StaminaDrainSprint *= IndoorStaminaDrainFactor;
             c.Player.StaminaDrainJog *= IndoorStaminaDrainFactor;

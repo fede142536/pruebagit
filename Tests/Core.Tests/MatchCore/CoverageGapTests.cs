@@ -91,7 +91,7 @@ namespace Football.Core.Tests.MatchCore
         public void AiTeamLosingAfterMinute60_SwitchesToAttackingWithHighPress()
         {
             MatchEngine e = MatchEngineTests.NewEngine(9);
-            e.Teams[0].Stats.Goals = 2; // el visitante va perdiendo
+            e.Teams[0].Stats.Goals = 6; // el visitante va perdiendo (margen amplio: no debe empatar antes del 60)
             while (e.Minute < 62f && !e.IsFinished)
             {
                 e.Tick();

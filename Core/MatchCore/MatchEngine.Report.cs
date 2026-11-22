@@ -15,6 +15,7 @@ namespace Football.Core.MatchCore
         private int _shotCount;
         private readonly BallState _shotProbe = new BallState();
         private bool _shotOnTargetCounted;
+        private float _keeperYAtShot;
 
         /// <summary>Remates registrados hasta ahora.</summary>
         public int ShotCount => _shotCount;
@@ -36,6 +37,7 @@ namespace Football.Core.MatchCore
             float xg = MathF.Min(Config.Report.XgMax,
                 Config.Report.XgCalibration * ExpectedGoal(p, origin, distance, NearestOpponentDistance(origin, p.Team)));
             bool onTarget = TrajectoryOnTarget(team.AttackDirection);
+            _keeperYAtShot = Teams[1 - p.Team].Players[0].Pos.Y; // para medir lo colocado del remate
             p.Stats.Shots++;
             p.Stats.Xg += xg;
             team.Stats.Xg += xg;

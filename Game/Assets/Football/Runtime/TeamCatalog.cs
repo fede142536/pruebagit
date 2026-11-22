@@ -17,7 +17,11 @@ namespace Football.Game
         /// <summary>Franja horizontal en el pecho.</summary>
         Band,
         /// <summary>Banda diagonal.</summary>
-        Sash
+        Sash,
+        /// <summary>V en el pecho (como la de Vélez).</summary>
+        Chevron,
+        /// <summary>Mitades verticales de dos colores (como la de Newell's).</summary>
+        Halves
     }
 
     /// <summary>Colores de una equipación ya convertidos para Unity.</summary>

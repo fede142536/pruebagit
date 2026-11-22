@@ -168,6 +168,18 @@ namespace Football.Game
                     Part(body, "Banda", MeshKit.Box, look.Secondary, new Vector3(0f, chest, 0f), new Vector3(0.1f, TorsoLength * 1.15f, 0.27f),
                         true, Quaternion.Euler(0f, 0f, 38f));
                     break;
+                case KitPattern.Chevron:
+                    // Dos brazos de la V que bajan desde los hombros hasta el centro del pecho.
+                    for (int side = -1; side <= 1; side += 2)
+                    {
+                        Part(body, "V", MeshKit.Box, look.Secondary, new Vector3(side * 0.1f, chest + 0.1f, 0f),
+                            new Vector3(0.08f, TorsoLength * 0.55f, 0.27f), true, Quaternion.Euler(0f, 0f, side * 35f));
+                    }
+
+                    break;
+                case KitPattern.Halves:
+                    Part(body, "Mitad", MeshKit.Box, look.Secondary, new Vector3(0.115f, chest, 0f), new Vector3(0.23f, TorsoLength * 0.92f, 0.27f));
+                    break;
             }
         }
 

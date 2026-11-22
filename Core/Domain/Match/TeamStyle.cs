@@ -71,7 +71,7 @@ namespace Football.Core.Domain
         /// Factor que convierte el xG con el que decide la IA (un valor relativo) en una probabilidad de gol: medido para que
         /// la suma del xG de los remates coincida con los goles del motor (BALANCE.md §1.7).
         /// </summary>
-        public float XgCalibration = 5.9f;
+        public float XgCalibration = 11.1f;
         /// <summary>xG máximo de un remate en el informe.</summary>
         public float XgMax = 0.95f;
         /// <summary>Minutos mínimos para recibir nota (los demás quedan sin calificar).</summary>

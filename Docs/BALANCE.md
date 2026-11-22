@@ -186,6 +186,33 @@ recuperadores y carrileros; Defensivo → laterales defensivos y pivote.
 **Medición** (1.000 partidos, semilla 1): **2,38 goles**, 85,7 % de pase, 0,15 lesiones por equipo, resistencia final 72 %;
 `XgCalibration` 5,0 → 5,9 para mantener goles / xG ≈ 1,0 (500 partidos: 1,01).
 
+### 1.9 Arqueros justos: tiempo de reacción y colocación (23/11/2026)
+
+**Dos defectos encontrados al probar remates controlados** (`KeeperBalanceTests`):
+1. La atajada se tira cuando el balón entra en el radio de alcance del arquero; como viene de frente, siempre entra por el
+   borde y la «distancia al cuerpo» daba ≈1 en todos los remates. Resultado: un tiro al centro y otro al palo se atajaban
+   igual (132 de 200 goles en ambos casos). Ahora se mide por dónde **va a pasar** el balón al cruzar al arquero, y la
+   colocación también se compara con dónde estaba el arquero al patear (la estirada lo acerca, pero el tiro al palo sigue siendo
+   más difícil).
+2. El castigo por velocidad (0,045 por m/s) hacía imposible atajar un remate lejano potente.
+
+**Modelo nuevo** (todo en `match.json`): tiempo del arquero = distancia del remate ÷ velocidad. Urgencia = `KeeperReactionTime`
+0,5 s ÷ ese tiempo; comodidad crece desde `KeeperComfortTime` 0,8 s. Atajada = `KeeperSaveBase` 0,45 + nivel − velocidad
+(`KeeperSaveSpeedPenalty` 0,015) − colocación × urgencia × `KeeperSaveEdgePenalty` 0,8 − urgencia × `KeeperUrgencyPenalty` 0,8 ×
+(25 % + 75 % de la colocación) + comodidad × `KeeperComfortBonus` 0,6; con comodidad, además, más alcance (`KeeperComfortReach`).
+El arquero achica más cerca del arco (`KeeperMaxDepth` 6,5 → 3,5 m) y la IA patea menos de lejos (`ShotEagerness` 2,2 → 1,6,
+`XgDecay` 9,5 → 7,5). Cancha cerrada: urgencia casi nula y base 0,87.
+
+| Remate de prueba (200 por caso) | Goles |
+|---|---|
+| A 24 m/s desde 14 m, al cuerpo / al palo | 65 / 115 |
+| Potente y colocado desde 9 m / desde 28 m | 169 / 9 |
+
+**Medición** (1.000 partidos, semilla 1): **2,63 goles por partido** (objetivo 2,4–2,9), 85,7 % de pase, goles / xG 0,98
+(`XgCalibration` 11,1). Conversión por distancia: menos de 11 m **46 %**, 11–18 m **34 %**, más de 18 m **13,5 %** (antes 16 %,
+y 3,5 tiros lejanos por equipo; ahora 1,7). En el fútbol real la conversión lejana es menor (≈4 %): sigue pendiente.
+Cancha cerrada: 5,1 goles.
+
 ## 2. Dificultad
 
 Cada nivel solo cambia **decisión y ejecución** de la IA y la ayuda al jugador; **nunca** velocidad, fuerza ni resistencia.

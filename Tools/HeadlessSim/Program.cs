@@ -103,6 +103,7 @@ namespace Football.Tools.HeadlessSim
             bool printReport)
         {
             var total = new double[2, Columns];
+            var bucketShots = new double[3]; var bucketGoals = new double[3]; var bucketOnTarget = new double[3];
             double assists = 0, scoredGoals = 0, staminaSum = 0, staminaCount = 0, staminaMin = 0, subsUsed = 0;
             MatchReport last = null;
             int failures = 0, unfinished = 0, homeWins = 0, draws = 0, awayWins = 0, outOfBounds = 0;
@@ -150,6 +151,14 @@ namespace Football.Tools.HeadlessSim
                     for (int t = 0; t < 2; t++)
                     {
                         staminaMin += engine.Teams[t].Players.Min(p => p.Stamina);
+                    }
+
+                    foreach (ShotRecord shot in report.Shots)
+                    {
+                        int b = shot.Distance < 11f ? 0 : shot.Distance < 18f ? 1 : 2;
+                        bucketShots[b]++;
+                        bucketGoals[b] += shot.Goal ? 1 : 0;
+                        bucketOnTarget[b] += shot.OnTarget ? 1 : 0;
                     }
 
                     foreach (TeamReport tr in report.Teams)
@@ -219,6 +228,12 @@ namespace Football.Tools.HeadlessSim
             Console.WriteLine($"  Remates al arco                {100.0 * (total[0, 2] + total[1, 2]) / Math.Max(1.0, total[0, 1] + total[1, 1]),6:F1}% de los tiros");
             Console.WriteLine($"  Goles con asistencia           {100.0 * assists / Math.Max(1.0, scoredGoals),6:F1}%");
             Console.WriteLine($"  Resistencia al final           {100.0 * staminaSum / Math.Max(1.0, staminaCount),6:F1}% (jugadores de campo que jugaron todo el partido); la más baja del equipo {100.0 * staminaMin / (2.0 * ok),5:F1}%");
+            string[] buckets = { "menos de 11 m", "11 a 18 m", "más de 18 m" };
+            for (int b = 0; b < 3; b++)
+            {
+                Console.WriteLine($"  Remates {buckets[b],-14} {bucketShots[b] / (2.0 * ok),5:F2} por equipo · {100.0 * bucketGoals[b] / Math.Max(1.0, bucketShots[b]),5:F1}% gol · {100.0 * bucketGoals[b] / Math.Max(1.0, bucketOnTarget[b]),5:F1}% de los que van al arco");
+            }
+
             Console.WriteLine($"  Cambios por equipo             {subsUsed / (2.0 * ok),6:F2}");
             if (printReport && last != null)
             {

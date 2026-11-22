@@ -12,7 +12,6 @@ namespace Football.Core.MatchCore
         private const float ParryOverBarChance = 0.4f;
         private const float ParryLiftStep = 1f;
         private const float SaveMinBallSpeed = 5f;
-        private const float SaveReachPenalty = 0.25f;
         private const float MinSaveChance = 0.05f;
         private const float MaxSaveChance = 0.95f;
         private const float KeeperHandReach = 0.4f;
@@ -348,22 +347,60 @@ namespace Football.Core.MatchCore
                 var centre = new Vec3(keeper.Pos.X, keeper.Pos.Y, c.KeeperReachHeight);
                 float skill = (keeper.Skill(AttributeId.Reflexes) + keeper.Skill(AttributeId.Handling)
                                + keeper.Skill(AttributeId.GoalkeeperPositioning)) / 3f;
-                float reach = c.KeeperBaseReach + c.KeeperExtraReach * keeper.Skill(AttributeId.Reflexes);
+                float time = ShotDistanceForKeeper() / MathF.Max(speed, 1f);
+                float comfort = MathUtil.Clamp01((time - c.KeeperComfortTime) / c.KeeperComfortRange);
+                float reach = (c.KeeperBaseReach + c.KeeperExtraReach * keeper.Skill(AttributeId.Reflexes)) * (1f + c.KeeperComfortReach * comfort);
                 float distance = Vec3.Distance(Ball.Pos, centre);
                 if (distance <= reach)
                 {
                     _saveRolled = true;
-                    AttemptSave(keeper, speed, distance / reach, skill);
+                    // Lo lejos del cuerpo se mide contra todo el cuerpo (del suelo a las manos en alto), no contra un punto:
+                    // un remate rasante directo al arquero es un tiro «al cuerpo», no uno colocado.
+                    // Se mide por dónde va a pasar el balón al cruzar la posición del arquero (al tirar la atajada el balón
+                    // todavía viene de frente, en el borde de su alcance, y esa distancia no dice nada de la colocación).
+                    float lateral = Vec2.Distance(Ball.Pos.Horizontal, keeper.Pos);
+                    if (MathF.Abs(Ball.Vel.X) > 0.1f)
+                    {
+                        float until = (keeper.Pos.X - Ball.Pos.X) / Ball.Vel.X;
+                        if (until > 0f)
+                        {
+                            lateral = MathF.Abs(Ball.Pos.Y + Ball.Vel.Y * until - keeper.Pos.Y);
+                        }
+                    }
+
+                    float above = MathF.Max(0f, Ball.Pos.Z - 2f * c.KeeperReachHeight);
+                    float fromBody = MathF.Sqrt(lateral * lateral + above * above);
+                    // Colocación: cuánto tuvo que desplazarse desde donde estaba al patear (la estirada lo acerca al balón,
+                    // pero un remate al palo sigue siendo más difícil que uno al centro).
+                    float placement = _shotLive ? MathF.Abs(Ball.Pos.Y - _keeperYAtShot) / MathF.Max(Pitch.GoalHalfWidth, 0.1f) : 0f;
+                    float edge = MathUtil.Clamp01(MathF.Max(fromBody / reach, placement));
+                    AttemptSave(keeper, speed, edge, skill, time);
                 }
             }
         }
 
-        private void AttemptSave(MatchPlayer keeper, float speed, float edgeFraction, float skill)
+        /// <summary>Distancia desde la que se pateó el remate en curso (si no hay remate, un valor medio).</summary>
+        private float ShotDistanceForKeeper()
+        {
+            const float NoShotDistance = 15f;
+            return _shotLive && _shotCount > 0 ? _shots[_shotCount - 1].Distance : NoShotDistance;
+        }
+
+        /// <summary>
+        /// Tirada de atajada según el tiempo que tuvo el arquero (distancia del remate ÷ velocidad): con poco tiempo
+        /// (mano a mano, remate potente en el área) pesan la urgencia y lo lejos del cuerpo que pasa (pegado al palo); con
+        /// mucho tiempo (remate lejano o lento) llega cómodo. También cuentan su nivel y la velocidad del balón.
+        /// </summary>
+        private void AttemptSave(MatchPlayer keeper, float speed, float edgeFraction, float skill, float time)
         {
             PlayerConfig c = Config.Player;
+            float urgency = MathUtil.Clamp01(c.KeeperReactionTime / MathF.Max(time, 0.01f));
+            float comfort = MathUtil.Clamp01((time - c.KeeperComfortTime) / c.KeeperComfortRange);
             float chance = c.KeeperSaveBase + c.KeeperSaveSkillSpread * (skill - 0.5f) * 2f
                            - c.KeeperSaveSpeedPenalty * MathF.Max(0f, speed - c.KeeperSaveSpeedRef)
-                           - SaveReachPenalty * edgeFraction;
+                           - c.KeeperSaveEdgePenalty * edgeFraction * urgency
+                           - c.KeeperUrgencyPenalty * urgency * (c.KeeperUrgencyBodyShare + (1f - c.KeeperUrgencyBodyShare) * edgeFraction)
+                           + c.KeeperComfortBonus * comfort;
             chance = MathUtil.Clamp(chance, MinSaveChance, MaxSaveChance);
             if (_rng.NextFloat() >= chance)
             {

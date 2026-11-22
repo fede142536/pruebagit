@@ -1,4 +1,5 @@
 using System;
+using Football.Core.Domain;
 
 namespace Football.Core.Data
 {
@@ -72,5 +73,38 @@ namespace Football.Core.Data
         public string Notes;
         /// <summary>Equipos.</summary>
         public TeamDefinition[] Teams = Array.Empty<TeamDefinition>();
+        /// <summary>Clásicos y rivalidades entre equipos del archivo.</summary>
+        public RivalryDefinition[] Rivalries = Array.Empty<RivalryDefinition>();
+
+        /// <summary>Nivel de rivalidad entre dos equipos (por nombre, en cualquier orden).</summary>
+        /// <param name="teamA">Nombre de un equipo.</param>
+        /// <param name="teamB">Nombre del otro.</param>
+        public RivalryLevel RivalryBetween(string teamA, string teamB)
+        {
+            foreach (RivalryDefinition r in Rivalries ?? Array.Empty<RivalryDefinition>())
+            {
+                bool match = (r.TeamA == teamA && r.TeamB == teamB) || (r.TeamA == teamB && r.TeamB == teamA);
+                if (match && Enum.TryParse(r.Level, true, out RivalryLevel level))
+                {
+                    return level;
+                }
+            }
+
+            return RivalryLevel.None;
+        }
+    }
+
+    /// <summary>Rivalidad entre dos equipos del archivo.</summary>
+    [Serializable]
+    public sealed class RivalryDefinition
+    {
+        /// <summary>Nombre de un equipo.</summary>
+        public string TeamA;
+        /// <summary>Nombre del otro equipo.</summary>
+        public string TeamB;
+        /// <summary>Nivel: Rivalry, Derby o Classic.</summary>
+        public string Level = "Rivalry";
+        /// <summary>Nombre popular del partido (por ejemplo, «Clásico rosarino»).</summary>
+        public string Name;
     }
 }
