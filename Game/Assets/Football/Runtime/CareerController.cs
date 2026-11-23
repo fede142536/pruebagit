@@ -93,7 +93,7 @@ namespace Football.Game
             switch (_screen.Action)
             {
                 case CareerAction.NewGame:
-                    StartNew(_screen.ChosenTeam, _screen.Manager);
+                    StartNew(_screen.ChosenTeam, _screen.Manager, _screen.PrimeraSize);
                     break;
                 case CareerAction.Sacked:
                     Sack();
@@ -202,14 +202,14 @@ namespace Football.Game
             _screen.SetStatus(string.Format(CultureInfo.InvariantCulture, Locale.Get("career.sacked_end"), club));
         }
 
-        private void StartNew(int teamIndex, ManagerProfile manager)
+        private void StartNew(int teamIndex, ManagerProfile manager, int primeraSize)
         {
             try
             {
                 TeamDatabase db = TeamCatalog.Database;
                 int seed = (int)(DateTime.Now.Ticks & int.MaxValue);
                 Session = CareerSession.NewGame(db, TeamCatalog.Teams[teamIndex].Name, DateTime.Now.Year, seed, Configs(), _tournament,
-                    _tournament ? null : manager);
+                    _tournament ? null : manager, _tournament ? 0 : primeraSize);
                 _screen.ShowSession(Session);
                 Save(false);
             }

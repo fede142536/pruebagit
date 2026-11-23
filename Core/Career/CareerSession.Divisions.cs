@@ -114,6 +114,15 @@ namespace Football.Core.Career
                 fin.Reputation = Math.Min(MaxReputation, fin.Reputation + ReputationStepForQualifying);
                 _inbox.Post(clubId == Data.UserClubId ? "news.user_promoted" : "news.promoted", Data.Club(clubId).Name);
             }
+
+            int change = promoted.Contains(Data.UserClubId) ? 1 : relegated.Contains(Data.UserClubId) ? -1 : 0;
+            if (change != 0)
+            {
+                _ceremonies.Add(new CompetitionRecord
+                {
+                    Season = season, Kind = TournamentKind.Promotion, Name = "Temporada " + season, Finished = true, DivisionChange = change
+                });
+            }
         }
     }
 }

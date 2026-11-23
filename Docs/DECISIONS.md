@@ -431,3 +431,16 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - Sin verificar en Unity: distribución de las pantallas nuevas y legibilidad de las tablas.
 - **Menú de la carrera arriba (ajuste posterior)**: la barra de secciones (Central, Plantilla, Mercado, Oficina, Finanzas) pasó de abajo a arriba, en la fila de Guardar y Salir; abajo quedan la cabecera del club (nombre, fecha, caja, DT) y la línea de estado.
   Así los botones propios de cada pantalla (Calendario, Historial, paginadores, Volver) ya no se pisan con la barra ni con la línea de estado. Las pantallas de alineación, calendario e historial subieron su borde inferior a y = 160.
+
+## D-37 · Primera y Nacional B, contratos y renovaciones, jugadores libres y buscador por nombre — Aceptada (pedido del usuario, 23/11/2026)
+- **Divisiones**: al crear la carrera se elige cuántos clubes juegan Primera (30 = todos, sin Nacional B; 24, 22, **20 (predeterminado)**, 18 o 16; el Nacional B tiene como mínimo 6). Empiezan en Primera los mejores por su puesto en la tabla anual anterior
+  (`ClubInfo.AnnualRank`, editable en `argentina.json`) o, **sin ese dato —que es lo que hay hoy, no tengo la tabla real—, por la media de los 11 mejores del plantel**; el resto juega el Nacional B. Con menos de 24 clubes, Apertura y Clausura son todos contra todos; el Nacional B, un torneo ida y vuelta. La Copa Argentina sigue siendo de los 30.
+- **Ascensos y descensos**: los dos últimos de los **promedios** (puntos por partido de las últimas 3 temporadas, ligas de Primera y de Nacional B) bajan; los dos primeros del Nacional B suben; el tercero del Nacional B juega la **promoción** (ida y vuelta) contra el club de Primera que quedó
+  `PlayoffFromBottom` = 3 puestos antes del final de los promedios (el 17.º con 20 clubes); el ganador juega en Primera. La cantidad de clubes de cada división no cambia. Un ascendido arrastra el promedio que hizo en el Nacional B (simplificación: no se descuenta).
+  Hay cartel de ascenso/descenso, noticias y la promoción figura en el calendario y el historial.
+- **Contratos**: duran como mucho 5 años y vencen al cerrar la temporada (`Contract.ExpiresOn.Year ≤ temporada`). El usuario renueva desde **Plantilla → CONTRATOS** (más años de los que le quedan, hasta 5; los veteranos solo aceptan contratos cortos; pide +10 % de sueldo; se niega si está descontento o si el sueldo no entra en el presupuesto de sueldos).
+  Si no se renueva, **se va libre**. Los clubes de la computadora renuevan a casi todos (los de menor nivel del plantel tienen más chances de irse) y los que quedan cortos firman a los mejores libres.
+- **Jugadores libres**: aparecen en el mercado con «LIBRE» (con filtro «SOLO LIBRES»); se firman sin transferencia, con sueldo propio de libre (70 % del de mercado) y 1 a 5 años a elección. Los libres que pasaron la edad de retiro no figuran (equivale a haberse retirado: no se agregó un indicador nuevo).
+- **Buscador por nombre** en el mercado: se escribe con el teclado (físico o en pantalla), sin importar mayúsculas ni tildes, y la lista se actualiza mientras se tipea.
+- **Guardado**: archivo de la partida versión 5 y migración 12 de SQLite (`division` por club y `primera_size`); las partidas viejas cargan con una sola división.
+- Sin verificar en Unity: pantallas de contratos y de elección de cantidad de clubes, buscador y firma de libres.

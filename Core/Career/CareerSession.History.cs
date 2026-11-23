@@ -34,6 +34,8 @@ namespace Football.Core.Career
         public int UserLastCupRoundSize;
         /// <summary>Copa: el usuario quedó eliminado (perdió su último partido).</summary>
         public bool UserEliminated;
+        /// <summary>Cambio de división del usuario al cerrar la temporada: +1 ascendió a Primera, −1 descendió al Nacional B, 0 ninguno (registro especial, sin competición).</summary>
+        public int DivisionChange;
     }
 
     // Historial de competiciones, calendario del usuario y cruces de la Copa Argentina.

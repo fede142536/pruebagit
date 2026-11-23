@@ -223,7 +223,7 @@ namespace Football.Core.Career
                 }
 
                 float rating = (float)def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
-                strength[club.Id] = def.Club != null && def.Club.AnnualRank > 0 ? 1000.0 - def.Club.AnnualRank : rating;
+                strength[club.Id] = ClubStrength(def);
                 int reputation = (int)MathUtil.Clamp(50f + (rating - cc.ReputationPivotRating) * cc.ReputationPerRating, MinReputation, MaxReputation);
                 long wages = data.Players.Values.Where(p => p.ClubId == club.Id).Sum(p => p.Contract.WeeklyWage);
                 // El mercado pide el mismo sueldo en todos lados; un club chico no lo puede pagar. Se ajusta la masa salarial a lo que el club factura.
@@ -307,6 +307,36 @@ namespace Football.Core.Career
             var session = new CareerSession(data, configs);
             session.StartSeason();
             return session;
+        }
+
+        /// <summary>
+        /// Fuerza de un club para repartir las divisiones: su puesto en la tabla anual anterior (<see cref="ClubInfo.AnnualRank"/>, mejor cuanto menor)
+        /// o, sin dato, la media de sus mejores jugadores.
+        /// </summary>
+        /// <param name="def">Club del archivo de equipos.</param>
+        public static double ClubStrength(TeamDefinition def) =>
+            def.Club != null && def.Club.AnnualRank > 0
+                ? 1000.0 - def.Club.AnnualRank
+                : def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
+
+        /// <summary>División (1 = Primera, 2 = Nacional B) que le toca a cada club del archivo con <paramref name="primeraSize"/> clubes en Primera; todos 1 si no hay divisiones.</summary>
+        /// <param name="db">Archivo de equipos.</param>
+        /// <param name="primeraSize">Clubes de Primera (0 o todos = una sola división).</param>
+        public static int[] PreviewDivisions(TeamDatabase db, int primeraSize)
+        {
+            var result = Enumerable.Repeat(1, db.Teams.Length).ToArray();
+            if (primeraSize <= 0 || primeraSize >= db.Teams.Length)
+            {
+                return result;
+            }
+
+            int placed = 0;
+            foreach (int t in Enumerable.Range(0, db.Teams.Length).OrderByDescending(t => ClubStrength(db.Teams[t])).ThenBy(t => t))
+            {
+                result[t] = ++placed <= primeraSize ? 1 : 2;
+            }
+
+            return result;
         }
 
         private static readonly string[] StaffNames =

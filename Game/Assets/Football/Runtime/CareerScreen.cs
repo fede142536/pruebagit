@@ -51,6 +51,7 @@ namespace Football.Game
         private const int RatingStep = 2;
         private const float FeeStep = 0.1f;
         private const int Sections = 5;
+        private const int MaxContractYears = 5; // igual que CareerConfig.MaxContractYears
         // Menú de secciones arriba (junto a Guardar y Salir); abajo quedan solo la cabecera del club y la línea de estado.
         private const float BarY = 1035f, BarHeight = 56f, BarStep = 262f, BarLeft = 40f;
         private const float HeaderY = 24f, StatusY = 62f, StartStatusY = 175f;
@@ -83,6 +84,7 @@ namespace Football.Game
         private readonly CareerLineupScreen _lineup;
         private readonly CareerCalendarScreen _calendar;
         private readonly CareerHistoryScreen _history;
+        private readonly CareerContractsScreen _contracts;
         private CareerSession _session;
         private PlayerCardPanel _card;
         private CareerSection _section;
@@ -95,6 +97,9 @@ namespace Football.Game
 
         /// <summary>Club elegido para la partida nueva (índice de <see cref="TeamCatalog.Teams"/>).</summary>
         public int ChosenTeam { get; private set; }
+
+        /// <summary>Clubes de Primera elegidos para la partida nueva (0 = una sola división con todos).</summary>
+        public int PrimeraSize { get; private set; }
 
         /// <summary>DT de la partida nueva (null en el Torneo).</summary>
         public ManagerProfile Manager { get; private set; }
@@ -111,7 +116,7 @@ namespace Football.Game
         private Text _squadPage;
         private int _squadOffset;
         private readonly UiButton[] _tactic = new UiButton[6];
-        private UiButton _openLineup;
+        private UiButton _openLineup, _openContracts;
 
         // mercado
         private UiButton _filterPos, _ageMinus, _agePlus, _ageMaxMinus, _ageMaxPlus, _rateMinus, _ratePlus, _rateMaxMinus, _rateMaxPlus, _search;
@@ -123,6 +128,14 @@ namespace Football.Game
         private int _posFilter, _minAge = 18, _maxAge = 34, _minRating = 55, _maxRating = 90;
         private long _fee;
         private UiButton _scout, _feeMinus, _feePlus, _offer, _clause;
+        private UiButton _nameField, _nameClear, _freeToggle, _signFree, _signYears;
+        private string _nameQuery = string.Empty;
+        private bool _freeOnly, _nameEditing, _caretOn;
+        private int _signYearsValue = 3;
+        private float _caretTimer;
+        private TouchScreenKeyboard _nameKeyboard;
+        private const int MaxNameQuery = 20;
+        private const float CaretBlinkSeconds = 0.5f;
         private Text _feeText;
         private readonly Text[] _offerLines = new Text[OfferRows];
         private readonly UiButton[] _accept = new UiButton[OfferRows], _reject = new UiButton[OfferRows];
@@ -151,6 +164,7 @@ namespace Football.Game
             _lineup = new CareerLineupScreen(Root, this);
             _calendar = new CareerCalendarScreen(Root, this);
             _history = new CareerHistoryScreen(Root, this);
+            _contracts = new CareerContractsScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(BarLeft + BarStep * 0.5f + i * BarStep, BarY), new Vector2(BarStep - 10f, BarHeight),
@@ -270,6 +284,7 @@ namespace Football.Game
                     break;
                 case CareerAction.NewGame:
                     ChosenTeam = _clubPage.Chosen;
+                    PrimeraSize = _clubPage.PrimeraSize;
                     Action = action;
                     break;
                 default:
@@ -286,12 +301,13 @@ namespace Football.Game
             _lineup.SetVisible(section == CareerSection.Lineup);
             _calendar.SetVisible(section == CareerSection.Calendar);
             _history.SetVisible(section == CareerSection.History);
+            _contracts.SetVisible(section == CareerSection.Contracts);
             _marketPanel.gameObject.SetActive(section == CareerSection.Market);
             _hub.SetVisible(section == CareerSection.Hub);
             _office.SetVisible(section == CareerSection.Office);
             _finance.SetVisible(section == CareerSection.Finance);
             _stadium.SetVisible(section == CareerSection.Stadium);
-            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup ? (int)CareerSection.Squad
+            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup || section == CareerSection.Contracts ? (int)CareerSection.Squad
                 : section == CareerSection.Calendar || section == CareerSection.History ? (int)CareerSection.Hub : (int)section;
             for (int i = 0; i < Sections; i++)
             {
@@ -321,6 +337,10 @@ namespace Football.Game
         {
             Action = CareerAction.None;
             _startPage?.Tick(Time.deltaTime);
+            if (_session != null && _section == CareerSection.Market)
+            {
+                TickNameSearch(Time.deltaTime);
+            }
             if (BackKey)
             {
                 if (_startPage == _clubPage)
@@ -391,6 +411,7 @@ namespace Football.Game
                     case CareerSection.Lineup: _lineup.Tap(p); break;
                     case CareerSection.Calendar: _calendar.Tap(p); break;
                     case CareerSection.History: _history.Tap(p); break;
+                    case CareerSection.Contracts: _contracts.Tap(p); break;
                 }
 
                 RefreshHeader();
@@ -417,6 +438,7 @@ namespace Football.Game
                 case CareerSection.Lineup: _lineup.Refresh(); break;
                 case CareerSection.Calendar: _calendar.Refresh(); break;
                 case CareerSection.History: _history.Refresh(); break;
+                case CareerSection.Contracts: _contracts.Refresh(); break;
             }
         }
 
@@ -439,6 +461,7 @@ namespace Football.Game
             _lineup.SetVisible(false);
             _calendar.SetVisible(false);
             _history.SetVisible(false);
+            _contracts.SetVisible(false);
             _managerPage.SetVisible(false);
             _clubPage.SetVisible(false);
         }
@@ -502,7 +525,8 @@ namespace Football.Game
                 _tactic[i] = UiKit.Button(p, "Tactica" + i, new Vector2(1580f, y - 10f), new Vector2(520f, 64f), string.Empty, 28, UiTheme.Button);
             }
 
-            _openLineup = UiKit.Button(p, "ArmarOnce", new Vector2(1580f, 108f), new Vector2(520f, 76f), Locale.Get("lineup.open"), 28, UiTheme.AccentDark);
+            _openLineup = UiKit.Button(p, "ArmarOnce", new Vector2(1450f, 108f), new Vector2(255f, 76f), Locale.Get("lineup.open"), 19, UiTheme.AccentDark);
+            _openContracts = UiKit.Button(p, "Contratos", new Vector2(1710f, 108f), new Vector2(255f, 76f), Locale.Get("contracts.open"), 22, UiTheme.AccentDark);
         }
 
         private void RefreshSquad()
@@ -521,6 +545,8 @@ namespace Football.Game
                 _squad.SetRow(i + 1, ShortName(pl), PositionCode(pl.Position), Num(_session.VisibleRating(pl)),
                     c.Form.ToString("0.0", CultureInfo.InvariantCulture), Num((int)c.Morale), Num((int)(c.Fitness * 100f)) + "%",
                     pl.Contract != null ? pl.Contract.ExpiresOn.Year.ToString(CultureInfo.InvariantCulture) : "-", status);
+                int yearsLeft = _session.ContractYearsLeft(pl);
+                _squad.SetColor(i + 1, 6, yearsLeft <= 1 ? StatusColors.Bad : yearsLeft == 2 ? StatusColors.Fair : UiTheme.Text); // los que vencen este año, en rojo
             }
 
             int pages = Math.Max(1, (squad.Count + SquadRows - 1) / SquadRows);
@@ -554,6 +580,12 @@ namespace Football.Game
                 return;
             }
 
+            if (_openContracts.Contains(p))
+            {
+                Open(CareerSection.Contracts);
+                return;
+            }
+
             UserTactics t = _session.Data.Tactics;
             if (_tactic[0].Contains(p)) { t.Formation = Next(FormationNames, t.Formation); }
             else if (_tactic[1].Contains(p))
@@ -574,33 +606,42 @@ namespace Football.Game
 
         private void BuildMarket(Transform p)
         {
-            UiKit.Panel(p, "Filtros", new Vector2(960f, 930f), new Vector2(1800f, 110f), UiTheme.Panel);
-            _filterPos = UiKit.Button(p, "Puesto", new Vector2(200f, 930f), new Vector2(260f, 70f), string.Empty, 24, UiTheme.Button);
-            _ageMinus = UiKit.Button(p, "EdadMin-", new Vector2(390f, 930f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
-            _agePlus = UiKit.Button(p, "EdadMin+", new Vector2(470f, 930f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
-            _ageMaxMinus = UiKit.Button(p, "EdadMax-", new Vector2(560f, 930f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
-            _ageMaxPlus = UiKit.Button(p, "EdadMax+", new Vector2(640f, 930f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
-            _rateMinus = UiKit.Button(p, "MediaMin-", new Vector2(1060f, 930f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
-            _ratePlus = UiKit.Button(p, "MediaMin+", new Vector2(1140f, 930f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
-            _rateMaxMinus = UiKit.Button(p, "MediaMax-", new Vector2(1230f, 930f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
-            _rateMaxPlus = UiKit.Button(p, "MediaMax+", new Vector2(1310f, 930f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
-            _filterText = UiKit.Label(p, "FiltroTexto", new Vector2(850f, 930f), new Vector2(380f, 70f), string.Empty, 22, UiTheme.Text);
-            _search = UiKit.Button(p, "Buscar", new Vector2(1500f, 930f), new Vector2(200f, 70f), Locale.Get("career.search"), 28, UiTheme.AccentDark);
-            _windowText = UiKit.Label(p, "Libro", new Vector2(1740f, 930f), new Vector2(260f, 70f), string.Empty, 20, UiTheme.Gold);
+            UiKit.Panel(p, "Filtros", new Vector2(960f, 905f), new Vector2(1800f, 160f), UiTheme.Panel);
+            _filterPos = UiKit.Button(p, "Puesto", new Vector2(200f, 945f), new Vector2(260f, 70f), string.Empty, 24, UiTheme.Button);
+            _ageMinus = UiKit.Button(p, "EdadMin-", new Vector2(390f, 945f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
+            _agePlus = UiKit.Button(p, "EdadMin+", new Vector2(470f, 945f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
+            _ageMaxMinus = UiKit.Button(p, "EdadMax-", new Vector2(560f, 945f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
+            _ageMaxPlus = UiKit.Button(p, "EdadMax+", new Vector2(640f, 945f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
+            _rateMinus = UiKit.Button(p, "MediaMin-", new Vector2(1060f, 945f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
+            _ratePlus = UiKit.Button(p, "MediaMin+", new Vector2(1140f, 945f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
+            _rateMaxMinus = UiKit.Button(p, "MediaMax-", new Vector2(1230f, 945f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
+            _rateMaxPlus = UiKit.Button(p, "MediaMax+", new Vector2(1310f, 945f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
+            _filterText = UiKit.Label(p, "FiltroTexto", new Vector2(850f, 945f), new Vector2(380f, 70f), string.Empty, 22, UiTheme.Text);
+            _search = UiKit.Button(p, "Buscar", new Vector2(1500f, 945f), new Vector2(200f, 70f), Locale.Get("career.search"), 28, UiTheme.AccentDark);
+            _windowText = UiKit.Label(p, "Libro", new Vector2(1740f, 945f), new Vector2(260f, 70f), string.Empty, 20, UiTheme.Gold);
 
-            UiKit.Panel(p, "Resultados", new Vector2(700f, 520f), new Vector2(1280f, 680f), UiTheme.Panel);
+            // Segunda fila: buscador por nombre (se escribe con el teclado) y filtro de jugadores libres.
+            _nameField = UiKit.Button(p, "Nombre", new Vector2(460f, 868f), new Vector2(640f, 64f), string.Empty, 26, UiTheme.Button);
+            _nameField.Label.alignment = TextAnchor.MiddleLeft;
+            _nameClear = UiKit.Button(p, "NombreBorrar", new Vector2(835f, 868f), new Vector2(64f, 64f), "X", 28, UiTheme.Button);
+            _freeToggle = UiKit.Button(p, "SoloLibres", new Vector2(1130f, 868f), new Vector2(400f, 64f), string.Empty, 24, UiTheme.Button);
+
+            UiKit.Panel(p, "Resultados", new Vector2(700f, 495f), new Vector2(1280f, 660f), UiTheme.Panel);
             _resultMark = UiKit.Panel(p, "Marca", new Vector2(700f, 0f), new Vector2(1260f, 58f), UiTheme.Selected);
             _resultMark.gameObject.SetActive(false);
-            _results = new TextGrid(p, "Lista", new Vector2(80f, 820f), 64f, new[] { 250f, 600f, 820f, 930f, 1090f, 1250f },
+            _results = new TextGrid(p, "Lista", new Vector2(80f, 785f), 64f, new[] { 250f, 600f, 820f, 930f, 1090f, 1250f },
                 new[] { 340f, 340f, 90f, 130f, 170f, 170f }, MarketRows + 1, 24);
 
-            UiKit.Panel(p, "Acciones", new Vector2(1660f, 640f), new Vector2(480f, 440f), UiTheme.Panel);
-            _scout = UiKit.Button(p, "Ojear", new Vector2(1660f, 800f), new Vector2(420f, 70f), Locale.Get("career.scout"), 28, UiTheme.Button);
-            _feeText = UiKit.Label(p, "Oferta", new Vector2(1660f, 715f), new Vector2(420f, 50f), string.Empty, 24, UiTheme.Text);
-            _feeMinus = UiKit.Button(p, "Oferta-", new Vector2(1520f, 640f), new Vector2(120f, 64f), "-10%", 24, UiTheme.Button);
-            _feePlus = UiKit.Button(p, "Oferta+", new Vector2(1800f, 640f), new Vector2(120f, 64f), "+10%", 24, UiTheme.Button);
-            _offer = UiKit.Button(p, "Ofertar", new Vector2(1660f, 640f), new Vector2(140f, 64f), Locale.Get("career.offer"), 22, UiTheme.AccentDark);
-            _clause = UiKit.Button(p, "Clausula", new Vector2(1660f, 520f), new Vector2(420f, 70f), Locale.Get("career.pay_clause"), 26, UiTheme.Button);
+            UiKit.Panel(p, "Acciones", new Vector2(1660f, 620f), new Vector2(480f, 400f), UiTheme.Panel);
+            _scout = UiKit.Button(p, "Ojear", new Vector2(1660f, 765f), new Vector2(420f, 70f), Locale.Get("career.scout"), 28, UiTheme.Button);
+            _feeText = UiKit.Label(p, "Oferta", new Vector2(1660f, 685f), new Vector2(420f, 60f), string.Empty, 24, UiTheme.Text);
+            _feeMinus = UiKit.Button(p, "Oferta-", new Vector2(1520f, 605f), new Vector2(120f, 64f), "-10%", 24, UiTheme.Button);
+            _feePlus = UiKit.Button(p, "Oferta+", new Vector2(1800f, 605f), new Vector2(120f, 64f), "+10%", 24, UiTheme.Button);
+            _offer = UiKit.Button(p, "Ofertar", new Vector2(1660f, 605f), new Vector2(140f, 64f), Locale.Get("career.offer"), 22, UiTheme.AccentDark);
+            _clause = UiKit.Button(p, "Clausula", new Vector2(1660f, 495f), new Vector2(420f, 70f), Locale.Get("career.pay_clause"), 26, UiTheme.Button);
+            // Jugador libre: se firma sin transferencia, eligiendo los años del contrato (en el lugar de la oferta y la cláusula).
+            _signFree = UiKit.Button(p, "FicharLibre", new Vector2(1660f, 605f), new Vector2(420f, 64f), Locale.Get("career.sign_free"), 26, UiTheme.AccentDark);
+            _signYears = UiKit.Button(p, "AniosLibre", new Vector2(1660f, 495f), new Vector2(420f, 70f), string.Empty, 26, UiTheme.Button);
 
             UiKit.Panel(p, "Recibidas", new Vector2(1660f, 240f), new Vector2(480f, 330f), UiTheme.Panel);
             UiKit.Label(p, "RecibidasTitulo", new Vector2(1660f, 375f), new Vector2(440f, 40f), Locale.Get("career.offers_in"), 24, UiTheme.Accent);
@@ -620,13 +661,18 @@ namespace Football.Game
             _filterPos.Label.text = Locale.Get("career.filter.position") + ": " + (pos.HasValue ? PositionCode(pos.Value) : Locale.Get("career.filter.any"));
             _filterText.text = Locale.Get("career.filter.age") + " " + _minAge + "-" + _maxAge + "   " + Locale.Get("career.filter.rating") + " " + _minRating + "-" + _maxRating;
             _windowText.text = Locale.Get(_session.TransferWindowOpen ? "career.window_open" : "career.window_closed");
+            _nameField.Label.text = "  " + Locale.Get("career.name_search") + ": " + _nameQuery + (_nameEditing && _caretOn ? "|" : string.Empty);
+            _nameField.Background.color = _nameEditing ? UiTheme.Selected : UiTheme.Button;
+            _nameClear.SetVisible(_nameQuery.Length > 0);
+            _freeToggle.Label.text = Locale.Get(_freeOnly ? "career.free_only_on" : "career.free_only_off");
+            _freeToggle.Background.color = _freeOnly ? UiTheme.Selected : UiTheme.Button;
             _results.Clear();
             _results.SetRow(0, Locale.Get("career.col.name"), Locale.Get("career.col.club"), Locale.Get("career.col.age"), Locale.Get("career.col.rating"),
                 Locale.Get("career.col.value"), Locale.Get("career.col.clause"));
             for (int i = 0; i < MarketRows && i < _found.Count; i++)
             {
                 Player pl = _found[i];
-                _results.SetRow(i + 1, ShortName(pl), pl.ClubId.HasValue ? d.Club(pl.ClubId.Value).ShortName : "-", Num(pl.AgeOn(d.Today)),
+                _results.SetRow(i + 1, ShortName(pl), pl.ClubId.HasValue ? d.Club(pl.ClubId.Value).ShortName : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
                     Num(_session.VisibleRating(pl)), Money(_session.Market.Value(pl, d.Today)), Money(pl.Contract?.ReleaseClause ?? 0));
             }
 
@@ -637,7 +683,22 @@ namespace Football.Game
                 ((RectTransform)_resultMark.transform).anchoredPosition = new Vector2(700f, _results.RowY(_selected + 1));
             }
 
-            _feeText.text = selected ? Format("career.fee", Money(_fee)) : Locale.Get("career.select_player");
+            bool free = selected && !_found[_selected].ClubId.HasValue;
+            _feeMinus.SetVisible(!free);
+            _feePlus.SetVisible(!free);
+            _offer.SetVisible(!free);
+            _clause.SetVisible(!free);
+            _signFree.SetVisible(free);
+            _signYears.SetVisible(free);
+            if (free)
+            {
+                _feeText.text = Format("career.free_wage", Money(_session.FreeAgentWage(_found[_selected])));
+                _signYears.Label.text = Format("career.contract_years", _signYearsValue);
+            }
+            else
+            {
+                _feeText.text = selected ? Format("career.fee", Money(_fee)) : Locale.Get("career.select_player");
+            }
             IReadOnlyList<PendingOffer> offers = _session.Offers;
             for (int i = 0; i < OfferRows; i++)
             {
@@ -661,14 +722,13 @@ namespace Football.Game
             else if (_ratePlus.Contains(p)) { _minRating = Math.Min(_maxRating, _minRating + RatingStep); }
             else if (_rateMaxMinus.Contains(p)) { _maxRating = Math.Max(_minRating, _maxRating - RatingStep); }
             else if (_rateMaxPlus.Contains(p)) { _maxRating = Math.Min(99, _maxRating + RatingStep); }
-            else if (_search.Contains(p))
-            {
-                _found.Clear();
-                _found.AddRange(_session.Search(PositionFilter[_posFilter], _minAge, _maxAge, _minRating, _maxRating, long.MaxValue));
-                _selected = -1;
-            }
+            else if (_search.Contains(p)) { StopNameEditing(); RunSearch(); }
+            else if (_nameField.Contains(p)) { StartNameEditing(); }
+            else if (_nameClear.Root.activeSelf && _nameClear.Contains(p)) { _nameQuery = string.Empty; RunSearch(); }
+            else if (_freeToggle.Contains(p)) { _freeOnly = !_freeOnly; RunSearch(); }
             else
             {
+                StopNameEditing();
                 int row = _results.RowAt(p) - 1;
                 if (row >= 0 && row < Math.Min(MarketRows, _found.Count))
                 {
@@ -680,6 +740,92 @@ namespace Football.Game
             }
 
             RefreshMarket();
+        }
+
+        /// <summary>Busca con los filtros y el nombre escritos; con «solo libres» deja nada más que los jugadores sin club.</summary>
+        private void RunSearch()
+        {
+            _found.Clear();
+            foreach (Player pl in _session.Search(PositionFilter[_posFilter], _minAge, _maxAge, _minRating, _maxRating, long.MaxValue, _nameQuery))
+            {
+                if (!_freeOnly || !pl.ClubId.HasValue)
+                {
+                    _found.Add(pl);
+                }
+            }
+
+            _selected = -1;
+        }
+
+        private void StartNameEditing()
+        {
+            _nameEditing = true;
+            _caretTimer = 0f;
+            _caretOn = true;
+            if (TouchScreenKeyboard.isSupported)
+            {
+                _nameKeyboard = TouchScreenKeyboard.Open(_nameQuery, TouchScreenKeyboardType.Default, false, false, false, false, Locale.Get("career.name_search"));
+            }
+        }
+
+        private void StopNameEditing()
+        {
+            _nameEditing = false;
+            _nameKeyboard = null;
+        }
+
+        /// <summary>Escribe en el buscador (teclado físico o en pantalla) y repite la búsqueda en cada cambio, así los resultados se acomodan mientras se tipea.</summary>
+        private void TickNameSearch(float deltaTime)
+        {
+            if (!_nameEditing)
+            {
+                return;
+            }
+
+            string before = _nameQuery;
+            if (_nameKeyboard != null)
+            {
+                string typed = _nameKeyboard.text ?? string.Empty;
+                _nameQuery = typed.Length > MaxNameQuery ? typed.Substring(0, MaxNameQuery) : typed;
+                if (_nameKeyboard.status != TouchScreenKeyboard.Status.Visible)
+                {
+                    StopNameEditing();
+                }
+            }
+            else
+            {
+                PointerInput input = Input;
+                for (int i = 0; i < input.TypedCount; i++)
+                {
+                    char c = input.Typed[i];
+                    if (c == '\b')
+                    {
+                        _nameQuery = _nameQuery.Length > 0 ? _nameQuery.Substring(0, _nameQuery.Length - 1) : _nameQuery;
+                    }
+                    else if (c == '\n' || c == '\r')
+                    {
+                        StopNameEditing();
+                        break;
+                    }
+                    else if ((char.IsLetter(c) || c == ' ' || c == '-' || c == '\'' || c == '.') && _nameQuery.Length < MaxNameQuery)
+                    {
+                        _nameQuery += c;
+                    }
+                }
+            }
+
+            _caretTimer += deltaTime;
+            bool on = ((int)(_caretTimer / CaretBlinkSeconds) & 1) == 0;
+            if (_nameQuery != before)
+            {
+                RunSearch();
+            }
+
+            if (_nameQuery != before || on != _caretOn || !_nameEditing)
+            {
+                _caretOn = on;
+                RefreshMarket();
+            }
         }
 
         private void TapMarketActions(Vector2 p)
@@ -700,6 +846,26 @@ namespace Football.Game
             }
 
             Player pl = _found[_selected];
+            if (!pl.ClubId.HasValue)
+            {
+                if (_signYears.Contains(p)) { _signYearsValue = _signYearsValue % MaxContractYears + 1; }
+                else if (_signFree.Contains(p))
+                {
+                    ContractOutcome r = _session.SignFreeAgent(pl.Id, _signYearsValue);
+                    SetStatus(Locale.Get(r == ContractOutcome.Accepted ? "career.sign_ok" : r == ContractOutcome.NoBudget ? "career.sign_no_budget" : "career.sign_failed"));
+                    if (r == ContractOutcome.Accepted)
+                    {
+                        RunSearch();
+                    }
+                }
+                else if (_scout.Contains(p))
+                {
+                    SetStatus(Locale.Get(_session.SendScout(pl.Id) ? "career.scout_sent" : "career.scout_refused"));
+                }
+
+                return;
+            }
+
             if (_scout.Contains(p))
             {
                 SetStatus(Locale.Get(_session.SendScout(pl.Id) ? "career.scout_sent" : "career.scout_refused"));
@@ -769,6 +935,7 @@ namespace Football.Game
                 shown[i] = int.TryParse(args[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out int id) && _session.Data.Players.TryGetValue(id, out Player p)
                            && item.Key != "news.result" && item.Key != "news.season_end" && item.Key != "news.scout_report"
                            && !item.Key.StartsWith("news.supporters", StringComparison.Ordinal) && item.Key != "news.stadium_work_done"
+                           && item.Key != "news.contract_renewed" && item.Key != "news.contracts_expiring"
                     ? ShortName(p)
                     : args[i];
             }

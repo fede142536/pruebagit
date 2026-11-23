@@ -64,6 +64,10 @@ namespace Football.Game
                 CompetitionRecord r = history[_offset + k];
                 int row = k + 1;
                 string champion = r.Finished ? d.Club(r.ChampionClubId).Name : Locale.Get("history.in_progress");
+                if (r.Kind == TournamentKind.Promotion && r.Finished)
+                {
+                    champion = CareerText.Format("history.promotion_winner", champion);
+                }
                 _grid.SetRow(row, r.Name, champion, ResultText(r));
                 _grid.SetColor(row, 0, r.Kind == TournamentKind.Cup ? UiTheme.Gold : UiTheme.Text);
                 _grid.SetColor(row, 2, r.UserChampion ? UiTheme.Gold : r.Finished ? UiTheme.Text : UiTheme.TextDim);
@@ -82,6 +86,11 @@ namespace Football.Game
             if (r.UserChampion)
             {
                 return Locale.Get("history.champion");
+            }
+
+            if (r.Kind == TournamentKind.Promotion)
+            {
+                return Locale.Get(r.UserChampion ? "history.promotion_won" : "history.promotion_lost");
             }
 
             if (r.Kind == TournamentKind.Cup)

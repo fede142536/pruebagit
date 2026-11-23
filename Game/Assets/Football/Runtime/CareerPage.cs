@@ -26,7 +26,9 @@ namespace Football.Game
         /// <summary>Calendario de todos los partidos del club, jugados y por jugar (se abre desde la Central).</summary>
         Calendar,
         /// <summary>Historial de las competiciones jugadas (se abre desde la Central).</summary>
-        History
+        History,
+        /// <summary>Contratos del plantel y renovaciones (se abre desde Plantilla).</summary>
+        Contracts
     }
 
     /// <summary>Lo que una pantalla de carrera necesita del contenedor: la partida, la línea de estado y la navegación.</summary>

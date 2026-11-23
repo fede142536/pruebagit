@@ -227,7 +227,26 @@ namespace Football.Game
             _ceremony.SetActive(true);
             foreach (Image star in _ceremonyStars)
             {
-                star.gameObject.SetActive(r.UserChampion);
+                star.gameObject.SetActive(r.UserChampion || r.DivisionChange > 0);
+            }
+
+            if (r.DivisionChange != 0)
+            {
+                // Ascenso o descenso del club del usuario al cerrar la temporada.
+                _ceremonyTitle.fontSize = 56;
+                _ceremonyTitle.text = Locale.Get(r.DivisionChange > 0 ? "ceremony.promoted" : "ceremony.relegated");
+                _ceremonySub.text = Locale.Get(r.DivisionChange > 0 ? "ceremony.promoted_sub" : "ceremony.relegated_sub");
+                _ceremonyDetail.text = string.Empty;
+                return;
+            }
+
+            if (r.Kind == TournamentKind.Promotion)
+            {
+                _ceremonyTitle.fontSize = 46;
+                _ceremonyTitle.text = CareerText.Format("ceremony.end", r.Name.ToUpperInvariant());
+                _ceremonySub.text = CareerText.Format("ceremony.promotion_sub", d.Club(r.ChampionClubId).Name);
+                _ceremonyDetail.text = Locale.Get(r.UserChampion ? "ceremony.promotion_won" : "ceremony.promotion_lost");
+                return;
             }
 
             if (r.UserChampion)

@@ -20,13 +20,15 @@ namespace Football.Game
         private const float RowStep = 132f;
         private static readonly string[] FilterTiers = { null, "Big", "Mid", "Development" };
 
-        private readonly UiButton _back, _prev, _next, _go, _filter;
+        private readonly UiButton _back, _prev, _next, _go, _filter, _size;
         private readonly Text _counter;
         private readonly System.Collections.Generic.List<int> _shown = new System.Collections.Generic.List<int>();
         private int _filterIndex;
         private readonly ClubCrest _crest;
         private readonly StarRating _stars;
         private readonly FlagView _flag;
+        private readonly Text _division;
+        private int _sizeIndex = -1;
         private readonly Text _name, _league, _tier, _founded, _history, _budget, _value, _stadium, _capacity;
         private readonly Text[] _priority = new Text[Objectives], _objective = new Text[Objectives], _target = new Text[Objectives];
         private readonly Image[] _badge = new Image[Objectives];
@@ -36,6 +38,58 @@ namespace Football.Game
         /// <summary>Club elegido (índice de <see cref="TeamCatalog.Teams"/>).</summary>
         public int Chosen { get; private set; }
 
+        /// <summary>
+        /// Clubes de Primera elegidos (el resto juega el Nacional B); 0 = todos los clubes en una sola división.
+        /// </summary>
+        public int PrimeraSize
+        {
+            get
+            {
+                int size = CurrentSize;
+                return size >= TeamCatalog.Teams.Length ? 0 : size;
+            }
+        }
+
+        /// <summary>Cantidades ofrecidas: las del archivo que dejan al menos los clubes mínimos en el Nacional B (o «todos»).</summary>
+        private int[] Sizes
+        {
+            get
+            {
+                int total = TeamCatalog.Teams.Length;
+                var list = new List<int>();
+                foreach (int s in _config.PrimeraSizes ?? new[] { total })
+                {
+                    if (s >= total || (s >= 2 && total - s >= _config.MinSecondDivisionClubs))
+                    {
+                        list.Add(Mathf.Min(s, total));
+                    }
+                }
+
+                if (list.Count == 0)
+                {
+                    list.Add(total);
+                }
+
+                return list.ToArray();
+            }
+        }
+
+        private int CurrentSize
+        {
+            get
+            {
+                int[] sizes = Sizes;
+                if (_sizeIndex < 0 || _sizeIndex >= sizes.Length)
+                {
+                    _sizeIndex = Mathf.Max(0, System.Array.IndexOf(sizes, DefaultSize)); // por defecto, 20 equipos
+                }
+
+                return Mathf.Min(sizes[_sizeIndex], TeamCatalog.Teams.Length);
+            }
+        }
+
+        private const int DefaultSize = 20;
+
         /// <summary>Crea la pantalla (oculta).</summary>
         public CareerClubSelectScreen(Transform root, ICareerHost host) : base(root, "ElegirClub", host)
         {
@@ -44,6 +98,7 @@ namespace Football.Game
             UiKit.Label(p, "Titulo", new Vector2(700f, 1020f), new Vector2(800f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
             _filter = UiKit.Button(p, "Filtro", new Vector2(1500f, 1020f), new Vector2(380f, 70f), string.Empty, 24, UiTheme.Button);
             _counter = UiKit.Label(p, "Contador", new Vector2(1790f, 1020f), new Vector2(170f, 60f), string.Empty, 28, UiTheme.TextDim);
+            _size = UiKit.Button(p, "CantidadPrimera", new Vector2(1130f, 1020f), new Vector2(340f, 70f), string.Empty, 22, UiTheme.Button);
 
             // Ficha del club.
             UiKit.Panel(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f), UiTheme.Panel);
@@ -55,7 +110,8 @@ namespace Football.Game
             _next = UiKit.Button(p, "Siguiente", new Vector2(565f, 665f), new Vector2(90f, 120f), ">", 54, UiTheme.Button);
             _name = UiKit.Label(p, "Club", new Vector2(330f, 465f), new Vector2(540f, 64f), string.Empty, 38, UiTheme.Text);
             _stars = new StarRating(p, new Vector2(330f, 400f));
-            _tier = UiKit.Label(p, "Jerarquia", new Vector2(330f, 340f), new Vector2(540f, 40f), string.Empty, 24, UiTheme.Gold);
+            _tier = UiKit.Label(p, "Jerarquia", new Vector2(330f, 345f), new Vector2(540f, 40f), string.Empty, 24, UiTheme.Gold);
+            _division = UiKit.Label(p, "Division", new Vector2(330f, 298f), new Vector2(540f, 40f), string.Empty, 24, UiTheme.Accent);
             _stadium = UiKit.Label(p, "Estadio", new Vector2(330f, 250f), new Vector2(540f, 44f), string.Empty, 26, UiTheme.Text);
             _capacity = UiKit.Label(p, "Capacidad", new Vector2(330f, 205f), new Vector2(540f, 40f), string.Empty, 22, UiTheme.TextDim);
 
@@ -111,6 +167,11 @@ namespace Football.Game
             _filter.Label.text = Locale.Get("career.filter") + ": " + Locale.Get("career.filter." + _filterIndex);
             _counter.text = Mathf.Max(1, _shown.IndexOf(Chosen) + 1) + " / " + _shown.Count;
             _tier.text = Locale.Get("career.tier." + (int)tier);
+            int size = PrimeraSize;
+            _size.Label.text = size == 0 ? Locale.Get("career.primera_all") : CareerText.Format("career.primera_size", size, TeamCatalog.Teams.Length - size);
+            int division = CareerSession.PreviewDivisions(TeamCatalog.Database, size)[Chosen];
+            _division.text = size == 0 ? Locale.Get("career.division_single") : Locale.Get(division == 1 ? "career.division_primera" : "career.division_b");
+            _division.color = division == 1 || size == 0 ? UiTheme.Accent : UiTheme.Warning;
             _stadium.text = string.IsNullOrEmpty(info.City) ? info.Stadium : info.Stadium + " · " + info.City;
             _capacity.text = CareerText.Format("career.capacity", CareerText.Count(info.Capacity));
             _founded.text = info.Founded > 0 ? CareerText.Format("career.founded", info.Founded) : team.Name;
@@ -129,6 +190,12 @@ namespace Football.Game
                 _objective[i].text = BoardText.Category(o.Category);
                 _target[i].text = BoardText.Target(o, _config);
             }
+        }
+
+        private int CurrentIndex()
+        {
+            int unused = CurrentSize; // asegura el valor inicial
+            return _sizeIndex;
         }
 
         private void RebuildShown()
@@ -162,6 +229,11 @@ namespace Football.Game
             if (_go.Contains(p)) { Host.Request(CareerAction.NewGame); return; }
             if (_prev.Contains(p)) { Step(-1); }
             else if (_next.Contains(p)) { Step(1); }
+            else if (_size.Contains(p))
+            {
+                int[] sizes = Sizes;
+                _sizeIndex = (CurrentIndex() + 1) % sizes.Length;
+            }
             else if (_filter.Contains(p))
             {
                 _filterIndex = (_filterIndex + 1) % FilterTiers.Length;
