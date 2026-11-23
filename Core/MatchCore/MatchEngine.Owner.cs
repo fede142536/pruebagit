@@ -575,7 +575,14 @@ namespace Football.Core.MatchCore
 
             float loft = 0f;
             float speed;
-            if (allowLob && distance >= ai.LobPassDistance)
+            bool throwIn = _restartKick && _restart.Kind == RestartKind.ThrowIn;
+            if (throwIn)
+            {
+                // Saque de banda: con las manos, el balón sale desde arriba de la cabeza y describe un arco (no rueda desde los pies).
+                loft = Config.Rules.ThrowInLoftDeg * MathUtil.Deg2Rad;
+                speed = Ballistics.LobSpeed(distance, loft, Config.Ball);
+            }
+            else if (allowLob && distance >= ai.LobPassDistance)
             {
                 loft = ai.LobLoftDeg * MathUtil.Deg2Rad;
                 speed = Ballistics.LobSpeed(distance, loft, Config.Ball);
@@ -588,6 +595,11 @@ namespace Football.Core.MatchCore
             speed = MathF.Min(speed * powerScale, MathF.Min(maxSpeed, ai.PassMaxSpeed * powerScale));
             speed *= 1f + _rng.NextGaussian(0f, ai.PassSpeedError * (1f - 0.5f * skill) * errorScale);
             Ballistics.Launch(Ball, Vec2.FromAngle(angle), speed, loft, 0f);
+            if (throwIn)
+            {
+                Ball.Pos = new Vec3(Ball.Pos.X, Ball.Pos.Y, Config.Rules.ThrowInReleaseHeight);
+            }
+
             AfterKick(p, KickKind.Pass, target);
         }
 

@@ -270,6 +270,9 @@ namespace Football.Core.Tests.MatchCore
             Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing));
             Assert.That(e.Ball.Vel.X, Is.GreaterThan(0f), "sale hacia donde apunta el joystick");
             Assert.That(e.Ball.Vel.Y, Is.LessThan(0f));
+            Assert.That(e.Ball.Pos.Z, Is.GreaterThanOrEqualTo(e.Config.Rules.ThrowInReleaseHeight * 0.9f), "se saca con las manos: el balón sale desde arriba de la cabeza");
+            Assert.That(e.Ball.Vel.Z, Is.GreaterThan(0f), "y describe un arco");
+            Assert.That(e.Teams[0].Players.Count(p => p.Action == PlayerAction.ThrowIn), Is.EqualTo(1), "el sacador muestra la acción de saque, no un pase");
         }
 
         [Test]

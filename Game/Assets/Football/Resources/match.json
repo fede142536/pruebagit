@@ -156,6 +156,8 @@
     "SlideDeceleration": 9,
     "SlideReach": 1.8,
     "SlideRecovery": 0.6,
+    "ThrowInLoftDeg": 28,
+    "ThrowInReleaseHeight": 2,
     "SlideWinBonus": 0.15,
     "SlideFoulMultiplier": 2,
     "BehindFoulMultiplier": 1.5,

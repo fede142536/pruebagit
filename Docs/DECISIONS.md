@@ -458,3 +458,8 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
   Para que los jugadores del Nacional sean reales hay que cargar los planteles a mano (mismo formato que los 30 de Primera); el juego los toma sin cambiar código.
 - **Tabla de posiciones de la Central**: ahora muestra PTS, PJ, PG, PE, PP, GF, GC y DG, con la sigla del club para que entren las diez columnas (los promedios muestran PROM).
 - Sin verificar en Unity: botón de modo en la elección de club (se movieron título, filtro y cantidad), legibilidad de la tabla con diez columnas y la zona del Nacional en el calendario. Núcleo probado con `dotnet test` (`VintageModeTests`).
+
+## D-40 · El saque de banda sale de las manos — Aceptada (video del usuario, 23/11/2026)
+- Con el saque de banda, el sacador levantaba las dos manos pero el balón salía rodando desde los pies. Ahora el balón sale desde `ThrowInReleaseHeight` (2 m, sobre la cabeza) con un arco de `ThrowInLoftDeg` (28°) (`KickPass` detecta el saque de banda); el sacador ya mostraba la acción `ThrowIn`, verificado con prueba.
+- Las animaciones de `ThirdParty/Quaternius_UniversalAnimationLibrary` (D-38/ASSETS_LICENSES) **todavía no están integradas**: por eso el movimiento no cambió. Pendiente: herramienta de conversión de clips al esqueleto de 20 huesos y reproducción en `SkinnedBodyGeometry`.
+- Pendiente de detallar con el usuario: «movilidad de los arqueros muy mala» (¿desplazamiento, zambullidas o animación?).

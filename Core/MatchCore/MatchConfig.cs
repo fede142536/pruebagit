@@ -393,6 +393,10 @@ namespace Football.Core.MatchCore
         public float SlideReach = 1.8f;
         /// <summary>Tiempo en el suelo tras la barrida (s).</summary>
         public float SlideRecovery = 0.6f;
+        /// <summary>Ángulo de salida del balón en un saque de banda (grados).</summary>
+        public float ThrowInLoftDeg = 28f;
+        /// <summary>Altura desde la que sale el balón en un saque de banda (metros): por encima de la cabeza.</summary>
+        public float ThrowInReleaseHeight = 2f;
         /// <summary>Probabilidad extra de ganar el balón con una barrida.</summary>
         public float SlideWinBonus = 0.15f;
         /// <summary>Multiplicador de la probabilidad de falta de una barrida.</summary>
