@@ -63,6 +63,8 @@ namespace Football.Core.Data
         public PlayerDefinition[] Players = Array.Empty<PlayerDefinition>();
         /// <summary>Datos institucionales para el modo carrera (fundación, estadio, presupuestos); opcionales.</summary>
         public ClubInfo Club = new ClubInfo();
+        /// <summary>El club solo participa en «Fútbol vintage» (Primera + Nacional); el modo clásico de 30 clubes y el Torneo lo ignoran.</summary>
+        public bool VintageOnly;
     }
 
     /// <summary>

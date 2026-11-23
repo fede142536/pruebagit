@@ -93,7 +93,7 @@ namespace Football.Game
             switch (_screen.Action)
             {
                 case CareerAction.NewGame:
-                    StartNew(_screen.ChosenTeam, _screen.Manager, _screen.PrimeraSize);
+                    StartNew(_screen.ChosenTeam, _screen.Manager, _screen.PrimeraSize, _screen.Vintage);
                     break;
                 case CareerAction.Sacked:
                     Sack();
@@ -176,7 +176,7 @@ namespace Football.Game
         private TeamDefinition Definition(int clubId)
         {
             string name = Session.Data.Club(clubId).Name;
-            TeamDefinition found = Array.Find(TeamCatalog.Teams, t => t.Name == name);
+            TeamDefinition found = Array.Find(TeamCatalog.AllTeams, t => t.Name == name);
             return found ?? new TeamDefinition { Name = name, ShortName = Session.Data.Club(clubId).ShortName };
         }
 
@@ -202,13 +202,14 @@ namespace Football.Game
             _screen.SetStatus(string.Format(CultureInfo.InvariantCulture, Locale.Get("career.sacked_end"), club));
         }
 
-        private void StartNew(int teamIndex, ManagerProfile manager, int primeraSize)
+        private void StartNew(int teamIndex, ManagerProfile manager, int primeraSize, bool vintage)
         {
             try
             {
-                TeamDatabase db = TeamCatalog.Database;
+                vintage = vintage && !_tournament;
+                TeamDatabase db = vintage ? TeamCatalog.VintageDatabase : TeamCatalog.Database;
                 int seed = (int)(DateTime.Now.Ticks & int.MaxValue);
-                Session = CareerSession.NewGame(db, TeamCatalog.Teams[teamIndex].Name, DateTime.Now.Year, seed, Configs(), _tournament,
+                Session = CareerSession.NewGame(db, TeamCatalog.AllTeams[teamIndex].Name, DateTime.Now.Year, seed, Configs(), _tournament,
                     _tournament ? null : manager, _tournament ? 0 : primeraSize);
                 _screen.ShowSession(Session);
                 Save(false);

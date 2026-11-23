@@ -101,6 +101,9 @@ namespace Football.Game
         /// <summary>Clubes de Primera elegidos para la partida nueva (0 = una sola división con todos).</summary>
         public int PrimeraSize { get; private set; }
 
+        /// <summary>true = «Fútbol vintage» (Primera de 20 + Nacional de 29); false = el modo clásico de 30 clubes.</summary>
+        public bool Vintage { get; private set; }
+
         /// <summary>DT de la partida nueva (null en el Torneo).</summary>
         public ManagerProfile Manager { get; private set; }
 
@@ -285,6 +288,7 @@ namespace Football.Game
                 case CareerAction.NewGame:
                     ChosenTeam = _clubPage.Chosen;
                     PrimeraSize = _clubPage.PrimeraSize;
+                    Vintage = _clubPage.Vintage;
                     Action = action;
                     break;
                 default:

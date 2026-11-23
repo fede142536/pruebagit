@@ -319,6 +319,25 @@ namespace Football.Core.Career
                 ? 1000.0 - def.Club.AnnualRank
                 : def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
 
+        /// <summary>
+        /// Clubes de una modalidad: «Fútbol vintage» usa todos (Primera de <see cref="VintageFirstDivision"/> + Nacional con el resto); el modo clásico
+        /// y el Torneo usan solo los que no son <see cref="TeamDefinition.VintageOnly"/>.
+        /// </summary>
+        /// <param name="db">Archivo completo de equipos.</param>
+        /// <param name="vintage">true = Fútbol vintage.</param>
+        public static TeamDatabase PoolFor(TeamDatabase db, bool vintage)
+        {
+            if (vintage)
+            {
+                return db;
+            }
+
+            return new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Rivalries = db.Rivalries, Teams = db.Teams.Where(t => !t.VintageOnly).ToArray() };
+        }
+
+        /// <summary>Clubes de Primera en «Fútbol vintage».</summary>
+        public const int VintageFirstDivision = 20;
+
         /// <summary>División (1 = Primera, 2 = Nacional B) que le toca a cada club del archivo con <paramref name="primeraSize"/> clubes en Primera; todos 1 si no hay divisiones.</summary>
         /// <param name="db">Archivo de equipos.</param>
         /// <param name="primeraSize">Clubes de Primera (0 o todos = una sola división).</param>
@@ -424,6 +443,21 @@ namespace Football.Core.Career
             List<int> second = Data.Clubs.Where(c => c.Division == 2).Select(c => c.Id).ToList();
             if (second.Count < 2)
             {
+                return;
+            }
+
+            if (second.Count >= _cfg.Career.ZoneSplitFrom)
+            {
+                // Nacional grande (29 clubes): dos zonas más cruces, como Primera, para que entre en el año.
+                int zonesId = CompetitionInfo.IdOf(Data.Season, TournamentKind.NacionalB);
+                Data.Competitions.Add(new CompetitionInfo { Id = zonesId, Name = "Nacional B " + Data.Season, Season = Data.Season, Kind = TournamentKind.NacionalB });
+                foreach (Fixture f in FixtureGenerator.TwoZones(zonesId, second.OrderByDescending(c => Data.Finances[c].Reputation).ThenBy(c => c).ToList(), first,
+                    _cfg.Career.DaysBetweenRounds, new SeededRandom(Mix(Data.Season * 7L + 1))))
+                {
+                    f.Id = nextId++;
+                    Data.Fixtures.Add(f);
+                }
+
                 return;
             }
 

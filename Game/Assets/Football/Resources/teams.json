@@ -1,7 +1,7 @@
 {
   "Source": "Búsquedas web del 20 y 21 de noviembre de 2026: listas de convocados y planteles publicados por medios (El Gráfico, RPP, La Página Millonaria, Fichajes.com, Vavel, ESPN, sitios oficiales). Las fuentes tienen fechas distintas y no siempre coinciden. Clubes agregados el 23/11/2026 (Vélez, Defensa y Justicia, Banfield, Lanús, Gimnasia, Talleres, Belgrano, Rosario Central y Newell's): nombres tomados de resúmenes de búsquedas web (Vavel, ESPN, Fichajes, Flashscore, Livefutbol, Tribuna, Football-Lineups, La Capital, La Unión); las páginas de plantel no se pudieron abrir desde la sesión. Clubes agregados el 22/11/2026: es.wikipedia.org (artículos de cada club, sección de plantel 2026; Unión muestra ya el plantel 2027) y en.wikipedia.org para Instituto.",
   "Updated": "2026-11-22",
-  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC. Los 15 clubes agregados el 22/11/2026 (Huracán, Argentinos, Godoy Cruz, Tigre, Platense, Unión, Instituto, Atlético Tucumán, Central Córdoba, Barracas Central, Sarmiento, Independiente Rivadavia, Riestra, Aldosivi y San Martín de San Juan) salen de los planteles de Wikipedia (nombres, dorsales y fecha de nacimiento): 22 jugadores reales por club, sin ficticios. Los dorsales que Wikipedia no trae (Godoy Cruz y San Martín de San Juan, y alguno suelto) se asignaron por la costumbre del puesto. Las posiciones finas (LD, LI, MCD, MCO, MI, MD, ED, EI) se infirieron del dorsal porque Wikipedia solo distingue arquero, defensor, mediocampista y delantero. Pierna hábil y altura no vienen en las fuentes: se estiman por jugador de forma fija (D-21). Instituto sale de la versión en inglés porque la española trae solo 13 jugadores. Algunos apellidos sin nombre de pila figuran tal como aparecieron en la fuente.",
+  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC. Los 15 clubes agregados el 22/11/2026 (Huracán, Argentinos, Godoy Cruz, Tigre, Platense, Unión, Instituto, Atlético Tucumán, Central Córdoba, Barracas Central, Sarmiento, Independiente Rivadavia, Riestra, Aldosivi y San Martín de San Juan) salen de los planteles de Wikipedia (nombres, dorsales y fecha de nacimiento): 22 jugadores reales por club, sin ficticios. Los dorsales que Wikipedia no trae (Godoy Cruz y San Martín de San Juan, y alguno suelto) se asignaron por la costumbre del puesto. Las posiciones finas (LD, LI, MCD, MCO, MI, MD, ED, EI) se infirieron del dorsal porque Wikipedia solo distingue arquero, defensor, mediocampista y delantero. Pierna hábil y altura no vienen en las fuentes: se estiman por jugador de forma fija (D-21). Instituto sale de la versión en inglés porque la española trae solo 13 jugadores. Algunos apellidos sin nombre de pila figuran tal como aparecieron en la fuente. Clubes con \"VintageOnly\" (solo juegan Fútbol vintage, 23/11/2026): nombre real; planteles GENERADOS por Tools/DataGen/vintage_clubs.py (jugadores ficticios, medias estimadas); estadio, capacidad y fundación aproximados. El puesto en la tabla anual 2026 (Club.AnnualRank) viene de las capturas del usuario.   ",
   "Teams": [
     {
       "Name": "Boca Juniors",
@@ -228,7 +228,8 @@
         "AnnualWageBudget": 56000000,
         "ClubValue": 336000000,
         "Tier": "Big",
-        "History": "Fundado en 1905 en La Boca. El Xeneize, uno de los dos grandes del fútbol argentino."
+        "History": "Fundado en 1905 en La Boca. El Xeneize, uno de los dos grandes del fútbol argentino.",
+        "AnnualRank": 1
       }
     },
     {
@@ -456,7 +457,8 @@
         "AnnualWageBudget": 63000000,
         "ClubValue": 364000000,
         "Tier": "Big",
-        "History": "Fundado en 1901 en La Boca y hoy en Núñez. El Millonario, el estadio más grande del país."
+        "History": "Fundado en 1901 en La Boca y hoy en Núñez. El Millonario, el estadio más grande del país.",
+        "AnnualRank": 7
       }
     },
     {
@@ -649,7 +651,8 @@
         "AnnualWageBudget": 35000000,
         "ClubValue": 182000000,
         "Tier": "Big",
-        "History": "Fundado en 1903 en Avellaneda. La Academia, primer campeón intercontinental argentino."
+        "History": "Fundado en 1903 en Avellaneda. La Academia, primer campeón intercontinental argentino.",
+        "AnnualRank": 23
       }
     },
     {
@@ -835,7 +838,8 @@
         "AnnualWageBudget": 25200000,
         "ClubValue": 133000000,
         "Tier": "Mid",
-        "History": "Fundado en 1905 en La Plata. El Pincharrata, cuatro veces campeón de América."
+        "History": "Fundado en 1905 en La Plata. El Pincharrata, cuatro veces campeón de América.",
+        "AnnualRank": 11
       }
     },
     {
@@ -1035,7 +1039,8 @@
         "AnnualWageBudget": 16800000,
         "ClubValue": 98000000,
         "Tier": "Big",
-        "History": "Fundado en 1908 en Almagro. El Ciclón de Boedo, campeón de la Libertadores 2014."
+        "History": "Fundado en 1908 en Almagro. El Ciclón de Boedo, campeón de la Libertadores 2014.",
+        "AnnualRank": 18
       }
     },
     {
@@ -1207,7 +1212,8 @@
         "AnnualWageBudget": 25200000,
         "ClubValue": 126000000,
         "Tier": "Big",
-        "History": "Fundado en 1905 en Avellaneda. El Rojo, el Rey de Copas con siete Libertadores."
+        "History": "Fundado en 1905 en Avellaneda. El Rojo, el Rey de Copas con siete Libertadores.",
+        "AnnualRank": 14
       }
     },
     {
@@ -1379,7 +1385,8 @@
         "AnnualWageBudget": 21000000,
         "ClubValue": 119000000,
         "Tier": "Mid",
-        "History": "Fundado en 1910 en Liniers. El Fortín, campeón del mundo en 1994."
+        "History": "Fundado en 1910 en Liniers. El Fortín, campeón del mundo en 1994.",
+        "AnnualRank": 6
       }
     },
     {
@@ -1565,7 +1572,8 @@
         "AnnualWageBudget": 9800000,
         "ClubValue": 56000000,
         "Tier": "Development",
-        "History": "Fundado en 1935 en Florencio Varela. El Halcón, campeón de la Sudamericana 2020."
+        "History": "Fundado en 1935 en Florencio Varela. El Halcón, campeón de la Sudamericana 2020.",
+        "AnnualRank": 13
       }
     },
     {
@@ -1751,7 +1759,8 @@
         "AnnualWageBudget": 8400000,
         "ClubValue": 49000000,
         "Tier": "Development",
-        "History": "Fundado en 1896 en Banfield. El Taladro, campeón del Apertura 2009."
+        "History": "Fundado en 1896 en Banfield. El Taladro, campeón del Apertura 2009.",
+        "AnnualRank": 25
       }
     },
     {
@@ -1937,7 +1946,8 @@
         "AnnualWageBudget": 16800000,
         "ClubValue": 84000000,
         "Tier": "Mid",
-        "History": "Fundado en 1915 en Lanús. El Granate, campeón de dos Sudamericanas."
+        "History": "Fundado en 1915 en Lanús. El Granate, campeón de dos Sudamericanas.",
+        "AnnualRank": 9
       }
     },
     {
@@ -2123,7 +2133,8 @@
         "AnnualWageBudget": 8400000,
         "ClubValue": 42000000,
         "Tier": "Development",
-        "History": "Fundado en 1887 en La Plata. El Lobo, el club más antiguo de América en actividad."
+        "History": "Fundado en 1887 en La Plata. El Lobo, el club más antiguo de América en actividad.",
+        "AnnualRank": 5
       }
     },
     {
@@ -2309,7 +2320,8 @@
         "AnnualWageBudget": 22400000,
         "ClubValue": 126000000,
         "Tier": "Mid",
-        "History": "Fundado en 1913 en Córdoba. La T, de los clubes más convocantes del interior."
+        "History": "Fundado en 1913 en Córdoba. La T, de los clubes más convocantes del interior.",
+        "AnnualRank": 21
       }
     },
     {
@@ -2495,7 +2507,8 @@
         "AnnualWageBudget": 12600000,
         "ClubValue": 63000000,
         "Tier": "Development",
-        "History": "Fundado en 1905 en Córdoba. El Pirata, del barrio de Alberdi."
+        "History": "Fundado en 1905 en Córdoba. El Pirata, del barrio de Alberdi.",
+        "AnnualRank": 10
       }
     },
     {
@@ -2681,7 +2694,8 @@
         "AnnualWageBudget": 19600000,
         "ClubValue": 98000000,
         "Tier": "Mid",
-        "History": "Fundado en 1889 en Rosario. El Canalla, una de las hinchadas más fieles del país."
+        "History": "Fundado en 1889 en Rosario. El Canalla, una de las hinchadas más fieles del país.",
+        "AnnualRank": 2
       }
     },
     {
@@ -2867,7 +2881,8 @@
         "AnnualWageBudget": 12600000,
         "ClubValue": 70000000,
         "Tier": "Mid",
-        "History": "Fundado en 1903 en Rosario. La Lepra, cuna de grandes jugadores."
+        "History": "Fundado en 1903 en Rosario. La Lepra, cuna de grandes jugadores.",
+        "AnnualRank": 22
       }
     },
     {
@@ -3078,7 +3093,8 @@
         "History": "Fundado en 1908 en Parque Patricios. El Globo fue campeón en 1973 con Menotti; su estadio, el Ducó, es conocido como «la Quema».",
         "City": "Parque Patricios, Buenos Aires",
         "ParkingSpaces": 900,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 15
       }
     },
     {
@@ -3289,7 +3305,8 @@
         "History": "Fundado en 1904 en La Paternal. El Bicho, «semillero del mundo»: de sus inferiores salió Maradona. Campeón de América en 1985.",
         "City": "La Paternal, Buenos Aires",
         "ParkingSpaces": 500,
-        "Pitch": "VeryGood"
+        "Pitch": "VeryGood",
+        "AnnualRank": 3
       }
     },
     {
@@ -3500,7 +3517,8 @@
         "History": "Fundado en 1921 en Godoy Cruz (Mendoza). El Tomba, con sus bastones azules y blancos, juega en el estadio Feliciano Gambarte.",
         "City": "Godoy Cruz, Mendoza",
         "ParkingSpaces": 1000,
-        "Pitch": "VeryGood"
+        "Pitch": "VeryGood",
+        "AnnualRank": 0
       }
     },
     {
@@ -3711,7 +3729,8 @@
         "History": "Fundado en 1902 en Victoria. El Matador fue finalista de la Copa Sudamericana 2012 y juega en «el Coliseo».",
         "City": "Victoria, Buenos Aires",
         "ParkingSpaces": 700,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 20
       }
     },
     {
@@ -3922,7 +3941,8 @@
         "History": "Fundado en 1905. El Calamar, de camiseta marrón y blanca, es uno de los clubes más antiguos del fútbol argentino.",
         "City": "Florida, Vicente López",
         "ParkingSpaces": 600,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 24
       }
     },
     {
@@ -4133,7 +4153,8 @@
         "History": "Fundado en 1907 en Santa Fe. El Tatengue, rojiblanco, juega en el estadio 15 de Abril, sobre la avenida López y Planes.",
         "City": "Santa Fe",
         "ParkingSpaces": 1200,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 16
       }
     },
     {
@@ -4334,7 +4355,8 @@
         "History": "Fundado en 1918 en Alta Córdoba. La Gloria, de rayas rojas y blancas, vive su etapa más fuerte en Primera.",
         "City": "Alta Córdoba, Córdoba",
         "ParkingSpaces": 800,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 8
       }
     },
     {
@@ -4545,7 +4567,8 @@
         "History": "Fundado en 1902 en Tucumán. El Decano, celeste y blanco, es el club más antiguo del norte argentino y juega en «la Ciudadela».",
         "City": "San Miguel de Tucumán",
         "ParkingSpaces": 1500,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 26
       }
     },
     {
@@ -4756,7 +4779,8 @@
         "History": "Fundado en 1919 en Santiago del Estero. El Ferroviario, blanquinegro, juega en el estadio Alfredo Terrera.",
         "City": "Santiago del Estero",
         "ParkingSpaces": 500,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 27
       }
     },
     {
@@ -4967,7 +4991,8 @@
         "History": "Fundado en 1904 en el barrio de Barracas. El Guapo volvió a Primera en 2022 y juega en el estadio Claudio Tapia.",
         "City": "Barracas, Buenos Aires",
         "ParkingSpaces": 250,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 12
       }
     },
     {
@@ -5178,7 +5203,8 @@
         "History": "Fundado en 1911 en Junín. El Verde, de camiseta verde, juega en el estadio Eva Perón de Junín.",
         "City": "Junín, Buenos Aires",
         "ParkingSpaces": 600,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 19
       }
     },
     {
@@ -5389,7 +5415,8 @@
         "History": "Fundado en 1913 en Mendoza. La Lepra mendocina, azul noche, tiene su casa en el Parque General San Martín.",
         "City": "Mendoza",
         "ParkingSpaces": 900,
-        "Pitch": "Good"
+        "Pitch": "Good",
+        "AnnualRank": 4
       }
     },
     {
@@ -5600,7 +5627,8 @@
         "History": "Fundado en 1931 en Nueva Pompeya. Los Malevos, blanquinegros, llegaron a Primera con la cancha más chica de la categoría.",
         "City": "Nueva Pompeya, Buenos Aires",
         "ParkingSpaces": 150,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 28
       }
     },
     {
@@ -5811,7 +5839,8 @@
         "History": "Fundado en 1913 en Mar del Plata. El Tiburón, amarillo y verde, juega en el estadio mundialista José María Minella.",
         "City": "Mar del Plata",
         "ParkingSpaces": 1200,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 29
       }
     },
     {
@@ -6022,7 +6051,4055 @@
         "History": "Fundado en 1907 en San Juan. El Verdinegro, «Santo», es el club más tradicional de la provincia.",
         "City": "San Juan",
         "ParkingSpaces": 700,
-        "Pitch": "Regular"
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Gimnasia y Esgrima (Mendoza)",
+      "ShortName": "GEM",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#1F4FA3",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#1F4FA3"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1F4FA3",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Facundo Ruiz",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 64,
+          "Age": 32
+        },
+        {
+          "Name": "Cristian Quiroga",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Ignacio Ríos",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 67,
+          "Age": 18
+        },
+        {
+          "Name": "Joaquín Flores",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 35
+        },
+        {
+          "Name": "Cristian Sosa",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 32
+        },
+        {
+          "Name": "Lautaro Sánchez",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 65,
+          "Age": 31
+        },
+        {
+          "Name": "Diego Ramírez",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 66,
+          "Age": 30
+        },
+        {
+          "Name": "Matías López",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 68,
+          "Age": 18
+        },
+        {
+          "Name": "Pablo Domínguez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Matías Medina",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 67,
+          "Age": 18
+        },
+        {
+          "Name": "Brian Giménez",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 65,
+          "Age": 20
+        },
+        {
+          "Name": "Agustín Suárez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 64,
+          "Age": 32
+        },
+        {
+          "Name": "Bruno Pérez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 65,
+          "Age": 30
+        },
+        {
+          "Name": "Bruno Paz",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 66,
+          "Age": 28
+        },
+        {
+          "Name": "Julián Aguirre",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 25
+        },
+        {
+          "Name": "Federico Acosta",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 72,
+          "Age": 22
+        },
+        {
+          "Name": "Matías Castro",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 66,
+          "Age": 20
+        },
+        {
+          "Name": "Ramiro Peralta",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 61,
+          "Age": 24
+        },
+        {
+          "Name": "Diego Gómez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 65,
+          "Age": 19
+        },
+        {
+          "Name": "Facundo Rojas",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 65,
+          "Age": 26
+        },
+        {
+          "Name": "Gastón Benítez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 66,
+          "Age": 21
+        },
+        {
+          "Name": "Lucas Vega",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 65,
+          "Age": 26
+        }
+      ],
+      "Club": {
+        "Founded": 1908,
+        "Stadium": "Víctor Antonio Legrotaglie",
+        "Capacity": 12500,
+        "TransferBudget": 1920000,
+        "AnnualWageBudget": 6300000,
+        "ClubValue": 25200000,
+        "Tier": "Development",
+        "History": "El Lobo mendocino, azul y blanco, llegó a Primera en 2026.",
+        "City": "Mendoza",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 17
+      }
+    },
+    {
+      "Name": "Estudiantes (Río Cuarto)",
+      "ShortName": "ERC",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#7EC8F0",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#7EC8F0"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#7EC8F0",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Federico Paz",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 65,
+          "Age": 25
+        },
+        {
+          "Name": "Nicolás Sosa",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Agustín Cabrera",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 55,
+          "Age": 31
+        },
+        {
+          "Name": "Ignacio Peralta",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 25
+        },
+        {
+          "Name": "Cristian Rojas",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 27
+        },
+        {
+          "Name": "Kevin Castro",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 20
+        },
+        {
+          "Name": "Julián Ortiz",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 21
+        },
+        {
+          "Name": "Lucas Ríos",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 29
+        },
+        {
+          "Name": "Maximiliano Ledesma",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 70,
+          "Age": 31
+        },
+        {
+          "Name": "Gastón Benítez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 64,
+          "Age": 31
+        },
+        {
+          "Name": "Maximiliano Pereyra",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 56,
+          "Age": 23
+        },
+        {
+          "Name": "Franco Correa",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 67,
+          "Age": 34
+        },
+        {
+          "Name": "Maximiliano López",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 66,
+          "Age": 21
+        },
+        {
+          "Name": "Julián Fernández",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 60,
+          "Age": 35
+        },
+        {
+          "Name": "Sebastián Ibáñez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 18
+        },
+        {
+          "Name": "Gonzalo Silva",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 34
+        },
+        {
+          "Name": "Facundo Sánchez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 64,
+          "Age": 26
+        },
+        {
+          "Name": "Federico Cardozo",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 61,
+          "Age": 30
+        },
+        {
+          "Name": "Agustín Medina",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 62,
+          "Age": 18
+        },
+        {
+          "Name": "Facundo Gutiérrez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 57,
+          "Age": 23
+        },
+        {
+          "Name": "Maximiliano Vega",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 62,
+          "Age": 26
+        },
+        {
+          "Name": "Pablo Gómez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 57,
+          "Age": 34
+        }
+      ],
+      "Club": {
+        "Founded": 1912,
+        "Stadium": "Ciudad de Río Cuarto",
+        "Capacity": 22000,
+        "TransferBudget": 1680000,
+        "AnnualWageBudget": 5400000,
+        "ClubValue": 20800000,
+        "Tier": "Development",
+        "History": "Club cordobés que ascendió a Primera en 2026.",
+        "City": "Río Cuarto",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 30
+      }
+    },
+    {
+      "Name": "Colón",
+      "ShortName": "COL",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#C8102E",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#C8102E"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#C8102E",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Ignacio González",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 66,
+          "Age": 23
+        },
+        {
+          "Name": "Gastón Peralta",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 66,
+          "Age": 23
+        },
+        {
+          "Name": "Brian Medina",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 66,
+          "Age": 29
+        },
+        {
+          "Name": "Bruno Acosta",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 22
+        },
+        {
+          "Name": "Brian Flores",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 67,
+          "Age": 26
+        },
+        {
+          "Name": "Franco Torres",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 66,
+          "Age": 29
+        },
+        {
+          "Name": "Sebastián Romero",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 25
+        },
+        {
+          "Name": "Cristian Ibáñez",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 68,
+          "Age": 23
+        },
+        {
+          "Name": "Axel Pérez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 66,
+          "Age": 34
+        },
+        {
+          "Name": "Pablo Álvarez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 65,
+          "Age": 29
+        },
+        {
+          "Name": "Martín Cardozo",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Martín Rodríguez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 25
+        },
+        {
+          "Name": "Lucas Molina",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 72,
+          "Age": 35
+        },
+        {
+          "Name": "Ramiro Luna",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 64,
+          "Age": 28
+        },
+        {
+          "Name": "Pablo Juárez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 30
+        },
+        {
+          "Name": "Axel Silva",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 34
+        },
+        {
+          "Name": "Matías Castro",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 31
+        },
+        {
+          "Name": "Emiliano Herrera",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 65,
+          "Age": 30
+        },
+        {
+          "Name": "Ramiro Sánchez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 59,
+          "Age": 24
+        },
+        {
+          "Name": "Gastón Paz",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 63,
+          "Age": 24
+        },
+        {
+          "Name": "Ignacio Núñez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 67,
+          "Age": 29
+        },
+        {
+          "Name": "Agustín Benítez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 59,
+          "Age": 27
+        }
+      ],
+      "Club": {
+        "Founded": 1905,
+        "Stadium": "Brigadier General Estanislao López",
+        "Capacity": 40000,
+        "TransferBudget": 1800000,
+        "AnnualWageBudget": 5850000,
+        "ClubValue": 23000000,
+        "Tier": "Mid",
+        "History": "El Sabalero, rojinegro, uno de los grandes del interior.",
+        "City": "Santa Fe",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Quilmes",
+      "ShortName": "QUI",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#2E7BC6",
+        "Pattern": "Stripes",
+        "Shorts": "#2E7BC6",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#2E7BC6",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#2E7BC6",
+        "Socks": "#2E7BC6"
+      },
+      "Players": [
+        {
+          "Name": "Julián Torres",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Pablo González",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 22
+        },
+        {
+          "Name": "Franco Pérez",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 19
+        },
+        {
+          "Name": "Agustín López",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 29
+        },
+        {
+          "Name": "Lucas Rojas",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 28
+        },
+        {
+          "Name": "Cristian Martínez",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 67,
+          "Age": 21
+        },
+        {
+          "Name": "Franco Correa",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 21
+        },
+        {
+          "Name": "Federico Paz",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 32
+        },
+        {
+          "Name": "Lucas Molina",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 66,
+          "Age": 25
+        },
+        {
+          "Name": "Federico Flores",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 66,
+          "Age": 27
+        },
+        {
+          "Name": "Santiago Cabrera",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 63,
+          "Age": 27
+        },
+        {
+          "Name": "Martín Peralta",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 65,
+          "Age": 35
+        },
+        {
+          "Name": "Facundo Suárez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 64,
+          "Age": 29
+        },
+        {
+          "Name": "Tomás Ortiz",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 59,
+          "Age": 20
+        },
+        {
+          "Name": "Franco Ibáñez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 61,
+          "Age": 27
+        },
+        {
+          "Name": "Leandro Gómez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 61,
+          "Age": 31
+        },
+        {
+          "Name": "Diego Gutiérrez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 61,
+          "Age": 19
+        },
+        {
+          "Name": "Diego Giménez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 56,
+          "Age": 33
+        },
+        {
+          "Name": "Lucas Pereyra",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 58,
+          "Age": 24
+        },
+        {
+          "Name": "Joaquín Silva",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 63,
+          "Age": 25
+        },
+        {
+          "Name": "Franco Díaz",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 65,
+          "Age": 34
+        },
+        {
+          "Name": "Julián Cardozo",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 35
+        }
+      ],
+      "Club": {
+        "Founded": 1887,
+        "Stadium": "Centenario",
+        "Capacity": 30200,
+        "TransferBudget": 1680000,
+        "AnnualWageBudget": 5400000,
+        "ClubValue": 20800000,
+        "Tier": "Mid",
+        "History": "El Cervecero, el club más antiguo del Gran Buenos Aires.",
+        "City": "Quilmes",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Chacarita Juniors",
+      "ShortName": "CHA",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#C8102E",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#C8102E"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#C8102E",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Diego Pérez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 28
+        },
+        {
+          "Name": "Diego Ríos",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 24
+        },
+        {
+          "Name": "Joaquín Correa",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 62,
+          "Age": 33
+        },
+        {
+          "Name": "Bruno López",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Diego Pereyra",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 34
+        },
+        {
+          "Name": "Maximiliano Fernández",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 66,
+          "Age": 34
+        },
+        {
+          "Name": "Matías Molina",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 26
+        },
+        {
+          "Name": "Pablo Sánchez",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 25
+        },
+        {
+          "Name": "Matías Vega",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 55,
+          "Age": 28
+        },
+        {
+          "Name": "Gonzalo Rojas",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 64,
+          "Age": 18
+        },
+        {
+          "Name": "Bruno Sosa",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 65,
+          "Age": 21
+        },
+        {
+          "Name": "Martín Flores",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Sebastián Ruiz",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 56,
+          "Age": 21
+        },
+        {
+          "Name": "Cristian Giménez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 58,
+          "Age": 24
+        },
+        {
+          "Name": "Ramiro Díaz",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 28
+        },
+        {
+          "Name": "Axel Álvarez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 55,
+          "Age": 30
+        },
+        {
+          "Name": "Ignacio Ledesma",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 67,
+          "Age": 31
+        },
+        {
+          "Name": "Diego Ortiz",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 60,
+          "Age": 21
+        },
+        {
+          "Name": "Joaquín Núñez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 64,
+          "Age": 31
+        },
+        {
+          "Name": "Franco Rodríguez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 63,
+          "Age": 23
+        },
+        {
+          "Name": "Ignacio Herrera",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Nicolás Benítez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 55,
+          "Age": 33
+        }
+      ],
+      "Club": {
+        "Founded": 1906,
+        "Stadium": "Chacarita Juniors",
+        "Capacity": 17000,
+        "TransferBudget": 1560000,
+        "AnnualWageBudget": 4950000,
+        "ClubValue": 18600000,
+        "Tier": "Mid",
+        "History": "El Funebrero, de San Martín.",
+        "City": "San Martín, Buenos Aires",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Atlético Rafaela",
+      "ShortName": "RAF",
+      "Style": "Counter Attack",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#8FD0F5",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#8FD0F5"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#8FD0F5",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Santiago Núñez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 18
+        },
+        {
+          "Name": "Axel Medina",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 21
+        },
+        {
+          "Name": "Ezequiel Gómez",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 34
+        },
+        {
+          "Name": "Maximiliano Sánchez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 19
+        },
+        {
+          "Name": "Gonzalo López",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 35
+        },
+        {
+          "Name": "Agustín Martínez",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 27
+        },
+        {
+          "Name": "Ignacio Fernández",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 34
+        },
+        {
+          "Name": "Pablo Herrera",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 34
+        },
+        {
+          "Name": "Tomás Gutiérrez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 58,
+          "Age": 26
+        },
+        {
+          "Name": "Emiliano Suárez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 61,
+          "Age": 21
+        },
+        {
+          "Name": "Ramiro Villalba",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 35
+        },
+        {
+          "Name": "Axel Morales",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 19
+        },
+        {
+          "Name": "Martín Peralta",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 61,
+          "Age": 28
+        },
+        {
+          "Name": "Sebastián Juárez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 57,
+          "Age": 29
+        },
+        {
+          "Name": "Facundo Díaz",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 58,
+          "Age": 25
+        },
+        {
+          "Name": "Leandro Flores",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 58,
+          "Age": 32
+        },
+        {
+          "Name": "Sebastián Ledesma",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 58,
+          "Age": 23
+        },
+        {
+          "Name": "Facundo González",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 55,
+          "Age": 19
+        },
+        {
+          "Name": "Sebastián Ramírez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 55,
+          "Age": 34
+        },
+        {
+          "Name": "Bruno Benítez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 60,
+          "Age": 29
+        },
+        {
+          "Name": "Maximiliano Aguirre",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 60,
+          "Age": 29
+        },
+        {
+          "Name": "Rodrigo Romero",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 28
+        }
+      ],
+      "Club": {
+        "Founded": 1907,
+        "Stadium": "Nuevo Monumental",
+        "Capacity": 15000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "La Crema, de Rafaela.",
+        "City": "Rafaela",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Patronato",
+      "ShortName": "PAT",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#B31B1B",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#B31B1B"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#B31B1B",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Julián Villalba",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 62,
+          "Age": 19
+        },
+        {
+          "Name": "Tomás Acosta",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 24
+        },
+        {
+          "Name": "Cristian Ledesma",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 62,
+          "Age": 33
+        },
+        {
+          "Name": "Ezequiel Domínguez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 65,
+          "Age": 27
+        },
+        {
+          "Name": "Kevin Gutiérrez",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 33
+        },
+        {
+          "Name": "Kevin Morales",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 55,
+          "Age": 25
+        },
+        {
+          "Name": "Gonzalo Ortiz",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 18
+        },
+        {
+          "Name": "Emiliano Ríos",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 30
+        },
+        {
+          "Name": "Gastón Quiroga",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 58,
+          "Age": 20
+        },
+        {
+          "Name": "Ignacio Ibáñez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 59,
+          "Age": 35
+        },
+        {
+          "Name": "Joaquín Ramírez",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 63,
+          "Age": 27
+        },
+        {
+          "Name": "Brian Álvarez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 18
+        },
+        {
+          "Name": "Rodrigo Luna",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 57,
+          "Age": 29
+        },
+        {
+          "Name": "Lucas Martínez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 61,
+          "Age": 22
+        },
+        {
+          "Name": "Axel Peralta",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 66,
+          "Age": 30
+        },
+        {
+          "Name": "Lucas González",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 59,
+          "Age": 35
+        },
+        {
+          "Name": "Brian Juárez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 20
+        },
+        {
+          "Name": "Gonzalo Gómez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 57,
+          "Age": 20
+        },
+        {
+          "Name": "Emiliano Molina",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 59,
+          "Age": 35
+        },
+        {
+          "Name": "Gastón Núñez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 68,
+          "Age": 32
+        },
+        {
+          "Name": "Brian Rojas",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 20
+        },
+        {
+          "Name": "Gastón Torres",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 30
+        }
+      ],
+      "Club": {
+        "Founded": 1914,
+        "Stadium": "Presbítero Bartolomé Grella",
+        "Capacity": 22000,
+        "TransferBudget": 1560000,
+        "AnnualWageBudget": 4950000,
+        "ClubValue": 18600000,
+        "Tier": "Development",
+        "History": "El Patrón, rojinegro, de Paraná.",
+        "City": "Paraná",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Temperley",
+      "ShortName": "TEM",
+      "Style": "Possession",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#8FD0F5",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#8FD0F5"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#8FD0F5",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Lautaro Díaz",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 62,
+          "Age": 18
+        },
+        {
+          "Name": "Julián Vega",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 57,
+          "Age": 32
+        },
+        {
+          "Name": "Kevin Herrera",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 19
+        },
+        {
+          "Name": "Ezequiel Giménez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 21
+        },
+        {
+          "Name": "Kevin Molina",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 33
+        },
+        {
+          "Name": "Agustín Romero",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 28
+        },
+        {
+          "Name": "Emiliano Aguirre",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 29
+        },
+        {
+          "Name": "Agustín Cabrera",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 65,
+          "Age": 19
+        },
+        {
+          "Name": "Diego Ibáñez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 58,
+          "Age": 31
+        },
+        {
+          "Name": "Pablo Luna",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 60,
+          "Age": 35
+        },
+        {
+          "Name": "Gastón González",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 55,
+          "Age": 30
+        },
+        {
+          "Name": "Gonzalo Sánchez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 22
+        },
+        {
+          "Name": "Kevin Pérez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 65,
+          "Age": 31
+        },
+        {
+          "Name": "Leandro Torres",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 62,
+          "Age": 29
+        },
+        {
+          "Name": "Facundo López",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 57,
+          "Age": 27
+        },
+        {
+          "Name": "Facundo Álvarez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 56,
+          "Age": 19
+        },
+        {
+          "Name": "Lautaro Correa",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 58,
+          "Age": 31
+        },
+        {
+          "Name": "Julián Domínguez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 64,
+          "Age": 22
+        },
+        {
+          "Name": "Kevin Peralta",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 59,
+          "Age": 25
+        },
+        {
+          "Name": "Tomás Juárez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 59,
+          "Age": 24
+        },
+        {
+          "Name": "Ignacio Martínez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 60,
+          "Age": 29
+        },
+        {
+          "Name": "Bruno Ríos",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 62,
+          "Age": 22
+        }
+      ],
+      "Club": {
+        "Founded": 1912,
+        "Stadium": "Alfredo Beranger",
+        "Capacity": 15000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "El Gasolero, celeste y blanco, de Turdera.",
+        "City": "Turdera",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Almagro",
+      "ShortName": "ALM",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#1F4FA3",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#1F4FA3"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1F4FA3",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Axel Pérez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 35
+        },
+        {
+          "Name": "Martín Gómez",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 57,
+          "Age": 31
+        },
+        {
+          "Name": "Sebastián Vega",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 55,
+          "Age": 27
+        },
+        {
+          "Name": "Tomás Herrera",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 59,
+          "Age": 33
+        },
+        {
+          "Name": "Martín Ruiz",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Joaquín López",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Nicolás Cabrera",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 55,
+          "Age": 29
+        },
+        {
+          "Name": "Nicolás Romero",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 29
+        },
+        {
+          "Name": "Facundo Molina",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 56,
+          "Age": 25
+        },
+        {
+          "Name": "Julián Luna",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 55,
+          "Age": 27
+        },
+        {
+          "Name": "Leandro Martínez",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 55,
+          "Age": 23
+        },
+        {
+          "Name": "Federico Torres",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 66,
+          "Age": 30
+        },
+        {
+          "Name": "Martín Morales",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 55,
+          "Age": 34
+        },
+        {
+          "Name": "Santiago Ramírez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 63,
+          "Age": 34
+        },
+        {
+          "Name": "Federico González",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 64,
+          "Age": 28
+        },
+        {
+          "Name": "Tomás Fernández",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 59,
+          "Age": 18
+        },
+        {
+          "Name": "Rodrigo Gutiérrez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 58,
+          "Age": 33
+        },
+        {
+          "Name": "Axel Rojas",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 61,
+          "Age": 24
+        },
+        {
+          "Name": "Brian Ortiz",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 55,
+          "Age": 26
+        },
+        {
+          "Name": "Martín Medina",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Lucas Ríos",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 19
+        },
+        {
+          "Name": "Emiliano Benítez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 20
+        }
+      ],
+      "Club": {
+        "Founded": 1911,
+        "Stadium": "Tres de Febrero",
+        "Capacity": 15000,
+        "TransferBudget": 1320000,
+        "AnnualWageBudget": 4050000,
+        "ClubValue": 14200000,
+        "Tier": "Development",
+        "History": "El Tricolor, de José Ingenieros.",
+        "City": "José Ingenieros",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Ferro Carril Oeste",
+      "ShortName": "FER",
+      "Style": "Possession",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#0A7D3A",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#0A7D3A"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#0A7D3A",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Sebastián Paz",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 26
+        },
+        {
+          "Name": "Julián Domínguez",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 64,
+          "Age": 35
+        },
+        {
+          "Name": "Kevin Ibáñez",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 22
+        },
+        {
+          "Name": "Cristian Martínez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 21
+        },
+        {
+          "Name": "Facundo Álvarez",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 29
+        },
+        {
+          "Name": "Gonzalo Peralta",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 30
+        },
+        {
+          "Name": "Ignacio López",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 24
+        },
+        {
+          "Name": "Sebastián Núñez",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Facundo Ruiz",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 65,
+          "Age": 19
+        },
+        {
+          "Name": "Lautaro Luna",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 62,
+          "Age": 22
+        },
+        {
+          "Name": "Pablo Ortiz",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 22
+        },
+        {
+          "Name": "Maximiliano Aguirre",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 20
+        },
+        {
+          "Name": "Leandro Díaz",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 64,
+          "Age": 31
+        },
+        {
+          "Name": "Brian Gutiérrez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 57,
+          "Age": 28
+        },
+        {
+          "Name": "Joaquín Correa",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 61,
+          "Age": 23
+        },
+        {
+          "Name": "Sebastián Torres",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 60,
+          "Age": 22
+        },
+        {
+          "Name": "Rodrigo Vega",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 69,
+          "Age": 33
+        },
+        {
+          "Name": "Pablo Giménez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 61,
+          "Age": 23
+        },
+        {
+          "Name": "Ignacio Rodríguez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 58,
+          "Age": 32
+        },
+        {
+          "Name": "Kevin Fernández",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Rodrigo Gómez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 67,
+          "Age": 28
+        },
+        {
+          "Name": "Santiago Flores",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 62,
+          "Age": 34
+        }
+      ],
+      "Club": {
+        "Founded": 1904,
+        "Stadium": "Ricardo Etcheverri",
+        "Capacity": 24000,
+        "TransferBudget": 1680000,
+        "AnnualWageBudget": 5400000,
+        "ClubValue": 20800000,
+        "Tier": "Mid",
+        "History": "El Verdolaga, de Caballito.",
+        "City": "Caballito",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "All Boys",
+      "ShortName": "ABO",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#111111",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#111111",
+        "Socks": "#111111"
+      },
+      "Players": [
+        {
+          "Name": "Martín Álvarez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 65,
+          "Age": 32
+        },
+        {
+          "Name": "Diego Acosta",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 55,
+          "Age": 35
+        },
+        {
+          "Name": "Bruno Cardozo",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 69,
+          "Age": 23
+        },
+        {
+          "Name": "Pablo Ledesma",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 31
+        },
+        {
+          "Name": "Maximiliano Juárez",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 23
+        },
+        {
+          "Name": "Diego Pérez",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 24
+        },
+        {
+          "Name": "Brian Aguirre",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 32
+        },
+        {
+          "Name": "Sebastián Villalba",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 26
+        },
+        {
+          "Name": "Emiliano Paz",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 56,
+          "Age": 23
+        },
+        {
+          "Name": "Lucas Núñez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 60,
+          "Age": 21
+        },
+        {
+          "Name": "Joaquín Torres",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 59,
+          "Age": 32
+        },
+        {
+          "Name": "Lucas González",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 58,
+          "Age": 18
+        },
+        {
+          "Name": "Cristian Martínez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 63,
+          "Age": 32
+        },
+        {
+          "Name": "Gastón Quiroga",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 58,
+          "Age": 30
+        },
+        {
+          "Name": "Santiago Ruiz",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 59,
+          "Age": 34
+        },
+        {
+          "Name": "Ignacio Domínguez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 29
+        },
+        {
+          "Name": "Ramiro Molina",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 57,
+          "Age": 20
+        },
+        {
+          "Name": "Facundo Ramírez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 58,
+          "Age": 32
+        },
+        {
+          "Name": "Tomás Gutiérrez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 60,
+          "Age": 27
+        },
+        {
+          "Name": "Gonzalo Flores",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 60,
+          "Age": 33
+        },
+        {
+          "Name": "Matías Correa",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 61,
+          "Age": 32
+        },
+        {
+          "Name": "Brian Gómez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 27
+        }
+      ],
+      "Club": {
+        "Founded": 1913,
+        "Stadium": "Islas Malvinas",
+        "Capacity": 14000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "El Albo, de Floresta.",
+        "City": "Floresta",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Atlanta",
+      "ShortName": "ATL",
+      "Style": "Counter Attack",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#F2C500",
+        "Secondary": "#1F4FA3",
+        "Pattern": "Stripes",
+        "Shorts": "#1F4FA3",
+        "Socks": "#F2C500"
+      },
+      "Away": {
+        "Shirt": "#1F4FA3",
+        "Secondary": "#F2C500",
+        "Pattern": "Solid",
+        "Shorts": "#1F4FA3",
+        "Socks": "#1F4FA3"
+      },
+      "Players": [
+        {
+          "Name": "Maximiliano Gutiérrez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 19
+        },
+        {
+          "Name": "Nicolás Cabrera",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 65,
+          "Age": 34
+        },
+        {
+          "Name": "Bruno Castro",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 30
+        },
+        {
+          "Name": "Gonzalo Paz",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Ramiro Quiroga",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 21
+        },
+        {
+          "Name": "Agustín Rojas",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 30
+        },
+        {
+          "Name": "Ramiro Ríos",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 59,
+          "Age": 29
+        },
+        {
+          "Name": "Martín Morales",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Julián Álvarez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 57,
+          "Age": 24
+        },
+        {
+          "Name": "Matías Pérez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 56,
+          "Age": 20
+        },
+        {
+          "Name": "Ezequiel Villalba",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Santiago Pereyra",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 56,
+          "Age": 30
+        },
+        {
+          "Name": "Nicolás Medina",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 56,
+          "Age": 22
+        },
+        {
+          "Name": "Martín Sánchez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 59,
+          "Age": 33
+        },
+        {
+          "Name": "Kevin Juárez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 65,
+          "Age": 29
+        },
+        {
+          "Name": "Brian Silva",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 27
+        },
+        {
+          "Name": "Santiago Domínguez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 65,
+          "Age": 32
+        },
+        {
+          "Name": "Maximiliano Martínez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 60,
+          "Age": 25
+        },
+        {
+          "Name": "Gonzalo Peralta",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 70,
+          "Age": 25
+        },
+        {
+          "Name": "Pablo Torres",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 58,
+          "Age": 31
+        },
+        {
+          "Name": "Kevin Fernández",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 35
+        },
+        {
+          "Name": "Lucas Molina",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 60,
+          "Age": 27
+        }
+      ],
+      "Club": {
+        "Founded": 1904,
+        "Stadium": "Don León Kolbowski",
+        "Capacity": 14000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "Los Bohemios, de Villa Crespo.",
+        "City": "Villa Crespo",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Tristán Suárez",
+      "ShortName": "TSU",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#1F3C88",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Stripes",
+        "Shorts": "#FFFFFF",
+        "Socks": "#1F3C88"
+      },
+      "Away": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1F3C88",
+        "Pattern": "Solid",
+        "Shorts": "#FFFFFF",
+        "Socks": "#FFFFFF"
+      },
+      "Players": [
+        {
+          "Name": "Nicolás Ledesma",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 67,
+          "Age": 30
+        },
+        {
+          "Name": "Emiliano Paz",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 35
+        },
+        {
+          "Name": "Facundo Flores",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 35
+        },
+        {
+          "Name": "Brian Giménez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 27
+        },
+        {
+          "Name": "Lautaro Villalba",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 25
+        },
+        {
+          "Name": "Leandro Ortiz",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 55,
+          "Age": 34
+        },
+        {
+          "Name": "Brian Correa",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Lautaro Domínguez",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 23
+        },
+        {
+          "Name": "Agustín Álvarez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 65,
+          "Age": 22
+        },
+        {
+          "Name": "Pablo Ramírez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 58,
+          "Age": 30
+        },
+        {
+          "Name": "Santiago Sánchez",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 69,
+          "Age": 33
+        },
+        {
+          "Name": "Joaquín Torres",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 18
+        },
+        {
+          "Name": "Kevin Gómez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 63,
+          "Age": 25
+        },
+        {
+          "Name": "Axel Medina",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 59,
+          "Age": 33
+        },
+        {
+          "Name": "Brian Martínez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 23
+        },
+        {
+          "Name": "Leandro Herrera",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 55,
+          "Age": 27
+        },
+        {
+          "Name": "Pablo Peralta",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 61,
+          "Age": 28
+        },
+        {
+          "Name": "Maximiliano Quiroga",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 60,
+          "Age": 18
+        },
+        {
+          "Name": "Pablo Juárez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 68,
+          "Age": 21
+        },
+        {
+          "Name": "Santiago Ibáñez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 56,
+          "Age": 30
+        },
+        {
+          "Name": "Cristian Rojas",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 61,
+          "Age": 20
+        },
+        {
+          "Name": "Bruno Gutiérrez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 67,
+          "Age": 32
+        }
+      ],
+      "Club": {
+        "Founded": 1929,
+        "Stadium": "Tristán Suárez",
+        "Capacity": 12000,
+        "TransferBudget": 1560000,
+        "AnnualWageBudget": 4950000,
+        "ClubValue": 18600000,
+        "Tier": "Development",
+        "History": "El Funebrero del sur, de Ezeiza.",
+        "City": "Ezeiza",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Deportivo Madryn",
+      "ShortName": "MAD",
+      "Style": "Counter Attack",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#111111",
+        "Secondary": "#F2C500",
+        "Pattern": "Stripes",
+        "Shorts": "#F2C500",
+        "Socks": "#111111"
+      },
+      "Away": {
+        "Shirt": "#F2C500",
+        "Secondary": "#111111",
+        "Pattern": "Solid",
+        "Shorts": "#F2C500",
+        "Socks": "#F2C500"
+      },
+      "Players": [
+        {
+          "Name": "Facundo Juárez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 26
+        },
+        {
+          "Name": "Nicolás Ramírez",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 30
+        },
+        {
+          "Name": "Facundo Ibáñez",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 59,
+          "Age": 28
+        },
+        {
+          "Name": "Ramiro Silva",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 19
+        },
+        {
+          "Name": "Ramiro Ortiz",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 56,
+          "Age": 27
+        },
+        {
+          "Name": "Lucas Cabrera",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 29
+        },
+        {
+          "Name": "Kevin Pereyra",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Kevin Romero",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 29
+        },
+        {
+          "Name": "Emiliano Fernández",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 58,
+          "Age": 32
+        },
+        {
+          "Name": "Santiago Luna",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 55,
+          "Age": 26
+        },
+        {
+          "Name": "Pablo Ledesma",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 63,
+          "Age": 34
+        },
+        {
+          "Name": "Gastón Villalba",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 57,
+          "Age": 25
+        },
+        {
+          "Name": "Agustín Suárez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 64,
+          "Age": 28
+        },
+        {
+          "Name": "Agustín Herrera",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 55,
+          "Age": 29
+        },
+        {
+          "Name": "Maximiliano Molina",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 28
+        },
+        {
+          "Name": "Martín Morales",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 65,
+          "Age": 35
+        },
+        {
+          "Name": "Kevin Martínez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 55,
+          "Age": 33
+        },
+        {
+          "Name": "Julián López",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 56,
+          "Age": 32
+        },
+        {
+          "Name": "Ignacio Cardozo",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 60,
+          "Age": 26
+        },
+        {
+          "Name": "Nicolás Álvarez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 64,
+          "Age": 32
+        },
+        {
+          "Name": "Martín Paz",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 57,
+          "Age": 18
+        },
+        {
+          "Name": "Maximiliano Rodríguez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 56,
+          "Age": 22
+        }
+      ],
+      "Club": {
+        "Founded": 1965,
+        "Stadium": "Abel Sastre",
+        "Capacity": 9000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "El Aurinegro, de Puerto Madryn.",
+        "City": "Puerto Madryn",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Deportivo Morón",
+      "ShortName": "MOR",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#C8102E",
+        "Pattern": "Stripes",
+        "Shorts": "#C8102E",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#C8102E",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#C8102E",
+        "Socks": "#C8102E"
+      },
+      "Players": [
+        {
+          "Name": "Ramiro Ríos",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 19
+        },
+        {
+          "Name": "Maximiliano Vega",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 62,
+          "Age": 25
+        },
+        {
+          "Name": "Franco Flores",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 69,
+          "Age": 18
+        },
+        {
+          "Name": "Franco Correa",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 58,
+          "Age": 20
+        },
+        {
+          "Name": "Lucas Sosa",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 31
+        },
+        {
+          "Name": "Federico Aguirre",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 24
+        },
+        {
+          "Name": "Kevin Luna",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 66,
+          "Age": 29
+        },
+        {
+          "Name": "Franco Cardozo",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 27
+        },
+        {
+          "Name": "Gastón Rodríguez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 59,
+          "Age": 30
+        },
+        {
+          "Name": "Martín Gutiérrez",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 60,
+          "Age": 21
+        },
+        {
+          "Name": "Federico Peralta",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 60,
+          "Age": 30
+        },
+        {
+          "Name": "Ramiro González",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 32
+        },
+        {
+          "Name": "Bruno Castro",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 64,
+          "Age": 19
+        },
+        {
+          "Name": "Gonzalo Sánchez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 63,
+          "Age": 35
+        },
+        {
+          "Name": "Brian Acosta",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 65,
+          "Age": 20
+        },
+        {
+          "Name": "Axel Villalba",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 66,
+          "Age": 19
+        },
+        {
+          "Name": "Sebastián Ruiz",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 60,
+          "Age": 20
+        },
+        {
+          "Name": "Gastón Díaz",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 62,
+          "Age": 35
+        },
+        {
+          "Name": "Joaquín Rojas",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 60,
+          "Age": 29
+        },
+        {
+          "Name": "Brian Juárez",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 57,
+          "Age": 32
+        },
+        {
+          "Name": "Maximiliano Martínez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 69,
+          "Age": 20
+        },
+        {
+          "Name": "Sebastián Romero",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 64,
+          "Age": 31
+        }
+      ],
+      "Club": {
+        "Founded": 1947,
+        "Stadium": "Nuevo Francisco Urbano",
+        "Capacity": 15000,
+        "TransferBudget": 1560000,
+        "AnnualWageBudget": 4950000,
+        "ClubValue": 18600000,
+        "Tier": "Development",
+        "History": "El Gallo, de Morón.",
+        "City": "Morón",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Gimnasia y Esgrima (Jujuy)",
+      "ShortName": "GEJ",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#1F4FA3",
+        "Pattern": "Stripes",
+        "Shorts": "#1F4FA3",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#1F4FA3",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#1F4FA3",
+        "Socks": "#1F4FA3"
+      },
+      "Players": [
+        {
+          "Name": "Brian Paz",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 30
+        },
+        {
+          "Name": "Julián Acosta",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 66,
+          "Age": 18
+        },
+        {
+          "Name": "Santiago Romero",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 28
+        },
+        {
+          "Name": "Pablo Quiroga",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 27
+        },
+        {
+          "Name": "Federico Rodríguez",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 65,
+          "Age": 30
+        },
+        {
+          "Name": "Gastón Cabrera",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 35
+        },
+        {
+          "Name": "Rodrigo Juárez",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 59,
+          "Age": 32
+        },
+        {
+          "Name": "Maximiliano Torres",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 55,
+          "Age": 26
+        },
+        {
+          "Name": "Brian Medina",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 59,
+          "Age": 28
+        },
+        {
+          "Name": "Ezequiel Silva",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 71,
+          "Age": 23
+        },
+        {
+          "Name": "Axel Herrera",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 55,
+          "Age": 32
+        },
+        {
+          "Name": "Lucas Pereyra",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 64,
+          "Age": 31
+        },
+        {
+          "Name": "Emiliano Benítez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 57,
+          "Age": 21
+        },
+        {
+          "Name": "Ignacio Sánchez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 61,
+          "Age": 31
+        },
+        {
+          "Name": "Agustín Gutiérrez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 28
+        },
+        {
+          "Name": "Cristian Villalba",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 56,
+          "Age": 25
+        },
+        {
+          "Name": "Kevin Flores",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 64,
+          "Age": 30
+        },
+        {
+          "Name": "Axel Luna",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 67,
+          "Age": 27
+        },
+        {
+          "Name": "Lucas Ruiz",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 60,
+          "Age": 28
+        },
+        {
+          "Name": "Agustín Vega",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 58,
+          "Age": 22
+        },
+        {
+          "Name": "Gonzalo Domínguez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 55,
+          "Age": 24
+        },
+        {
+          "Name": "Kevin Sosa",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 61,
+          "Age": 29
+        }
+      ],
+      "Club": {
+        "Founded": 1931,
+        "Stadium": "23 de Agosto",
+        "Capacity": 23000,
+        "TransferBudget": 1440000,
+        "AnnualWageBudget": 4500000,
+        "ClubValue": 16400000,
+        "Tier": "Development",
+        "History": "El Lobo jujeño.",
+        "City": "San Salvador de Jujuy",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Mitre (Santiago del Estero)",
+      "ShortName": "MIT",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#F2C500",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#F2C500"
+      },
+      "Away": {
+        "Shirt": "#111111",
+        "Secondary": "#F2C500",
+        "Pattern": "Solid",
+        "Shorts": "#111111",
+        "Socks": "#111111"
+      },
+      "Players": [
+        {
+          "Name": "Joaquín Rodríguez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 60,
+          "Age": 35
+        },
+        {
+          "Name": "Axel Herrera",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 66,
+          "Age": 21
+        },
+        {
+          "Name": "Matías Ledesma",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 58,
+          "Age": 29
+        },
+        {
+          "Name": "Lucas Torres",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 34
+        },
+        {
+          "Name": "Matías Álvarez",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 59,
+          "Age": 29
+        },
+        {
+          "Name": "Leandro Castro",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 22
+        },
+        {
+          "Name": "Diego Ortiz",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 35
+        },
+        {
+          "Name": "Rodrigo Ríos",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Maximiliano Villalba",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 64,
+          "Age": 33
+        },
+        {
+          "Name": "Sebastián Peralta",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 61,
+          "Age": 18
+        },
+        {
+          "Name": "Ezequiel González",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 63,
+          "Age": 30
+        },
+        {
+          "Name": "Sebastián Suárez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 57,
+          "Age": 20
+        },
+        {
+          "Name": "Joaquín Núñez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 59,
+          "Age": 35
+        },
+        {
+          "Name": "Ramiro Silva",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 58,
+          "Age": 31
+        },
+        {
+          "Name": "Agustín Paz",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 60,
+          "Age": 28
+        },
+        {
+          "Name": "Lucas Juárez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 64,
+          "Age": 25
+        },
+        {
+          "Name": "Axel Benítez",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 59,
+          "Age": 19
+        },
+        {
+          "Name": "Emiliano Acosta",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 57,
+          "Age": 24
+        },
+        {
+          "Name": "Lucas Romero",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 60,
+          "Age": 24
+        },
+        {
+          "Name": "Ezequiel Fernández",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 62,
+          "Age": 35
+        },
+        {
+          "Name": "Lautaro Gómez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 63,
+          "Age": 19
+        },
+        {
+          "Name": "Nicolás Ramírez",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 25
+        }
+      ],
+      "Club": {
+        "Founded": 1907,
+        "Stadium": "Doctor Antonio Zorrilla",
+        "Capacity": 14000,
+        "TransferBudget": 1320000,
+        "AnnualWageBudget": 4050000,
+        "ClubValue": 14200000,
+        "Tier": "Development",
+        "History": "El Aurinegro santiagueño.",
+        "City": "Santiago del Estero",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Los Andes",
+      "ShortName": "LAD",
+      "Style": "Balanced",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#FFFFFF",
+        "Secondary": "#C8102E",
+        "Pattern": "Stripes",
+        "Shorts": "#C8102E",
+        "Socks": "#FFFFFF"
+      },
+      "Away": {
+        "Shirt": "#C8102E",
+        "Secondary": "#FFFFFF",
+        "Pattern": "Solid",
+        "Shorts": "#C8102E",
+        "Socks": "#C8102E"
+      },
+      "Players": [
+        {
+          "Name": "Franco Gutiérrez",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 56,
+          "Age": 32
+        },
+        {
+          "Name": "Kevin Pérez",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 57,
+          "Age": 28
+        },
+        {
+          "Name": "Maximiliano Molina",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 55,
+          "Age": 27
+        },
+        {
+          "Name": "Pablo Aguirre",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 64,
+          "Age": 20
+        },
+        {
+          "Name": "Tomás Ledesma",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 55,
+          "Age": 32
+        },
+        {
+          "Name": "Bruno Medina",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 32
+        },
+        {
+          "Name": "Matías Martínez",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Bruno Núñez",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 32
+        },
+        {
+          "Name": "Brian Sosa",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 59,
+          "Age": 27
+        },
+        {
+          "Name": "Bruno Cabrera",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 62,
+          "Age": 30
+        },
+        {
+          "Name": "Facundo Álvarez",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 19
+        },
+        {
+          "Name": "Bruno Domínguez",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 55,
+          "Age": 21
+        },
+        {
+          "Name": "Joaquín Peralta",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Joaquín Giménez",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 55,
+          "Age": 27
+        },
+        {
+          "Name": "Tomás Sánchez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 62,
+          "Age": 21
+        },
+        {
+          "Name": "Cristian Quiroga",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 63,
+          "Age": 26
+        },
+        {
+          "Name": "Gastón Cardozo",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 64,
+          "Age": 31
+        },
+        {
+          "Name": "Martín Rodríguez",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 55,
+          "Age": 30
+        },
+        {
+          "Name": "Julián Ramírez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 63,
+          "Age": 24
+        },
+        {
+          "Name": "Bruno Ruiz",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 60,
+          "Age": 21
+        },
+        {
+          "Name": "Diego Benítez",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 57,
+          "Age": 26
+        },
+        {
+          "Name": "Joaquín Vega",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 60,
+          "Age": 18
+        }
+      ],
+      "Club": {
+        "Founded": 1917,
+        "Stadium": "Eduardo Gallardón",
+        "Capacity": 24000,
+        "TransferBudget": 1320000,
+        "AnnualWageBudget": 4050000,
+        "ClubValue": 14200000,
+        "Tier": "Development",
+        "History": "Las Milrayitas, de Lomas de Zamora.",
+        "City": "Lomas de Zamora",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
+      }
+    },
+    {
+      "Name": "Almirante Brown",
+      "ShortName": "ABR",
+      "Style": "Defensive",
+      "Formation": "4-4-2",
+      "VintageOnly": true,
+      "Home": {
+        "Shirt": "#F2C500",
+        "Secondary": "#111111",
+        "Pattern": "Stripes",
+        "Shorts": "#111111",
+        "Socks": "#F2C500"
+      },
+      "Away": {
+        "Shirt": "#111111",
+        "Secondary": "#F2C500",
+        "Pattern": "Solid",
+        "Shorts": "#111111",
+        "Socks": "#111111"
+      },
+      "Players": [
+        {
+          "Name": "Brian Rojas",
+          "ShortName": "",
+          "Number": 1,
+          "Position": "POR",
+          "Rating": 55,
+          "Age": 31
+        },
+        {
+          "Name": "Axel Ibáñez",
+          "ShortName": "",
+          "Number": 12,
+          "Position": "POR",
+          "Rating": 61,
+          "Age": 22
+        },
+        {
+          "Name": "Axel Gómez",
+          "ShortName": "",
+          "Number": 22,
+          "Position": "POR",
+          "Rating": 63,
+          "Age": 18
+        },
+        {
+          "Name": "Diego Benítez",
+          "ShortName": "",
+          "Number": 2,
+          "Position": "DFC",
+          "Rating": 61,
+          "Age": 25
+        },
+        {
+          "Name": "Axel Quiroga",
+          "ShortName": "",
+          "Number": 3,
+          "Position": "DFC",
+          "Rating": 62,
+          "Age": 23
+        },
+        {
+          "Name": "Leandro Silva",
+          "ShortName": "",
+          "Number": 4,
+          "Position": "DFC",
+          "Rating": 60,
+          "Age": 28
+        },
+        {
+          "Name": "Brian Díaz",
+          "ShortName": "",
+          "Number": 5,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 33
+        },
+        {
+          "Name": "Matías Ledesma",
+          "ShortName": "",
+          "Number": 6,
+          "Position": "DFC",
+          "Rating": 57,
+          "Age": 28
+        },
+        {
+          "Name": "Martín Rodríguez",
+          "ShortName": "",
+          "Number": 7,
+          "Position": "LI",
+          "Rating": 68,
+          "Age": 28
+        },
+        {
+          "Name": "Cristian Castro",
+          "ShortName": "",
+          "Number": 8,
+          "Position": "LI",
+          "Rating": 60,
+          "Age": 19
+        },
+        {
+          "Name": "Martín Molina",
+          "ShortName": "",
+          "Number": 9,
+          "Position": "LD",
+          "Rating": 58,
+          "Age": 30
+        },
+        {
+          "Name": "Pablo Fernández",
+          "ShortName": "",
+          "Number": 10,
+          "Position": "LD",
+          "Rating": 61,
+          "Age": 26
+        },
+        {
+          "Name": "Leandro Giménez",
+          "ShortName": "",
+          "Number": 11,
+          "Position": "MCD",
+          "Rating": 58,
+          "Age": 23
+        },
+        {
+          "Name": "Santiago Acosta",
+          "ShortName": "",
+          "Number": 13,
+          "Position": "MCD",
+          "Rating": 62,
+          "Age": 24
+        },
+        {
+          "Name": "Kevin Suárez",
+          "ShortName": "",
+          "Number": 14,
+          "Position": "MC",
+          "Rating": 60,
+          "Age": 25
+        },
+        {
+          "Name": "Ezequiel Álvarez",
+          "ShortName": "",
+          "Number": 15,
+          "Position": "MC",
+          "Rating": 57,
+          "Age": 35
+        },
+        {
+          "Name": "Lautaro Flores",
+          "ShortName": "",
+          "Number": 16,
+          "Position": "MC",
+          "Rating": 55,
+          "Age": 30
+        },
+        {
+          "Name": "Brian Torres",
+          "ShortName": "",
+          "Number": 17,
+          "Position": "MCO",
+          "Rating": 60,
+          "Age": 34
+        },
+        {
+          "Name": "Gastón Pérez",
+          "ShortName": "",
+          "Number": 18,
+          "Position": "EI",
+          "Rating": 56,
+          "Age": 27
+        },
+        {
+          "Name": "Joaquín López",
+          "ShortName": "",
+          "Number": 19,
+          "Position": "ED",
+          "Rating": 55,
+          "Age": 24
+        },
+        {
+          "Name": "Martín Ríos",
+          "ShortName": "",
+          "Number": 20,
+          "Position": "DC",
+          "Rating": 58,
+          "Age": 35
+        },
+        {
+          "Name": "Rodrigo Cabrera",
+          "ShortName": "",
+          "Number": 21,
+          "Position": "DC",
+          "Rating": 62,
+          "Age": 22
+        }
+      ],
+      "Club": {
+        "Founded": 1922,
+        "Stadium": "Fragata Presidente Sarmiento",
+        "Capacity": 22000,
+        "TransferBudget": 1200000,
+        "AnnualWageBudget": 3600000,
+        "ClubValue": 12000000,
+        "Tier": "Development",
+        "History": "El Mirasol, de Isidro Casanova.",
+        "City": "Isidro Casanova",
+        "ParkingSpaces": 200,
+        "Pitch": "Regular",
+        "AnnualRank": 0
       }
     }
   ],

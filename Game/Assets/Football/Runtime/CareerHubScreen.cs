@@ -131,8 +131,8 @@ namespace Football.Game
             _tablePrev = UiKit.Button(p, "TablaAnterior", new Vector2(1490f, PagerY), new Vector2(90f, 46f), "<", 28, UiTheme.Button);
             _tableNext = UiKit.Button(p, "TablaSiguiente", new Vector2(1760f, PagerY), new Vector2(90f, 46f), ">", 28, UiTheme.Button);
             _tableRange = UiKit.Label(p, "TablaRango", new Vector2(1625f, PagerY), new Vector2(190f, 40f), string.Empty, 22, UiTheme.TextDim);
-            _table = new TextGrid(p, "Posiciones", new Vector2(1370f, 890f), TableRowHeight, new[] { 1395f, 1560f, 1720f, 1790f, 1855f },
-                new[] { 44f, 240f, 60f, 70f, 70f }, TableRows, 20);
+            _table = new TextGrid(p, "Posiciones", new Vector2(1370f, 890f), TableRowHeight, new[] { 1390f, 1455f, 1522f, 1568f, 1614f, 1660f, 1706f, 1752f, 1798f, 1852f },
+                new[] { 36f, 86f, 46f, 44f, 44f, 44f, 44f, 44f, 44f, 60f }, TableRows, 17);
 
             // Cruces de la copa: local, resultado y visitante de cada partido de la ronda.
             _cupTitle = UiKit.Label(p, "CopaTitulo", new Vector2(1625f, 890f), new Vector2(500f, 40f), string.Empty, 22, UiTheme.Gold);
@@ -418,8 +418,17 @@ namespace Football.Game
             }
 
             bool averages = _tableMode == 2;
-            _table.SetRow(0, "#", Locale.Get("career.col.club"), averages ? string.Empty : Locale.Get("career.col.played"),
-                averages ? string.Empty : Locale.Get("career.col.gd"), Locale.Get(averages ? "career.col.average" : "career.col.points"));
+            if (averages)
+            {
+                _table.SetRow(0, "#", Locale.Get("career.col.club"), string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                    Locale.Get("career.col.average"));
+            }
+            else
+            {
+                _table.SetRow(0, "#", Locale.Get("career.col.club"), Locale.Get("career.col.points"), Locale.Get("career.col.played"), Locale.Get("career.col.won"),
+                    Locale.Get("career.col.drawn"), Locale.Get("career.col.lost"), Locale.Get("career.col.gf"), Locale.Get("career.col.ga"), Locale.Get("career.col.gd"));
+            }
+
             List<AverageRow> rows = averages ? Session.AveragesTable() : null;
             List<Standing> table = averages ? null : _tableMode == 0 ? Session.TournamentTable() : Session.AnnualTable();
             int count = averages ? rows.Count : table.Count;
@@ -436,14 +445,15 @@ namespace Football.Game
                 int i = first + k, row = k + 1;
                 if (averages)
                 {
-                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(rows[i].ClubId).Name, string.Empty, string.Empty,
-                        rows[i].Average.ToString("0.000", CultureInfo.InvariantCulture));
+                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(rows[i].ClubId).ShortName, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                        string.Empty, string.Empty, rows[i].Average.ToString("0.000", CultureInfo.InvariantCulture));
                     _table.Highlight(row, rows[i].ClubId == d.UserClubId);
                 }
                 else
                 {
                     Standing s = table[i];
-                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(s.ClubId).Name, CareerText.Num(s.Played), CareerText.Num(s.GoalDifference), CareerText.Num(s.Points));
+                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(s.ClubId).ShortName, CareerText.Num(s.Points), CareerText.Num(s.Played), CareerText.Num(s.Won),
+                        CareerText.Num(s.Drawn), CareerText.Num(s.Lost), CareerText.Num(s.GoalsFor), CareerText.Num(s.GoalsAgainst), CareerText.Num(s.GoalDifference));
                     _table.Highlight(row, s.ClubId == d.UserClubId);
                 }
             }

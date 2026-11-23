@@ -20,7 +20,8 @@ namespace Football.Game
         private const float RowStep = 132f;
         private static readonly string[] FilterTiers = { null, "Big", "Mid", "Development" };
 
-        private readonly UiButton _back, _prev, _next, _go, _filter, _size;
+        private readonly UiButton _back, _prev, _next, _go, _filter, _size, _mode;
+        private bool _vintage;
         private readonly Text _counter;
         private readonly System.Collections.Generic.List<int> _shown = new System.Collections.Generic.List<int>();
         private int _filterIndex;
@@ -35,7 +36,7 @@ namespace Football.Game
         private readonly KitPreview _home, _away;
         private CareerConfig _config = new CareerConfig();
 
-        /// <summary>Club elegido (índice de <see cref="TeamCatalog.Teams"/>).</summary>
+        /// <summary>Club elegido (índice de <see cref="TeamCatalog.AllTeams"/>; los 30 clásicos conservan su índice de <see cref="TeamCatalog.Teams"/>).</summary>
         public int Chosen { get; private set; }
 
         /// <summary>
@@ -45,10 +46,18 @@ namespace Football.Game
         {
             get
             {
+                if (_vintage)
+                {
+                    return CareerSession.VintageFirstDivision;
+                }
+
                 int size = CurrentSize;
                 return size >= TeamCatalog.Teams.Length ? 0 : size;
             }
         }
+
+        /// <summary>true = «Fútbol vintage» (Primera de 20 + Nacional de 29); false = el modo clásico de 30 clubes.</summary>
+        public bool Vintage => _vintage;
 
         /// <summary>Cantidades ofrecidas: las del archivo que dejan al menos los clubes mínimos en el Nacional B (o «todos»).</summary>
         private int[] Sizes
@@ -95,10 +104,11 @@ namespace Football.Game
         {
             Transform p = Panel;
             _back = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.back"), 28, UiTheme.Button);
-            UiKit.Label(p, "Titulo", new Vector2(700f, 1020f), new Vector2(800f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
-            _filter = UiKit.Button(p, "Filtro", new Vector2(1500f, 1020f), new Vector2(380f, 70f), string.Empty, 24, UiTheme.Button);
+            UiKit.Label(p, "Titulo", new Vector2(520f, 1020f), new Vector2(420f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
+            _filter = UiKit.Button(p, "Filtro", new Vector2(1530f, 1020f), new Vector2(320f, 70f), string.Empty, 24, UiTheme.Button);
             _counter = UiKit.Label(p, "Contador", new Vector2(1790f, 1020f), new Vector2(170f, 60f), string.Empty, 28, UiTheme.TextDim);
-            _size = UiKit.Button(p, "CantidadPrimera", new Vector2(1130f, 1020f), new Vector2(340f, 70f), string.Empty, 22, UiTheme.Button);
+            _size = UiKit.Button(p, "CantidadPrimera", new Vector2(1240f, 1020f), new Vector2(300f, 70f), string.Empty, 20, UiTheme.Button);
+            _mode = UiKit.Button(p, "Modalidad", new Vector2(930f, 1020f), new Vector2(300f, 70f), string.Empty, 20, UiTheme.AccentDark);
 
             // Ficha del club.
             UiKit.Panel(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f), UiTheme.Panel);
@@ -152,24 +162,27 @@ namespace Football.Game
         public void Select(int index)
         {
             Chosen = Mathf.Clamp(index, 0, TeamCatalog.Teams.Length - 1);
+            _vintage = false;
         }
 
         /// <inheritdoc />
         public override void Refresh()
         {
-            TeamDefinition team = TeamCatalog.Teams[Chosen];
+            TeamDefinition team = TeamCatalog.AllTeams[Chosen];
             ClubInfo info = team.Club ?? new ClubInfo();
             _crest.Set(team);
             _name.text = team.Name;
-            _stars.Set(TeamCatalog.Rating(Chosen));
+            _stars.Set(TeamCatalog.RatingAll(Chosen));
             ClubTier tier = BoardExpectations.ParseTier(info.Tier);
             RebuildShown();
             _filter.Label.text = Locale.Get("career.filter") + ": " + Locale.Get("career.filter." + _filterIndex);
             _counter.text = Mathf.Max(1, _shown.IndexOf(Chosen) + 1) + " / " + _shown.Count;
             _tier.text = Locale.Get("career.tier." + (int)tier);
             int size = PrimeraSize;
-            _size.Label.text = size == 0 ? Locale.Get("career.primera_all") : CareerText.Format("career.primera_size", size, TeamCatalog.Teams.Length - size);
-            int division = CareerSession.PreviewDivisions(TeamCatalog.Database, size)[Chosen];
+            _mode.Label.text = Locale.Get(_vintage ? "career.mode.vintage" : "career.mode.classic");
+            _size.Label.text = _vintage ? Locale.Get("career.vintage_split")
+                : size == 0 ? Locale.Get("career.primera_all") : CareerText.Format("career.primera_size", size, TeamCatalog.Teams.Length - size);
+            int division = CareerSession.PreviewDivisions(_vintage ? TeamCatalog.VintageDatabase : TeamCatalog.Database, size)[Chosen];
             _division.text = size == 0 ? Locale.Get("career.division_single") : Locale.Get(division == 1 ? "career.division_primera" : "career.division_b");
             _division.color = division == 1 || size == 0 ? UiTheme.Accent : UiTheme.Warning;
             _stadium.text = string.IsNullOrEmpty(info.City) ? info.Stadium : info.Stadium + " · " + info.City;
@@ -181,7 +194,8 @@ namespace Football.Game
             _home.Set(KitColors.From(team.Home));
             _away.Set(KitColors.From(team.Away));
 
-            List<BoardObjective> objectives = BoardExpectations.Generate(tier, TeamCatalog.Teams.Length, _config.Board);
+            int clubsInDivision = _vintage ? (division == 1 ? size : TeamCatalog.AllTeams.Length - size) : TeamCatalog.Teams.Length;
+            List<BoardObjective> objectives = BoardExpectations.Generate(tier, clubsInDivision, _config.Board);
             for (int i = 0; i < Objectives; i++)
             {
                 BoardObjective o = objectives[i];
@@ -201,9 +215,10 @@ namespace Football.Game
         private void RebuildShown()
         {
             _shown.Clear();
-            for (int i = 0; i < TeamCatalog.Teams.Length; i++)
+            int pool = _vintage ? TeamCatalog.AllTeams.Length : TeamCatalog.Teams.Length; // los clásicos son los primeros de la lista completa
+            for (int i = 0; i < pool; i++)
             {
-                if (FilterTiers[_filterIndex] == null || TeamCatalog.Teams[i].Club?.Tier == FilterTiers[_filterIndex])
+                if (FilterTiers[_filterIndex] == null || TeamCatalog.AllTeams[i].Club?.Tier == FilterTiers[_filterIndex])
                 {
                     _shown.Add(i);
                 }
@@ -229,7 +244,17 @@ namespace Football.Game
             if (_go.Contains(p)) { Host.Request(CareerAction.NewGame); return; }
             if (_prev.Contains(p)) { Step(-1); }
             else if (_next.Contains(p)) { Step(1); }
-            else if (_size.Contains(p))
+            else if (_mode.Contains(p))
+            {
+                _vintage = !_vintage;
+                _sizeIndex = -1;
+                RebuildShown();
+                if (!_shown.Contains(Chosen) && _shown.Count > 0)
+                {
+                    Chosen = _shown[0];
+                }
+            }
+            else if (!_vintage && _size.Contains(p))
             {
                 int[] sizes = Sizes;
                 _sizeIndex = (CurrentIndex() + 1) % sizes.Length;

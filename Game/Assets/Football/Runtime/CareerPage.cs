@@ -122,15 +122,15 @@ namespace Football.Game
         /// <summary>Definición del archivo de equipos para un club (escudo y camisetas), o una mínima si no está.</summary>
         public static TeamDefinition TeamOf(Club club)
         {
-            TeamDefinition found = Array.Find(TeamCatalog.Teams, t => t.Name == club.Name);
+            TeamDefinition found = Array.Find(TeamCatalog.AllTeams, t => t.Name == club.Name);
             return found ?? new TeamDefinition { Name = club.Name, ShortName = club.ShortName };
         }
 
         /// <summary>Media del club en el catálogo (para las estrellas), o 0 si no está.</summary>
         public static float RatingOf(Club club)
         {
-            int i = Array.FindIndex(TeamCatalog.Teams, t => t.Name == club.Name);
-            return i >= 0 ? TeamCatalog.Rating(i) : 0f;
+            int i = Array.FindIndex(TeamCatalog.AllTeams, t => t.Name == club.Name);
+            return i >= 0 ? TeamCatalog.RatingAll(i) : 0f;
         }
     }
 }

@@ -14,7 +14,13 @@ namespace Football.Core.Tests.Career
     {
         private const string UserTeam = "Rosario Central";
 
-        internal static TeamDatabase Argentina()
+        /// <summary>Los 30 clubes del modo clásico (sin los exclusivos de Fútbol vintage).</summary>
+        internal static TeamDatabase Argentina() => CareerSession.PoolFor(ArgentinaAll(), false);
+
+        /// <summary>Los 49 clubes de Fútbol vintage.</summary>
+        internal static TeamDatabase Vintage() => CareerSession.PoolFor(ArgentinaAll(), true);
+
+        private static TeamDatabase ArgentinaAll()
         {
             string dir = AppContext.BaseDirectory;
             while (dir != null && !File.Exists(Path.Combine(dir, "Data", "teams", "argentina.json")))

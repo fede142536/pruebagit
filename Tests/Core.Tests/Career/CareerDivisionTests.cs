@@ -23,6 +23,7 @@ namespace Football.Core.Tests.Career
             int guard = 0;
             do
             {
+                s.Data.Manager.Popularity = 100f; // estas pruebas miden divisiones, no la paciencia de la directiva
                 outcome = s.AdvanceToNextMatch();
                 if (outcome == DayOutcome.UserMatchToday)
                 {

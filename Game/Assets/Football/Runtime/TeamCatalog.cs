@@ -77,8 +77,8 @@ namespace Football.Game
         public const float KitClashDistance = 0.35f;
 
         private const string ResourceName = "teams";
-        private static TeamDefinition[] _teams;
-        private static float[] _ratings;
+        private static TeamDefinition[] _teams, _all;
+        private static float[] _ratings, _allRatings;
 
         /// <summary>Nombres en español de las dificultades de <c>MatchConfig.Difficulties</c>, en el mismo orden.</summary>
         public static readonly string[] DifficultyLabels = { "Principiante", "Amateur", "Profesional", "Mundial", "Leyenda" };
@@ -112,7 +112,50 @@ namespace Football.Game
             }
         }
 
-        /// <summary>Equipos disponibles.</summary>
+        /// <summary>
+        /// Los clubes de «Fútbol vintage» (Primera + Nacional): los 30 del modo clásico, en el mismo orden y con los mismos índices,
+        /// seguidos de los exclusivos de esa modalidad.
+        /// </summary>
+        public static TeamDefinition[] AllTeams
+        {
+            get
+            {
+                if (_all == null)
+                {
+                    Load();
+                }
+
+                return _all;
+            }
+        }
+
+        /// <summary>Archivo de equipos con todos los clubes de «Fútbol vintage».</summary>
+        public static TeamDatabase VintageDatabase
+        {
+            get
+            {
+                TeamDatabase classic = Database;
+                return new TeamDatabase { Source = classic.Source, Updated = classic.Updated, Notes = classic.Notes, Teams = AllTeams, Rivalries = classic.Rivalries };
+            }
+        }
+
+        /// <summary>Media del once de cualquier club de <see cref="AllTeams"/>.</summary>
+        /// <param name="index">Índice en <see cref="AllTeams"/>.</param>
+        public static float RatingAll(int index)
+        {
+            if (_allRatings == null)
+            {
+                _allRatings = new float[AllTeams.Length];
+                for (int i = 0; i < _allRatings.Length; i++)
+                {
+                    _allRatings[i] = TeamBuilder.LineupRating(AllTeams[i]);
+                }
+            }
+
+            return _allRatings[index];
+        }
+
+        /// <summary>Equipos disponibles (el modo clásico de 30 clubes, los amistosos y el Torneo).</summary>
         public static TeamDefinition[] Teams
         {
             get
@@ -187,8 +230,14 @@ namespace Football.Game
 
                     if (valid.Count >= 2)
                     {
-                        _teams = valid.ToArray();
-                        _database = new TeamDatabase { Teams = _teams, Rivalries = db.Rivalries ?? Array.Empty<RivalryDefinition>() };
+                        _all = valid.ToArray();
+                        _teams = valid.FindAll(t => !t.VintageOnly).ToArray(); // los exclusivos de Fútbol vintage van al final del archivo
+                        if (_teams.Length < 2)
+                        {
+                            _teams = _all;
+                        }
+
+                        _database = new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Teams = _teams, Rivalries = db.Rivalries ?? Array.Empty<RivalryDefinition>() };
                         return;
                     }
 
@@ -206,6 +255,7 @@ namespace Football.Game
             }
 
             _teams = new[] { Fictional("Halcones del Sur", "#C62828", "Possession"), Fictional("Real Montaña", "#F5F5F5", "Defensive") };
+            _all = _teams;
         }
 
         private static TeamDefinition Fictional(string name, string color, string style)
