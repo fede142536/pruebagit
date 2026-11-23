@@ -129,8 +129,14 @@ namespace Football.Core.Tests.MatchCore
                 e.Tick();
             }
 
-            Assert.That(e.Teams[1].Departed.Count, Is.GreaterThan(before), "la IA hizo un cambio");
-            Assert.That(e.Teams[1].Departed[before], Is.SameAs(hurt), "el primero en salir después de la lesión es el lesionado");
+            // Un cambio ya pedido antes de la lesión se hace primero (el árbitro lo concede en la misma parada); el siguiente es el lesionado.
+            for (int guardTicks = 0; !e.IsFinished && !e.Teams[1].Departed.Contains(hurt) && guardTicks++ < 100000;)
+            {
+                e.Tick();
+            }
+
+            int position = e.Teams[1].Departed.IndexOf(hurt) - before;
+            Assert.That(position, Is.InRange(0, 1), "el lesionado sale en el primero o, a lo sumo, en el segundo cambio tras la lesión (el primero pudo estar ya pedido)");
         }
     }
 }

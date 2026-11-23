@@ -96,6 +96,23 @@ namespace Football.Core.MatchCore
         Injury
     }
 
+    /// <summary>Por qué terminó una parte (para el informe y las pruebas).</summary>
+    public enum HalfEndReason
+    {
+        /// <summary>La parte todavía no terminó.</summary>
+        None,
+        /// <summary>Se cumplió el tiempo y el balón salió del campo (lateral o saque de arco): la jugada había culminado.</summary>
+        BallOut,
+        /// <summary>Se cumplió el tiempo y la parte terminó después de un gol (la jugada de gol se jugó hasta el final).</summary>
+        Goal,
+        /// <summary>Un córner o un tiro libre se dejó jugar y ya pasó el margen de tolerancia.</summary>
+        SetPieceCap,
+        /// <summary>Pasado el margen, el juego estaba lejos de las dos áreas (no había una jugada de gol): se cortó.</summary>
+        PlayOver,
+        /// <summary>Seguro: el juego seguido pasó el máximo de tolerancia sin parar.</summary>
+        Safety
+    }
+
     /// <summary>Evento registrado durante el partido.</summary>
     public struct MatchEvent
     {

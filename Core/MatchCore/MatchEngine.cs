@@ -69,6 +69,71 @@ namespace Football.Core.MatchCore
         /// <summary>Cuánto se acelera el desgaste por segundo real para que dependa de los minutos de partido y no de la duración elegida.</summary>
         public float FatigueScale => Config.Rules.FatigueReferenceHalf / Config.Rules.HalfDuration * Config.Rules.FatigueFactor;
 
+        /// <summary>Por qué terminó la última parte.</summary>
+        public HalfEndReason LastHalfEndReason { get; private set; }
+
+        /// <summary>
+        /// Pasado el tiempo agregado, ¿la jugada ya culminó? Sí si el balón salió (lateral o saque de arco) o si se va a sacar del
+        /// medio tras un gol (la pausa del gol se juega entera: festejo incluido). No mientras el balón está en juego, ni durante un
+        /// penal (<see cref="PenaltyPending"/> lo cubre), ni con un córner o tiro libre por ejecutarse, que se dejan jugar un rato.
+        /// </summary>
+        private bool CanEndHalf(float overtime)
+        {
+            RulesConfig r = Config.Rules;
+            float perMinute = r.HalfDuration / r.MinutesPerHalf;
+            switch (Phase)
+            {
+                case MatchPhase.GoalPause:
+                    return false; // el gol ya está hecho: se deja terminar su pausa y la parte cierra en el saque del medio
+                case MatchPhase.SetPiece:
+                    RestartKind kind = _restart.Kind;
+                    if (kind == RestartKind.KickOff)
+                    {
+                        LastHalfEndReason = HalfEndReason.Goal;
+                        return true;
+                    }
+
+                    if (kind == RestartKind.ThrowIn || kind == RestartKind.GoalKick)
+                    {
+                        LastHalfEndReason = HalfEndReason.BallOut;
+                        return true;
+                    }
+
+                    if (overtime >= r.EndPlayHardMinutes * perMinute)
+                    {
+                        LastHalfEndReason = HalfEndReason.SetPieceCap;
+                        return true; // un córner o tiro libre se deja jugar, pero no eternamente
+                    }
+
+                    return false;
+                default:
+                    if (overtime >= r.EndPlayHardMinutes * perMinute)
+                    {
+                        LastHalfEndReason = HalfEndReason.Safety;
+                        return true;
+                    }
+
+                    if (overtime >= r.EndPlaySoftMinutes * perMinute && !GoalChanceInProgress())
+                    {
+                        LastHalfEndReason = HalfEndReason.PlayOver;
+                        return true;
+                    }
+
+                    return false;
+            }
+        }
+
+        /// <summary>Hay una jugada de gol: un tiro en el aire o el balón cerca de un área.</summary>
+        private bool GoalChanceInProgress()
+        {
+            if (_shotLive)
+            {
+                return true;
+            }
+
+            return MathF.Abs(Ball.Pos.X) > Pitch.HalfLength * (1f - Config.Rules.DangerZoneFraction);
+        }
+
         private float _stoppage;       // minutos que sumaron los hechos de la parte
         private bool _addedDecided;
         private int _addedMinutes;
@@ -216,8 +281,9 @@ namespace Football.Core.MatchCore
                         _addedDecided = true;
                     }
 
+                    // Cumplido el tiempo agregado la parte termina cuando la jugada culmina (no se corta una jugada de gol).
                     float end = Config.Rules.HalfDuration * (1f + _addedMinutes / Config.Rules.MinutesPerHalf);
-                    if (HalfElapsed >= end && !PenaltyPending())
+                    if (HalfElapsed >= end && !PenaltyPending() && CanEndHalf(HalfElapsed - end))
                     {
                         EndHalf();
                     }

@@ -49,10 +49,13 @@ namespace Football.Core.Tests.MatchCore
 
             float perHalf = e.Config.Rules.MinutesPerHalf;
             Assert.That(maxFirst, Is.GreaterThan(perHalf), "la primera parte pasó los 45 antes del descanso");
-            Assert.That(maxFirst, Is.LessThanOrEqualTo(perHalf + e.FirstHalfAdded + 0.05f));
+            float tolerance = e.Config.Rules.EndPlayHardMinutes + 0.05f; // la jugada en curso se termina de jugar
+            Assert.That(maxFirst, Is.GreaterThanOrEqualTo(perHalf + e.FirstHalfAdded - 0.05f), "se juega todo el tiempo agregado");
+            Assert.That(maxFirst, Is.LessThanOrEqualTo(perHalf + e.FirstHalfAdded + tolerance));
             Assert.That(e.Minute, Is.GreaterThan(2f * perHalf), "el partido terminó pasados los 90");
-            Assert.That(e.Minute, Is.LessThanOrEqualTo(2f * perHalf + e.AddedMinutes + 0.05f));
-            Assert.That(e.PlayedMinute, Is.EqualTo(2f * perHalf + e.FirstHalfAdded + e.AddedMinutes).Within(0.1f), "minutos jugados en total");
+            Assert.That(e.Minute, Is.GreaterThanOrEqualTo(2f * perHalf + e.AddedMinutes - 0.05f));
+            Assert.That(e.Minute, Is.LessThanOrEqualTo(2f * perHalf + e.AddedMinutes + tolerance));
+            Assert.That(e.PlayedMinute, Is.GreaterThanOrEqualTo(2f * perHalf + e.FirstHalfAdded + e.AddedMinutes - 0.1f), "minutos jugados en total");
         }
 
         [Test]
@@ -123,6 +126,40 @@ namespace Football.Core.Tests.MatchCore
 
             Assert.That(waited, Is.GreaterThan(e.Config.TickRate), "hubo espera real antes del saque");
             Assert.That(e.HalfElapsed, Is.GreaterThan(0f), "después del saque el reloj corre");
+        }
+
+        [Test]
+        public void AfterTheAddedTime_TheHalfEndsOnlyWhenThePlayHasFinished()
+        {
+            int halves = 0, goalEnds = 0, safetyEnds = 0;
+            for (ulong seed = 1; seed <= 14; seed++)
+            {
+                MatchEngine e = MatchEngineTests.NewEngine(seed);
+                int lastHalf = 1;
+                bool lastFinished = false;
+                float perMinute = e.Config.Rules.HalfDuration / e.Config.Rules.MinutesPerHalf;
+                int guard = 0;
+                while (!e.IsFinished && guard++ < 200000)
+                {
+                    e.Tick();
+                    bool ended = e.Half != lastHalf || (e.IsFinished && !lastFinished);
+                    lastHalf = e.Half;
+                    lastFinished = e.IsFinished;
+                    if (!ended)
+                    {
+                        continue;
+                    }
+
+                    halves++;
+                    Assert.That(e.LastHalfEndReason, Is.Not.EqualTo(HalfEndReason.None), "semilla " + seed);
+                    goalEnds += e.LastHalfEndReason == HalfEndReason.Goal ? 1 : 0;
+                    safetyEnds += e.LastHalfEndReason == HalfEndReason.Safety ? 1 : 0;
+                }
+            }
+
+            Assert.That(halves, Is.EqualTo(28));
+            Assert.That(safetyEnds, Is.LessThanOrEqualTo(2), "casi siempre la parte termina con el balón parado, no por el seguro");
+            Assert.That(goalEnds, Is.LessThanOrEqualTo(halves), "los goles en el descuento cierran la parte después de su pausa");
         }
     }
 }

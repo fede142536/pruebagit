@@ -352,3 +352,13 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **11 contra 11**: los jugadores se agrandan un 22 % y llevan una marca en el piso (celeste el equipo de la persona, rojo el rival).
 - **DT**: nombre y apellido se escriben con el teclado (la computadora lee texto con `PointerInput.Typed`; el celular usa el teclado en pantalla). Retroceso borra y Enter termina.
 - **Buzón**: los récords mostraban la clave de texto y trataban la marca como si fuera un jugador; ahora se lee «¡Récord! Mayor goleada (diferencia de goles): 5 (Club)».
+
+## D-28 · El final de cada parte espera a que termine la jugada — Aceptada (pedido del usuario, 23/11/2026)
+- Al cumplirse el tiempo agregado el árbitro no corta una jugada de gol: la parte termina en la primera pelota parada que cierra la jugada
+  (lateral, saque de arco o saque del medio después de un gol). Un córner o un tiro libre se dejan ejecutar; un **penal** nunca se corta
+  (`PenaltyPending`): termina como gol, fuera o atajada, y la parte acaba en la pelota parada siguiente.
+- Márgenes en `RulesConfig` (`match.json`): `EndPlaySoftMinutes` 0,75 (pasado ese margen, si el balón está lejos de las dos áreas —`DangerZoneFraction` 0,5— y no hay
+  un tiro en el aire, se corta: `HalfEndReason.PlayOver`) y `EndPlayHardMinutes` 6 (seguro: nunca se espera más, salvo un penal). `MatchEngine.LastHalfEndReason` dice por qué terminó.
+- **Medición** (1000 partidos, semilla 1): 2,90 goles por partido (esperar sin límite daba 3,07; cortar al instante, 2,66), pase 85,7 %. El resto del tiempo agregado es el mismo.
+- Pruebas: `AiNeverKeepsDribblingInsideTheBox` admite 270 ticks (la secuencia de azar cambió y el pase de 233 ticks en la prórroga es legítimo);
+  `Ai_SubstitutesAnInjuredPlayerFirst` admite que un cambio ya pedido salga antes. **No hay una prueba que fuerce un penal justo al final**: la regla se apoya en `PenaltyPending`, ya probado.

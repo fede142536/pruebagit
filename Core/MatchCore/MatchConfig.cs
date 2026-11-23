@@ -320,6 +320,16 @@ namespace Football.Core.MatchCore
         public float StoppagePerYellowCard = 0.25f;
         /// <summary>Minutos que suma cada penal (ejecución y reclamos).</summary>
         public float StoppagePerPenalty = 1f;
+        /// <summary>
+        /// Pasado el tiempo agregado, la jugada en curso se deja terminar. Los laterales y saques de arco cortan enseguida. Si el juego
+        /// sigue después de estos minutos de partido y el balón está lejos de las dos áreas, se corta; con una jugada de gol (balón
+        /// cerca de un área, tiro en el aire, córner o tiro libre) se espera.
+        /// </summary>
+        public float EndPlaySoftMinutes = 0.75f;
+        /// <summary>Seguro: si una jugada de gol sigue sin terminar pasados estos minutos de partido, la parte termina igual (nunca con un penal).</summary>
+        public float EndPlayHardMinutes = 6f;
+        /// <summary>Un balón a menos de esta fracción de la mitad del largo de la cancha de un arco (0,5 ≈ 26 m en 105 m) es una jugada de gol.</summary>
+        public float DangerZoneFraction = 0.5f;
         /// <summary>Mínimo de minutos agregados que se anuncian al final de cada parte.</summary>
         public int MinAddedMinutes = 1;
         /// <summary>Máximo de minutos agregados.</summary>

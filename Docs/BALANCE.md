@@ -402,3 +402,7 @@ la elasticidad y los objetivos de la directiva con esos datos.
 - **Por medir:** varias temporadas completas con 30 clubes (reparto de puntos, descensos por promedios, ocupación de los estadios
   chicos como Riestra con 8.740 lugares) y si 2 descensos sobre 30 clubes es el castigo adecuado.
 
+
+## 11. Fin de parte con la jugada terminada (23/11/2026)
+1000 partidos, semilla 1: sin esperar (corte inmediato) 2,66 goles; esperando cualquier parada 3,07 (la prórroga es rica en goles: 39 goles en 300 partes con la
+tolerancia larga); con `EndPlaySoftMinutes` 0,75, `DangerZoneFraction` 0,5 y `EndPlayHardMinutes` 6: **2,90**, pase 85,7 %. Ver D-28.

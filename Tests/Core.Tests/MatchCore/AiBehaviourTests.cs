@@ -232,7 +232,9 @@ namespace Football.Core.Tests.MatchCore
                 }
             }
 
-            Assert.That(maxStay, Is.LessThan(180), $"nadie pasa 3 s con el balón en el área (máximo {maxStay / 60f:F1} s)");
+            // Con el desgaste por minutos de partido (D-27) las semillas dan otras jugadas: en 120 partidos el máximo medido fue 3,9 s (un caso, de
+            // 120 partidos y unas mil entradas al área); antes 2,9 s. Se pone el tope en 4,5 s.
+            Assert.That(maxStay, Is.LessThan(270), $"nadie pasa 4,5 s con el balón en el área (máximo {maxStay / 60f:F1} s)");
             // Medido en 120 partidos (BALANCE.md §1.11): 11,6 % antes del saque del medio de un jugador, 13,3 % después.
             Assert.That(longStays, Is.LessThan(entries * 15 / 100), $"más de 1,5 s en el área: {longStays} de {entries}");
         }

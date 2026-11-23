@@ -594,7 +594,7 @@ namespace Football.Game
             UpdateHint(deltaTime, input);
             _debug.Frame(deltaTime, steps);
 
-            if (_engine.IsFinished)
+            if (_engine.IsFinished && _celebrationTimer <= 0f)
             {
                 _endTimer += deltaTime;
                 if (_endTimer >= EndDelaySeconds)
