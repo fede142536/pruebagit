@@ -270,6 +270,17 @@ namespace Football.Game
             return inside;
         }
 
+        /// <summary>Contorno de 1,5 unidades en el borde de un elemento (dentro de su rectángulo).</summary>
+        private static void Outline(Transform parent, Vector2 size)
+        {
+            const float t = 2f;
+            Color line = UiTheme.Line;
+            Panel(parent, "BordeN", new Vector2(size.x * 0.5f, size.y - t * 0.5f), new Vector2(size.x, t), line);
+            Panel(parent, "BordeS", new Vector2(size.x * 0.5f, t * 0.5f), new Vector2(size.x, t), line);
+            Panel(parent, "BordeO", new Vector2(t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line);
+            Panel(parent, "BordeE", new Vector2(size.x - t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line);
+        }
+
         /// <summary>Crea un panel o círculo coloreado anclado abajo a la izquierda.</summary>
         public static Image Panel(Transform parent, string name, Vector2 center, Vector2 size, Color color, bool circle = false)
         {
@@ -322,6 +333,11 @@ namespace Football.Game
         {
             Image background = Panel(parent, name, center, size, color, circle);
             Text label = Label(background.transform, "Label", size * 0.5f, size, text, fontSize, Color.white);
+            if (!circle && color == UiTheme.Button)
+            {
+                Outline(background.transform, size); // los botones secundarios del manual: contorno fino, fondo casi vacío
+            }
+
             var button = new UiButton(background.gameObject, background, label, circle);
             button.Place(center, size);
             return button;

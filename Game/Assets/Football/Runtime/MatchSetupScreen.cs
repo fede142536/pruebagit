@@ -262,7 +262,7 @@ namespace Football.Game
         {
             Title("FINAL DEL PARTIDO");
             _score = UiKit.Label(Root, "Marcador", new Vector2(960f, 840f), new Vector2(1700f, 110f), string.Empty, 68, UiTheme.Text);
-            Image panel = UiKit.Panel(Root, "Estadisticas", new Vector2(960f, 480f), new Vector2(1300f, 520f), UiTheme.Panel);
+            Image panel = UiTheme.Frame(Root, "Estadisticas", new Vector2(960f, 480f), new Vector2(1300f, 520f));
             _body = UiKit.Label(panel.transform, "Texto", new Vector2(650f, 260f), new Vector2(1240f, 500f), string.Empty, 34, UiTheme.Text);
             _again = UiKit.Button(Root, "Otra", new Vector2(640f, 110f), new Vector2(520f, 110f), "REVANCHA", 44, UiTheme.AccentDark);
             _menu = UiKit.Button(Root, "Menu", new Vector2(1280f, 110f), new Vector2(520f, 110f), MenuLabel, 44, UiTheme.Button);

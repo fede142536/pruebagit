@@ -63,6 +63,7 @@ namespace Football.Game
         private const float ScrollSpeed = 9f, SwipeDistance = 60f, DotsY = 130f;
         private readonly Image[] _tagBack = new Image[ClubTags];
         private readonly Text[] _tagText = new Text[ClubTags];
+        private Image _shadow;
         private readonly Image[] _edge = new Image[Entries.Length], _fill = new Image[Entries.Length], _dot = new Image[Entries.Length];
         private readonly Text[] _number = new Text[Entries.Length], _title = new Text[Entries.Length], _desc = new Text[Entries.Length];
         private readonly UiButton _action;
@@ -94,6 +95,7 @@ namespace Football.Game
                 _tagText[i] = UiKit.Label(Root, "TextoClub" + i, center, new Vector2(116f, 46f), string.Empty, 22, i == 1 ? ButtonText : Ink);
             }
 
+            _shadow = UiKit.Panel(Root, "SombraModo", new Vector2(960f, CardY), new Vector2(BigW, BigH), Accent); // sombra sólida de la tarjeta elegida (manual de diseño)
             for (int i = 0; i < Entries.Length; i++)
             {
                 _edge[i] = UiKit.Panel(Root, "BordeModo" + i, new Vector2(960f, CardY), new Vector2(SmallW, SmallH), Line);
@@ -217,6 +219,15 @@ namespace Football.Game
                 _desc[i].rectTransform.sizeDelta = new Vector2(w - 2f * Pad, 170f);
                 _desc[i].gameObject.SetActive(near > 0.85f);
             }
+
+            PlaceShadow();
+        }
+
+        private void PlaceShadow()
+        {
+            RectTransform card = _edge[_selected].rectTransform;
+            const float offset = 8f;
+            Place(_shadow, card.anchoredPosition + new Vector2(offset, -offset), card.sizeDelta);
         }
 
         private static void Place(Image image, Vector2 center, Vector2 size)

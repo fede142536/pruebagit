@@ -32,7 +32,7 @@ namespace Football.Game
         private int _sizeIndex = -1;
         private readonly Text _name, _league, _tier, _founded, _history, _budget, _value, _stadium, _capacity;
         private readonly Text[] _priority = new Text[Objectives], _objective = new Text[Objectives], _target = new Text[Objectives];
-        private readonly Image[] _badge = new Image[Objectives];
+        private readonly Image[] _badge = new Image[Objectives], _badgeEdge = new Image[Objectives];
         private readonly KitPreview _home, _away;
         private CareerConfig _config = new CareerConfig();
 
@@ -131,7 +131,9 @@ namespace Football.Game
             for (int i = 0; i < Objectives; i++)
             {
                 float y = 790f - i * RowStep;
-                _badge[i] = UiKit.Panel(p, "Prioridad" + i, new Vector2(745f, y), new Vector2(160f, 56f), UiTheme.Button);
+                // Etiqueta de prioridad: solo contorno (nunca relleno), como en el manual.
+                _badgeEdge[i] = UiKit.Panel(p, "PrioridadBorde" + i, new Vector2(745f, y), new Vector2(160f, 56f), UiTheme.Line);
+                _badge[i] = UiKit.Panel(p, "Prioridad" + i, new Vector2(745f, y), new Vector2(156f, 52f), new Color(0.04f, 0.075f, 0.06f, 1f));
                 _priority[i] = UiKit.Label(p, "PrioridadTexto" + i, new Vector2(745f, y), new Vector2(160f, 56f), string.Empty, 22, Color.white);
                 _objective[i] = UiKit.Label(p, "Objetivo" + i, new Vector2(1035f, y + 16f), new Vector2(400f, 36f), string.Empty, 24, UiTheme.Text, TextAnchor.MiddleLeft);
                 _target[i] = UiKit.Label(p, "Meta" + i, new Vector2(1035f, y - 20f), new Vector2(400f, 34f), string.Empty, 19, UiTheme.TextDim, TextAnchor.MiddleLeft);
@@ -199,7 +201,8 @@ namespace Football.Game
             for (int i = 0; i < Objectives; i++)
             {
                 BoardObjective o = objectives[i];
-                _badge[i].color = BoardText.PriorityColor(o.Priority);
+                _badgeEdge[i].color = BoardText.PriorityColor(o.Priority);
+                _priority[i].color = BoardText.PriorityColor(o.Priority);
                 _priority[i].text = BoardText.Priority(o.Priority);
                 _objective[i].text = BoardText.Category(o.Category);
                 _target[i].text = BoardText.Target(o, _config);

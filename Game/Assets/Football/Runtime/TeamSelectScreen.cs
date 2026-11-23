@@ -117,7 +117,7 @@ namespace Football.Game
             }
 
             // Panel derecho: escudo grande, nombre, estrellas, camisetas CASA / VISITANTE y jugador 3D.
-            UiKit.Panel(Root, "Panel", new Vector2(1390f, 520f), new Vector2(940f, 820f), UiTheme.Panel);
+            UiTheme.Frame(Root, "Panel", new Vector2(1390f, 520f), new Vector2(940f, 820f));
             _bigCrest = new ClubCrest(Root, new Vector2(1060f, 800f), 210f);
             _name = UiKit.Label(Root, "Nombre", new Vector2(1430f, 850f), new Vector2(560f, 70f), string.Empty, 42, UiTheme.Text, TextAnchor.MiddleLeft);
             _stars = new StarRating(Root, new Vector2(1280f, 785f));

@@ -13,7 +13,7 @@ namespace Football.Game
     public static class BoardText
     {
         private static readonly Color[] PriorityColors =
-            { StatusColors.Bad, UiTheme.Warning, StatusColors.Fair, new Color(0.35f, 0.45f, 0.55f) };
+            { UiTheme.Danger, UiTheme.Amber, UiTheme.Amber, UiTheme.TextDim };
 
         /// <summary>«1 CRÍTICA», «2 ALTA», «3 MEDIA» o «4 BAJA».</summary>
         public static string Priority(ObjectivePriority p) => CareerText.Num((int)p) + " " + Locale.Get("priority." + (int)p);

@@ -29,6 +29,8 @@ namespace Football.Game
         public static readonly Color Line = new Color(0.239f, 0.318f, 0.282f);
         /// <summary>Acento claro para elementos activos y títulos.</summary>
         public static readonly Color AccentStrong = new Color(0.663f, 0.925f, 0.780f);
+        /// <summary>Ámbar del manual: alerta, prioridad alta o media, contrato por vencer.</summary>
+        public static readonly Color Amber = new Color(0.878f, 0.69f, 0.29f);
         /// <summary>Peligro (salir, descartar).</summary>
         public static readonly Color Danger = new Color(0.878f, 0.408f, 0.353f);
         /// <summary>Aviso.</summary>
@@ -53,10 +55,13 @@ namespace Football.Game
             UiKit.Panel(parent, name + "Borde", center, size, Line);
             Image fill = UiKit.Panel(parent, name, center, size - new Vector2(2f * FrameBorder, 2f * FrameBorder), Panel);
             Vector2 half = size * 0.5f;
+            var mark = new Color(AccentText.r, AccentText.g, AccentText.b, 0.85f);
             for (int i = 0; i < 4; i++)
             {
-                var corner = new Vector2(i % 2 == 0 ? -half.x : half.x, i < 2 ? half.y : -half.y);
-                UiKit.Panel(parent, name + "Esquina" + i, center + corner, new Vector2(CornerSize, CornerSize), Accent);
+                // Marca «+» en cada esquina, como en el manual de diseño.
+                var corner = center + new Vector2(i % 2 == 0 ? -half.x : half.x, i < 2 ? half.y : -half.y);
+                UiKit.Panel(parent, name + "MarcaH" + i, corner, new Vector2(CornerSize * 1.6f, 2f), mark);
+                UiKit.Panel(parent, name + "MarcaV" + i, corner, new Vector2(2f, CornerSize * 1.6f), mark);
             }
 
             return fill;

@@ -53,7 +53,7 @@ namespace Football.Game
         private const int Sections = 5;
         private const int MaxContractYears = 5; // igual que CareerConfig.MaxContractYears
         // Menú de secciones arriba (junto a Guardar y Salir); abajo quedan solo la cabecera del club y la línea de estado.
-        private const float BarY = 1035f, BarHeight = 56f, BarStep = 262f, BarLeft = 40f;
+        private const float BarY = 1030f, BarHeight = 84f, BarStep = 262f, BarLeft = 40f;
         private const float HeaderY = 24f, StatusY = 62f, StartStatusY = 175f;
         // Plantilla y Mercado se diseñaron para toda la pantalla: se achican para dejar lugar a la cabecera y la barra.
         private const float SectionScale = 0.885f;
@@ -156,9 +156,9 @@ namespace Football.Game
             _newsTemplates = LoadNews();
             _header = UiKit.Label(Root, "Cabecera", new Vector2(700f, HeaderY), new Vector2(1300f, 36f), string.Empty, 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
             _status = UiKit.Label(Root, "Estado", new Vector2(960f, StatusY), new Vector2(1800f, 36f), string.Empty, 22, UiTheme.Accent);
-            _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1035f), new Vector2(160f, 54f), Locale.Get("career.save"), 22, UiTheme.Accent);
+            _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1030f), new Vector2(160f, 76f), Locale.Get("career.save"), 22, UiTheme.Accent);
             _save.Label.color = UiTheme.OnAccent; // GUARDAR relleno de acento con texto oscuro; SALIR con borde (barra del diseño)
-            _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1035f), new Vector2(150f, 54f), Locale.Get("career.exit"), 22, UiTheme.Button);
+            _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1030f), new Vector2(150f, 76f), Locale.Get("career.exit"), 22, UiTheme.Button);
 
             _hub = new CareerHubScreen(Root, this);
             _squadPanel = SectionGroup("Plantilla");
