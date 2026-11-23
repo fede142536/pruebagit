@@ -444,3 +444,7 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **Buscador por nombre** en el mercado: se escribe con el teclado (físico o en pantalla), sin importar mayúsculas ni tildes, y la lista se actualiza mientras se tipea.
 - **Guardado**: archivo de la partida versión 5 y migración 12 de SQLite (`division` por club y `primera_size`); las partidas viejas cargan con una sola división.
 - Sin verificar en Unity: pantallas de contratos y de elección de cantidad de clubes, buscador y firma de libres.
+
+## D-38 · El pie llega al balón al patear — Aceptada (pedido del usuario, 23/11/2026)
+- El motor suelta el balón en el primer instante del golpeo, pero la animación de tiro dedicaba el 40 % (0,18 s) a armar la pierna: el balón salía antes de que el pie llegara. Ahora el armado dura el 12 % (≈ 0,05 s) y el pase alcanza su punto de contacto al 15 %.
+  Es solo visual (el motor no cambia). Sin verificar en Unity. La sincronización fina requiere animaciones de captura de movimiento con un instante de contacto marcado (pendiente del pack de animaciones).

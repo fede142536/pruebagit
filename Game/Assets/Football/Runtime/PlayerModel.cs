@@ -83,7 +83,10 @@ namespace Football.Game
         private const float KickDuration = 0.32f;
         private const float TackleLean = -68f;
         private const float ShotDuration = 0.45f;
-        private const float ShotWindUp = 0.4f;        // fracción del tiro dedicada al armado
+        // El motor suelta el balón en el primer instante del golpeo: el pie tiene que estar en el balón casi enseguida, así que el armado es cortísimo
+        // (antes duraba 0,18 s y el balón salía antes de que la pierna llegara).
+        private const float ShotWindUp = 0.12f;       // fracción del tiro dedicada al armado
+        private const float PassContact = 0.15f;      // fracción del pase en que el pie toca el balón
         private const float ShotBackSwing = 45f;
         private const float ShotFollowThrough = 105f;
         private const float ShotKneeBend = 80f;
@@ -474,7 +477,7 @@ namespace Football.Game
                 else
                 {
                     // Pase: la cadera se abre y la pierna golpea con el interior (más corto que el tiro).
-                    float hit = Mathf.Sin(u * Mathf.PI);
+                    float hit = u < PassContact ? Mathf.SmoothStep(0f, 1f, u / PassContact) : 1f - Mathf.SmoothStep(0f, 1f, (u - PassContact) / (1f - PassContact));
                     legR = -PassSwing * hit + 15f * (1f - u);
                     kneeR = 20f * hit;
                     legOut = _strike == PlayerAction.Pass ? PassHipOpen * hit : 0f;
