@@ -23,6 +23,7 @@ namespace Football.Game
         private const string MasterKey = "football.vol.master";
         private const string StadiumKey = "football.vol.stadium";
         private const string EffectsKey = "football.vol.effects";
+        private const string MusicKey = "football.vol.music";
         private const string ResolutionKey = "football.resolution";
         private const string FixedJoystickKey = "football.fixedjoystick";
         private const string OpacityKey = "football.opacity";
@@ -72,6 +73,8 @@ namespace Football.Game
         public int MasterVolume = 4;
         /// <summary>Volumen del ambiente de estadio (hinchada).</summary>
         public int StadiumVolume = 3;
+        /// <summary>Volumen de la música de los menús.</summary>
+        public int MusicVolume = 3;
         /// <summary>Volumen de los efectos (balón, silbato, red, palo).</summary>
         public int EffectsVolume = 4;
         /// <summary>Escala de resolución: 0 la del perfil gráfico, 1 75 %, 2 100 %.</summary>
@@ -142,6 +145,7 @@ namespace Football.Game
                 Quality = Mathf.Clamp(PlayerPrefs.GetInt(QualityKey, 1), 0, QualityLabels.Length - 1),
                 MasterVolume = Mathf.Clamp(PlayerPrefs.GetInt(MasterKey, 4), 0, 4),
                 StadiumVolume = Mathf.Clamp(PlayerPrefs.GetInt(StadiumKey, 3), 0, 4),
+                MusicVolume = Mathf.Clamp(PlayerPrefs.GetInt(MusicKey, 3), 0, 4),
                 EffectsVolume = Mathf.Clamp(PlayerPrefs.GetInt(EffectsKey, 4), 0, 4),
                 Resolution = Mathf.Clamp(PlayerPrefs.GetInt(ResolutionKey, 0), 0, 2),
                 FixedJoystick = PlayerPrefs.GetInt(FixedJoystickKey, 0) == 1,
@@ -180,6 +184,7 @@ namespace Football.Game
             PlayerPrefs.SetInt(QualityKey, Quality);
             PlayerPrefs.SetInt(MasterKey, MasterVolume);
             PlayerPrefs.SetInt(StadiumKey, StadiumVolume);
+            PlayerPrefs.SetInt(MusicKey, MusicVolume);
             PlayerPrefs.SetInt(EffectsKey, EffectsVolume);
             PlayerPrefs.SetInt(ResolutionKey, Resolution);
             PlayerPrefs.SetInt(FixedJoystickKey, FixedJoystick ? 1 : 0);

@@ -362,3 +362,14 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **Medición** (1000 partidos, semilla 1): 2,90 goles por partido (esperar sin límite daba 3,07; cortar al instante, 2,66), pase 85,7 %. El resto del tiempo agregado es el mismo.
 - Pruebas: `AiNeverKeepsDribblingInsideTheBox` admite 270 ticks (la secuencia de azar cambió y el pase de 233 ticks en la prórroga es legítimo);
   `Ai_SubstitutesAnInjuredPlayerFirst` admite que un cambio ya pedido salga antes. **No hay una prueba que fuerce un penal justo al final**: la regla se apoya en `PenaltyPending`, ya probado.
+
+## D-29 · Audio real de hinchada y música, cancha táctica y jugador más humano — Aceptada (pedido del usuario, 23/11/2026)
+- **Audio**: la hinchada de fondo, el grito de gol y los cánticos de Boca son archivos de `Resources/Audio` (registrados en `ASSETS_LICENSES.md`); se conserva el murmullo
+  sintético solo como respaldo si falta el archivo. Los cánticos de Boca suenan a tramos de 18–34 s desde un punto al azar del archivo, con 12–40 s de silencio, solo si el
+  equipo local es «Boca Juniors». La música de los menús (nuevo ajuste «MÚSICA DE LOS MENÚS») suena en todo menos en el partido, **pausa incluida**, con fundido. El azar del audio es
+  de presentación (semilla por reloj), no de juego.
+- **Táctica**: «PLANTEL Y TÁCTICA» dibuja una cancha con cada jugador en su puesto de la formación (sigue la formación, los intercambios y los cambios). Tocar un punto equivale a tocar su fila.
+- **Jugador**: hombros y brazos más juntos al torso (huesos de hombro a ±0,235 m, antes ±0,26), manga con hombro redondeado, muslos y pantorrillas más gruesos, tronco con pendiente de trapecio,
+  cuello de la camiseta y 14 lados en el tronco. LOD0 2.540–2.870 triángulos (antes 2.450–2.790).
+- **Aviso «EL PARTIDO DEJÓ DE AVANZAR»**: se quedaba pegado aunque el partido siguiera; ahora se retira apenas deja de cumplirse la condición.
+- `Tools/SkinCheck --ply ruta [lod]` vuelca la malla con colores para mirarla fuera de Unity.

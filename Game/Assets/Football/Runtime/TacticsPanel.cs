@@ -14,19 +14,35 @@ namespace Football.Game
     {
         private const int MaxRows = 11;
         private const int MaxBench = 12;
-        private const float FieldX = 560f;
-        private const float BenchX = 1360f;
+        private const float FieldX = 330f;
+        private const float BenchX = 1590f;
+        private const float RowWidth = 540f;
+        private const float PitchCenterX = 960f;
+        private const float PitchCenterY = 465f;
+        private const float PitchWidth = 420f;
+        private const float PitchHeight = 620f;
+        private const float PitchMargin = 0.9f;     // las bandas y las líneas de fondo no se usan: los puntos quedan dentro
+        private const float DotSize = 54f;
+        private const float LineWidth = 3f;
         private const float RowTop = 760f;
         private const float RowStep = 56f;
 
         private static readonly Color RowColor = new Color(0.16f, 0.18f, 0.24f, 0.95f);
         private static readonly Color Selected = new Color(0.12f, 0.42f, 0.38f, 0.95f);
         private static readonly Color Pending = new Color(0.45f, 0.35f, 0.1f, 0.95f);
+        private static readonly Color PitchColor = new Color(0.10f, 0.36f, 0.16f, 1f);
+        private static readonly Color LineTint = new Color(1f, 1f, 1f, 0.55f);
+        private static readonly Color KeeperDot = new Color(0.85f, 0.65f, 0.10f, 1f);
+        private static readonly Color DefenderDot = new Color(0.18f, 0.40f, 0.80f, 1f);
+        private static readonly Color MidfielderDot = new Color(0.20f, 0.62f, 0.55f, 1f);
+        private static readonly Color AttackerDot = new Color(0.80f, 0.25f, 0.22f, 1f);
         private static readonly Color Unavailable = new Color(0.12f, 0.12f, 0.14f, 0.9f);
 
         private readonly GameObject _root;
         private readonly UiButton[] _field = new UiButton[MaxRows];
         private readonly UiButton[] _bench = new UiButton[MaxBench];
+        private readonly UiButton[] _dots = new UiButton[MaxRows];     // los mismos jugadores sobre la cancha, en su puesto de la formación
+        private readonly Text[] _dotNames = new Text[MaxRows];
         private readonly UiButton _formationPrevious, _formationNext, _back, _defensive, _corners, _marking;
         private static readonly string[] CornerLabels = { "MIXTO", "PRIMER PALO", "PUNTO PENAL", "CORTO" };
         private readonly Text _formation, _status, _message;
@@ -54,8 +70,9 @@ namespace Football.Game
             _corners = UiKit.Button(t, "Corners", new Vector2(1620f, 955f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
             _marking = UiKit.Button(t, "Marca", new Vector2(1620f, 895f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
             _status = UiKit.Label(t, "Cupos", new Vector2(960f, 850f), new Vector2(1400f, 44f), string.Empty, 28, Color.white);
-            UiKit.Label(t, "EnCampo", new Vector2(FieldX, 805f), new Vector2(700f, 36f), "EN EL CAMPO (toca uno y luego otro para cambiar puestos)", 20, UiTheme.TextDim);
-            UiKit.Label(t, "Suplentes", new Vector2(BenchX, 805f), new Vector2(700f, 36f), "SUPLENTES (toca uno del campo y luego un suplente)", 20, UiTheme.TextDim);
+            UiKit.Label(t, "EnCampo", new Vector2(FieldX, 805f), new Vector2(RowWidth, 36f), "EN EL CAMPO (toca uno y luego otro para cambiar puestos)", 17, UiTheme.TextDim);
+            UiKit.Label(t, "Suplentes", new Vector2(BenchX, 805f), new Vector2(RowWidth, 36f), "SUPLENTES (toca uno del campo y luego un suplente)", 17, UiTheme.TextDim);
+            BuildPitch(t);
             for (int i = 0; i < MaxRows; i++)
             {
                 _field[i] = Row(t, "Campo" + i, FieldX, i);
@@ -66,14 +83,81 @@ namespace Football.Game
                 _bench[i] = Row(t, "Banco" + i, BenchX, i);
             }
 
+            for (int i = 0; i < MaxRows; i++)
+            {
+                _dots[i] = UiKit.Button(t, "Punto" + i, Vector2.zero, new Vector2(DotSize, DotSize), string.Empty, 22, DefenderDot, true);
+                _dotNames[i] = UiKit.Label(t, "NombrePunto" + i, Vector2.zero, new Vector2(140f, 24f), string.Empty, 16, Color.white);
+            }
+
             _message = UiKit.Label(t, "Aviso", new Vector2(960f, 75f), new Vector2(1300f, 40f), string.Empty, 26, UiTheme.Warning);
             _back = UiKit.Button(t, "Volver", new Vector2(1700f, 75f), new Vector2(300f, 80f), "VOLVER", 34, UiTheme.AccentDark);
             _root.SetActive(false);
         }
 
+        /// <summary>Cancha vertical (ataque hacia arriba) con sus líneas, donde se dibujan los jugadores en su puesto.</summary>
+        private static void BuildPitch(Transform t)
+        {
+            var center = new Vector2(PitchCenterX, PitchCenterY);
+            UiKit.Panel(t, "Cancha", center, new Vector2(PitchWidth, PitchHeight), PitchColor);
+            Outline(t, "Borde", center, new Vector2(PitchWidth, PitchHeight));
+            UiKit.Panel(t, "Mitad", center, new Vector2(PitchWidth, LineWidth), LineTint);
+            UiKit.Panel(t, "CirculoMedio", center, new Vector2(PitchWidth * 0.26f, PitchWidth * 0.26f), LineTint, true);
+            UiKit.Panel(t, "CirculoMedioInterior", center, new Vector2(PitchWidth * 0.26f - 2f * LineWidth, PitchWidth * 0.26f - 2f * LineWidth), PitchColor, true);
+            Vector2 area = new Vector2(PitchWidth * 0.58f, PitchHeight * 0.16f);
+            Vector2 small = new Vector2(PitchWidth * 0.28f, PitchHeight * 0.06f);
+            for (int end = -1; end <= 1; end += 2)
+            {
+                float edge = PitchCenterY + end * PitchHeight * 0.5f;
+                Outline(t, "Area" + end, new Vector2(PitchCenterX, edge - end * area.y * 0.5f), area);
+                Outline(t, "AreaChica" + end, new Vector2(PitchCenterX, edge - end * small.y * 0.5f), small);
+            }
+        }
+
+        private static void Outline(Transform t, string name, Vector2 center, Vector2 size)
+        {
+            UiKit.Panel(t, name + "N", center + new Vector2(0f, size.y * 0.5f), new Vector2(size.x, LineWidth), LineTint);
+            UiKit.Panel(t, name + "S", center - new Vector2(0f, size.y * 0.5f), new Vector2(size.x, LineWidth), LineTint);
+            UiKit.Panel(t, name + "O", center - new Vector2(size.x * 0.5f, 0f), new Vector2(LineWidth, size.y), LineTint);
+            UiKit.Panel(t, name + "E", center + new Vector2(size.x * 0.5f, 0f), new Vector2(LineWidth, size.y), LineTint);
+        }
+
+        /// <summary>Punto de la cancha donde va un puesto de la formación (ataque hacia arriba; Y positivo es la izquierda del equipo).</summary>
+        private static Vector2 PitchPoint(FormationSlot slot)
+        {
+            float x = PitchCenterX - slot.Y * PitchWidth * 0.5f * PitchMargin;
+            float y = PitchCenterY - PitchHeight * 0.5f * PitchMargin + slot.X * PitchHeight * PitchMargin;
+            return new Vector2(x, y);
+        }
+
+        private static Color LineColor(Position role)
+        {
+            switch (PlayerRatings.LineOf(role))
+            {
+                case PitchLine.Goalkeeper: return KeeperDot;
+                case PitchLine.Defence: return DefenderDot;
+                case PitchLine.Midfield: return MidfielderDot;
+                default: return AttackerDot;
+            }
+        }
+
+        /// <summary>Índice del jugador del campo cuya fila o punto está en el punto, o -1.</summary>
+        private int FieldAt(Vector2 point)
+        {
+            int count = Mathf.Min(_engine.Teams[0].Players.Length, MaxRows);
+            for (int i = 0; i < count; i++)
+            {
+                if (_field[i].Contains(point) || _dots[i].Contains(point))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         private static UiButton Row(Transform parent, string name, float x, int index)
         {
-            UiButton row = UiKit.Button(parent, name, new Vector2(x, RowTop - index * RowStep), new Vector2(720f, 50f), string.Empty, 24, RowColor);
+            UiButton row = UiKit.Button(parent, name, new Vector2(x, RowTop - index * RowStep), new Vector2(RowWidth, 50f), string.Empty, 22, RowColor);
             row.Label.alignment = TextAnchor.MiddleLeft;
             return row;
         }
@@ -100,14 +184,12 @@ namespace Football.Game
         public PlayerCardInfo CardAt(Vector2 point)
         {
             TeamState team = _engine.Teams[0];
-            for (int i = 0; i < team.Players.Length && i < MaxRows; i++)
+            int onField = FieldAt(point);
+            if (onField >= 0)
             {
-                if (_field[i].Contains(point))
-                {
-                    _selected = -1;
-                    Refresh();
-                    return PlayerCards.FromMatch(team.Players[i]);
-                }
+                _selected = -1;
+                Refresh();
+                return PlayerCards.FromMatch(team.Players[onField]);
             }
 
             for (int i = 0; i < team.Bench.Length && i < MaxBench; i++)
@@ -149,20 +231,16 @@ namespace Football.Game
                     team.Marking == SetPieceMarking.Zonal ? SetPieceMarking.ManToMan : SetPieceMarking.Zonal);
             }
 
-            for (int i = 0; i < team.Players.Length && i < MaxRows; i++)
+            int tapped = FieldAt(point);
+            if (tapped >= 0)
             {
-                if (!_field[i].Contains(point))
+                if (_selected < 0 || _selected == tapped)
                 {
-                    continue;
-                }
-
-                if (_selected < 0 || _selected == i)
-                {
-                    _selected = _selected == i ? -1 : i;
+                    _selected = _selected == tapped ? -1 : tapped;
                 }
                 else
                 {
-                    _message.text = _engine.SwapPositions(team.Players[_selected], team.Players[i])
+                    _message.text = _engine.SwapPositions(team.Players[_selected], team.Players[tapped])
                         ? "Puestos intercambiados."
                         : "El arquero no cambia de puesto con un jugador de campo.";
                     _selected = -1;
@@ -228,6 +306,18 @@ namespace Football.Game
             }
         }
 
+        /// <summary>Coloca el punto del jugador en el puesto táctico que ocupa ahora (cambia con la formación y los intercambios).</summary>
+        private void PlaceDot(int i, MatchPlayer p, bool pending)
+        {
+            TeamState team = _engine.Teams[0];
+            Vector2 at = PitchPoint(team.Formation.Slots[p.Spot]);
+            _dots[i].Place(at, new Vector2(DotSize, DotSize));
+            ((RectTransform)_dotNames[i].transform).anchoredPosition = at - new Vector2(0f, DotSize * 0.5f + 10f);
+            _dots[i].Label.text = p.Number.ToString();
+            _dotNames[i].text = PlayerLabels.Surname(p.Name);
+            _dots[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : LineColor(p.Role);
+        }
+
         private void Refresh()
         {
             TeamState team = _engine.Teams[0];
@@ -243,6 +333,8 @@ namespace Football.Game
             {
                 bool used = i < team.Players.Length;
                 _field[i].SetVisible(used);
+                _dots[i].SetVisible(used);
+                _dotNames[i].gameObject.SetActive(used);
                 if (!used)
                 {
                     continue;
@@ -250,9 +342,10 @@ namespace Football.Game
 
                 MatchPlayer p = team.Players[i];
                 bool pending = _engine.IsPendingOut(0, p.Index);
-                _field[i].Label.text = "  " + p.Number + "  " + p.Name + "   ·   " + UiTheme.Code(p.Role) + "   ·   resistencia "
-                                       + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "   (SALE)" : string.Empty) + (p.SentOff ? "   (EXPULSADO)" : string.Empty) + (p.Injured ? "   (LESIONADO)" : string.Empty);
+                _field[i].Label.text = "  " + p.Number + "  " + p.Name + "  ·  " + UiTheme.Code(p.Role) + "  ·  RES "
+                                       + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "  (SALE)" : string.Empty) + (p.SentOff ? "  (EXPULSADO)" : string.Empty) + (p.Injured ? "  (LESIONADO)" : string.Empty);
                 _field[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : RowColor;
+                PlaceDot(i, p, pending);
             }
 
             for (int i = 0; i < MaxBench; i++)

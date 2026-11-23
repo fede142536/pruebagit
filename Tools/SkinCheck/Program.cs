@@ -86,8 +86,24 @@ static class P
         return null;
     }
 
-    static void Main()
+    static void Main(string[] args)
     {
+        // Volcado para mirar la malla fuera de Unity: --ply ruta [lod] escribe vértices con color y triángulos.
+        int dump = Array.IndexOf(args, "--ply");
+        if (dump >= 0)
+        {
+            int lod = dump + 2 < args.Length ? int.Parse(args[dump + 2]) : 0;
+            var m = SkinnedBodyGeometry.Build(Spec(0, 1, 1, false, 10, 2), lod);
+            using (var w = new System.IO.StreamWriter(args[dump + 1]))
+            {
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                for (int k = 0; k < m.Vertices.Count; k++)
+                    w.WriteLine(string.Format(inv, "v {0} {1} {2} {3} {4} {5}", m.Vertices[k].x, m.Vertices[k].y, m.Vertices[k].z, m.Colors[k].r, m.Colors[k].g, m.Colors[k].b));
+                for (int k = 0; k < m.Triangles.Count; k += 3) w.WriteLine("f " + m.Triangles[k] + " " + m.Triangles[k + 1] + " " + m.Triangles[k + 2]);
+            }
+            return;
+        }
+
         Console.WriteLine("Huesos: " + SkinnedBodyGeometry.BoneCount + " (" + string.Join(", ", SkinnedBodyGeometry.BoneNames) + ")");
 
         // 1) Triángulos de los dos niveles, para todos los peinados, vellos y diseños.

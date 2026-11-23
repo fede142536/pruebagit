@@ -322,7 +322,7 @@ namespace Football.Game
             _lineupCard.SetActive(!benchmark && !presentation);
             _lastBallSpeed = 0f;
             AudioListener.pause = false;
-            _audio.StartCrowd();
+            _audio.StartCrowd(IsBoca(homeTeam)); // los cánticos de Boca suenan solo si es el equipo que elegiste (el local)
             _bannerTimer = 0f;
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
@@ -461,10 +461,15 @@ namespace Football.Game
             if (advanced || !activePlay)
             {
                 _stalledSeconds = 0f;
-                if (_stallShown && (advanced || _paused))
+                if (_stallShown)
                 {
+                    // El aviso se retira apenas deja de cumplirse la condición (el motor avanzó o el juego pasó a un gol, saque o pausa);
+                    // antes se quedaba pegado en pantalla durante partidos que seguían perfectamente.
                     _stallShown = false;
-                    _warning.text = string.Empty;
+                    if (_warning.text.StartsWith("EL PARTIDO DEJÓ", StringComparison.Ordinal))
+                    {
+                        _warning.text = string.Empty;
+                    }
                 }
 
                 return;
@@ -846,6 +851,7 @@ namespace Football.Game
         private const float ReplaySpeed = 0.5f;
         private const int HistoryLength = 300; // 5 s a 60 pasos por segundo
         private readonly MatchSnapshot[] _history = new MatchSnapshot[HistoryLength];
+        private const string BocaName = "Boca Juniors";
         private readonly GameAudio _audio;
         private int _historyHead, _historyCount;
         private bool _replaying;
@@ -1059,6 +1065,9 @@ namespace Football.Game
             rect.anchoredPosition = new Vector2(ScoreboardMargin, -ScoreboardMargin);
             return rect;
         }
+
+        /// <summary>Boca Juniors (por nombre): activa los cánticos de su hinchada.</summary>
+        private static bool IsBoca(TeamDefinition team) => team != null && team.Name == BocaName;
 
         private static string ShortName(TeamDefinition team) => !string.IsNullOrEmpty(team.ShortName)
             ? team.ShortName.ToUpperInvariant()

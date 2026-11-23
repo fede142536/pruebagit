@@ -142,6 +142,7 @@ namespace Football.Game
             }
 
             _state = next;
+            _audio?.SetMenuMusic(next != State.Match);
             switch (next)
             {
                 case State.MainMenu: _mainMenu.Show(); break;
@@ -216,6 +217,7 @@ namespace Football.Game
         private void Update()
         {
             _pointers.Update();
+            _audio.Tick(Time.unscaledDeltaTime);
             if (_state != State.Match)
             {
                 if (_match.IsIdle)

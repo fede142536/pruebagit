@@ -159,8 +159,8 @@ namespace Football.Game
         {
             new Vector3(0f, 0f, 0f), new Vector3(0f, 0.95f, 0f), new Vector3(0f, 1.1f, 0f), new Vector3(0f, 1.28f, 0f),
             new Vector3(0f, 1.45f, 0f), new Vector3(0f, 1.53f, 0f),
-            new Vector3(-0.26f, 1.4f, 0f), new Vector3(-0.26f, 1.11f, 0f), new Vector3(-0.26f, 0.875f, 0f),
-            new Vector3(0.26f, 1.4f, 0f), new Vector3(0.26f, 1.11f, 0f), new Vector3(0.26f, 0.875f, 0f),
+            new Vector3(-0.235f, 1.4f, 0f), new Vector3(-0.235f, 1.11f, 0f), new Vector3(-0.235f, 0.875f, 0f),
+            new Vector3(0.235f, 1.4f, 0f), new Vector3(0.235f, 1.11f, 0f), new Vector3(0.235f, 0.875f, 0f),
             new Vector3(-0.11f, 0.92f, 0f), new Vector3(-0.11f, 0.48f, 0f), new Vector3(-0.11f, 0.06f, 0f), new Vector3(-0.11f, 0.025f, 0.11f),
             new Vector3(0.11f, 0.92f, 0f), new Vector3(0.11f, 0.48f, 0f), new Vector3(0.11f, 0.06f, 0f), new Vector3(0.11f, 0.025f, 0.11f)
         };
@@ -201,16 +201,23 @@ namespace Football.Game
 
         private static readonly BodyRing[] Torso =
         {
-            BodyRing.Pole(1.525f), new BodyRing(1.515f, 0.075f, 0.055f, 0.06f), new BodyRing(1.485f, 0.165f, 0.085f, 0.095f),
-            new BodyRing(1.44f, 0.215f, 0.11f, 0.105f), new BodyRing(1.37f, 0.212f, 0.135f, 0.115f), new BodyRing(1.29f, 0.198f, 0.138f, 0.115f),
-            new BodyRing(1.2f, 0.178f, 0.122f, 0.108f), new BodyRing(1.1f, 0.158f, 0.108f, 0.1f), new BodyRing(1.02f, 0.162f, 0.106f, 0.101f),
+            BodyRing.Pole(1.525f), new BodyRing(1.515f, 0.07f, 0.052f, 0.056f), new BodyRing(1.5f, 0.115f, 0.068f, 0.078f),
+            new BodyRing(1.47f, 0.178f, 0.092f, 0.098f), new BodyRing(1.42f, 0.208f, 0.118f, 0.108f), new BodyRing(1.36f, 0.2f, 0.138f, 0.118f),
+            new BodyRing(1.29f, 0.186f, 0.142f, 0.116f), new BodyRing(1.2f, 0.166f, 0.124f, 0.106f), new BodyRing(1.1f, 0.146f, 0.106f, 0.098f),
+            new BodyRing(1.02f, 0.15f, 0.104f, 0.1f),
             new BodyRing(0.985f, 0.176f, 0.12f, 0.115f), new BodyRing(0.975f, 0.168f, 0.11f, 0.106f), BodyRing.Pole(0.97f) // ruedo sobre el pantalón
         };
 
         private static readonly BodyRing[] TorsoLow =
         {
-            BodyRing.Pole(1.525f), new BodyRing(1.485f, 0.165f, 0.085f, 0.095f), new BodyRing(1.37f, 0.212f, 0.135f, 0.115f), new BodyRing(1.29f, 0.198f, 0.138f, 0.115f),
-            new BodyRing(1.2f, 0.178f, 0.122f, 0.108f), new BodyRing(1.02f, 0.162f, 0.106f, 0.101f), new BodyRing(0.98f, 0.172f, 0.115f, 0.11f), BodyRing.Pole(0.97f)
+            BodyRing.Pole(1.525f), new BodyRing(1.47f, 0.178f, 0.092f, 0.098f), new BodyRing(1.36f, 0.2f, 0.138f, 0.118f), new BodyRing(1.29f, 0.186f, 0.142f, 0.116f),
+            new BodyRing(1.2f, 0.166f, 0.124f, 0.106f), new BodyRing(1.02f, 0.15f, 0.104f, 0.1f), new BodyRing(0.98f, 0.172f, 0.115f, 0.11f), BodyRing.Pole(0.97f)
+        };
+
+        // Cuello de la camiseta: aro de color alrededor de la base del cuello.
+        private static readonly BodyRing[] Collar =
+        {
+            BodyRing.Pole(1.548f), new BodyRing(1.543f, 0.064f, 0.06f, 0.068f), new BodyRing(1.51f, 0.082f, 0.074f, 0.088f), BodyRing.Pole(1.495f)
         };
 
         private static readonly BodyRing[] Pelvis =
@@ -239,38 +246,38 @@ namespace Football.Game
         // Pierna de la cadera al tobillo, una sola superficie. Anillos de soporte de la rodilla (y = −0,44): −0,38, −0,44 y −0,50.
         private static readonly BodyRing[] LegSkin =
         {
-            BodyRing.Pole(-0.10f), new BodyRing(-0.18f, 0.081f, 0.092f, 0.078f), new BodyRing(-0.22f, 0.076f, 0.084f, 0.072f),
-            new BodyRing(-0.30f, 0.068f, 0.076f, 0.065f), new BodyRing(-0.38f, 0.056f, 0.062f, 0.056f), new BodyRing(-0.44f, 0.052f, 0.064f, 0.05f),
-            new BodyRing(-0.50f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.58f, 0.054f, 0.048f, 0.071f), new BodyRing(-0.69f, 0.044f, 0.042f, 0.048f),
+            BodyRing.Pole(-0.10f), new BodyRing(-0.18f, 0.09f, 0.1f, 0.088f), new BodyRing(-0.22f, 0.086f, 0.094f, 0.082f),
+            new BodyRing(-0.30f, 0.076f, 0.085f, 0.074f), new BodyRing(-0.38f, 0.06f, 0.066f, 0.06f), new BodyRing(-0.44f, 0.054f, 0.066f, 0.052f),
+            new BodyRing(-0.50f, 0.06f, 0.054f, 0.082f), new BodyRing(-0.58f, 0.058f, 0.05f, 0.08f), new BodyRing(-0.69f, 0.045f, 0.042f, 0.05f),
             new BodyRing(-0.79f, 0.032f, 0.033f, 0.032f), new BodyRing(-0.84f, 0.03f, 0.031f, 0.03f), BodyRing.Pole(-0.865f)
         };
 
         private static readonly BodyRing[] LegSkinLow =
         {
-            BodyRing.Pole(-0.10f), new BodyRing(-0.14f, 0.083f, 0.094f, 0.08f), new BodyRing(-0.30f, 0.068f, 0.076f, 0.065f), new BodyRing(-0.38f, 0.056f, 0.062f, 0.056f),
-            new BodyRing(-0.44f, 0.052f, 0.064f, 0.05f), new BodyRing(-0.50f, 0.056f, 0.05f, 0.075f), new BodyRing(-0.69f, 0.044f, 0.042f, 0.048f),
+            BodyRing.Pole(-0.10f), new BodyRing(-0.14f, 0.09f, 0.1f, 0.088f), new BodyRing(-0.30f, 0.076f, 0.085f, 0.074f), new BodyRing(-0.38f, 0.06f, 0.066f, 0.06f),
+            new BodyRing(-0.44f, 0.054f, 0.066f, 0.052f), new BodyRing(-0.50f, 0.06f, 0.054f, 0.082f), new BodyRing(-0.69f, 0.045f, 0.042f, 0.05f),
             new BodyRing(-0.84f, 0.03f, 0.031f, 0.03f), BodyRing.Pole(-0.865f)
         };
 
         private static readonly BodyRing[] Sock =
         {
-            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.58f, 0.057f, 0.051f, 0.075f), new BodyRing(-0.69f, 0.047f, 0.045f, 0.051f),
+            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.063f, 0.058f, 0.086f), new BodyRing(-0.58f, 0.061f, 0.054f, 0.084f), new BodyRing(-0.69f, 0.049f, 0.046f, 0.054f),
             new BodyRing(-0.79f, 0.034f, 0.035f, 0.034f), new BodyRing(-0.845f, 0.032f, 0.033f, 0.032f), BodyRing.Pole(-0.85f)
         };
 
         private static readonly BodyRing[] SockLow =
         {
-            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.059f, 0.054f, 0.079f), new BodyRing(-0.69f, 0.047f, 0.045f, 0.051f), new BodyRing(-0.845f, 0.032f, 0.033f, 0.032f), BodyRing.Pole(-0.85f)
+            BodyRing.Pole(-0.506f), new BodyRing(-0.51f, 0.063f, 0.058f, 0.086f), new BodyRing(-0.69f, 0.049f, 0.046f, 0.054f), new BodyRing(-0.845f, 0.032f, 0.033f, 0.032f), BodyRing.Pole(-0.85f)
         };
 
         private static readonly BodyRing[] SockCuff = // borde superior enrollado de la media
         {
-            BodyRing.Pole(-0.498f), new BodyRing(-0.5f, 0.064f, 0.06f, 0.085f), new BodyRing(-0.522f, 0.064f, 0.059f, 0.084f), BodyRing.Pole(-0.524f)
+            BodyRing.Pole(-0.498f), new BodyRing(-0.5f, 0.068f, 0.064f, 0.092f), new BodyRing(-0.522f, 0.068f, 0.063f, 0.091f), BodyRing.Pole(-0.524f)
         };
 
         private static readonly BodyRing[] SockBand =
         {
-            BodyRing.Pole(-0.536f), new BodyRing(-0.538f, 0.062f, 0.057f, 0.083f), new BodyRing(-0.562f, 0.061f, 0.055f, 0.081f), BodyRing.Pole(-0.564f)
+            BodyRing.Pole(-0.536f), new BodyRing(-0.538f, 0.066f, 0.061f, 0.09f), new BodyRing(-0.562f, 0.065f, 0.059f, 0.088f), BodyRing.Pole(-0.564f)
         };
 
         // Botín a lo largo de Y (talón en −Y, puntera en +Y); se gira 90° en X para que la puntera mire hacia delante.
@@ -289,27 +296,27 @@ namespace Football.Game
         // Brazo del hombro a la muñeca, una sola superficie. Anillos de soporte del codo (y = −0,29): −0,24, −0,29 y −0,34.
         private static readonly BodyRing[] ArmSkin =
         {
-            BodyRing.Pole(-0.095f), new BodyRing(-0.1f, 0.048f, 0.055f, 0.046f), new BodyRing(-0.2f, 0.041f, 0.044f, 0.039f),
-            new BodyRing(-0.24f, 0.038f, 0.039f, 0.037f), new BodyRing(-0.29f, 0.037f, 0.036f, 0.037f), new BodyRing(-0.34f, 0.041f, 0.04f, 0.038f),
-            new BodyRing(-0.44f, 0.032f, 0.03f, 0.03f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
+            BodyRing.Pole(-0.095f), new BodyRing(-0.1f, 0.052f, 0.058f, 0.05f), new BodyRing(-0.2f, 0.045f, 0.048f, 0.042f),
+            new BodyRing(-0.24f, 0.04f, 0.042f, 0.039f), new BodyRing(-0.29f, 0.038f, 0.037f, 0.038f), new BodyRing(-0.34f, 0.044f, 0.043f, 0.04f),
+            new BodyRing(-0.44f, 0.034f, 0.032f, 0.032f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
         };
 
         private static readonly BodyRing[] ArmSkinLow =
         {
-            BodyRing.Pole(-0.095f), new BodyRing(-0.12f, 0.046f, 0.052f, 0.044f), new BodyRing(-0.24f, 0.038f, 0.039f, 0.037f), new BodyRing(-0.29f, 0.037f, 0.036f, 0.037f),
-            new BodyRing(-0.34f, 0.041f, 0.04f, 0.038f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
+            BodyRing.Pole(-0.095f), new BodyRing(-0.12f, 0.05f, 0.056f, 0.048f), new BodyRing(-0.24f, 0.04f, 0.042f, 0.039f), new BodyRing(-0.29f, 0.038f, 0.037f, 0.038f),
+            new BodyRing(-0.34f, 0.044f, 0.043f, 0.04f), new BodyRing(-0.525f, 0.024f, 0.02f, 0.02f), BodyRing.Pole(-0.54f)
         };
 
         private static readonly BodyRing[] Sleeve =
         {
-            BodyRing.Pole(0.062f), new BodyRing(0.052f, 0.064f, 0.064f, 0.064f), new BodyRing(-0.02f, 0.069f, 0.069f, 0.066f),
-            new BodyRing(-0.118f, 0.066f, 0.068f, 0.063f), new BodyRing(-0.128f, 0.071f, 0.073f, 0.068f),
+            BodyRing.Pole(0.07f), new BodyRing(0.06f, 0.04f, 0.04f, 0.04f), new BodyRing(0.04f, 0.056f, 0.056f, 0.054f), new BodyRing(0.0f, 0.062f, 0.063f, 0.06f),
+            new BodyRing(-0.06f, 0.06f, 0.062f, 0.057f), new BodyRing(-0.118f, 0.057f, 0.06f, 0.054f), new BodyRing(-0.128f, 0.062f, 0.065f, 0.059f),
             BodyRing.Pole(-0.133f) // borde de la manga (vuelo y dobladillo)
         };
 
         private static readonly BodyRing[] SleeveLow =
         {
-            BodyRing.Pole(0.062f), new BodyRing(0.0f, 0.069f, 0.069f, 0.066f), new BodyRing(-0.125f, 0.068f, 0.07f, 0.065f), BodyRing.Pole(-0.133f)
+            BodyRing.Pole(0.07f), new BodyRing(0.04f, 0.056f, 0.056f, 0.054f), new BodyRing(-0.02f, 0.062f, 0.063f, 0.06f), new BodyRing(-0.125f, 0.059f, 0.062f, 0.056f), BodyRing.Pole(-0.133f)
         };
 
         private static readonly BodyRing[] LongSleeve =
@@ -440,7 +447,7 @@ namespace Football.Game
         /// <summary>Cantidad de triángulos.</summary>
         public int TriangleCount => Triangles.Count / 3;
 
-        private int TorsoSides => _low ? 9 : 12;
+        private int TorsoSides => _low ? 9 : 14;
         private int LimbSides => _low ? 7 : 8;
         private int ArmSides => _low ? 6 : 8;
         private int HeadSides => _low ? 10 : 12;
@@ -489,6 +496,10 @@ namespace Football.Game
 
             Sculpt(_low ? PelvisLow : Pelvis, TorsoSides, null, Place.Identity, shorts, Bind.Auto, FoldGroin, false, true);
             Sculpt(Neck, _low ? 6 : 8, null, Place.Identity, Tag(_spec.Skin, SkinId), Bind.Auto, SweatNeck, false, false);
+            if (!_low)
+            {
+                Sculpt(Collar, 10, null, Place.Identity, Tag(_spec.Secondary, FabricId), Bind.Auto, NoMask, false, true);
+            }
         }
 
         private void BuildLeg(int side)

@@ -51,6 +51,7 @@ namespace Football.Game
 
             Item(SettingCategory.Audio, true, s => "VOLUMEN GENERAL: " + GameSettings.VolumeLabels[s.MasterVolume], s => s.MasterVolume = (s.MasterVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "AMBIENTE DE ESTADIO: " + GameSettings.VolumeLabels[s.StadiumVolume], s => s.StadiumVolume = (s.StadiumVolume + 1) % 5),
+            Item(SettingCategory.Audio, true, s => "MÚSICA DE LOS MENÚS: " + GameSettings.VolumeLabels[s.MusicVolume], s => s.MusicVolume = (s.MusicVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "BALÓN, SILBATO Y RED: " + GameSettings.VolumeLabels[s.EffectsVolume], s => s.EffectsVolume = (s.EffectsVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "VIBRACIÓN (GOLES Y PALOS): " + YesNo(s.Vibration), s => s.Vibration = !s.Vibration),
 
