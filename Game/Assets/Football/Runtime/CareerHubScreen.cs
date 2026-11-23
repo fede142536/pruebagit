@@ -74,7 +74,8 @@ namespace Football.Game
             // Pedido de los socios.
             _requestGroup = CreateGroup(p, "PedidoSocios").gameObject;
             Transform r = _requestGroup.transform;
-            UiKit.Panel(r, "PedidoFondo", new Vector2(330f, 745f), new Vector2(600f, 180f), new Color(0.35f, 0.22f, 0.08f, 0.92f));
+            UiKit.Panel(r, "PedidoBorde", new Vector2(330f, 745f), new Vector2(600f, 180f), UiTheme.Amber); // estado de alerta: solo contorno ámbar
+            UiKit.Panel(r, "PedidoFondo", new Vector2(330f, 745f), new Vector2(596f, 176f), new Color(0.059f, 0.102f, 0.09f, 0.97f));
             _request = UiKit.Label(r, "Pedido", new Vector2(330f, 790f), new Vector2(560f, 80f), string.Empty, 20, UiTheme.Text, TextAnchor.MiddleLeft);
             _request.horizontalOverflow = HorizontalWrapMode.Wrap;
             _accept = UiKit.Button(r, "Aceptar", new Vector2(185f, 700f), new Vector2(280f, 64f), Locale.Get("supporters.accept"), 20, UiTheme.AccentDark);
@@ -143,7 +144,7 @@ namespace Football.Game
             _ceremony = CreateGroup(p, "Cartel").gameObject;
             Transform c = _ceremony.transform;
             UiKit.Panel(c, "Velo", new Vector2(960f, 540f), new Vector2(1920f, 1080f), new Color(0f, 0f, 0f, 0.75f));
-            UiKit.Panel(c, "Tarjeta", new Vector2(960f, 540f), new Vector2(980f, 620f), new Color(0.1f, 0.13f, 0.18f, 0.98f));
+            UiTheme.Frame(c, "Tarjeta", new Vector2(960f, 540f), new Vector2(980f, 620f));
             for (int i = 0; i < _ceremonyStars.Length; i++)
             {
                 _ceremonyStars[i] = UiKit.Panel(c, "Trofeo" + i, new Vector2(960f + (i - 2) * 100f, 720f), new Vector2(84f, 84f), UiTheme.Gold);
@@ -350,7 +351,8 @@ namespace Football.Game
                     : (f.HomeClubId == d.UserClubId ? Locale.Get("career.home_short") : Locale.Get("career.away_short")) + " "
                       + d.Club(f.HomeClubId == d.UserClubId ? f.AwayClubId : f.HomeClubId).ShortName;
                 _dayMatch[i].color = cup ? UiTheme.Gold : UiTheme.Accent;
-                _dayCell[i].color = i == 0 ? UiTheme.Selected : f != null ? UiTheme.Button : UiTheme.Panel;
+                _dayCell[i].color = i == 0 ? UiTheme.Selected : UiTheme.Panel;
+                UiTheme.FrameEdge(_dayCell[i]).color = i == 0 ? UiTheme.AccentStrong : f != null ? UiTheme.AccentText : UiTheme.Line; // hoy resaltado; con partido, borde verde
             }
         }
 

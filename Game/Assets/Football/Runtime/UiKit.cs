@@ -66,6 +66,42 @@ namespace Football.Game
         }
     }
 
+    /// <summary>
+    /// Pinta el contorno de un botón: línea fina normal y, cuando el botón está elegido (su fondo es el color de «seleccionado»), el contorno claro del diseño.
+    /// </summary>
+    public sealed class OutlineSkin : MonoBehaviour
+    {
+        private const float SameColor = 0.02f;
+        private Image _background;
+        private Image[] _edges;
+
+        /// <summary>Asocia el fondo del botón con los cuatro lados de su contorno.</summary>
+        public void Setup(Image background, Image[] edges)
+        {
+            _background = background;
+            _edges = edges;
+        }
+
+        private void LateUpdate()
+        {
+            if (_background == null)
+            {
+                return;
+            }
+
+            Color b = _background.color, s = UiTheme.Selected;
+            bool selected = Mathf.Abs(b.r - s.r) + Mathf.Abs(b.g - s.g) + Mathf.Abs(b.b - s.b) < SameColor;
+            Color target = selected ? UiTheme.AccentStrong : UiTheme.Line;
+            if (_edges[0].color != target)
+            {
+                for (int i = 0; i < _edges.Length; i++)
+                {
+                    _edges[i].color = target;
+                }
+            }
+        }
+    }
+
     /// <summary>Funciones para crear la interfaz por código (sin escenas ni prefabs).</summary>
     public static class UiKit
     {
@@ -271,14 +307,19 @@ namespace Football.Game
         }
 
         /// <summary>Contorno de 1,5 unidades en el borde de un elemento (dentro de su rectángulo).</summary>
-        private static void Outline(Transform parent, Vector2 size)
+        private static void Outline(Image background, Vector2 size)
         {
             const float t = 2f;
+            Transform parent = background.transform;
             Color line = UiTheme.Line;
-            Panel(parent, "BordeN", new Vector2(size.x * 0.5f, size.y - t * 0.5f), new Vector2(size.x, t), line);
-            Panel(parent, "BordeS", new Vector2(size.x * 0.5f, t * 0.5f), new Vector2(size.x, t), line);
-            Panel(parent, "BordeO", new Vector2(t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line);
-            Panel(parent, "BordeE", new Vector2(size.x - t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line);
+            var edges = new[]
+            {
+                Panel(parent, "BordeN", new Vector2(size.x * 0.5f, size.y - t * 0.5f), new Vector2(size.x, t), line),
+                Panel(parent, "BordeS", new Vector2(size.x * 0.5f, t * 0.5f), new Vector2(size.x, t), line),
+                Panel(parent, "BordeO", new Vector2(t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line),
+                Panel(parent, "BordeE", new Vector2(size.x - t * 0.5f, size.y * 0.5f), new Vector2(t, size.y), line)
+            };
+            background.gameObject.AddComponent<OutlineSkin>().Setup(background, edges);
         }
 
         /// <summary>Crea un panel o círculo coloreado anclado abajo a la izquierda.</summary>
@@ -335,7 +376,7 @@ namespace Football.Game
             Text label = Label(background.transform, "Label", size * 0.5f, size, text, fontSize, Color.white);
             if (!circle && color == UiTheme.Button)
             {
-                Outline(background.transform, size); // los botones secundarios del manual: contorno fino, fondo casi vacío
+                Outline(background, size); // los botones secundarios del manual: contorno fino, fondo casi vacío
             }
 
             var button = new UiButton(background.gameObject, background, label, circle);

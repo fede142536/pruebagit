@@ -116,7 +116,7 @@ namespace Football.Game
             for (int i = 0; i < Tiles; i++)
             {
                 Vector2 c = new Vector2(230f + (i % 2) * 400f, 715f - (i / 2) * 250f);
-                _tiles[i] = UiKit.Button(p, "Mosaico" + i, c, new Vector2(380f, 230f), string.Empty, 10, UiTheme.Panel);
+                _tiles[i] = UiKit.Button(p, "Mosaico" + i, c, new Vector2(380f, 230f), string.Empty, 10, UiTheme.Button);
                 UiKit.Label(p, "MosaicoTitulo" + i, c + new Vector2(0f, 70f), new Vector2(350f, 40f), Locale.Get("office.tile." + i), 24, UiTheme.Text);
                 _tilePriority[i] = UiKit.Label(p, "MosaicoPrioridad" + i, c + new Vector2(0f, 22f), new Vector2(350f, 36f), string.Empty, 20, UiTheme.TextDim);
                 _tileBars[i] = new UiBar(p, "MosaicoBarra" + i, c + new Vector2(0f, -30f), new Vector2(320f, 18f));
@@ -181,7 +181,7 @@ namespace Football.Game
             ManagementRating rating = Session.Rating();
             for (int i = 0; i < Tiles; i++)
             {
-                _tiles[i].Background.color = i == _tile ? UiTheme.Selected : UiTheme.Panel;
+                _tiles[i].Background.color = i == _tile ? UiTheme.Selected : UiTheme.Button;
                 float progress;
                 if (i == 0)
                 {

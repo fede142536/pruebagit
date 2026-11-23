@@ -71,11 +71,11 @@ namespace Football.Game
     public static class StatusColors
     {
         /// <summary>Bien.</summary>
-        public static readonly Color Good = new Color(0.3f, 0.85f, 0.45f);
+        public static readonly Color Good = UiTheme.Accent;
         /// <summary>Atención.</summary>
-        public static readonly Color Fair = new Color(1f, 0.8f, 0.25f);
+        public static readonly Color Fair = UiTheme.Amber;
         /// <summary>Mal.</summary>
-        public static readonly Color Bad = new Color(0.95f, 0.32f, 0.3f);
+        public static readonly Color Bad = UiTheme.Danger;
 
         private const float GoodFrom = 0.66f;
         private const float FairFrom = 0.33f;
@@ -87,7 +87,7 @@ namespace Football.Game
     /// <summary>Barra de progreso horizontal (fondo y relleno) que se llena de izquierda a derecha.</summary>
     public sealed class UiBar
     {
-        private static readonly Color Track = new Color(1f, 1f, 1f, 0.1f);
+        private static readonly Color Track = new Color(0.165f, 0.231f, 0.204f); // pista gris del manual (neutro 300)
         private readonly Image _track, _fill;
         private readonly Vector2 _center, _size;
 

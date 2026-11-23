@@ -67,6 +67,10 @@ namespace Football.Game
             return fill;
         }
 
+        /// <summary>Borde de un panel creado con <see cref="Frame"/> (para cambiarle el color, por ejemplo al elegirlo).</summary>
+        /// <param name="fill">Imagen devuelta por <see cref="Frame"/>.</param>
+        public static Image FrameEdge(Image fill) => fill.transform.parent.Find(fill.name + "Borde").GetComponent<Image>();
+
         private static Sprite _gradient;
         private const float BackgroundAlpha = 0.82f;
 
