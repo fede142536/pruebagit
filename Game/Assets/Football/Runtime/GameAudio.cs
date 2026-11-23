@@ -29,6 +29,11 @@ namespace Football.Game
         private const float BocaMaxSilence = 40f;
         private const float BocaFadeSeconds = 2.5f;
         private const float BocaGain = 0.75f;
+        private const float ReactMinSeconds = 1.2f, ReactMaxSeconds = 2.4f;  // reacciones breves de la hinchada (ohh, protesta) tomadas del archivo del grito
+        private const float ReactFadeSeconds = 0.35f;
+        private const float ReactCooldown = 1.6f;                           // no se pisan unas con otras
+        private const float ReactGain = 0.7f;
+        private const float ProtestPitch = 0.82f;                           // la protesta suena más grave que el ¡ooh!
         private const float MusicGain = 0.6f;
         private const float MusicFadeSeconds = 1.2f;
 
@@ -40,6 +45,8 @@ namespace Football.Game
         private readonly AudioClip _cheerClip, _bocaClip, _musicClip;
         private readonly SeededRandom _presentationRng = new SeededRandom((ulong)System.Environment.TickCount); // solo presentación: no es azar de juego
         private bool _matchRunning, _bocaFans, _bocaSinging;
+        private readonly AudioSource _react;
+        private float _reactTimer, _reactLength, _reactIntensity, _reactCooldown;
         private float _bocaTimer, _cheerTimer, _musicTarget, _musicLevel;
         private readonly AudioClip _kick, _whistle, _longWhistle, _post, _net, _cheer;
         private float _crowdTarget = CrowdBase;
@@ -66,6 +73,7 @@ namespace Football.Game
             _musicClip = Resources.Load<AudioClip>(MusicPath);
             _cheerSource = NewSource(owner, false);
             _bocaSource = NewSource(owner, false);
+            _react = NewSource(owner, false);
             _music = NewSource(owner, true);
             _music.clip = _musicClip;
             _effects = owner.AddComponent<AudioSource>();
@@ -110,6 +118,7 @@ namespace Football.Game
             _matchRunning = false;
             _crowd.Stop();
             _cheerSource.Stop();
+            _react.Stop();
             _bocaSource.Stop();
             _bocaSinging = false;
         }
@@ -148,6 +157,18 @@ namespace Football.Game
                 if (_cheerTimer <= 0f)
                 {
                     _cheerSource.Stop();
+                }
+            }
+
+            _reactCooldown -= deltaTime;
+            if (_react.isPlaying)
+            {
+                _reactTimer -= deltaTime;
+                float fade = Mathf.Clamp01(Mathf.Min(_reactTimer, _reactLength - _reactTimer) / ReactFadeSeconds);
+                _react.volume = stadium * ReactGain * _reactIntensity * fade;
+                if (_reactTimer <= 0f)
+                {
+                    _react.Stop();
                 }
             }
 
@@ -205,6 +226,27 @@ namespace Football.Game
             {
                 _effects.PlayOneShot(_kick, Mathf.Clamp01(0.25f + speedChange / KickFullSpeed) * Fx);
             }
+        }
+
+        /// <summary>Reacción breve de la hinchada a una jugada (un ¡ooh! en un remate o una atajada, una protesta en una falta).</summary>
+        /// <param name="intensity">Fuerza de 0 a 1.</param>
+        /// <param name="protest">Verdadero para una protesta (más grave) y falso para un ¡ooh!.</param>
+        public void React(float intensity, bool protest)
+        {
+            if (_cheerClip == null || !_matchRunning || _reactCooldown > 0f || _cheerSource.isPlaying)
+            {
+                return;
+            }
+
+            _reactLength = Mathf.Lerp(ReactMinSeconds, ReactMaxSeconds, _presentationRng.NextFloat());
+            _react.clip = _cheerClip;
+            _react.time = _presentationRng.NextFloat() * Mathf.Max(0f, _cheerClip.length - _reactLength);
+            _react.pitch = protest ? ProtestPitch : 1f;
+            _react.volume = 0f;
+            _react.Play();
+            _reactTimer = _reactLength;
+            _reactIntensity = Mathf.Clamp01(intensity);
+            _reactCooldown = ReactCooldown;
         }
 
         /// <summary>Silbato corto (saque, falta, fuera de juego).</summary>

@@ -25,6 +25,18 @@ namespace Football.Core.Career
         public float RivalOfferShare = 0.85f;
         /// <summary>Clubes que descienden por promedios al terminar la temporada.</summary>
         public int RelegatedClubs = 2;
+        /// <summary>Ingreso anual estimado por punto de reputación sobre el piso (para ajustar la masa salarial inicial al tamaño del club).</summary>
+        public long RevenuePerReputation = 330_000_000;
+        /// <summary>Reputación por debajo de la cual el ingreso estimado es el mínimo.</summary>
+        public int RevenueFloorReputation = 30;
+        /// <summary>Qué parte del ingreso estimado se va en sueldos al empezar.</summary>
+        public float WageToRevenue = 0.8f;
+        /// <summary>Límites del ajuste de sueldos iniciales (1 = tal cual los pide el mercado).</summary>
+        public float MinWageScale = 0.4f, MaxWageScale = 1.5f;
+        /// <summary>Tope de plantel de los clubes que maneja la computadora: al cerrar la temporada sueltan al excedente (los de menor nivel).</summary>
+        public int MaxAiSquadSize = 32;
+        /// <summary>Arqueros que un club de la computadora nunca baja al soltar el excedente.</summary>
+        public int MinAiGoalkeepers = 3;
         /// <summary>Clubes que se clasifican a la copa internacional por la tabla anual.</summary>
         public int CupQualifiers = 4;
         /// <summary>Temporadas que cuenta la tabla de promedios.</summary>

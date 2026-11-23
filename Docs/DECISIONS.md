@@ -382,3 +382,10 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
   El rig actual de 20 huesos admite retargeting, pero **no se escribió el importador sin poder probarlo**.
 - **Benchmark**: el informe final suma asignaciones por segundo, ajustes gráficos y GPU, y se guarda en `benchmark_report.txt` (carpeta de datos de la aplicación).
 - `Docs/VERIFICACION_EN_CELULAR.md`: lista de lo que nunca se ejecutó en Unity, con objetivos medibles.
+
+## D-31 · Pruebas de carrera, dificultad y asignaciones; reacciones de la hinchada y APK por script — Aceptada (pedido del usuario, 23/11/2026)
+- **Carrera**: 5 temporadas simuladas mostraron planteles que crecían sin tope (los contratos no vencen) y sueldos iguales para todos los clubes con ingresos muy distintos. Se ajusta la masa salarial inicial a la facturación estimada
+  y los clubes de la computadora sueltan el excedente (`MaxAiSquadSize` 32, `MinAiGoalkeepers` 3). Números en `BALANCE.md` §12. Queda pendiente que los fichajes de la computadora también paguen según el club.
+- **Núcleo sin basura**: `AllocationTests` mide 0 bytes por tick y 0 al copiar el estado. No reemplaza el benchmark en el celular (IL2CPP y Unity pueden asignar por su cuenta).
+- **Hinchada**: reacciones breves tomadas del archivo del grito (¡ooh! en remates y atajadas, protesta más grave en faltas, amarillas, rojas y offsides), con enfriamiento de 1,6 s para que no se pisen.
+- **APK**: `CONSTRUIR_APK.bat` compila sin abrir Unity (`BuildAndroid.BuildBatch`) y, si hay un celular con depuración USB y `adb`, lo instala. **No se probó**: requiere Unity y Android SDK.

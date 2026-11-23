@@ -406,3 +406,12 @@ la elasticidad y los objetivos de la directiva con esos datos.
 ## 11. Fin de parte con la jugada terminada (23/11/2026)
 1000 partidos, semilla 1: sin esperar (corte inmediato) 2,66 goles; esperando cualquier parada 3,07 (la prórroga es rica en goles: 39 goles en 300 partes con la
 tolerancia larga); con `EndPlaySoftMinutes` 0,75, `DangerZoneFraction` 0,5 y `EndPlayHardMinutes` 6: **2,90**, pase 85,7 %. Ver D-28.
+
+## 12. Dificultad y carrera de varias temporadas (23/11/2026)
+**Dificultad** (HeadlessSim, 300 partidos, semilla 3, equipos iguales): local nivel 1 contra rival nivel 0 / 1 / 2 → victorias del local 64 % / 37 % / 20 %, goles 2,79 / 2,59 / 2,97.
+Con los dos en el mismo nivel: nivel 0 → 2,01 goles; nivel 1 → 2,59; nivel 2 (el predeterminado) → 2,87. `DifficultyBalanceTests` (plantel sintético, 40 partidos por nivel) comprueba que el orden se mantenga (9 % / 39 % / 70 %).
+**Carrera** (`CareerLongRunTests`, 5 temporadas, 30 clubes, semilla 21): antes los contratos nunca vencían y los planteles crecían hasta 43 jugadores; y todos los clubes pagaban sueldos parecidos
+mientras la facturación iba de ≈ 4.000 M (Riestra) a ≈ 21.000 M por año (River): 9 clubes quedaban en deuda permanente (hasta −15.000 M, 4 veces la caja inicial). Ahora la masa salarial inicial se ajusta a
+`RevenuePerReputation × (reputación − 30) × 0,8` (límites 0,4–1,5) y los clubes de la computadora sueltan el excedente sobre 32 jugadores. Resultado a 5 temporadas: plantel 25–34, caja mínima −1.900 M, 4 clubes en deuda.
+Pendiente: los fichajes y juveniles de la computadora siguen cobrando sueldos de mercado, así que los clubes chicos se deterioran despacio (por eso el test tolera hasta 10 clubes en deuda).
+**Rendimiento del núcleo** (`AllocationTests`): 0 bytes por tick en el motor y 0 al copiar el estado para la vista (regla 7).

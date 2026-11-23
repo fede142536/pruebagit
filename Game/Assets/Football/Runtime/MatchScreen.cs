@@ -693,11 +693,12 @@ namespace Football.Game
                         // El detalle (minuto, jugador, equipo) va en la placa; el aviso grande solo celebra.
                         text = ownGoal ? "¡GOL EN CONTRA!" : "¡GOOOL!";
                         break;
-                    case MatchEventType.Offside: text = "FUERA DE JUEGO"; _audio.Whistle(); break;
-                    case MatchEventType.Foul: text = "FALTA"; _audio.Whistle(); break;
+                    case MatchEventType.Offside: text = "FUERA DE JUEGO"; _audio.Whistle(); _audio.React(ReactMild, true); break;
+                    case MatchEventType.Foul: text = "FALTA"; _audio.Whistle(); _audio.React(ReactMedium, true); break;
+                    case MatchEventType.Shot: _audio.React(ReactMild, false); break;
                     case MatchEventType.KickOff: _audio.Whistle(); break;
-                    case MatchEventType.YellowCard: ShowPlate("AMARILLA", new Color(1f, 0.85f, 0.1f), e); break;
-                    case MatchEventType.RedCard: ShowPlate("ROJA", new Color(0.9f, 0.15f, 0.15f), e); break;
+                    case MatchEventType.YellowCard: ShowPlate("AMARILLA", new Color(1f, 0.85f, 0.1f), e); _audio.React(ReactMedium, true); break;
+                    case MatchEventType.RedCard: ShowPlate("ROJA", new Color(0.9f, 0.15f, 0.15f), e); _audio.React(ReactStrong, true); break;
                     case MatchEventType.Penalty: text = "¡PENAL!"; _audio.Whistle(); break;
                     case MatchEventType.Corner: text = "TIRO DE ESQUINA"; break;
                     case MatchEventType.ThrowIn: text = "SAQUE LATERAL"; break;
@@ -713,7 +714,7 @@ namespace Football.Game
 
                         break;
                     case MatchEventType.FullTime: text = "FIN DEL PARTIDO"; _audio.LongWhistle(); break;
-                    case MatchEventType.Save: text = "¡PARADÓN!"; break;
+                    case MatchEventType.Save: text = "¡PARADÓN!"; _audio.React(ReactStrong, false); break;
                     case MatchEventType.Woodwork:
                         text = "¡AL PALO!";
                         Haptics.Pulse(_settings.Vibration);
@@ -858,6 +859,7 @@ namespace Football.Game
         private const int HistoryLength = 300; // 5 s a 60 pasos por segundo
         private readonly MatchSnapshot[] _history = new MatchSnapshot[HistoryLength];
         private const string BocaName = "Boca Juniors";
+        private const float ReactMild = 0.35f, ReactMedium = 0.55f, ReactStrong = 0.8f;   // intensidad de la reacción de la hinchada
         private readonly GameAudio _audio;
         private int _historyHead, _historyCount;
         private bool _replaying;

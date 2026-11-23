@@ -29,6 +29,26 @@ namespace Football.Game.Editor
                 return;
             }
 
+            RunBuild();
+        }
+
+        /// <summary>
+        /// Misma compilación sin ventanas, para <c>CONSTRUIR_APK.bat</c> (Unity -batchmode -buildTarget Android -executeMethod).
+        /// Termina el proceso con código 0 si el APK se generó y 1 si no.
+        /// </summary>
+        public static void BuildBatch()
+        {
+            bool ok = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android && RunBuild();
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                Debug.LogError("Football: la plataforma activa no es Android (usa -buildTarget Android).");
+            }
+
+            EditorApplication.Exit(ok ? 0 : 1);
+        }
+
+        private static bool RunBuild()
+        {
             FootballProjectSetup.EnsureMaterial();
 
             PlayerSettings.companyName = "Personal";
@@ -58,12 +78,16 @@ namespace Football.Game.Editor
             if (report.summary.result == BuildResult.Succeeded)
             {
                 Debug.Log("Football: APK generado en " + Path.GetFullPath(ApkPath) + " (" + (report.summary.totalSize / 1048576) + " MB)");
-                EditorUtility.RevealInFinder(ApkPath);
+                if (!Application.isBatchMode)
+                {
+                    EditorUtility.RevealInFinder(ApkPath);
+                }
+
+                return true;
             }
-            else
-            {
-                Debug.LogError("Football: falló la compilación (" + report.summary.result + "). Revisa los errores de la consola.");
-            }
+
+            Debug.LogError("Football: falló la compilación (" + report.summary.result + "). Revisa los errores de la consola.");
+            return false;
         }
 
         private static string CreateEmptyScene()

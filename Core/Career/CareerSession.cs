@@ -222,6 +222,15 @@ namespace Football.Core.Career
                 float rating = (float)def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
                 int reputation = (int)MathUtil.Clamp(50f + (rating - cc.ReputationPivotRating) * cc.ReputationPerRating, MinReputation, MaxReputation);
                 long wages = data.Players.Values.Where(p => p.ClubId == club.Id).Sum(p => p.Contract.WeeklyWage);
+                // El mercado pide el mismo sueldo en todos lados; un club chico no lo puede pagar. Se ajusta la masa salarial a lo que el club factura.
+                double expectedRevenue = (double)cc.RevenuePerReputation * Math.Max(1, reputation - cc.RevenueFloorReputation);
+                double wageScale = Math.Min(cc.MaxWageScale, Math.Max(cc.MinWageScale, expectedRevenue * cc.WageToRevenue / WeeksPerYear / Math.Max(1L, wages)));
+                foreach (Player p in data.Players.Values.Where(p => p.ClubId == club.Id))
+                {
+                    p.Contract.WeeklyWage = (long)(p.Contract.WeeklyWage * wageScale);
+                }
+
+                wages = data.Players.Values.Where(p => p.ClubId == club.Id).Sum(p => p.Contract.WeeklyWage);
                 // Presupuestos del archivo (estimaciones propias por club) o, si faltan, fórmulas por reputación.
                 ClubInfo info = def.Club ?? new ClubInfo();
                 long transfer = info.TransferBudget > 0 ? info.TransferBudget : (long)(reputation * cc.CashPerReputation * (double)cc.TransferBudgetShare);
@@ -722,6 +731,8 @@ namespace Football.Core.Career
                 }
             }
 
+            ReleaseSurplusPlayers();
+
             foreach (PlayerCondition c in Data.Conditions.Values)
             {
                 c.SeasonMinutes = 0f;
@@ -732,6 +743,42 @@ namespace Football.Core.Career
             _inbox.Post("news.season_end", Data.Season.ToString(CultureInfo.InvariantCulture));
             Data.Season++;
             StartSeason();
+        }
+
+        /// <summary>
+        /// Los contratos no vencen, así que sin esto los planteles crecerían con cada camada de juveniles. Los clubes de la computadora
+        /// sueltan al excedente sobre <see cref="CareerConfig.MaxAiSquadSize"/> (los de menor nivel, sin dejar menos arqueros que
+        /// <see cref="CareerConfig.MinAiGoalkeepers"/>); pasan a ser jugadores libres. El club del usuario no se toca.
+        /// </summary>
+        private void ReleaseSurplusPlayers()
+        {
+            CareerConfig cc = _cfg.Career;
+            foreach (Club club in Data.Clubs.Where(c => c.Id != Data.UserClubId))
+            {
+                List<Player> squad = Squad(club.Id);
+                int goalkeepers = squad.Count(p => p.Position == Position.Goalkeeper);
+                foreach (Player p in squad.OrderBy(x => PlayerRatings.Overall(x.Attributes, x.Position)).ThenBy(x => x.Id))
+                {
+                    if (squad.Count <= cc.MaxAiSquadSize)
+                    {
+                        break;
+                    }
+
+                    if (p.Position == Position.Goalkeeper)
+                    {
+                        if (goalkeepers <= cc.MinAiGoalkeepers)
+                        {
+                            continue;
+                        }
+
+                        goalkeepers--;
+                    }
+
+                    p.ClubId = null;
+                    p.Contract = null;
+                    squad.Remove(p);
+                }
+            }
         }
 
         // ------------------------------------------------------------------ ojeadores y mercado
