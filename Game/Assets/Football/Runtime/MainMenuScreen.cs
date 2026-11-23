@@ -59,7 +59,7 @@ namespace Football.Game
         private static readonly Color ButtonText = new Color(0.047f, 0.102f, 0.078f);
 
         private const int ClubTags = 3;
-        private const float CardY = 560f, BigW = 620f, BigH = 450f, SmallW = 330f, SmallH = 330f, Gap = 30f, Border = 3f;
+        private const float CardY = 540f, BigW = 640f, BigH = 460f, SmallW = 330f, SmallH = 330f, Gap = 30f, Border = 3f, MarginX = 90f, Pad = 30f;
         private const float ScrollSpeed = 9f, SwipeDistance = 60f, DotsY = 130f;
         private readonly Image[] _tagBack = new Image[ClubTags];
         private readonly Text[] _tagText = new Text[ClubTags];
@@ -79,19 +79,19 @@ namespace Football.Game
         /// <summary>Crea el menú.</summary>
         public MainMenuScreen(Transform parent, PointerInput pointers) : base(parent, pointers, "MenuPrincipalUI")
         {
-            UiKit.Panel(Root, "FondoNoche", new Vector2(960f, 540f), new Vector2(1920f, 1080f), Bg);
+            UiKit.Panel(Root, "FondoNoche", new Vector2(960f, 540f), UiKit.FullScreenSize, Bg); // cubre toda la pantalla, sea cual sea la proporción
             DrawPitch();
 
-            UiKit.Label(Root, "Logo", new Vector2(420f, 975f), new Vector2(700f, 110f), Locale.Get("app.title"), 96, AccentStrong, TextAnchor.MiddleLeft);
-            UiKit.Label(Root, "Lema", new Vector2(420f, 895f), new Vector2(760f, 40f), Locale.Get("app.tagline"), 24, Dim, TextAnchor.MiddleLeft);
+            UiKit.Label(Root, "Logo", new Vector2(MarginX + 350f, 960f), new Vector2(700f, 100f), Locale.Get("app.title"), 84, AccentStrong, TextAnchor.MiddleLeft);
+            UiKit.Label(Root, "Lema", new Vector2(MarginX + 380f, 890f), new Vector2(760f, 36f), Locale.Get("app.tagline"), 22, Dim, TextAnchor.MiddleLeft);
 
             // Clubes de la portada (arriba a la derecha).
-            UiKit.Label(Root, "TuClub", new Vector2(1330f, 990f), new Vector2(240f, 36f), Locale.Get("title.favorite"), 22, Dim, TextAnchor.MiddleRight);
+            UiKit.Label(Root, "TuClub", new Vector2(1920f - MarginX - 3f * 126f - 130f, 960f), new Vector2(240f, 36f), Locale.Get("title.favorite"), 20, Dim, TextAnchor.MiddleRight);
             for (int i = 0; i < ClubTags; i++)
             {
-                var center = new Vector2(1520f + i * 130f, 990f);
-                _tagBack[i] = UiKit.Panel(Root, "EtiquetaClub" + i, center, new Vector2(112f, 46f), i == 1 ? Accent : Line);
-                _tagText[i] = UiKit.Label(Root, "TextoClub" + i, center, new Vector2(112f, 46f), string.Empty, 24, i == 1 ? ButtonText : Ink);
+                var center = new Vector2(1920f - MarginX - 60f - (ClubTags - 1 - i) * 126f, 960f);
+                _tagBack[i] = UiKit.Panel(Root, "EtiquetaClub" + i, center, new Vector2(116f, 46f), i == 1 ? Accent : Line);
+                _tagText[i] = UiKit.Label(Root, "TextoClub" + i, center, new Vector2(116f, 46f), string.Empty, 22, i == 1 ? ButtonText : Ink);
             }
 
             for (int i = 0; i < Entries.Length; i++)
@@ -99,16 +99,16 @@ namespace Football.Game
                 _edge[i] = UiKit.Panel(Root, "BordeModo" + i, new Vector2(960f, CardY), new Vector2(SmallW, SmallH), Line);
                 _fill[i] = UiKit.Panel(Root, "FondoModo" + i, new Vector2(960f, CardY), new Vector2(SmallW - 2f * Border, SmallH - 2f * Border), Bg);
                 _number[i] = UiKit.Label(Root, "NumeroModo" + i, new Vector2(960f, CardY), new Vector2(120f, 30f), (i + 1).ToString("00"), 22, Dim, TextAnchor.MiddleLeft);
-                _title[i] = UiKit.Label(Root, "TituloModo" + i, new Vector2(960f, CardY), new Vector2(SmallW - 40f, 120f), Locale.Get(Entries[i].Key).ToUpperInvariant(), 36, Ink,
-                    TextAnchor.LowerLeft);
+                _title[i] = UiKit.Label(Root, "TituloModo" + i, new Vector2(960f, CardY), new Vector2(SmallW - 2f * Pad, 120f), Locale.Get(Entries[i].Key).ToUpperInvariant(), 36, Ink,
+                    TextAnchor.MiddleLeft);
                 _title[i].horizontalOverflow = HorizontalWrapMode.Wrap;
-                _desc[i] = UiKit.Label(Root, "DescModo" + i, new Vector2(960f, CardY), new Vector2(BigW - 60f, 130f), Locale.Get(Entries[i].Key + ".desc"), 24, AccentStrong,
+                _desc[i] = UiKit.Label(Root, "DescModo" + i, new Vector2(960f, CardY), new Vector2(BigW - 2f * Pad, 180f), Locale.Get(Entries[i].Key + ".desc"), 26, Dim,
                     TextAnchor.UpperLeft);
                 _desc[i].horizontalOverflow = HorizontalWrapMode.Wrap;
-                _dot[i] = UiKit.Panel(Root, "Punto" + i, new Vector2(100f + i * 26f, DotsY), new Vector2(10f, 6f), Line);
+                _dot[i] = UiKit.Panel(Root, "Punto" + i, new Vector2(MarginX + 10f + i * 26f, DotsY), new Vector2(10f, 6f), Line);
             }
 
-            _action = UiKit.Button(Root, "Accion", new Vector2(1640f, DotsY), new Vector2(440f, 100f), string.Empty, 44, Accent);
+            _action = UiKit.Button(Root, "Accion", new Vector2(1920f - MarginX - 220f, DotsY), new Vector2(440f, 96f), string.Empty, 44, Accent);
             _action.Label.color = ButtonText;
             UiKit.Label(Root, "Version", new Vector2(960f, 40f), new Vector2(1800f, 40f), Locale.Get("app.version"), 22, Dim);
             _error = UiKit.Label(Root, "Error", new Vector2(960f, 230f), new Vector2(1200f, 60f), string.Empty, 24, UiTheme.Warning);
@@ -128,14 +128,10 @@ namespace Football.Game
                 UiKit.Panel(Root, name + "E", new Vector2(cx + w / 2f, cy), new Vector2(t, h), c);
             }
 
-            Rect("Cancha", 960f, 540f, 1800f, 960f);
-            UiKit.Panel(Root, "LineaMedia", new Vector2(960f, 540f), new Vector2(3f, 960f), c);
-            Rect("AreaIzq", 160f, 540f, 260f, 480f);
-            Rect("AreaDer", 1760f, 540f, 260f, 480f);
-            Rect("ChicaIzq", 100f, 540f, 140f, 250f);
-            Rect("ChicaDer", 1820f, 540f, 140f, 250f);
-            UiKit.Panel(Root, "Circulo", new Vector2(960f, 540f), new Vector2(240f, 240f), c, true);
-            UiKit.Panel(Root, "CirculoCentro", new Vector2(960f, 540f), new Vector2(234f, 234f), Bg, true);
+            Rect("Cancha", 960f, 540f, 1920f - 2f * 40f, 1080f - 2f * 40f);
+            UiKit.Panel(Root, "LineaMedia", new Vector2(960f, 540f), new Vector2(3f, 1080f - 2f * 40f), c);
+            UiKit.Panel(Root, "Circulo", new Vector2(960f, 540f), new Vector2(260f, 260f), c, true);
+            UiKit.Panel(Root, "CirculoCentro", new Vector2(960f, 540f), new Vector2(254f, 254f), Bg, true);
         }
 
         /// <summary>Muestra en las etiquetas los clubes que visten las figuras de la portada (izquierda, favorito, derecha).</summary>
@@ -209,12 +205,16 @@ namespace Football.Game
                 Place(_fill[i], new Vector2(x, CardY), new Vector2(w - 2f * Border, h - 2f * Border));
                 _edge[i].color = on ? AccentStrong : Line;
                 _fill[i].color = Color.Lerp(Bg, AccentSoft, near);
-                _number[i].rectTransform.anchoredPosition = new Vector2(x - w * 0.5f + 90f, CardY + h * 0.5f - 40f);
-                _title[i].rectTransform.anchoredPosition = new Vector2(x - 10f, CardY - h * 0.5f + (on ? 190f : 90f));
-                _title[i].rectTransform.sizeDelta = new Vector2(w - 50f, 120f);
-                _title[i].fontSize = on ? 52 : 34;
+                float top = CardY + h * 0.5f, bottom = CardY - h * 0.5f, left = x - w * 0.5f + Pad;
+                _number[i].rectTransform.anchoredPosition = new Vector2(left + 60f, top - 34f);
+                // Tarjeta chica: el título va abajo. Tarjeta grande: el título arriba y la descripción debajo, sin pisarse.
+                float titleY = Mathf.Lerp(bottom + 75f, top - 125f, near);
+                _title[i].rectTransform.anchoredPosition = new Vector2(x, titleY);
+                _title[i].rectTransform.sizeDelta = new Vector2(w - 2f * Pad, 120f);
+                _title[i].fontSize = on ? 48 : 32;
                 _title[i].color = on ? AccentStrong : Ink;
-                _desc[i].rectTransform.anchoredPosition = new Vector2(x, CardY - h * 0.5f + 90f);
+                _desc[i].rectTransform.anchoredPosition = new Vector2(x, top - 290f);
+                _desc[i].rectTransform.sizeDelta = new Vector2(w - 2f * Pad, 170f);
                 _desc[i].gameObject.SetActive(near > 0.85f);
             }
         }
