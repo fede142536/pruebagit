@@ -19,16 +19,12 @@ namespace Football.Game
         private const ulong NoiseSeed = 7;
         private const string AmbientPath = "Audio/crowd_ambient";
         private const string CheerPath = "Audio/crowd_cheer";
-        private const string BocaPath = "Audio/boca_chants";
+        private static readonly string[] BocaPaths = { "Audio/boca_song_1", "Audio/boca_song_2" };
         private const string MusicPath = "Audio/music_menu";
         private const float CheerSeconds = 7f;         // lo que dura el grito de gol antes de apagarse
         private const float CheerFadeSeconds = 2f;
-        private const float BocaMinSong = 18f;         // los cánticos suenan en tramos de esta duración, desde un punto al azar del archivo
-        private const float BocaMaxSong = 34f;
-        private const float BocaMinSilence = 12f;      // y se callan entre tramos
-        private const float BocaMaxSilence = 40f;
-        private const float BocaFadeSeconds = 2.5f;
-        private const float BocaGain = 0.75f;
+        private const float BocaFadeSeconds = 3f;       // las canciones se encadenan con un fundido cruzado: nunca hay un hueco entre una y otra
+        private const float BocaGain = 0.8f;
         private const float ReactMinSeconds = 1.2f, ReactMaxSeconds = 2.4f;  // reacciones breves de la hinchada (ohh, protesta) tomadas del archivo del grito
         private const float ReactFadeSeconds = 0.35f;
         private const float ReactCooldown = 1.6f;                           // no se pisan unas con otras
@@ -40,14 +36,18 @@ namespace Football.Game
         private readonly GameSettings _settings;
         private readonly AudioSource _crowd;
         private readonly AudioSource _effects;
-        private readonly AudioSource _cheerSource, _bocaSource, _music;
+        private readonly AudioSource _cheerSource, _music;
+        private readonly AudioSource[] _bocaSources = new AudioSource[2];   // dos voces: una termina mientras la otra entra
+        private readonly float[] _bocaLevel = new float[2];
         private readonly AudioClip[] _ambient;          // un archivo de hinchada (o el sintético si falta)
-        private readonly AudioClip _cheerClip, _bocaClip, _musicClip;
+        private readonly AudioClip _cheerClip, _musicClip;
+        private readonly AudioClip[] _bocaClips;
         private readonly SeededRandom _presentationRng = new SeededRandom((ulong)System.Environment.TickCount); // solo presentación: no es azar de juego
-        private bool _matchRunning, _bocaFans, _bocaSinging;
+        private bool _matchRunning, _bocaFans, _bocaCrossing;
         private readonly AudioSource _react;
         private float _reactTimer, _reactLength, _reactIntensity, _reactCooldown;
-        private float _bocaTimer, _cheerTimer, _musicTarget, _musicLevel;
+        private int _bocaActive, _bocaSong;
+        private float _cheerTimer, _musicTarget, _musicLevel;
         private readonly AudioClip _kick, _whistle, _longWhistle, _post, _net, _cheer;
         private float _crowdTarget = CrowdBase;
         private float _crowdLevel;
@@ -69,10 +69,21 @@ namespace Football.Game
             _ambient = new[] { real != null ? real : SynthCrowd(rng) };
             _crowd.clip = _ambient[0];
             _cheerClip = Resources.Load<AudioClip>(CheerPath);
-            _bocaClip = Resources.Load<AudioClip>(BocaPath);
+            var songs = new System.Collections.Generic.List<AudioClip>();
+            for (int i = 0; i < BocaPaths.Length; i++)
+            {
+                AudioClip song = Resources.Load<AudioClip>(BocaPaths[i]);
+                if (song != null)
+                {
+                    songs.Add(song);
+                }
+            }
+
+            _bocaClips = songs.ToArray();
             _musicClip = Resources.Load<AudioClip>(MusicPath);
             _cheerSource = NewSource(owner, false);
-            _bocaSource = NewSource(owner, false);
+            _bocaSources[0] = NewSource(owner, false);
+            _bocaSources[1] = NewSource(owner, false);
             _react = NewSource(owner, false);
             _music = NewSource(owner, true);
             _music.clip = _musicClip;
@@ -97,14 +108,20 @@ namespace Football.Game
         }
 
         /// <summary>Empieza el ambiente de la hinchada (al empezar un partido).</summary>
-        /// <param name="bocaFans">Elige Boca Juniors: además suenan sus cánticos, a tramos y al azar.</param>
+        /// <param name="bocaFans">Elige Boca Juniors: además suenan sus canciones de La 12, una tras otra y sin silencios, durante todo el partido.</param>
         public void StartCrowd(bool bocaFans = false)
         {
             _crowdTarget = CrowdBase;
             _matchRunning = true;
-            _bocaFans = bocaFans && _bocaClip != null;
-            _bocaSinging = false;
-            _bocaTimer = _presentationRng.NextFloat() * BocaMinSilence; // el primer cántico no tarda
+            _bocaFans = bocaFans && _bocaClips.Length > 0;
+            _bocaCrossing = false;
+            _bocaSong = _presentationRng.NextInt(0, Mathf.Max(1, _bocaClips.Length)); // arranca por una al azar y después se alternan
+            _bocaActive = 0;
+            _bocaLevel[0] = _bocaLevel[1] = 0f;
+            if (_bocaFans)
+            {
+                StartBocaSong(0);
+            }
             if (!_crowd.isPlaying)
             {
                 _crowd.time = _presentationRng.NextFloat() * Mathf.Max(0f, _crowd.clip.length - 1f);
@@ -119,8 +136,9 @@ namespace Football.Game
             _crowd.Stop();
             _cheerSource.Stop();
             _react.Stop();
-            _bocaSource.Stop();
-            _bocaSinging = false;
+            _bocaSources[0].Stop();
+            _bocaSources[1].Stop();
+            _bocaCrossing = false;
         }
 
         /// <summary>Música de los menús (suena en todo menos en el partido, pausa incluida). Entra y sale con fundido.</summary>
@@ -177,29 +195,53 @@ namespace Football.Game
                 return;
             }
 
-            _bocaTimer -= deltaTime;
-            if (_bocaSinging)
+            UpdateBoca(deltaTime, stadium);
+        }
+
+        private void StartBocaSong(int source)
+        {
+            AudioSource voice = _bocaSources[source];
+            voice.clip = _bocaClips[_bocaSong % _bocaClips.Length];
+            voice.time = 0f;
+            voice.volume = 0f;
+            voice.Play();
+            _bocaLevel[source] = 0f;
+        }
+
+        /// <summary>
+        /// Canciones de La 12 encadenadas: cuando a la que suena le quedan <see cref="BocaFadeSeconds"/> segundos, la siguiente entra con un fundido cruzado.
+        /// Con una sola canción cargada se repite. No hay silencios entre canciones ni durante el partido.
+        /// </summary>
+        private void UpdateBoca(float deltaTime, float stadium)
+        {
+            if (!_bocaFans || !_matchRunning)
             {
-                float left = _bocaTimer;
-                float fade = Mathf.Clamp01(Mathf.Min(left, _bocaSource.time) / BocaFadeSeconds);
-                _bocaSource.volume = stadium * BocaGain * fade;
-                if (left <= 0f || !_bocaSource.isPlaying)
-                {
-                    _bocaSource.Stop();
-                    _bocaSinging = false;
-                    _bocaTimer = Mathf.Lerp(BocaMinSilence, BocaMaxSilence, _presentationRng.NextFloat());
-                }
+                return;
             }
-            else if (_bocaTimer <= 0f)
+
+            AudioSource active = _bocaSources[_bocaActive];
+            int other = 1 - _bocaActive;
+            if (!_bocaCrossing && active.clip != null && active.clip.length - active.time <= BocaFadeSeconds)
             {
-                float length = Mathf.Lerp(BocaMinSong, BocaMaxSong, _presentationRng.NextFloat());
-                float start = _presentationRng.NextFloat() * Mathf.Max(0f, _bocaClip.length - length);
-                _bocaSource.clip = _bocaClip;
-                _bocaSource.time = start;
-                _bocaSource.volume = 0f;
-                _bocaSource.Play();
-                _bocaSinging = true;
-                _bocaTimer = Mathf.Min(length, _bocaClip.length - start);
+                _bocaSong++;
+                StartBocaSong(other);
+                _bocaCrossing = true;
+            }
+
+            float step = deltaTime / BocaFadeSeconds;
+            _bocaLevel[_bocaActive] = Mathf.MoveTowards(_bocaLevel[_bocaActive], _bocaCrossing ? 0f : 1f, step);
+            if (_bocaCrossing)
+            {
+                _bocaLevel[other] = Mathf.MoveTowards(_bocaLevel[other], 1f, step);
+            }
+
+            _bocaSources[0].volume = _bocaLevel[0] * stadium * BocaGain;
+            _bocaSources[1].volume = _bocaLevel[1] * stadium * BocaGain;
+            if (_bocaCrossing && _bocaLevel[_bocaActive] <= 0f)
+            {
+                active.Stop();
+                _bocaActive = other;
+                _bocaCrossing = false;
             }
         }
 

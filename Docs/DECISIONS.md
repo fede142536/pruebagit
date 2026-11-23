@@ -399,3 +399,8 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - `BindPositions` pasó de campo a propiedad: con el cuerpo importado el esqueleto del juego toma las posiciones de ese modelo (muslo 0,43 m, pierna 0,46 m, altura 1,82 m con cabeza).
 - Sin verificar en Unity: la apariencia con la luz y el shader del juego, la deformación al correr y patear (los pesos se redujeron de 4 huesos a 2), el anclaje de los pies y el tamaño del dorsal. Lo único comprobado es la malla armada (SkinCheck) y una vista previa por software.
 - Se quitaron del repositorio las texturas del pack (30 MB, sin uso) y los modelos pasaron a `ThirdParty/`.
+
+## D-33 · Canciones de La 12 continuas en los partidos de Boca — Aceptada (pedido del usuario, 23/11/2026)
+- Los cánticos de Boca ahora son dos canciones de La 12 que se encadenan **sin silencios** durante todo el partido: cuando a la que suena le quedan 3 s, la otra entra con fundido cruzado; arranca por una al azar y después se alternan.
+  Antes sonaban a tramos al azar con 12–40 s de silencio (decisión de D-29), que el usuario percibió como baches. Se recortó además el silencio de ~2 s que tenía la primera canción al principio y al final.
+- Solo suenan si el equipo local es «Boca Juniors». Se retiró el archivo anterior de cánticos. Las canciones son de origen y licencia desconocidos (uso personal): ver `ASSETS_LICENSES.md`.
