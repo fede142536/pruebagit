@@ -72,12 +72,12 @@ namespace Football.Game
         public static Image FrameEdge(Image fill) => fill.transform.parent.Find(fill.name + "Borde").GetComponent<Image>();
 
         private static Sprite _gradient;
-        private const float BackgroundAlpha = 0.82f;
+        private const float BackgroundAlpha = 1f; // opaco: no se transparentan las figuras 3D de la portada
 
         /// <summary>Fondo a pantalla completa con degradado vertical.</summary>
         public static void Background(Transform parent)
         {
-            // Semitransparente: detrás se ve la portada del túnel (TitleStage).
+            // Opaco: detrás no debe verse la portada 3D (TitleStage); el menú principal tiene su propio fondo.
             Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(1f, 1f, 1f, BackgroundAlpha));
             image.sprite = Gradient();
             // Líneas de cancha muy tenues como decoración (marco, línea media, círculo y áreas), como en el diseño.

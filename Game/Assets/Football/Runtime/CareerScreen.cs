@@ -714,7 +714,7 @@ namespace Football.Game
             for (int i = 0; i < MarketRows && i < _found.Count; i++)
             {
                 Player pl = _found[i];
-                _results.SetRow(i + 1, FullName(pl), pl.ClubId.HasValue ? d.Club(pl.ClubId.Value).ShortName : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
+                _results.SetRow(i + 1, FullName(pl), pl.ClubId.HasValue ? CareerText.Fit(d.Club(pl.ClubId.Value).Name, 24) : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
                     Num(_session.VisibleRating(pl)), Money(_session.Market.Value(pl, d.Today)), Money(pl.Contract?.ReleaseClause ?? 0));
             }
 

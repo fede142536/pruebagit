@@ -7,6 +7,11 @@ namespace Football.Game
     /// <summary>Formato de números y textos de las pantallas de carrera (montos, porcentajes y textos con argumentos).</summary>
     public static class CareerText
     {
+        /// <summary>Recorta un nombre largo con «…» para que entre en su columna; el nombre completo siempre que entre.</summary>
+        /// <param name="name">Texto.</param>
+        /// <param name="max">Máximo de letras.</param>
+        public static string Fit(string name, int max) => name.Length <= max ? name : name.Substring(0, max - 1) + "…";
+
         private const long Million = 1_000_000;
         private const long Thousand = 1_000;
 

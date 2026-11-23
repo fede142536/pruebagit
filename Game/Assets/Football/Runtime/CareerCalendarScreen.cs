@@ -88,8 +88,8 @@ namespace Football.Game
                 string competition = Session.CompetitionName(f) + "  ·  " + (CareerSession.IsCup(f)
                     ? CareerText.CupStage(Session.CupFixtures(Season, f.Round).Count, f.Round)
                     : CareerText.Format("career.matchday", f.Round));
-                _grid.SetRow(row, f.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture), competition, d.Club(f.HomeClubId).ShortName, CareerText.Score(f),
-                    d.Club(f.AwayClubId).ShortName, Letter(f));
+                _grid.SetRow(row, f.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture), competition, CareerText.Fit(d.Club(f.HomeClubId).Name, 24), CareerText.Score(f),
+                    CareerText.Fit(d.Club(f.AwayClubId).Name, 24), Letter(f));
                 bool userHome = f.HomeClubId == d.UserClubId;
                 _grid.SetColor(row, userHome ? 2 : 4, UiTheme.Accent);
                 _grid.SetColor(row, 5, ResultColor(f));

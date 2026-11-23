@@ -30,7 +30,7 @@ namespace Football.Game
         private const int CupRows = 15;
         private const float CupRowHeight = 40f;
         private const float CrestSize = 120f;
-        private const float DayWidth = 120f, DayStep = 128f;
+        private const float DayWidth = 104f, DayStep = 110f;
 
         private readonly ClubCrest _bannerCrest, _homeCrest, _awayCrest;
         private readonly Text _bannerClub, _bannerCompetition, _date, _round, _weather, _homeName, _awayName, _versus, _noMatch;
@@ -65,56 +65,56 @@ namespace Football.Game
             Transform p = Panel;
 
             // Cartel del club y la competición.
-            UiTheme.Frame(p, "Cartel", new Vector2(330f, 915f), new Vector2(600f, 130f));
+            UiTheme.Frame(p, "Cartel", new Vector2(280f, 915f), new Vector2(500f, 130f));
             UiKit.Panel(p, "CartelAcento", new Vector2(34f, 915f), new Vector2(8f, 130f), UiTheme.Accent);
-            _bannerCrest = new ClubCrest(p, new Vector2(110f, 915f), 100f);
-            _bannerClub = UiKit.Label(p, "CartelClub", new Vector2(400f, 940f), new Vector2(420f, 50f), string.Empty, 30, UiTheme.Text, TextAnchor.MiddleLeft);
-            _bannerCompetition = UiKit.Label(p, "CartelTorneo", new Vector2(400f, 890f), new Vector2(420f, 40f), string.Empty, 22, UiTheme.Accent, TextAnchor.MiddleLeft);
+            _bannerCrest = new ClubCrest(p, new Vector2(100f, 915f), 100f);
+            _bannerClub = UiKit.Label(p, "CartelClub", new Vector2(340f, 940f), new Vector2(340f, 50f), string.Empty, 28, UiTheme.Text, TextAnchor.MiddleLeft);
+            _bannerCompetition = UiKit.Label(p, "CartelTorneo", new Vector2(340f, 890f), new Vector2(340f, 40f), string.Empty, 22, UiTheme.Accent, TextAnchor.MiddleLeft);
 
             // Pedido de los socios.
             _requestGroup = CreateGroup(p, "PedidoSocios").gameObject;
             Transform r = _requestGroup.transform;
-            UiKit.Panel(r, "PedidoBorde", new Vector2(330f, 745f), new Vector2(600f, 180f), UiTheme.Amber); // estado de alerta: solo contorno ámbar
-            UiKit.Panel(r, "PedidoFondo", new Vector2(330f, 745f), new Vector2(596f, 176f), new Color(0.059f, 0.102f, 0.09f, 0.97f));
-            _request = UiKit.Label(r, "Pedido", new Vector2(330f, 790f), new Vector2(560f, 80f), string.Empty, 20, UiTheme.Text, TextAnchor.MiddleLeft);
+            UiKit.Panel(r, "PedidoBorde", new Vector2(280f, 745f), new Vector2(500f, 180f), UiTheme.Amber); // estado de alerta: solo contorno ámbar
+            UiKit.Panel(r, "PedidoFondo", new Vector2(280f, 745f), new Vector2(496f, 176f), new Color(0.059f, 0.102f, 0.09f, 0.97f));
+            _request = UiKit.Label(r, "Pedido", new Vector2(280f, 790f), new Vector2(460f, 80f), string.Empty, 20, UiTheme.Text, TextAnchor.MiddleLeft);
             _request.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _accept = UiKit.Button(r, "Aceptar", new Vector2(185f, 700f), new Vector2(280f, 64f), Locale.Get("supporters.accept"), 20, UiTheme.AccentDark);
-            _keep = UiKit.Button(r, "Mantener", new Vector2(475f, 700f), new Vector2(280f, 64f), Locale.Get("supporters.keep"), 20, UiTheme.Button);
+            _accept = UiKit.Button(r, "Aceptar", new Vector2(160f, 700f), new Vector2(230f, 64f), Locale.Get("supporters.accept"), 20, UiTheme.AccentDark);
+            _keep = UiKit.Button(r, "Mantener", new Vector2(400f, 700f), new Vector2(230f, 64f), Locale.Get("supporters.keep"), 20, UiTheme.Button);
 
             // Buzón.
-            UiTheme.Frame(p, "Buzon", new Vector2(330f, 400f), new Vector2(600f, 440f));
-            UiKit.Label(p, "BuzonTitulo", new Vector2(330f, 595f), new Vector2(560f, 40f), Locale.Get("career.news"), 26, UiTheme.Accent);
-            _openCalendar = UiKit.Button(p, "AbrirCalendario", new Vector2(185f, 125f), new Vector2(285f, 64f), Locale.Get("career.cal.open"), 24, UiTheme.Button);
-            _openHistory = UiKit.Button(p, "AbrirHistorial", new Vector2(475f, 125f), new Vector2(285f, 64f), Locale.Get("career.history.open"), 24, UiTheme.Button);
+            UiTheme.Frame(p, "Buzon", new Vector2(280f, 400f), new Vector2(500f, 440f));
+            UiKit.Label(p, "BuzonTitulo", new Vector2(280f, 595f), new Vector2(460f, 40f), Locale.Get("career.news"), 26, UiTheme.Accent);
+            _openCalendar = UiKit.Button(p, "AbrirCalendario", new Vector2(160f, 125f), new Vector2(235f, 64f), Locale.Get("career.cal.open"), 24, UiTheme.Button);
+            _openHistory = UiKit.Button(p, "AbrirHistorial", new Vector2(400f, 125f), new Vector2(235f, 64f), Locale.Get("career.history.open"), 24, UiTheme.Button);
             for (int i = 0; i < NewsRows; i++)
             {
-                _news[i] = UiKit.Label(p, "Noticia" + i, new Vector2(330f, 535f - i * 76f), new Vector2(560f, 70f), string.Empty, 19, UiTheme.Text, TextAnchor.MiddleLeft);
+                _news[i] = UiKit.Label(p, "Noticia" + i, new Vector2(280f, 535f - i * 76f), new Vector2(460f, 70f), string.Empty, 19, UiTheme.Text, TextAnchor.MiddleLeft);
                 _news[i].horizontalOverflow = HorizontalWrapMode.Wrap;
             }
 
             // Tarjeta del próximo partido.
-            UiTheme.Frame(p, "Partido", new Vector2(985f, 660f), new Vector2(680f, 640f));
-            _date = UiKit.Label(p, "Fecha", new Vector2(985f, 945f), new Vector2(640f, 44f), string.Empty, 28, UiTheme.Text);
-            _round = UiKit.Label(p, "Jornada", new Vector2(985f, 900f), new Vector2(640f, 40f), string.Empty, 22, UiTheme.Accent);
-            _weather = UiKit.Label(p, "Clima", new Vector2(985f, 860f), new Vector2(640f, 36f), string.Empty, 20, UiTheme.TextDim);
+            UiTheme.Frame(p, "Partido", new Vector2(825f, 660f), new Vector2(560f, 640f));
+            _date = UiKit.Label(p, "Fecha", new Vector2(825f, 945f), new Vector2(520f, 44f), string.Empty, 28, UiTheme.Text);
+            _round = UiKit.Label(p, "Jornada", new Vector2(825f, 900f), new Vector2(520f, 40f), string.Empty, 22, UiTheme.Accent);
+            _weather = UiKit.Label(p, "Clima", new Vector2(825f, 860f), new Vector2(520f, 36f), string.Empty, 20, UiTheme.TextDim);
             _matchGroup = CreateGroup(p, "Rivales").gameObject;
             Transform m = _matchGroup.transform;
-            _homeCrest = new ClubCrest(m, new Vector2(820f, 740f), CrestSize);
-            _awayCrest = new ClubCrest(m, new Vector2(1150f, 740f), CrestSize);
-            _versus = UiKit.Label(m, "Vs", new Vector2(985f, 740f), new Vector2(120f, 60f), "VS", 40, UiTheme.TextDim);
-            _homeName = UiKit.Label(m, "Local", new Vector2(820f, 650f), new Vector2(300f, 40f), string.Empty, 24, UiTheme.Text);
-            _awayName = UiKit.Label(m, "Visitante", new Vector2(1150f, 650f), new Vector2(300f, 40f), string.Empty, 24, UiTheme.Text);
-            _homeStars = new StarRating(m, new Vector2(820f, 600f));
-            _awayStars = new StarRating(m, new Vector2(1150f, 600f));
-            _noMatch = UiKit.Label(p, "SinPartido", new Vector2(985f, 680f), new Vector2(620f, 60f), string.Empty, 28, UiTheme.TextDim);
-            _play = UiKit.Button(p, "Jugar", new Vector2(855f, 395f), new Vector2(250f, 84f), Locale.Get("career.play"), 34, UiTheme.AccentDark);
-            _simulate = UiKit.Button(p, "Simular", new Vector2(1115f, 395f), new Vector2(250f, 84f), Locale.Get("career.simulate"), 30, UiTheme.Button);
-            _advance = UiKit.Button(p, "Avanzar", new Vector2(985f, 395f), new Vector2(380f, 84f), Locale.Get("career.advance"), 30, UiTheme.Button);
+            _homeCrest = new ClubCrest(m, new Vector2(690f, 740f), CrestSize);
+            _awayCrest = new ClubCrest(m, new Vector2(960f, 740f), CrestSize);
+            _versus = UiKit.Label(m, "Vs", new Vector2(825f, 740f), new Vector2(120f, 60f), "VS", 40, UiTheme.TextDim);
+            _homeName = UiKit.Label(m, "Local", new Vector2(690f, 650f), new Vector2(250f, 40f), string.Empty, 22, UiTheme.Text);
+            _awayName = UiKit.Label(m, "Visitante", new Vector2(960f, 650f), new Vector2(250f, 40f), string.Empty, 22, UiTheme.Text);
+            _homeStars = new StarRating(m, new Vector2(690f, 600f));
+            _awayStars = new StarRating(m, new Vector2(960f, 600f));
+            _noMatch = UiKit.Label(p, "SinPartido", new Vector2(825f, 680f), new Vector2(500f, 60f), string.Empty, 28, UiTheme.TextDim);
+            _play = UiKit.Button(p, "Jugar", new Vector2(700f, 395f), new Vector2(220f, 84f), Locale.Get("career.play"), 34, UiTheme.AccentDark);
+            _simulate = UiKit.Button(p, "Simular", new Vector2(950f, 395f), new Vector2(220f, 84f), Locale.Get("career.simulate"), 30, UiTheme.Button);
+            _advance = UiKit.Button(p, "Avanzar", new Vector2(825f, 395f), new Vector2(340f, 84f), Locale.Get("career.advance"), 30, UiTheme.Button);
 
             // Calendario de cinco días.
             for (int i = 0; i < CalendarDays; i++)
             {
-                float x = 985f + (i - CalendarDays / 2) * DayStep;
+                float x = 825f + (i - CalendarDays / 2) * DayStep;
                 _dayCell[i] = UiTheme.Frame(p, "Dia" + i, new Vector2(x, 235f), new Vector2(DayWidth, 170f));
                 _dayName[i] = UiKit.Label(p, "DiaNombre" + i, new Vector2(x, 295f), new Vector2(DayWidth, 34f), string.Empty, 18, UiTheme.TextDim);
                 _dayNumber[i] = UiKit.Label(p, "DiaNumero" + i, new Vector2(x, 250f), new Vector2(DayWidth, 50f), string.Empty, 34, UiTheme.Text);
@@ -122,23 +122,23 @@ namespace Football.Game
             }
 
             // Tabla compacta.
-            UiTheme.Frame(p, "Tabla", new Vector2(1625f, 560f), new Vector2(530f, 860f));
+            UiTheme.Frame(p, "Tabla", new Vector2(1510f, 560f), new Vector2(760f, 860f));
             string[] keys = { "career.table.tournament", "career.table.annual", "career.table.averages", "career.table.cup" };
             for (int i = 0; i < _tableTabs.Length; i++)
             {
-                _tableTabs[i] = UiKit.Button(p, "TablaModo" + i, new Vector2(1425f + i * 130f, 950f), new Vector2(124f, 52f), Locale.Get(keys[i]), 15, UiTheme.Button);
+                _tableTabs[i] = UiKit.Button(p, "TablaModo" + i, new Vector2(1215f + i * 180f, 950f), new Vector2(172f, 52f), Locale.Get(keys[i]), 15, UiTheme.Button);
             }
 
-            _tablePrev = UiKit.Button(p, "TablaAnterior", new Vector2(1490f, PagerY), new Vector2(90f, 46f), "<", 28, UiTheme.Button);
-            _tableNext = UiKit.Button(p, "TablaSiguiente", new Vector2(1760f, PagerY), new Vector2(90f, 46f), ">", 28, UiTheme.Button);
-            _tableRange = UiKit.Label(p, "TablaRango", new Vector2(1625f, PagerY), new Vector2(190f, 40f), string.Empty, 22, UiTheme.TextDim);
-            _table = new TextGrid(p, "Posiciones", new Vector2(1370f, 890f), TableRowHeight, new[] { 1390f, 1455f, 1522f, 1568f, 1614f, 1660f, 1706f, 1752f, 1798f, 1852f },
-                new[] { 36f, 86f, 46f, 44f, 44f, 44f, 44f, 44f, 44f, 60f }, TableRows, 17);
+            _tablePrev = UiKit.Button(p, "TablaAnterior", new Vector2(1330f, PagerY), new Vector2(90f, 46f), "<", 28, UiTheme.Button);
+            _tableNext = UiKit.Button(p, "TablaSiguiente", new Vector2(1690f, PagerY), new Vector2(90f, 46f), ">", 28, UiTheme.Button);
+            _tableRange = UiKit.Label(p, "TablaRango", new Vector2(1510f, PagerY), new Vector2(190f, 40f), string.Empty, 22, UiTheme.TextDim);
+            _table = new TextGrid(p, "Posiciones", new Vector2(1136f, 890f), TableRowHeight, new[] { 1158f, 1295f, 1456f, 1508f, 1560f, 1612f, 1664f, 1716f, 1768f, 1826f },
+                new[] { 44f, 240f, 56f, 52f, 52f, 52f, 52f, 52f, 52f, 60f }, TableRows, 18);
 
             // Cruces de la copa: local, resultado y visitante de cada partido de la ronda.
-            _cupTitle = UiKit.Label(p, "CopaTitulo", new Vector2(1625f, 890f), new Vector2(500f, 40f), string.Empty, 22, UiTheme.Gold);
-            _cup = new TextGrid(p, "Cruces", new Vector2(1370f, 850f), CupRowHeight, new[] { 1480f, 1625f, 1770f }, new[] { 210f, 80f, 210f }, CupRows + 1, 18);
-            _cupBye = UiKit.Label(p, "CopaDirecto", new Vector2(1625f, 205f), new Vector2(500f, 36f), string.Empty, 18, UiTheme.TextDim);
+            _cupTitle = UiKit.Label(p, "CopaTitulo", new Vector2(1510f, 890f), new Vector2(700f, 40f), string.Empty, 22, UiTheme.Gold);
+            _cup = new TextGrid(p, "Cruces", new Vector2(1140f, 850f), CupRowHeight, new[] { 1330f, 1510f, 1690f }, new[] { 330f, 100f, 330f }, CupRows + 1, 18);
+            _cupBye = UiKit.Label(p, "CopaDirecto", new Vector2(1510f, 205f), new Vector2(700f, 36f), string.Empty, 18, UiTheme.TextDim);
 
             // Cartel de campeón: tapa la central hasta que se toca CONTINUAR.
             _ceremony = CreateGroup(p, "Cartel").gameObject;
@@ -349,7 +349,7 @@ namespace Football.Game
                 bool cup = f != null && CareerSession.IsCup(f);
                 _dayMatch[i].text = f == null ? string.Empty
                     : (f.HomeClubId == d.UserClubId ? Locale.Get("career.home_short") : Locale.Get("career.away_short")) + " "
-                      + d.Club(f.HomeClubId == d.UserClubId ? f.AwayClubId : f.HomeClubId).ShortName;
+                      + d.Club(f.HomeClubId == d.UserClubId ? f.AwayClubId : f.HomeClubId).Name;
                 _dayMatch[i].color = cup ? UiTheme.Gold : UiTheme.Accent;
                 _dayCell[i].color = i == 0 ? UiTheme.Selected : UiTheme.Panel;
                 UiTheme.FrameEdge(_dayCell[i]).color = i == 0 ? UiTheme.AccentStrong : f != null ? UiTheme.AccentText : UiTheme.Line; // hoy resaltado; con partido, borde verde
@@ -392,7 +392,7 @@ namespace Football.Game
             {
                 Fixture f = ties[k];
                 int row = k + 1;
-                _cup.SetRow(row, d.Club(f.HomeClubId).ShortName, f.IsPlayed ? CareerText.Score(f) : "vs", d.Club(f.AwayClubId).ShortName);
+                _cup.SetRow(row, Fit(d.Club(f.HomeClubId).Name, 28), f.IsPlayed ? CareerText.Score(f) : "vs", Fit(d.Club(f.AwayClubId).Name, 28));
                 bool mine = f.HomeClubId == d.UserClubId || f.AwayClubId == d.UserClubId;
                 _cup.Highlight(row, mine);
                 if (f.IsPlayed)
@@ -404,8 +404,11 @@ namespace Football.Game
             }
 
             List<int> byes = Session.CupByesOf(season, round);
-            _cupBye.text = byes.Count == 0 ? string.Empty : CareerText.Format("cup.bye", string.Join(", ", byes.ConvertAll(id => d.Club(id).ShortName)));
+            _cupBye.text = byes.Count == 0 ? string.Empty : CareerText.Format("cup.bye", string.Join(", ", byes.ConvertAll(id => d.Club(id).Name)));
         }
+
+        /// <summary>Recorta un nombre largo con «…» para que entre en su columna (el nombre completo siempre que entre).</summary>
+        private static string Fit(string name, int max = 26) => name.Length <= max ? name : name.Substring(0, max - 1) + "…";
 
         private void FillTable(CareerData d)
         {
@@ -447,14 +450,14 @@ namespace Football.Game
                 int i = first + k, row = k + 1;
                 if (averages)
                 {
-                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(rows[i].ClubId).ShortName, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                    _table.SetRow(row, CareerText.Num(i + 1), Fit(d.Club(rows[i].ClubId).Name), string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
                         string.Empty, string.Empty, rows[i].Average.ToString("0.000", CultureInfo.InvariantCulture));
                     _table.Highlight(row, rows[i].ClubId == d.UserClubId);
                 }
                 else
                 {
                     Standing s = table[i];
-                    _table.SetRow(row, CareerText.Num(i + 1), d.Club(s.ClubId).ShortName, CareerText.Num(s.Points), CareerText.Num(s.Played), CareerText.Num(s.Won),
+                    _table.SetRow(row, CareerText.Num(i + 1), Fit(d.Club(s.ClubId).Name), CareerText.Num(s.Points), CareerText.Num(s.Played), CareerText.Num(s.Won),
                         CareerText.Num(s.Drawn), CareerText.Num(s.Lost), CareerText.Num(s.GoalsFor), CareerText.Num(s.GoalsAgainst), CareerText.Num(s.GoalDifference));
                     _table.Highlight(row, s.ClubId == d.UserClubId);
                 }
