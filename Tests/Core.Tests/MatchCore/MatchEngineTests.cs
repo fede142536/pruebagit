@@ -108,7 +108,7 @@ namespace Football.Core.Tests.MatchCore
             Assert.That(sawSecondHalfKickoff, Is.True, "la segunda parte la saca el visitante");
             Assert.That(e.Half, Is.EqualTo(2));
             Assert.That(e.Teams[0].AttackDirection, Is.EqualTo(-1f), "los equipos cambian de lado en el descanso");
-            Assert.That(e.Minute, Is.EqualTo(90f).Within(0.5f));
+            Assert.That(e.Minute, Is.EqualTo(90f + e.AddedMinutes).Within(0.5f), "90 minutos más el tiempo agregado de la segunda parte");
             Assert.That(e.Events.CountOf(MatchEventType.HalfTime), Is.EqualTo(1));
             Assert.That(e.Events.CountOf(MatchEventType.FullTime), Is.EqualTo(1));
             Assert.That(e.Events.CountOf(MatchEventType.KickOff), Is.GreaterThanOrEqualTo(2));

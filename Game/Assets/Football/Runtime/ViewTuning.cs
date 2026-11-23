@@ -8,9 +8,9 @@ namespace Football.Game
     public sealed class CameraTuning
     {
         /// <summary>Altura de la cámara de transmisión (m).</summary>
-        public float Height = 21f;
+        public float Height = 13f;
         /// <summary>Distancia horizontal de la cámara al centro del campo (m).</summary>
-        public float Distance = 30f;
+        public float Distance = 34f;
         /// <summary>Campo de visión vertical (grados).</summary>
         public float Fov = 40f;
         /// <summary>Cuánto sigue al balón a lo largo (0 nada, 1 del todo).</summary>

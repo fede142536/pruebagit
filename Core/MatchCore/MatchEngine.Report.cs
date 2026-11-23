@@ -200,7 +200,7 @@ namespace Football.Core.MatchCore
 
         private PlayerReport PlayerEntry(MatchPlayer p)
         {
-            float end = p.MinuteOff >= 0f ? p.MinuteOff : Math.Min(Minute, 2f * Config.Rules.MinutesPerHalf);
+            float end = p.MinuteOff >= 0f ? p.MinuteOff : PlayedMinute;
             return new PlayerReport
             {
                 PlayerId = p.PlayerId,

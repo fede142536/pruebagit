@@ -746,7 +746,7 @@ namespace Football.Core.MatchCore
         private void SendOff(MatchPlayer p, Vec2 at)
         {
             p.SentOff = true;
-            p.MinuteOff = Minute;
+            p.MinuteOff = PlayedMinute;
             p.Stats.Reds++;
             Teams[p.Team].Stats.Reds++;
             AddEvent(MatchEventType.RedCard, p.Team, p.Index, at);

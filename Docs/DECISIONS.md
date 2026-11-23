@@ -328,3 +328,18 @@ valen los de la jerarquía); las partidas guardadas con 15 clubes siguen cargand
 - **Animación**: cadencia acompasada con la velocidad del suelo, amortiguación `1 − e^(−λ·dt)` de la pose pedida respecto de la zancada base y anclaje de pies con IK de dos huesos (el pie de apoyo también al patear).
 - **LOD** de dos niveles sobre el mismo esqueleto: ~2.520 triángulos de cerca y ~840 desde 24 m de la cámara (histéresis de 2 m).
 **Sin ejecutar en Unity:** el `UsePass`, el stencil (requiere buffer de profundidad con stencil), `SetShaderPassEnabled` y la IK son lo que más probablemente necesite ajustes en el dispositivo. Medido sin Unity (`Tools/SkinCheck`): triángulos, pesos, una sola superficie por extremidad, AO y proyección de decales.
+
+## D-26 · 45 minutos por parte con tiempo agregado, repetición en cancha cerrada y cámara más baja — Aceptada (pedido del usuario, 23/11/2026)
+**Decisión:**
+- **Reloj**: el 3 contra 3 también muestra 45 minutos por parte (antes 20); la duración real sigue siendo la que se elige (2, 3 o 5 min por parte).
+- **Tiempo agregado** (`RulesConfig.Stoppage*`, `MinAddedMinutes` = 1, `MaxAddedMinutes` = 7): al terminar la hora reglamentaria de cada parte el motor anuncia
+  los minutos que sumaron los hechos de esa parte (gol 0,75; cambio 0,5; lesión 1,5; expulsión 1; amarilla 0,25; penal 1), redondeados hacia arriba. El reloj
+  sigue contando (45:00, 46:10…) y un cartel «+N» y un aviso lo anuncian; el partido termina al cumplirse. `Minute` es el reloj de pantalla (la segunda parte vuelve a
+  empezar en 45) y `PlayedMinute` el minuto jugado de verdad (para minutos de jugadores y cambios). Los hechos guardan su parte (`MatchEvent.Half`) y la placa
+  escribe «45+2'».
+- **Repetición**: en la cancha cerrada la segunda pasada (a ras del césped detrás del arco) quedaba del otro lado de la pared y solo mostraba la pared; ahora esa
+  cancha repite una sola vez desde la cámara de transmisión, y al terminar la cámara vuelve de golpe a su sitio y se reinicia la interpolación del partido.
+- **Césped**: se quitan las manchas de «desgaste» (óvalos oscuros en las áreas y el círculo central).
+- **Cámara de transmisión**: altura 13 m y distancia 34 m (≈ 21° sobre el horizonte; antes 21 m y 30 m, ≈ 35°). Se ajusta en `view_tuning.json`.
+**Medición** (1000 partidos, semilla 1): 2,79 goles por partido (antes 2,69; el tiempo agregado suma ≈ 4 % de juego) dentro del objetivo 2,4–2,9;
+sin excepciones ni partidos sin terminar. Pase 85,9 %.

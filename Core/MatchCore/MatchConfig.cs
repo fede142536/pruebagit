@@ -299,8 +299,24 @@ namespace Football.Core.MatchCore
     {
         /// <summary>Duración real de cada parte (s).</summary>
         public float HalfDuration = 180f;
-        /// <summary>Minutos de partido que representa cada parte.</summary>
+        /// <summary>Minutos de partido que representa cada parte (también en el 3 contra 3).</summary>
         public float MinutesPerHalf = 45f;
+        /// <summary>Minutos que suma al final de la parte cada gol (festejo y saque del medio).</summary>
+        public float StoppagePerGoal = 0.75f;
+        /// <summary>Minutos que suma cada cambio.</summary>
+        public float StoppagePerSubstitution = 0.5f;
+        /// <summary>Minutos que suma cada lesión.</summary>
+        public float StoppagePerInjury = 1.5f;
+        /// <summary>Minutos que suma cada expulsión.</summary>
+        public float StoppagePerRedCard = 1f;
+        /// <summary>Minutos que suma cada amarilla.</summary>
+        public float StoppagePerYellowCard = 0.25f;
+        /// <summary>Minutos que suma cada penal (ejecución y reclamos).</summary>
+        public float StoppagePerPenalty = 1f;
+        /// <summary>Mínimo de minutos agregados que se anuncian al final de cada parte.</summary>
+        public int MinAddedMinutes = 1;
+        /// <summary>Máximo de minutos agregados.</summary>
+        public int MaxAddedMinutes = 7;
         /// <summary>Espera antes de ejecutar un saque (s): tiro libre y otros.</summary>
         public float RestartDelay = 1.4f;
         /// <summary>Espera antes de un saque lateral, para que los compañeros se acerquen (s).</summary>
@@ -771,7 +787,6 @@ namespace Football.Core.MatchCore
             c.Report.XgCalibration = IndoorXgCalibration;
 
             RulesConfig r = c.Rules;
-            r.MinutesPerHalf = 20f;
             r.Offside = false;
             r.SetPieceDistance = 5f;
             r.FreeKickDirectMaxDistance = 14f;

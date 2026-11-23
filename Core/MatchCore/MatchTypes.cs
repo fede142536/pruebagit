@@ -105,8 +105,10 @@ namespace Football.Core.MatchCore
         public int Team;
         /// <summary>Índice global del jugador protagonista (0..21), o -1.</summary>
         public int PlayerIndex;
-        /// <summary>Minuto de partido (0..90).</summary>
+        /// <summary>Minuto de pantalla de la parte en que ocurrió (0..45 + tiempo agregado; la segunda parte vuelve a empezar en 45).</summary>
         public float Minute;
+        /// <summary>Parte en que ocurrió (1 o 2); con <see cref="Minute"/> permite escribir «45+2'».</summary>
+        public int Half;
         /// <summary>Posición X del evento.</summary>
         public float X;
         /// <summary>Posición Y del evento.</summary>

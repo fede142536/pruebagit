@@ -1,7 +1,7 @@
 {
   "Camera": {
-    "Height": 21.0,
-    "Distance": 30.0,
+    "Height": 13.0,
+    "Distance": 34.0,
     "Fov": 40.0,
     "FollowX": 0.8,
     "FollowZ": 0.85,

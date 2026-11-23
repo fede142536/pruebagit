@@ -55,7 +55,7 @@ namespace Football.Core.Tests.MatchCore
                 Assert.That(team.Possession, Is.InRange(0f, 1f));
                 foreach (PlayerReport p in team.Players)
                 {
-                    Assert.That(p.Minutes, Is.InRange(0f, 90.01f), p.Name);
+                    Assert.That(p.Minutes, Is.InRange(0f, 90.01f + 2 * new MatchConfig().Rules.MaxAddedMinutes), p.Name); // 90 más el tiempo agregado
                     if (p.Minutes >= new MatchConfig().Report.MinMinutesForRating)
                     {
                         Assert.That(p.Rating, Is.InRange(3f, 10f), p.Name);

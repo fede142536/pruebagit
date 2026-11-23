@@ -44,8 +44,31 @@ namespace Football.Core.MatchCore
         /// <summary>Terminó el partido.</summary>
         public bool IsFinished => Phase == MatchPhase.Finished;
 
-        /// <summary>Minuto de partido (0 a 90) representado por el tiempo real transcurrido.</summary>
+        /// <summary>
+        /// Minuto del reloj de pantalla: 0 a 45 en la primera parte y 45 a 90 en la segunda; pasada la hora reglamentaria de cada parte
+        /// sigue contando (45:00, 46:10…) mientras dura el tiempo agregado (<see cref="AddedMinutes"/>).
+        /// </summary>
         public float Minute => ((Half - 1) + HalfElapsed / Config.Rules.HalfDuration) * Config.Rules.MinutesPerHalf;
+
+        /// <summary>
+        /// Minuto jugado de verdad, sin que la segunda parte retroceda: la segunda parte arranca en 45 + el tiempo agregado de la primera.
+        /// Lo usan los minutos de cada jugador y los cambios.
+        /// </summary>
+        public float PlayedMinute =>
+            (Half == 1 ? 0f : Config.Rules.MinutesPerHalf + FirstHalfAdded) + HalfElapsed / Config.Rules.HalfDuration * Config.Rules.MinutesPerHalf;
+
+        /// <summary>Minutos agregados anunciados en la parte en curso (0 hasta que termina la hora reglamentaria; después quedan los de la última parte).</summary>
+        public int AddedMinutes => _addedDecided ? _addedMinutes : 0;
+
+        /// <summary>Minutos agregados que tuvo la primera parte.</summary>
+        public int FirstHalfAdded { get; private set; }
+
+        /// <summary>La parte pasó su hora reglamentaria y está en el tiempo agregado.</summary>
+        public bool InStoppageTime => _addedDecided && !IsFinished;
+
+        private float _stoppage;       // minutos que sumaron los hechos de la parte
+        private bool _addedDecided;
+        private int _addedMinutes;
 
         private readonly IRandom _rng;
         private readonly float _dt;
@@ -174,9 +197,21 @@ namespace Football.Core.MatchCore
             if (Phase != MatchPhase.Finished)
             {
                 HalfElapsed += _dt;
-                if (HalfElapsed >= Config.Rules.HalfDuration && !PenaltyPending())
+                if (HalfElapsed >= Config.Rules.HalfDuration)
                 {
-                    EndHalf();
+                    if (!_addedDecided)
+                    {
+                        // Termina la hora reglamentaria: se anuncian los minutos que sumaron los hechos de la parte.
+                        RulesConfig r = Config.Rules;
+                        _addedMinutes = Math.Min(r.MaxAddedMinutes, Math.Max(r.MinAddedMinutes, (int)Math.Ceiling(_stoppage)));
+                        _addedDecided = true;
+                    }
+
+                    float end = Config.Rules.HalfDuration * (1f + _addedMinutes / Config.Rules.MinutesPerHalf);
+                    if (HalfElapsed >= end && !PenaltyPending())
+                    {
+                        EndHalf();
+                    }
                 }
             }
 
@@ -243,7 +278,20 @@ namespace Football.Core.MatchCore
 
         private void AddEvent(MatchEventType type, int team, int playerIndex, Vec2 at)
         {
-            Events.Add(new MatchEvent { Type = type, Team = team, PlayerIndex = playerIndex, Minute = Minute, X = at.X, Y = at.Y });
+            Events.Add(new MatchEvent { Type = type, Team = team, PlayerIndex = playerIndex, Minute = Minute, Half = Half, X = at.X, Y = at.Y });
+            if (!_addedDecided)
+            {
+                RulesConfig r = Config.Rules;
+                switch (type)
+                {
+                    case MatchEventType.Goal: _stoppage += r.StoppagePerGoal; break;
+                    case MatchEventType.Substitution: _stoppage += r.StoppagePerSubstitution; break;
+                    case MatchEventType.Injury: _stoppage += r.StoppagePerInjury; break;
+                    case MatchEventType.RedCard: _stoppage += r.StoppagePerRedCard; break;
+                    case MatchEventType.YellowCard: _stoppage += r.StoppagePerYellowCard; break;
+                    case MatchEventType.Penalty: _stoppage += r.StoppagePerPenalty; break;
+                }
+            }
         }
 
         private void TickPlaying(float dt)
@@ -505,6 +553,10 @@ namespace Football.Core.MatchCore
                 return;
             }
 
+            FirstHalfAdded = _addedMinutes;
+            _stoppage = 0f;
+            _addedDecided = false;
+            _addedMinutes = 0;
             Half = 2;
             HalfElapsed = 0f;
             Teams[0].AttackDirection = -1f;

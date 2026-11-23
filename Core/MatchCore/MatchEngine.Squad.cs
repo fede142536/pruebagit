@@ -215,8 +215,8 @@ namespace Football.Core.MatchCore
                 incoming.Role = t.Formation.Slots[incoming.Spot].Role; // juega en el puesto del que sale, con resistencia llena
                 Replace(old, incoming);
                 t.SubstitutedOut.Add(old.Name);
-                old.MinuteOff = Minute;
-                incoming.MinuteOn = Minute;
+                old.MinuteOff = PlayedMinute;
+                incoming.MinuteOn = PlayedMinute;
                 t.Departed.Add(old);
                 t.SubstitutionsUsed++;
                 AddEvent(MatchEventType.Substitution, team, incoming.Index, incoming.Pos);

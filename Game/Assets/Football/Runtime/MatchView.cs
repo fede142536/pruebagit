@@ -340,17 +340,6 @@ namespace Football.Game
 
             lines.Quad(-0.15f, -0.15f, 0.15f, 0.15f, LineHeight);
             AddMesh("Lineas", lines, new Color(0.95f, 0.97f, 0.95f));
-
-            // Zonas gastadas: el área chica de cada arco y el círculo central (césped más pálido y terroso).
-            Color worn = new Color(0.27f, 0.36f, 0.16f);
-            float wornHeight = StripeHeight + 0.004f;
-            for (int end = -1; end <= 1; end += 2)
-            {
-                StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(end * (halfL - 2.2f), wornHeight, 0f), new Vector3(3.6f, 1f, 6f));
-                StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(end * (halfL - 11f), wornHeight, 0f), new Vector3(1.6f, 1f, 1.6f));
-            }
-
-            StaticShape("Desgaste", MeshKit.Disc, worn, new Vector3(0f, wornHeight, 0f), new Vector3(2.4f, 1f, 2.4f));
         }
 
         private void BuildStadium()
@@ -1182,6 +1171,12 @@ namespace Football.Game
         {
             _replayAngle = angle;
             _replayGoalEnd = goalEnd < 0f ? -1f : 1f;
+        }
+
+        /// <summary>La cámara salta de golpe a la posición que le toca (sin arrastre): al terminar una repetición, por ejemplo.</summary>
+        public void SnapCamera()
+        {
+            _camReady = false;
         }
 
         /// <summary>Pose de la cámara del modo elegido (el paso suave entre modos se aplica después).</summary>

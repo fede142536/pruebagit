@@ -28,7 +28,10 @@ namespace Football.Game
         private readonly Canvas _canvas;
         private readonly TouchControls _controls;
         private readonly DebugPanel _debug;
-        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning;
+        private readonly Text _homeName, _awayName, _score, _clock, _banner, _hint, _warning, _addedLabel;
+        private readonly Image _addedPanel;
+        private int _shownAdded = -1;
+        private static readonly string[] AddedTexts = { string.Empty, "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9" };
         private readonly GameObject[] _pauseBase;
         private bool _stallShown;
         private readonly GameObject _pausePanel;
@@ -101,6 +104,9 @@ namespace Football.Game
             _awayName = UiKit.Label(board, "Visitante", new Vector2(365f, ScoreboardHeight * 0.5f), new Vector2(110f, 50f), string.Empty, 30, Color.white);
             _awayCrest = new ClubCrest(board, new Vector2(450f, ScoreboardHeight * 0.5f), ScoreboardHeight - 8f);
             _clock = UiKit.Label(board, "Reloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "00:00", 28, Color.white);
+            _addedPanel = UiKit.Panel(board, "FondoAgregado", new Vector2(ScoreboardWidth + 34f, ScoreboardHeight * 0.5f), new Vector2(68f, ScoreboardHeight), new Color(0.05f, 0.06f, 0.09f, 0.9f));
+            _addedLabel = UiKit.Label(board, "Agregado", new Vector2(ScoreboardWidth + 34f, ScoreboardHeight * 0.5f), new Vector2(68f, 50f), string.Empty, 28, new Color(1f, 0.85f, 0.2f));
+            _addedPanel.gameObject.SetActive(false);
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
             _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
@@ -320,6 +326,7 @@ namespace Football.Game
             _bannerTimer = 0f;
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
+            _shownAdded = -1;
             _banner.text = string.Empty;
             _homeName.text = ShortName(homeTeam);
             _awayName.text = ShortName(awayTeam);
@@ -709,7 +716,7 @@ namespace Football.Game
                         TeamState subTeam = _engine.Teams[e.Team];
                         string left = subTeam.SubstitutedOut.Count > 0 ? subTeam.SubstitutedOut[subTeam.SubstitutedOut.Count - 1] : string.Empty;
                         _plate.Show("CAMBIO", new Color(0.3f, 0.75f, 1f),
-                            ((int)e.Minute + 1) + "'   ENTRA " + _engine.Players[e.PlayerIndex].Name.ToUpperInvariant() + "  ·  SALE " + left.ToUpperInvariant(),
+                            MinuteLabel(e) + "'   ENTRA " + _engine.Players[e.PlayerIndex].Name.ToUpperInvariant() + "  ·  SALE " + left.ToUpperInvariant(),
                             e.Team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
                         break;
                     case MatchEventType.Injury:
@@ -763,6 +770,20 @@ namespace Football.Game
             {
                 _shownSecond = second;
                 _clock.text = ClockText(second);
+            }
+
+            // Tiempo agregado: el reloj sigue contando pasada la hora reglamentaria y un cartel anuncia los minutos de más.
+            int added = _engine.AddedMinutes;
+            if (added != _shownAdded)
+            {
+                _shownAdded = added;
+                _addedLabel.text = AddedTexts[Mathf.Clamp(added, 0, AddedTexts.Length - 1)];
+                _addedPanel.gameObject.SetActive(added > 0);
+                if (added > 0 && !_benchmark && !_engine.IsFinished)
+                {
+                    _banner.text = "TIEMPO AGREGADO: " + added + (added == 1 ? " MINUTO" : " MINUTOS");
+                    _bannerTimer = BannerSeconds;
+                }
             }
 
             if (!_benchmark)
@@ -831,7 +852,7 @@ namespace Football.Game
         private float _replayCursor;
         private int _replayStart, _replayLength;
         private int _replayPass; // 0 plano de transmisión, 1 a ras del césped detrás del arco
-        private const int ReplayPasses = 2;
+        private int _replayPasses = 2; // en la cancha cerrada solo hay una: detrás del arco queda la pared
         private float _lastBallSpeed;
         private Radar _radar;
         private PlayerHud _playerHud;
@@ -867,12 +888,21 @@ namespace Football.Game
         }
 
         /// <summary>Placa de TV con el minuto, el jugador y el equipo de un evento.</summary>
+        /// <summary>Minuto de un hecho para la placa: «23», «45+2» (tiempo agregado de la primera parte) o «90+1».</summary>
+        private string MinuteLabel(MatchEvent e)
+        {
+            float regulation = _engine.Config.Rules.MinutesPerHalf * Mathf.Max(1, e.Half);
+            return e.Minute >= regulation
+                ? ((int)regulation).ToString() + "+" + ((int)(e.Minute - regulation) + 1)
+                : ((int)e.Minute + 1).ToString();
+        }
+
         private void ShowPlate(string tag, Color tagColor, MatchEvent e)
         {
             string player = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Name : string.Empty;
             int team = e.PlayerIndex >= 0 ? _engine.Players[e.PlayerIndex].Team : e.Team;
             string teamName = ShortName(team == 0 ? _homeTeam : _awayTeam);
-            _plate.Show(tag, tagColor, ((int)e.Minute + 1) + "'   " + player.ToUpperInvariant() + "  ·  " + teamName,
+            _plate.Show(tag, tagColor, MinuteLabel(e) + "'   " + player.ToUpperInvariant() + "  ·  " + teamName,
                 team == 0 ? _homeKit.Shirt : _awayKit.Shirt);
         }
 
@@ -926,6 +956,7 @@ namespace Football.Game
             _replayStart = (end - _replayLength + _history.Length) % _history.Length;
             _replayCursor = 0f;
             _replayPass = 0;
+            _replayPasses = _engine.Pitch.Config.Walls ? 1 : 2;
             _replaying = true;
             _view.SetReplayAngle(0, _history[(end - 1 + _history.Length) % _history.Length].BallX);
             _hint.text = "REPETICIÓN  ·  toca para saltar";
@@ -938,7 +969,7 @@ namespace Football.Game
             bool skip = input.Pass || input.Shoot || input.Slide || input.Switch || input.Clear || TappedThisFrame();
             _replayCursor += deltaTime * _engine.Config.TickRate * ReplaySpeed;
             int i = (int)_replayCursor;
-            if (!skip && i >= _replayLength - 1 && _replayPass + 1 < ReplayPasses)
+            if (!skip && i >= _replayLength - 1 && _replayPass + 1 < _replayPasses)
             {
                 // Segunda pasada con el otro ángulo: la cámara a ras del césped, detrás del arco.
                 _replayPass++;
@@ -952,6 +983,10 @@ namespace Football.Game
             {
                 _replaying = false;
                 _view.SetReplayAngle(-1, 0f);
+                _view.SnapCamera(); // vuelve de golpe a la cámara de juego (sin arrastrar la de la repetición)
+                _accumulator = 0f;
+                _previous.CopyFrom(_engine);
+                _current.CopyFrom(_engine);
                 _hint.text = string.Empty;
                 _playerHud.SetVisible(true);
                 ApplyControlsVisibility(); // vuelven los botones táctiles
