@@ -109,17 +109,17 @@ namespace Football.Game
         {
             _canvas = canvas;
             Transform t = canvas.transform;
-            _pass = Make(t, "Pase", "PASE", new Color(0.3f, 0.95f, 0.45f, ButtonAlpha), SlotA, SizeA, Icon.Pass);
-            _shoot = Make(t, "Tiro", "TIRO", new Color(1f, 0.32f, 0.3f, ButtonAlpha), SlotB, SizeB, Icon.Shot);
-            _clear = Make(t, "Despejar", "DESPEJE", new Color(1f, 0.6f, 0.25f, ButtonAlpha), SlotB, SizeB, Icon.Clear);
-            _through = Make(t, "Filtrado", "FILTRADO", new Color(1f, 0.85f, 0.2f, ButtonAlpha), SlotC, SizeC, Icon.Through);
-            _cross = Make(t, "Centro", "CENTRO", new Color(0.35f, 0.6f, 1f, ButtonAlpha), SlotD, SizeD, Icon.Cross);
-            _press = Make(t, "Presionar", "PRESIÓN", new Color(0.35f, 0.75f, 1f, ButtonAlpha), SlotA, SizeA, Icon.Press);
-            _slide = Make(t, "Barrer", "BARRER", new Color(1f, 0.45f, 0.2f, ButtonAlpha), SlotB, SizeB, Icon.Slide);
-            _secondPress = Make(t, "SegundaMarca", "2ª MARCA", new Color(0.3f, 0.6f, 0.95f, ButtonAlpha), SlotC, SizeC, Icon.SecondPress);
-            _switch = Make(t, "Cambiar", "CAMBIAR", new Color(0.75f, 0.5f, 1f, ButtonAlpha), SlotD, SizeD, Icon.Switch);
-            _keeper = Make(t, "Arquero", "ARQUERO", new Color(0.7f, 0.95f, 0.3f, ButtonAlpha), SlotE, SizeE, Icon.None);
-            _sprint = Make(t, "Esprint", "ESPRINT", new Color(0.85f, 0.88f, 0.95f, ButtonAlpha), SprintSlot, SizeSprint, Icon.Sprint);
+            _pass = Make(t, "Pase", "PASE", Tint(UiTheme.AccentStrong), SlotA, SizeA, Icon.Pass);
+            _shoot = Make(t, "Tiro", "TIRO", Tint(UiTheme.Accent), SlotB, SizeB, Icon.Shot);
+            _clear = Make(t, "Despejar", "DESPEJE", Tint(UiTheme.Danger), SlotB, SizeB, Icon.Clear);
+            _through = Make(t, "Filtrado", "FILTRADO", Tint(new Color(0.498f, 0.863f, 0.667f)), SlotC, SizeC, Icon.Through);
+            _cross = Make(t, "Centro", "CENTRO", Tint(UiTheme.TextDim), SlotD, SizeD, Icon.Cross);
+            _press = Make(t, "Presionar", "PRESIÓN", Tint(UiTheme.AccentStrong), SlotA, SizeA, Icon.Press);
+            _slide = Make(t, "Barrer", "BARRER", Tint(UiTheme.Danger), SlotB, SizeB, Icon.Slide);
+            _secondPress = Make(t, "SegundaMarca", "2ª MARCA", Tint(UiTheme.TextDim), SlotC, SizeC, Icon.SecondPress);
+            _switch = Make(t, "Cambiar", "CAMBIAR", Tint(UiTheme.TextDim), SlotD, SizeD, Icon.Switch);
+            _keeper = Make(t, "Arquero", "ARQUERO", Tint(UiTheme.Accent), SlotE, SizeE, Icon.None);
+            _sprint = Make(t, "Esprint", "ESPRINT", Tint(UiTheme.TextDim), SprintSlot, SizeSprint, Icon.Sprint);
             _pause = Make(t, "Pausa", "II", new Color(1f, 1f, 1f, 0.7f), new Vector2(UiKit.Reference.x - PauseMargin, UiKit.Reference.y - PauseMargin), 84f, Icon.None);
             _controls = new[] { _pass, _shoot, _clear, _through, _cross, _slide, _press, _secondPress, _switch, _keeper, _sprint, _pause };
             _passBar = ChargeBar(_pass);
@@ -161,6 +161,8 @@ namespace Football.Game
                 bar.sizeDelta = new Vector2(width, ChargeBarHeight);
             }
         }
+
+        private static Color Tint(Color c) => new Color(c.r, c.g, c.b, ButtonAlpha);
 
         private enum Icon { None, Pass, Through, Shot, Clear, Cross, Sprint, Press, SecondPress, Slide, Switch }
 

@@ -4,25 +4,33 @@ using Football.Core.Domain;
 
 namespace Football.Game
 {
-    /// <summary>Colores y piezas visuales comunes de los menús (estilo oscuro con acento turquesa).</summary>
+    /// <summary>Colores y piezas visuales comunes de los menús (tema «Noche + verde cancha»: fondo verde muy oscuro y acento verde césped).</summary>
     public static class UiTheme
     {
         /// <summary>Color de acento.</summary>
-        public static readonly Color Accent = new Color(0.22f, 0.88f, 0.78f);
+        public static readonly Color Accent = new Color(0.247f, 0.714f, 0.478f);
         /// <summary>Acento oscuro (botón principal).</summary>
-        public static readonly Color AccentDark = new Color(0.08f, 0.55f, 0.48f);
+        public static readonly Color AccentDark = new Color(0.13f, 0.47f, 0.31f);
         /// <summary>Texto principal.</summary>
-        public static readonly Color Text = new Color(0.95f, 0.97f, 1f);
+        public static readonly Color Text = new Color(0.91f, 0.937f, 0.914f);
         /// <summary>Texto secundario.</summary>
-        public static readonly Color TextDim = new Color(0.65f, 0.71f, 0.78f);
+        public static readonly Color TextDim = new Color(0.616f, 0.702f, 0.659f);
         /// <summary>Texto apagado (opciones no disponibles).</summary>
-        public static readonly Color TextMuted = new Color(0.4f, 0.44f, 0.5f);
+        public static readonly Color TextMuted = new Color(0.36f, 0.45f, 0.40f);
         /// <summary>Panel translúcido.</summary>
-        public static readonly Color Panel = new Color(0.12f, 0.15f, 0.2f, 0.85f);
+        public static readonly Color Panel = new Color(0.075f, 0.13f, 0.11f, 0.88f);
         /// <summary>Botón normal.</summary>
-        public static readonly Color Button = new Color(0.18f, 0.22f, 0.28f, 0.95f);
+        public static readonly Color Button = new Color(0.12f, 0.19f, 0.16f, 0.95f);
         /// <summary>Elemento seleccionado.</summary>
-        public static readonly Color Selected = new Color(0.12f, 0.42f, 0.38f, 0.95f);
+        public static readonly Color Selected = new Color(0.102f, 0.227f, 0.176f, 0.97f);
+        /// <summary>Texto sobre los botones de acento (verde claro): casi negro, como en el diseño.</summary>
+        public static readonly Color OnAccent = new Color(0.047f, 0.102f, 0.078f);
+        /// <summary>Borde de los elementos inactivos (líneas del diseño).</summary>
+        public static readonly Color Line = new Color(0.239f, 0.318f, 0.282f);
+        /// <summary>Acento claro para elementos activos y títulos.</summary>
+        public static readonly Color AccentStrong = new Color(0.663f, 0.925f, 0.780f);
+        /// <summary>Peligro (salir, descartar).</summary>
+        public static readonly Color Danger = new Color(0.878f, 0.408f, 0.353f);
         /// <summary>Aviso.</summary>
         public static readonly Color Warning = new Color(1f, 0.62f, 0.3f);
         /// <summary>Estrella encendida.</summary>
@@ -38,10 +46,10 @@ namespace Football.Game
             Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(1f, 1f, 1f, BackgroundAlpha));
             image.sprite = Gradient();
             // Líneas de cancha muy tenues como decoración.
-            Color line = new Color(1f, 1f, 1f, 0.035f);
+            Color line = new Color(UiTheme.Accent.r, UiTheme.Accent.g, UiTheme.Accent.b, 0.07f);
             UiKit.Panel(parent, "LineaCentral", new Vector2(1500f, 540f), new Vector2(4f, 1080f), line);
             UiKit.Panel(parent, "Circulo", new Vector2(1500f, 540f), new Vector2(420f, 420f), line, true);
-            UiKit.Panel(parent, "CirculoInterior", new Vector2(1500f, 540f), new Vector2(412f, 412f), new Color(0.05f, 0.08f, 0.12f, 0.9f), true);
+            UiKit.Panel(parent, "CirculoInterior", new Vector2(1500f, 540f), new Vector2(412f, 412f), new Color(0.04f, 0.075f, 0.06f, 0.9f), true);
         }
 
         private static Sprite Gradient()
@@ -53,8 +61,8 @@ namespace Football.Game
 
             const int height = 64;
             var texture = new Texture2D(2, height, TextureFormat.RGBA32, false);
-            var top = new Color(0.07f, 0.12f, 0.18f);
-            var bottom = new Color(0.02f, 0.03f, 0.05f);
+            var top = new Color(0.06f, 0.105f, 0.09f);
+            var bottom = new Color(0.03f, 0.06f, 0.05f);
             var pixels = new Color32[2 * height];
             for (int y = 0; y < height; y++)
             {

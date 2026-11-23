@@ -156,7 +156,8 @@ namespace Football.Game
             _newsTemplates = LoadNews();
             _header = UiKit.Label(Root, "Cabecera", new Vector2(700f, HeaderY), new Vector2(1300f, 36f), string.Empty, 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
             _status = UiKit.Label(Root, "Estado", new Vector2(960f, StatusY), new Vector2(1800f, 36f), string.Empty, 22, UiTheme.Accent);
-            _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1035f), new Vector2(160f, 54f), Locale.Get("career.save"), 22, UiTheme.AccentDark);
+            _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1035f), new Vector2(160f, 54f), Locale.Get("career.save"), 22, UiTheme.Accent);
+            _save.Label.color = UiTheme.OnAccent; // GUARDAR relleno de acento con texto oscuro; SALIR con borde (barra del diseño)
             _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1035f), new Vector2(150f, 54f), Locale.Get("career.exit"), 22, UiTheme.Button);
 
             _hub = new CareerHubScreen(Root, this);
@@ -319,6 +320,7 @@ namespace Football.Game
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i].Background.color = i == highlighted ? UiTheme.Selected : UiTheme.Button;
+                _bar[i].Label.color = i == highlighted ? UiTheme.AccentStrong : UiTheme.TextDim; // pestaña activa resaltada
             }
 
             Refresh();

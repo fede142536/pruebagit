@@ -36,7 +36,9 @@ namespace Football.Game
         private readonly GameObject[] _pauseBase;
         private bool _stallShown;
         private readonly GameObject _pausePanel;
-        private readonly UiButton _resume, _quit, _quick, _quickBack, _mentality, _pressing;
+        private readonly UiButton _resume, _quit, _quick, _quickBack;
+        private readonly UiButton[] _mentalityOptions = new UiButton[5], _pressingOptions = new UiButton[3]; // selectores segmentados de la pausa
+        private static readonly string[] MentalityShort = { "MUY DEF.", "DEF.", "EQUIL.", "OFENS.", "MUY OF." };
         private readonly GameObject _quickPanel;
         private readonly SettingsList _quickList;
         private readonly NameTags _nameTags;
@@ -124,45 +126,63 @@ namespace Football.Game
             UiKit.Panel(pauseRoot.transform, "Oscurecer", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(0f, 0f, 0f, 0.7f));
             Image dim = pauseRoot;
             _pausePanel = dim.gameObject;
-            Text pauseTitle = UiKit.Label(dim.transform, "Titulo", new Vector2(960f, 880f), new Vector2(800f, 120f), "PAUSA", 80, Color.white);
-            Color option = new Color(0.3f, 0.3f, 0.4f);
-            _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(960f, 770f), new Vector2(620f, 100f), "REANUDAR", 44, new Color(0.15f, 0.6f, 0.25f));
-            _quick = UiKit.Button(dim.transform, "AjustesRapidos", new Vector2(960f, 556f), new Vector2(620f, 92f), "AJUSTES RÁPIDOS ›", 34, option);
+            // Pausa (diseño «Noche + verde cancha»): acciones a la izquierda, táctica con selectores segmentados a la derecha, charla al centro.
+            Text pauseTitle = UiKit.Label(dim.transform, "Titulo", new Vector2(330f, 920f), new Vector2(520f, 120f), "PAUSA", 80, UiTheme.Text, TextAnchor.MiddleLeft);
+            _resume = UiKit.Button(dim.transform, "Reanudar", new Vector2(330f, 770f), new Vector2(520f, 100f), "REANUDAR", 44, UiTheme.Accent);
+            _resume.Label.color = UiTheme.OnAccent;
+            _quick = UiKit.Button(dim.transform, "AjustesRapidos", new Vector2(330f, 650f), new Vector2(520f, 92f), "AJUSTES RÁPIDOS ›", 30, UiTheme.Button);
+            _quick.Label.color = UiTheme.AccentStrong;
             // Ajustes rápidos: solo lo que se puede cambiar en vivo (audio, cámara, controles, calidad); las reglas, no.
-            Image quick = UiKit.Panel(dim.transform, "PanelAjustes", UiKit.Reference * 0.5f, UiKit.Reference, new Color(0.03f, 0.04f, 0.07f, 0.97f));
+            Image quick = UiKit.Panel(dim.transform, "PanelAjustes", UiKit.Reference * 0.5f, UiKit.Reference, new Color(0.03f, 0.055f, 0.045f, 0.97f));
             _quickPanel = quick.gameObject;
-            UiKit.Label(quick.transform, "Titulo", new Vector2(960f, 1000f), new Vector2(1200f, 70f), "AJUSTES RÁPIDOS", 46, Color.white);
+            UiKit.Label(quick.transform, "Titulo", new Vector2(960f, 1000f), new Vector2(1200f, 70f), "AJUSTES RÁPIDOS", 46, UiTheme.Text);
             UiKit.Label(quick.transform, "Nota", new Vector2(960f, 945f), new Vector2(1500f, 40f),
                 "Las reglas del partido (duración, dificultad, velocidad) se cambian desde el menú principal.", 24, UiTheme.TextDim);
             _quickList = new SettingsList(quick.transform, new Vector2(520f, 870f), new Vector2(820f, 62f), 72f, 9, 880f, 2);
-            _quickBack = UiKit.Button(quick.transform, "Volver", new Vector2(1700f, 70f), new Vector2(300f, 80f), "VOLVER", 34, UiTheme.AccentDark);
+            _quickBack = UiKit.Button(quick.transform, "Volver", new Vector2(1700f, 70f), new Vector2(300f, 80f), "VOLVER", 34, UiTheme.Accent);
+            _quickBack.Label.color = UiTheme.OnAccent;
             _quickPanel.SetActive(false);
-            _quit = UiKit.Button(dim.transform, "Salir", new Vector2(960f, 225f), new Vector2(620f, 100f), "SALIR AL MENÚ", 44, new Color(0.7f, 0.2f, 0.2f));
-            Color tactic = new Color(0.2f, 0.35f, 0.55f);
-            Text tacticTitle = UiKit.Label(dim.transform, "TituloTactica", new Vector2(1600f, 770f), new Vector2(520f, 70f), "TÁCTICA", 44, Color.white);
-            _mentality = UiKit.Button(dim.transform, "Mentalidad", new Vector2(1600f, 660f), new Vector2(520f, 92f), string.Empty, 30, tactic);
-            _pressing = UiKit.Button(dim.transform, "Presion", new Vector2(1600f, 556f), new Vector2(520f, 92f), string.Empty, 30, tactic);
-            _squadButton = UiKit.Button(dim.transform, "Plantel", new Vector2(1600f, 300f), new Vector2(520f, 92f), "PLANTEL Y TÁCTICA ›", 30, UiTheme.AccentDark);
+            _quit = UiKit.Button(dim.transform, "Salir", new Vector2(330f, 530f), new Vector2(520f, 92f), "SALIR AL MENÚ ›", 30, UiTheme.Button);
+            _quit.Label.color = UiTheme.Danger;
+            Image tacticBack = UiKit.Panel(dim.transform, "FondoTactica", new Vector2(1560f, 560f), new Vector2(700f, 740f), UiTheme.Panel);
+            Text tacticTitle = UiKit.Label(dim.transform, "TituloTactica", new Vector2(1560f, 880f), new Vector2(620f, 50f), "TÁCTICA", 34, UiTheme.AccentStrong, TextAnchor.MiddleLeft);
+            Text mentalityLabel = UiKit.Label(dim.transform, "EtiquetaMentalidad", new Vector2(1560f, 805f), new Vector2(620f, 36f), "MENTALIDAD", 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
+            for (int i = 0; i < _mentalityOptions.Length; i++)
+            {
+                _mentalityOptions[i] = UiKit.Button(dim.transform, "Mentalidad" + i, new Vector2(1560f + (i - 2) * 124f, 745f), new Vector2(122f, 70f), MentalityShort[i], 20, UiTheme.Button);
+            }
+
+            Text pressingLabel = UiKit.Label(dim.transform, "EtiquetaPresion", new Vector2(1560f, 665f), new Vector2(620f, 36f), "PRESIÓN", 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
+            for (int i = 0; i < _pressingOptions.Length; i++)
+            {
+                _pressingOptions[i] = UiKit.Button(dim.transform, "Presion" + i, new Vector2(1560f + (i - 1) * 205f, 605f), new Vector2(203f, 70f), TeamCatalog.PressLabels[i], 22, UiTheme.Button);
+            }
+
+            _squadButton = UiKit.Button(dim.transform, "Plantel", new Vector2(1560f, 400f), new Vector2(620f, 84f), "PLANTEL Y TÁCTICA ›", 28, UiTheme.Button);
+            _squadButton.Label.color = UiTheme.AccentStrong;
             // Gritos desde el banco: el botón muestra el siguiente grito; tocarlo lo da (y avanza al siguiente).
-            _shoutButton = UiKit.Button(dim.transform, "Grito", new Vector2(1600f, 190f), new Vector2(520f, 80f), string.Empty, 26, tactic);
+            _shoutButton = UiKit.Button(dim.transform, "Grito", new Vector2(1560f, 300f), new Vector2(620f, 76f), string.Empty, 24, UiTheme.Button);
             // Charla del entretiempo (solo en el descanso).
-            _talkTitle = UiKit.Label(dim.transform, "TituloCharla", new Vector2(330f, 770f), new Vector2(560f, 70f), "CHARLA DEL ENTRETIEMPO", 34, Color.white);
+            _talkTitle = UiKit.Label(dim.transform, "TituloCharla", new Vector2(960f, 770f), new Vector2(560f, 70f), "CHARLA DEL ENTRETIEMPO", 34, Color.white);
             for (int i = 0; i < _talkButtons.Length; i++)
             {
-                _talkButtons[i] = UiKit.Button(dim.transform, "Charla" + i, new Vector2(330f, 660f - i * 104f), new Vector2(480f, 90f),
-                    TalkLabels[i], 30, new Color(0.45f, 0.3f, 0.15f));
+                _talkButtons[i] = UiKit.Button(dim.transform, "Charla" + i, new Vector2(960f, 660f - i * 104f), new Vector2(480f, 90f),
+                    TalkLabels[i], 30, UiTheme.Button);
             }
             _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
             _card = new PlayerCardPanel(parent);
-            Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1600f, 430f), new Vector2(520f, 140f),
+            Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1560f, 505f), new Vector2(620f, 140f),
                 "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
             // Elementos de la pantalla base de la pausa: se ocultan al abrir un submenú para que nada quede detrás de sus listas.
             // (La guía de controles ya no está aquí: vive en Ajustes → Controles.)
-            _pauseBase = new[]
+            var pauseBase = new System.Collections.Generic.List<GameObject>
             {
-                pauseTitle.gameObject, _resume.Root, _quick.Root, _quit.Root, tacticTitle.gameObject, _mentality.Root, _pressing.Root,
+                pauseTitle.gameObject, _resume.Root, _quick.Root, _quit.Root, tacticTitle.gameObject, tacticBack.gameObject, mentalityLabel.gameObject, pressingLabel.gameObject,
                 _squadButton.Root, tacticHelp.gameObject, _shoutButton.Root
             };
+            foreach (UiButton b in _mentalityOptions) { pauseBase.Add(b.Root); }
+            foreach (UiButton b in _pressingOptions) { pauseBase.Add(b.Root); }
+            _pauseBase = pauseBase.ToArray();
             _pausePanel.SetActive(false);
             _canvas.gameObject.SetActive(false);
             _nameTags = new NameTags(parent);
@@ -1216,13 +1236,50 @@ namespace Football.Game
             }
         }
 
+        /// <summary>Un toque en un selector segmentado de mentalidad o presión lo aplica al instante.</summary>
+        private bool TacticOptionTapped(Vector2 point)
+        {
+            TeamState own = _engine.Teams[0];
+            for (int i = 0; i < _mentalityOptions.Length; i++)
+            {
+                if (_mentalityOptions[i].Contains(point))
+                {
+                    _engine.SetTactics(0, (Mentality)(i - 2), own.Pressing);
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < _pressingOptions.Length; i++)
+            {
+                if (_pressingOptions[i].Contains(point))
+                {
+                    _engine.SetTactics(0, own.Mentality, (PressLevel)(i - 1));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void RefreshPauseLabels()
         {
             if (_engine != null)
             {
                 TeamState own = _engine.Teams[0];
-                _mentality.Label.text = "MENTALIDAD: " + TeamCatalog.MentalityLabels[(int)own.Mentality + 2];
-                _pressing.Label.text = "PRESIÓN: " + TeamCatalog.PressLabels[(int)own.Pressing + 1];
+                for (int i = 0; i < _mentalityOptions.Length; i++)
+                {
+                    bool on = i == (int)own.Mentality + 2;
+                    _mentalityOptions[i].Background.color = on ? UiTheme.Selected : UiTheme.Button;
+                    _mentalityOptions[i].Label.color = on ? UiTheme.AccentStrong : UiTheme.TextDim;
+                }
+
+                for (int i = 0; i < _pressingOptions.Length; i++)
+                {
+                    bool on = i == (int)own.Pressing + 1;
+                    _pressingOptions[i].Background.color = on ? UiTheme.Selected : UiTheme.Button;
+                    _pressingOptions[i].Label.color = on ? UiTheme.AccentStrong : UiTheme.TextDim;
+                }
+
                 _shoutButton.Label.text = own.Shout != TouchlineShout.None
                     ? "GRITANDO: " + ShoutLabels[(int)own.Shout] + " · OTRO ›"
                     : "GRITAR: " + ShoutLabels[_shoutChoice] + " ›";
@@ -1329,18 +1386,8 @@ namespace Football.Game
                     SetPaused(false);
                     QuitRequested = true;
                 }
-                else if (_mentality.Contains(point) && _engine != null)
+                else if (_engine != null && TacticOptionTapped(point))
                 {
-                    TeamState own = _engine.Teams[0];
-                    int next = (int)own.Mentality + 1 > (int)Mentality.VeryAttacking ? (int)Mentality.VeryDefensive : (int)own.Mentality + 1;
-                    _engine.SetTactics(0, (Mentality)next, own.Pressing);
-                    RefreshPauseLabels();
-                }
-                else if (_pressing.Contains(point) && _engine != null)
-                {
-                    TeamState own = _engine.Teams[0];
-                    int next = (int)own.Pressing + 1 > (int)PressLevel.High ? (int)PressLevel.Low : (int)own.Pressing + 1;
-                    _engine.SetTactics(0, own.Mentality, (PressLevel)next);
                     RefreshPauseLabels();
                 }
             }
