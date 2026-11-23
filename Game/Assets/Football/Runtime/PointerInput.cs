@@ -87,6 +87,62 @@ namespace Football.Game
         /// <summary>Estado del teclado.</summary>
         public KeyboardState Keyboard;
 
+        /// <summary>Máximo de caracteres escritos que se leen por fotograma.</summary>
+        public const int MaxTyped = 16;
+
+        /// <summary>Caracteres escritos en este fotograma (para campos de texto; incluye '\b' de borrar y '\n' de Enter).</summary>
+        public readonly char[] Typed = new char[MaxTyped];
+
+        /// <summary>Cuántos caracteres hay en <see cref="Typed"/>.</summary>
+        public int TypedCount { get; private set; }
+
+#if ENABLE_INPUT_SYSTEM
+        private readonly char[] _pendingTyped = new char[MaxTyped * 2];
+        private int _pendingCount;
+        private UnityEngine.InputSystem.Keyboard _hookedKeyboard;
+
+        private void OnText(char c)
+        {
+            if (_pendingCount < _pendingTyped.Length)
+            {
+                _pendingTyped[_pendingCount++] = c;
+            }
+        }
+
+        private void ReadTyped()
+        {
+            UnityEngine.InputSystem.Keyboard kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb != _hookedKeyboard)
+            {
+                if (_hookedKeyboard != null)
+                {
+                    _hookedKeyboard.onTextInput -= OnText;
+                }
+
+                if (kb != null)
+                {
+                    kb.onTextInput += OnText;
+                }
+
+                _hookedKeyboard = kb;
+            }
+
+            TypedCount = Mathf.Min(_pendingCount, MaxTyped);
+            System.Array.Copy(_pendingTyped, Typed, TypedCount);
+            _pendingCount = 0;
+        }
+#else
+        private void ReadTyped()
+        {
+            string typed = Input.inputString; // el sistema antiguo entrega el texto del fotograma
+            TypedCount = Mathf.Min(typed.Length, MaxTyped);
+            for (int i = 0; i < TypedCount; i++)
+            {
+                Typed[i] = typed[i];
+            }
+        }
+#endif
+
         private bool _enabled;
 
         /// <summary>Lee la entrada del fotograma actual.</summary>
@@ -105,6 +161,7 @@ namespace Football.Game
             ReadTouches();
             ReadMouse();
             ReadKeyboard();
+            ReadTyped();
 #if ENABLE_INPUT_SYSTEM
             ReadGamepad();
 #endif

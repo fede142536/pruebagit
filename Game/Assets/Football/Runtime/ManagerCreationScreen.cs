@@ -47,6 +47,7 @@ namespace Football.Game
             UiKit.Label(p, "ApellidoTitulo", new Vector2(540f, 790f), new Vector2(820f, 40f), Locale.Get("manager.last_name"), 24, UiTheme.TextDim, TextAnchor.MiddleLeft);
             _lastField = UiKit.Button(p, "Apellido", new Vector2(540f, 735f), new Vector2(820f, 72f), string.Empty, 32, UiTheme.Button);
 
+            UiKit.Label(p, "AyudaTexto", new Vector2(540f, 692f), new Vector2(820f, 26f), Locale.Get("manager.type_hint"), 18, UiTheme.TextMuted, TextAnchor.MiddleLeft);
             UiKit.Label(p, "NacionTitulo", new Vector2(540f, 668f), new Vector2(820f, 40f), Locale.Get("manager.nationality"), 24, UiTheme.TextDim, TextAnchor.MiddleLeft);
             for (int i = 0; i < _flags.Length; i++)
             {
@@ -103,8 +104,9 @@ namespace Football.Game
         /// <inheritdoc />
         public override void Refresh()
         {
-            _firstField.Label.text = Profile.FirstName;
-            _lastField.Label.text = Profile.LastName;
+            string caret = _editing >= 0 && _caretOn ? "|" : string.Empty;
+            _firstField.Label.text = Profile.FirstName + (_editing == 0 ? caret : string.Empty);
+            _lastField.Label.text = Profile.LastName + (_editing == 1 ? caret : string.Empty);
             _firstField.Background.color = _editing == 0 ? UiTheme.Selected : UiTheme.Button;
             _lastField.Background.color = _editing == 1 ? UiTheme.Selected : UiTheme.Button;
             int nation = NationFlag.IndexOf(Profile.Nationality);
@@ -131,6 +133,7 @@ namespace Football.Game
             _figure.Update(deltaTime);
             if (_keyboard == null)
             {
+                TypeWithKeyboard(deltaTime);
                 return;
             }
 
@@ -164,6 +167,11 @@ namespace Football.Game
 
                 Host.Request(CareerAction.PickClub);
                 return;
+            }
+
+            if (_keyboard == null && !_firstField.Contains(p) && !_lastField.Contains(p))
+            {
+                _editing = -1; // un toque fuera de los campos deja de escribir
             }
 
             if (_firstField.Contains(p)) { Edit(0); }
@@ -202,19 +210,55 @@ namespace Football.Game
                 return;
             }
 
-            // Sin teclado en pantalla (ordenador): se recorren nombres de ejemplo.
-            if (field == 0)
+            // Sin teclado en pantalla (ordenador): se escribe con el teclado físico (ver TypeWithKeyboard).
+            _caretTimer = 0f;
+            Refresh();
+        }
+
+        private const float CaretBlinkSeconds = 0.5f;
+        private float _caretTimer;
+        private bool _caretOn;
+
+        /// <summary>Escribe en el campo elegido con el teclado de la computadora: letras, espacio, guion y apóstrofe; retroceso borra; Enter termina.</summary>
+        private void TypeWithKeyboard(float deltaTime)
+        {
+            if (_editing < 0)
             {
-                _firstPreset = (_firstPreset + 1) % _firstPresets.Length;
-                SetName(_firstPresets[_firstPreset].Trim());
-            }
-            else
-            {
-                _lastPreset = (_lastPreset + 1) % _lastPresets.Length;
-                SetName(_lastPresets[_lastPreset].Trim());
+                return;
             }
 
-            _editing = -1;
+            PointerInput input = Host.Input;
+            bool changed = false;
+            for (int i = 0; i < input.TypedCount; i++)
+            {
+                char c = input.Typed[i];
+                string current = _editing == 0 ? Profile.FirstName : Profile.LastName;
+                if (c == '\b')
+                {
+                    if (current.Length > 0)
+                    {
+                        SetName(current.Substring(0, current.Length - 1));
+                    }
+                }
+                else if (c == '\n' || c == '\r')
+                {
+                    _editing = -1;
+                    changed = true;
+                    break;
+                }
+                else if ((char.IsLetter(c) || c == ' ' || c == '-' || c == '\'') && current.Length < MaxNameLength)
+                {
+                    SetName(current + c);
+                }
+            }
+
+            _caretTimer += deltaTime;
+            bool on = ((int)(_caretTimer / CaretBlinkSeconds) & 1) == 0;
+            if (on != _caretOn || changed)
+            {
+                _caretOn = on;
+                Refresh();
+            }
         }
 
         private void SetName(string name)

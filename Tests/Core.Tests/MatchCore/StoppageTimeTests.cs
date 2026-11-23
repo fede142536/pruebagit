@@ -104,5 +104,25 @@ namespace Football.Core.Tests.MatchCore
             Assert.That(a.AddedMinutes, Is.EqualTo(b.AddedMinutes));
             Assert.That(a.FirstHalfAdded, Is.EqualTo(b.FirstHalfAdded));
         }
+
+        [Test]
+        public void TheClockDoesNotRun_WhileTheKickoffIsPending_AndStartsWithTheFirstTouch()
+        {
+            MatchEngine e = MatchEngineTests.NewEngine(11);
+            e.SetHuman(0, true); // la persona saca del medio: el motor espera su pase o el tiempo límite
+            int waited = 0;
+            for (int t = 0; t < 3000 && e.HalfElapsed <= 0f; t++)
+            {
+                e.Tick();
+                if (e.Phase == MatchPhase.SetPiece && e.CurrentRestart.Kind == RestartKind.KickOff)
+                {
+                    waited++;
+                    Assert.That(e.HalfElapsed, Is.EqualTo(0f), "el reloj no corre antes del puntapié inicial");
+                }
+            }
+
+            Assert.That(waited, Is.GreaterThan(e.Config.TickRate), "hubo espera real antes del saque");
+            Assert.That(e.HalfElapsed, Is.GreaterThan(0f), "después del saque el reloj corre");
+        }
     }
 }

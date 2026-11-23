@@ -66,6 +66,9 @@ namespace Football.Core.MatchCore
         /// <summary>La parte pasó su hora reglamentaria y está en el tiempo agregado.</summary>
         public bool InStoppageTime => _addedDecided && !IsFinished;
 
+        /// <summary>Cuánto se acelera el desgaste por segundo real para que dependa de los minutos de partido y no de la duración elegida.</summary>
+        public float FatigueScale => Config.Rules.FatigueReferenceHalf / Config.Rules.HalfDuration * Config.Rules.FatigueFactor;
+
         private float _stoppage;       // minutos que sumaron los hechos de la parte
         private bool _addedDecided;
         private int _addedMinutes;
@@ -196,7 +199,13 @@ namespace Football.Core.MatchCore
 
             if (Phase != MatchPhase.Finished)
             {
-                HalfElapsed += _dt;
+                // El reloj no corre mientras se espera el saque del medio (inicio de cada parte y después de cada gol): arranca con el puntapié.
+                bool waitingKickoff = Phase == MatchPhase.SetPiece && _restart.Kind == RestartKind.KickOff;
+                if (!waitingKickoff)
+                {
+                    HalfElapsed += _dt;
+                }
+
                 if (HalfElapsed >= Config.Rules.HalfDuration)
                 {
                     if (!_addedDecided)
@@ -401,11 +410,11 @@ namespace Football.Core.MatchCore
                 }
                 else
                 {
-                    PlayerMotion.Step(p, dt, Config.Player);
+                    PlayerMotion.Step(p, dt, Config.Player, FatigueScale);
                     if (p == Teams[p.Team].SecondPresser)
                     {
                         // Salir a presionar por la segunda marca cansa más que correr sin más.
-                        p.Stamina = MathUtil.Clamp01(p.Stamina - Config.Player.SecondPressStaminaDrain * dt);
+                        p.Stamina = MathUtil.Clamp01(p.Stamina - Config.Player.SecondPressStaminaDrain * dt * FatigueScale);
                     }
                 }
 

@@ -98,6 +98,9 @@ namespace Football.Game
         /// <inheritdoc />
         public CareerSession Session => _session;
 
+        /// <inheritdoc />
+        public PointerInput Input => Pointers;
+
         // plantel
         private TextGrid _squad;
         private UiButton _squadPrev, _squadNext;
@@ -713,6 +716,18 @@ namespace Football.Game
         {
             string[] args = item.Args ?? Array.Empty<string>();
             var shown = new string[args.Length];
+            if (item.Key == "news.record" && args.Length >= 3)
+            {
+                // Récord: {0} el nombre del récord (clave de texto), {1} el jugador que lo tiene y {2} la marca (un número, no un jugador).
+                shown[0] = Locale.Get(args[0]);
+                bool isClub = args[0] == "record.biggest_win"; // la mayor goleada la tiene un club; los goles, un jugador
+                shown[1] = !int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int holder) ? args[1]
+                    : isClub ? (_session.Data.Club(holder)?.Name ?? args[1])
+                    : _session.Data.Players.TryGetValue(holder, out Player hp) ? ShortName(hp) : args[1];
+                shown[2] = args[2];
+                return Inbox.Format(new NewsItem { Key = item.Key, Args = shown }, _newsTemplates);
+            }
+
             for (int i = 0; i < args.Length; i++)
             {
                 // Los avisos del motor traen el identificador del jugador: se muestra su nombre; las claves de la interfaz, su texto.

@@ -343,3 +343,12 @@ valen los de la jerarquía); las partidas guardadas con 15 clubes siguen cargand
 - **Cámara de transmisión**: altura 13 m y distancia 34 m (≈ 21° sobre el horizonte; antes 21 m y 30 m, ≈ 35°). Se ajusta en `view_tuning.json`.
 **Medición** (1000 partidos, semilla 1): 2,79 goles por partido (antes 2,69; el tiempo agregado suma ≈ 4 % de juego) dentro del objetivo 2,4–2,9;
 sin excepciones ni partidos sin terminar. Pase 85,9 %.
+
+## D-27 · Reloj que arranca con el puntapié, cansancio por minutos de partido, marcas de equipo y DT editable — Aceptada (pedido del usuario, 23/11/2026)
+- **Reloj**: no corre mientras se espera el saque del medio (inicio de cada parte y después de cada gol); arranca con el puntapié. Antes la espera de la persona (hasta 8 s) gastaba minutos.
+- **Desgaste**: `RulesConfig.FatigueReferenceHalf` (180 s) y `FatigueFactor` (1,25). El gasto de resistencia se mide en minutos de partido: con partes de 2 minutos reales
+  se acelera (180/120) para que a los 75' el cansancio sea el mismo con 2 que con 5. Medición (500 partidos): resistencia al final 66,7 % (antes 71 %), la más baja 30 %;
+  2,63 goles por partido, pase 85,6 %.
+- **11 contra 11**: los jugadores se agrandan un 22 % y llevan una marca en el piso (celeste el equipo de la persona, rojo el rival).
+- **DT**: nombre y apellido se escriben con el teclado (la computadora lee texto con `PointerInput.Typed`; el celular usa el teclado en pantalla). Retroceso borra y Enter termina.
+- **Buzón**: los récords mostraban la clave de texto y trataban la marca como si fuera un jugador; ahora se lee «¡Récord! Mayor goleada (diferencia de goles): 5 (Club)».

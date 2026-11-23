@@ -14,7 +14,7 @@ namespace Football.Core.MatchCore
         /// <param name="p">Jugador.</param>
         /// <param name="dt">Duración del paso (s).</param>
         /// <param name="c">Parámetros de jugadores.</param>
-        public static void Step(MatchPlayer p, float dt, PlayerConfig c)
+        public static void Step(MatchPlayer p, float dt, PlayerConfig c, float fatigueScale = 1f)
         {
             Vec2 toTarget = p.Target - p.Pos;
             float distance = toTarget.Length;
@@ -68,7 +68,7 @@ namespace Football.Core.MatchCore
             }
 
             p.Pos += Vec2.FromAngle(p.Heading) * (p.Speed * dt);
-            UpdateStamina(p, dt, c);
+            UpdateStamina(p, dt * fatigueScale, c);
         }
 
         private static void UpdateStamina(MatchPlayer p, float dt, PlayerConfig c)

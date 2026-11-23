@@ -414,5 +414,9 @@
   "career.filter.0": "TODOS",
   "career.filter.1": "GRANDES",
   "career.filter.2": "MEDIA TABLA",
-  "career.filter.3": "EN DESARROLLO"
+  "career.filter.3": "EN DESARROLLO",
+  "record.season_goals": "Más goles en una temporada",
+  "record.career_goals": "Más goles en la carrera",
+  "record.biggest_win": "Mayor goleada (diferencia de goles)",
+  "manager.type_hint": "Tocá un campo y escribí con el teclado (Enter para terminar)."
 }

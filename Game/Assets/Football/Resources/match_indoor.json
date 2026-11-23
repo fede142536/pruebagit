@@ -115,6 +115,8 @@
   "Rules": {
     "HalfDuration": 180,
     "MinutesPerHalf": 45,
+    "FatigueReferenceHalf": 180,
+    "FatigueFactor": 1.25,
     "StoppagePerGoal": 0.75,
     "StoppagePerSubstitution": 0.5,
     "StoppagePerInjury": 1.5,

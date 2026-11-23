@@ -40,6 +40,9 @@ namespace Football.Game
 
         /// <summary>Texto de una noticia del buzón, con los nombres ya resueltos.</summary>
         string NewsText(NewsItem item);
+
+        /// <summary>Entrada (punteros, teclado y texto escrito).</summary>
+        PointerInput Input { get; }
     }
 
     /// <summary>

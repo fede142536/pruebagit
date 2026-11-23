@@ -301,6 +301,13 @@ namespace Football.Core.MatchCore
         public float HalfDuration = 180f;
         /// <summary>Minutos de partido que representa cada parte (también en el 3 contra 3).</summary>
         public float MinutesPerHalf = 45f;
+        /// <summary>
+        /// Duración real de una parte (s) con la que se calibró el gasto de resistencia. El desgaste se mide en minutos de partido: una parte
+        /// más corta gasta más por segundo real, para que a los 75' el cansancio sea el mismo con 2 que con 5 minutos por parte.
+        /// </summary>
+        public float FatigueReferenceHalf = 180f;
+        /// <summary>Multiplicador del desgaste sobre lo calibrado (1 = el de antes; más alto, jugadores más cansados al final).</summary>
+        public float FatigueFactor = 1.25f;
         /// <summary>Minutos que suma al final de la parte cada gol (festejo y saque del medio).</summary>
         public float StoppagePerGoal = 0.75f;
         /// <summary>Minutos que suma cada cambio.</summary>

@@ -414,5 +414,9 @@
   "career.filter.0": "ALL",
   "career.filter.1": "BIG CLUBS",
   "career.filter.2": "MID-TABLE",
-  "career.filter.3": "DEVELOPING"
+  "career.filter.3": "DEVELOPING",
+  "record.season_goals": "Most goals in a season",
+  "record.career_goals": "Most career goals",
+  "record.biggest_win": "Biggest win (goal difference)",
+  "manager.type_hint": "Tap a field and type with the keyboard (Enter to finish)."
 }

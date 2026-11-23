@@ -732,6 +732,12 @@ namespace Football.Game
 
         // ---- Jugadores, balón e indicadores -----------------------------------------------------------------------------
 
+        private const int LargePitchTeamSize = 7;          // desde este tamaño de equipo (11 contra 11) se agrandan los jugadores
+        private const float LargePitchPlayerScale = 1.22f;
+        private const float TeamMarkScale = 1.05f;
+        private const float TeamMarkHeight = 0.03f;
+        private static readonly Color HomeMarkColor = new Color(0.1f, 0.85f, 0.95f);
+        private static readonly Color AwayMarkColor = new Color(0.95f, 0.3f, 0.2f);
         private const float KeeperBuild = 1.05f;
         private const float MinBuild = 0.94f;
         private const float BuildRange = 0.1f;
@@ -776,7 +782,17 @@ namespace Football.Game
                 };
                 // Contextura: los arqueros, algo más altos; el resto varía un poco (determinista, sin azar).
                 float build = keeper ? KeeperBuild : MinBuild + (i * BuildStep % BuildSteps) * BuildRange / (BuildSteps - 1);
+                // En la cancha grande los jugadores se ven chicos: se agrandan un poco y cada uno lleva una marca de su equipo en el piso
+                // (celeste el tuyo, rojo el rival), para distinguirlos aunque las camisetas se parezcan.
+                if (_perTeam >= LargePitchTeamSize)
+                {
+                    build *= LargePitchPlayerScale;
+                }
+
                 _players[i] = new PlayerModel(_root.transform, "Jugador" + i, look, i * 0.7f, build, _meshes);
+                Transform mark = Shape("MarcaEquipo", MeshKit.Disc, home ? HomeMarkColor : AwayMarkColor, Vector3.zero, new Vector3(TeamMarkScale, 1f, TeamMarkScale));
+                mark.SetParent(_players[i].Root, false);
+                mark.localPosition = new Vector3(0f, TeamMarkHeight, 0f);
             }
         }
 
