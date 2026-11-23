@@ -120,10 +120,14 @@ namespace Football.Game
 
         // ------------------------------------------------------------------ partido 3D
 
+        /// <summary>El usuario juega de local el partido preparado con <see cref="PrepareMatch"/>.</summary>
+        public bool UserIsHome => _userIsHome;
+
         /// <summary>
         /// Arma los dos equipos del partido de hoy para el motor 3D: el del usuario primero. Devuelve también las definiciones
         /// del archivo de equipos (nombres y camisetas).
         /// </summary>
+
         public void PrepareMatch(out MatchTeamSetup user, out MatchTeamSetup rival, out TeamDefinition userTeam, out TeamDefinition rivalTeam)
         {
             Session.PrepareUserMatch(out MatchTeamSetup home, out MatchTeamSetup away);

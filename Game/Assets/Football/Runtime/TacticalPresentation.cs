@@ -91,10 +91,14 @@ namespace Football.Game
             _name[i] = UiKit.Label(go.transform, "Apellido", c + new Vector2(0f, -TokenSize * 0.72f), new Vector2(170f, 30f), string.Empty, 22, Color.white);
         }
 
-        /// <summary>Empieza la presentación (primero el local).</summary>
+        private bool _hostIsSecondTeam;
+
+        /// <summary>Empieza la presentación (primero el equipo de la persona; el rótulo LOCAL/VISITANTE sigue al dueño de casa).</summary>
+        /// <param name="hostIsSecondTeam">El dueño de casa es el segundo equipo (modo carrera de visitante).</param>
         public void Begin(MatchEngine engine, MatchView view, MatchTeamSetup home, MatchTeamSetup away, TeamDefinition homeTeam,
-            TeamDefinition awayTeam, KitColors homeKit, KitColors awayKit)
+            TeamDefinition awayTeam, KitColors homeKit, KitColors awayKit, bool hostIsSecondTeam = false)
         {
+            _hostIsSecondTeam = hostIsSecondTeam;
             _engine = engine;
             _view = view;
             _setups = new[] { home, away };
@@ -159,7 +163,7 @@ namespace Football.Game
             _crest.Set(def);
             _club.text = def.Name.ToUpperInvariant();
             _formation.text = team.Formation.Name;
-            _title.text = side == 0 ? "LOCAL" : "VISITANTE";
+            _title.text = (side == 0) != _hostIsSecondTeam ? "LOCAL" : "VISITANTE";
             _plate.color = new Color(kit.Shirt.r * 0.25f, kit.Shirt.g * 0.25f, kit.Shirt.b * 0.25f, 0.9f);
 
             // Toma y pizarra sobre la mitad propia (los jugadores están formados para el saque del medio).

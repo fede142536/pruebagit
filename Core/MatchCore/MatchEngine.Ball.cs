@@ -238,6 +238,24 @@ namespace Football.Core.MatchCore
             Ball.Vel = Vec3.Zero;
             Ball.Spin = 0f;
             p.ActionTimer = Config.Player.ControlDelay;
+            for (int t = 0; t < 2; t++)
+            {
+                TeamState team = Teams[t];
+                if (!team.IsHuman || team.KickBufferTimer <= 0f)
+                {
+                    continue;
+                }
+
+                if (t == p.Team && team.Controlled == p && HasKickInput(team.Input))
+                {
+                    p.ActionTimer = Config.Player.FirstTimeControlDelay; // ya había pedido el pase: lo da al primer toque
+                }
+                else if (t != p.Team)
+                {
+                    ConsumeKick(team); // el rival se quedó con el balón: la orden pedida ya no vale
+                }
+            }
+
             p.OwnerTimer = 0f;
             if (!p.IsKeeper)
             {
@@ -250,6 +268,8 @@ namespace Football.Core.MatchCore
             p.Target = p.IsKeeper ? p.Pos : Pitch.Clamp(p.Pos + Vec2.FromAngle(p.Heading) * Config.Ai.DribbleLookahead, -SafeMarginToLine);
             p.SpeedFactor = Config.Player.JogFraction;
         }
+
+        private static bool HasKickInput(in MatchInput i) => i.Pass || i.Through || i.Cross || i.Shoot || i.Clear;
 
         /// <summary>
         /// Un balón demasiado rápido para controlarlo golpea el cuerpo del jugador: rebota según el punto de contacto, pierde

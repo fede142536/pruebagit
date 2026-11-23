@@ -141,15 +141,20 @@ namespace Football.Game
         /// <param name="playersPerTeam">Jugadores por equipo (11, o 3 en la cancha cerrada).</param>
         /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
         /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio; sin indicar, estadio lleno.</param>
-        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook? look = null, int[] shirtNumbers = null)
+        /// <param name="shirtNumbers">Dorsales por jugador (opcional).</param>
+        /// <param name="hostIsSecondTeam">El dueño de casa es el segundo equipo (el usuario juega de visitante en el modo carrera): la tribuna y los carteles llevan sus colores.</param>
+        public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook? look = null, int[] shirtNumbers = null,
+            bool hostIsSecondTeam = false)
         {
+            _hostIsSecondTeam = hostIsSecondTeam;
             _look = look ?? StadiumLook.Full;
             _shirtNumbers = shirtNumbers;
             _pitch = pitch;
             _tickRate = tickRate;
             _homeKit = homeKit;
             _awayKit = awayKit;
-            _ledColors = new[] { homeKit.Shirt, new Color(0.95f, 0.95f, 0.95f), awayKit.Shirt, new Color(0.1f, 0.6f, 0.95f), homeKit.Secondary };
+            KitColors host = hostIsSecondTeam ? awayKit : homeKit, guest = hostIsSecondTeam ? homeKit : awayKit;
+            _ledColors = new[] { host.Shirt, new Color(0.95f, 0.95f, 0.95f), guest.Shirt, new Color(0.1f, 0.6f, 0.95f), host.Secondary };
             _perTeam = playersPerTeam;
             _players = new PlayerModel[2 * playersPerTeam];
             _heads = new Vector3[_players.Length];
@@ -417,6 +422,7 @@ namespace Football.Game
         private Material _ledMaterial;
         private float _ledClock;
         private Color[] _ledColors;
+        private readonly bool _hostIsSecondTeam;
 
         /// <summary>
         /// Carteles LED alrededor del campo (laterales y detrás de los arcos): una sola malla con un material propio cuyo color
@@ -499,9 +505,10 @@ namespace Football.Game
             _crowd.SetParent(_root.transform, false);
             float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
             // Público multicolor: mayoría con los colores del local, algo del visitante y ropa de todos los días.
+            KitColors host = _hostIsSecondTeam ? _awayKit : _homeKit, guest = _hostIsSecondTeam ? _homeKit : _awayKit;
             Color[] palette =
             {
-                _homeKit.Shirt, _homeKit.Shirt, _homeKit.Secondary, _homeKit.Shirt, _awayKit.Shirt, _awayKit.Secondary,
+                host.Shirt, host.Shirt, host.Secondary, host.Shirt, guest.Shirt, guest.Secondary,
                 new Color(0.92f, 0.92f, 0.92f), new Color(0.15f, 0.15f, 0.18f), new Color(0.55f, 0.4f, 0.3f), new Color(0.85f, 0.2f, 0.2f),
                 new Color(0.2f, 0.45f, 0.85f), new Color(0.95f, 0.8f, 0.2f), new Color(0.3f, 0.65f, 0.35f), new Color(0.9f, 0.5f, 0.2f)
             };

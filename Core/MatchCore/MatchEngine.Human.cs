@@ -76,7 +76,8 @@ namespace Football.Core.MatchCore
 
             if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
             {
-                Teams[team].KickBufferTimer = Config.Player.HumanInputBuffer;
+                // Con un pase de un compañero en camino, la orden espera hasta que llegue el balón (pase de primera).
+                Teams[team].KickBufferTimer = IsPassComingTo(team) ? Config.Player.HumanFirstTimeBuffer : Config.Player.HumanInputBuffer;
             }
 
             Teams[team].Input = current;
@@ -104,6 +105,14 @@ namespace Football.Core.MatchCore
             return target;
         }
 
+        /// <summary>El balón está suelto y lo tocó por última vez un compañero del jugador controlado: viene un pase hacia él o hacia su zona.</summary>
+        private bool IsPassComingTo(int team)
+        {
+            MatchPlayer controlled = Teams[team].Controlled;
+            return controlled != null && Owner == null && LastToucher != null && LastToucher.Team == team && LastToucher != controlled
+                   && Phase == MatchPhase.Playing;
+        }
+
         private void ClearInputImpulses()
         {
             for (int t = 0; t < 2; t++)
@@ -115,6 +124,11 @@ namespace Football.Core.MatchCore
                 if (team.DefendBufferTimer <= 0f)
                 {
                     i.Tackle = i.Slide = false; // la entrada y la barrida esperan un instante si el jugador estaba ocupado
+                }
+
+                if (Phase != MatchPhase.Playing && team.KickBufferTimer > Config.Player.HumanInputBuffer)
+                {
+                    team.KickBufferTimer = Config.Player.HumanInputBuffer; // el pase de primera solo espera con la pelota en juego
                 }
 
                 team.KickBufferTimer -= _dt;

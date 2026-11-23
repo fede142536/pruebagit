@@ -232,12 +232,13 @@ namespace Football.Game
         /// <param name="halfMinutes">Minutos reales por parte.</param>
         /// <param name="stadium">Público, tribunas y obras del estadio del partido.</param>
         /// <returns>Verdadero si arrancó; si no, el motivo queda en <see cref="LastError"/>.</returns>
+        /// <param name="userIsHome">El usuario juega de local; si es visitante, el estadio, la tribuna, el marcador y la hinchada son los del rival.</param>
         public bool BeginCareer(TeamDefinition userTeam, TeamDefinition rivalTeam, MatchTeamSetup user, MatchTeamSetup rival,
-            KitColors userKit, KitColors rivalKit, int difficulty, int halfMinutes, StadiumLook stadium)
+            KitColors userKit, KitColors rivalKit, int difficulty, int halfMinutes, StadiumLook stadium, bool userIsHome = true)
         {
             try
             {
-                BeginUnsafe(userTeam, rivalTeam, null, null, userKit, rivalKit, difficulty, halfMinutes, false, false, user, rival, stadium);
+                BeginUnsafe(userTeam, rivalTeam, null, null, userKit, rivalKit, difficulty, halfMinutes, false, false, user, rival, stadium, !userIsHome);
                 LastError = null;
                 return true;
             }
@@ -256,8 +257,9 @@ namespace Football.Game
 
         private void BeginUnsafe(TeamDefinition homeTeam, TeamDefinition awayTeam, SquadSelection homeSquad, SquadSelection awaySquad,
             KitColors homeKit, KitColors awayKit, int difficulty, int halfMinutes, bool benchmark, bool indoor,
-            MatchTeamSetup prebuiltHome = null, MatchTeamSetup prebuiltAway = null, StadiumLook? stadium = null)
+            MatchTeamSetup prebuiltHome = null, MatchTeamSetup prebuiltAway = null, StadiumLook? stadium = null, bool hostIsSecondTeam = false)
         {
+            _hostIsSecondTeam = hostIsSecondTeam;
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
             _benchmark = benchmark;
@@ -288,7 +290,7 @@ namespace Football.Game
                 numbers[home.Players.Length + n] = away.Players[n].Number;
             }
 
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full, numbers);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full, numbers, hostIsSecondTeam);
             _nameTags.Setup(_engine);
             _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize); // en 3 contra 3 no hace falta
             _playerHud.SetVisible(!benchmark);
@@ -312,7 +314,7 @@ namespace Football.Game
             if (presentation)
             {
                 // 11 contra 11: presentación táctica de TV (local y visitante) y después la bajada de cámara.
-                _presentation.Begin(_engine, _view, home, away, homeTeam, awayTeam, homeKit, awayKit);
+                _presentation.Begin(_engine, _view, home, away, homeTeam, awayTeam, homeKit, awayKit, hostIsSecondTeam);
             }
             else if (!benchmark)
             {
@@ -323,16 +325,17 @@ namespace Football.Game
             _lineupCard.SetActive(!benchmark && !presentation);
             _lastBallSpeed = 0f;
             AudioListener.pause = false;
-            _audio.StartCrowd(IsBoca(homeTeam)); // los cánticos de Boca suenan solo si es el equipo que elegiste (el local)
+            _audio.StartCrowd(IsBoca(hostIsSecondTeam ? awayTeam : homeTeam)); // los cánticos de La 12 son de local: solo suenan si Boca es el dueño de casa
             _bannerTimer = 0f;
             _endTimer = 0f;
             _shownHome = _shownAway = _shownSecond = -1;
             _shownAdded = -1;
             _banner.text = string.Empty;
-            _homeName.text = ShortName(homeTeam);
-            _awayName.text = ShortName(awayTeam);
-            _homeCrest.Set(homeTeam);
-            _awayCrest.Set(awayTeam);
+            // El marcador pone primero al dueño de casa: con el usuario de visitante (modo carrera) el rival va a la izquierda.
+            _homeName.text = ShortName(hostIsSecondTeam ? awayTeam : homeTeam);
+            _awayName.text = ShortName(hostIsSecondTeam ? homeTeam : awayTeam);
+            _homeCrest.Set(hostIsSecondTeam ? awayTeam : homeTeam);
+            _awayCrest.Set(hostIsSecondTeam ? homeTeam : awayTeam);
             _warning.text = _view.BuildErrors.Length > 0
                 ? "Algo no se pudo dibujar (manda una captura de esto):\n" + _view.BuildErrors
                 : string.Empty;
@@ -767,8 +770,8 @@ namespace Football.Game
 
         private void UpdateHud()
         {
-            int home = _engine.Teams[0].Stats.Goals;
-            int away = _engine.Teams[1].Stats.Goals;
+            int home = _engine.Teams[_hostIsSecondTeam ? 1 : 0].Stats.Goals;   // el marcador va con el dueño de casa a la izquierda
+            int away = _engine.Teams[_hostIsSecondTeam ? 0 : 1].Stats.Goals;
             if (home != _shownHome || away != _shownAway)
             {
                 _shownHome = home;
@@ -853,6 +856,7 @@ namespace Football.Game
         private float _celebrationTimer;
         private int _goalHead;
         private KitColors _homeKit, _awayKit;
+        private bool _hostIsSecondTeam;
         private const float ReplaySeconds = 4f;
         private const float GoalCheerSeconds = 3.5f;
         private const float ReplaySpeed = 0.5f;

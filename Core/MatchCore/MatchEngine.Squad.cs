@@ -101,7 +101,41 @@ namespace Football.Core.MatchCore
             _pendingCount[team] = 0;
         }
 
-        /// <summary>El jugador ya tiene un cambio pedido.</summary>
+        /// <summary>Suplente que entrará por un jugador de campo con el cambio ya pedido (null si no hay cambio pedido para él).</summary>
+        /// <param name="team">Equipo.</param>
+        /// <param name="outgoingIndex">Índice global del jugador que sale.</param>
+        public PlayerMatchView PendingIncoming(int team, int outgoingIndex)
+        {
+            for (int i = 0; i < _pendingCount[team]; i++)
+            {
+                if (_pendingOut[team * MaxPending + i] == outgoingIndex)
+                {
+                    return Teams[team].Bench[_pendingIn[team * MaxPending + i]];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Indica si un suplente del banco ya fue pedido y entrará en el próximo parón.</summary>
+        /// <param name="team">Equipo.</param>
+        /// <param name="benchIndex">Posición en el banco.</param>
+        public bool IsPendingIn(int team, int benchIndex)
+        {
+            for (int i = 0; i < _pendingCount[team]; i++)
+            {
+                if (_pendingIn[team * MaxPending + i] == benchIndex)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Indica si un jugador de campo ya tiene pedido su cambio (sale en el próximo parón).</summary>
+        /// <param name="team">Equipo.</param>
+        /// <param name="playerIndex">Índice global del jugador.</param>
         public bool IsPendingOut(int team, int playerIndex)
         {
             for (int i = 0; i < _pendingCount[team]; i++)

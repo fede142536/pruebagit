@@ -313,8 +313,9 @@ namespace Football.Game
             Vector2 at = PitchPoint(team.Formation.Slots[p.Spot]);
             _dots[i].Place(at, new Vector2(DotSize, DotSize));
             ((RectTransform)_dotNames[i].transform).anchoredPosition = at - new Vector2(0f, DotSize * 0.5f + 10f);
-            _dots[i].Label.text = p.Number.ToString();
-            _dotNames[i].text = PlayerLabels.Surname(p.Name);
+            PlayerMatchView incoming = pending ? _engine.PendingIncoming(0, p.Index) : null;
+            _dots[i].Label.text = (incoming != null ? incoming.Number : p.Number).ToString();
+            _dotNames[i].text = PlayerLabels.Surname(incoming != null ? incoming.Name : p.Name);
             _dots[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : LineColor(p.Role);
         }
 
@@ -342,8 +343,17 @@ namespace Football.Game
 
                 MatchPlayer p = team.Players[i];
                 bool pending = _engine.IsPendingOut(0, p.Index);
-                _field[i].Label.text = "  " + p.Number + "  " + p.Name + "  ·  " + UiTheme.Code(p.Role) + "  ·  RES "
-                                       + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "  (SALE)" : string.Empty) + (p.SentOff ? "  (EXPULSADO)" : string.Empty) + (p.Injured ? "  (LESIONADO)" : string.Empty);
+                PlayerMatchView incoming = pending ? _engine.PendingIncoming(0, p.Index) : null;
+                if (incoming != null)
+                {
+                    // Cambio pedido: el que entra ya aparece en su puesto (entra en el próximo parón) y el que sale queda anotado.
+                    _field[i].Label.text = "  " + incoming.Number + "  " + incoming.Name + "  ·  " + UiTheme.Code(p.Role) + "  ·  ENTRA POR " + PlayerLabels.Surname(p.Name);
+                }
+                else
+                {
+                    _field[i].Label.text = "  " + p.Number + "  " + p.Name + "  ·  " + UiTheme.Code(p.Role) + "  ·  RES "
+                                           + Mathf.RoundToInt(p.Stamina * 100f) + "%" + (pending ? "  (SALE)" : string.Empty) + (p.SentOff ? "  (EXPULSADO)" : string.Empty) + (p.Injured ? "  (LESIONADO)" : string.Empty);
+                }
                 _field[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : RowColor;
                 PlaceDot(i, p, pending);
             }
@@ -359,8 +369,9 @@ namespace Football.Game
 
                 PlayerMatchView b = team.Bench[i];
                 bool unavailable = team.BenchUsed[i];
-                _bench[i].Label.text = "  " + b.Number + "  " + b.Name + "   ·   " + UiTheme.Code(b.Role) + (unavailable ? "   (USADO)" : string.Empty);
-                _bench[i].Background.color = unavailable ? Unavailable : RowColor;
+                bool entering = _engine.IsPendingIn(0, i);
+                _bench[i].Label.text = "  " + b.Number + "  " + b.Name + "   ·   " + UiTheme.Code(b.Role) + (entering ? "   (ENTRA)" : unavailable ? "   (USADO)" : string.Empty);
+                _bench[i].Background.color = entering ? Pending : unavailable ? Unavailable : RowColor;
             }
         }
     }

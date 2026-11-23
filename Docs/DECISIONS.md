@@ -411,3 +411,12 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - Banco de hasta 9 (`MatchPreparation.BenchSize`). Se guarda en el archivo de la partida (versión 4) y en SQLite (migración 11). Las partidas viejas cargan con alineación automática.
 - Pantalla `CareerLineupScreen` (botón «ARMAR ONCE Y BANCO» en Plantilla): cancha con el once, banco y no convocados; se toca un jugador y otro para intercambiarlos; «AUTOMÁTICA» devuelve la elección a la computadora. Sin verificar en Unity.
 - Al cambiar de formación se mantiene el orden de los titulares (el jugador i sigue en el puesto i): conviene revisar el once después de cambiar el dibujo. No hay penalización por jugar fuera de posición en los atributos.
+
+## D-35 · Pase de primera, cambios visibles en el once y modo carrera de visitante — Aceptada (pedido del usuario, 23/11/2026)
+- **Pase de primera**: si la persona pulsa un botón de golpeo mientras un pase de un compañero viene hacia ella (balón suelto, tocado por último por un compañero), la orden espera hasta
+  `HumanFirstTimeBuffer` (1,5 s; antes solo 0,2 s) y, al recibir, el jugador espera `FirstTimeControlDelay` (0,03 s; antes 0,18 s) y pasa o patea. Si el rival se queda con el balón la orden se descarta; fuera de juego vuelve a valer 0,2 s
+  (para no disparar un saque manual por error). Medido: de primera 0,033 s con el balón; sin pedirlo antes, 0,183 s. Solo afecta a la persona (la IA no cambia: mismas métricas).
+- **Cambios en Plantel y táctica**: al pedir un cambio, el que entra aparece ya en su puesto de la lista y de la cancha («ENTRA POR …») y en el banco como «(ENTRA)»; se hace en el próximo parón, como siempre.
+- **Carrera de visitante**: el estadio ya era el del local (capacidad y obras), pero la tribuna, los carteles y el marcador usaban los colores del usuario. Ahora el dueño de casa va a la izquierda del marcador, la tribuna lleva sus colores y el visitante usa su camiseta alternativa si se confunden.
+  Los cánticos de La 12 suenan **solo si Boca es el dueño de casa**; de visitante queda la hinchada genérica. El rótulo LOCAL/VISITANTE de la presentación sigue al dueño de casa.
+  Sin verificar en Unity. El usuario sigue siendo el equipo 0 del motor (ataca hacia +X): el lado de la cancha no cambia.

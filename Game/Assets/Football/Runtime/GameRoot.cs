@@ -198,13 +198,21 @@ namespace Football.Game
             KitColors rivalKit = KitColors.From(rivalTeam.Home);
             if (userKit.Distance(rivalKit) < TeamCatalog.KitClashDistance)
             {
-                rivalKit = KitColors.From(rivalTeam.Away); // si se confunden, el rival usa la alternativa
+                // Si se confunden, el visitante usa la alternativa: el dueño de casa siempre sale con su camiseta titular.
+                if (_career.UserIsHome)
+                {
+                    rivalKit = KitColors.From(rivalTeam.Away);
+                }
+                else
+                {
+                    userKit = KitColors.From(userTeam.Away);
+                }
             }
 
             _careerMatch = true;
             Go(State.Match);
             if (_match.BeginCareer(userTeam, rivalTeam, user, rival, userKit, rivalKit, _settings.Difficulty, TeamCatalog.HalfMinutes[_settings.Length],
-                    _career.MatchStadium()))
+                    _career.MatchStadium(), _career.UserIsHome))
             {
                 return;
             }

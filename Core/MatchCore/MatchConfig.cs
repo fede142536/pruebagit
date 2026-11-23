@@ -203,6 +203,13 @@ namespace Football.Core.MatchCore
         public float KickCooldown = 0.5f;
         /// <summary>Tiempo tras controlar el balón antes de poder actuar (s).</summary>
         public float ControlDelay = 0.18f;
+        /// <summary>
+        /// Pase de primera: si la persona pulsa un botón de golpeo mientras un pase de un compañero viene hacia ella, la orden espera
+        /// este tiempo (s) a que el balón llegue, en vez del instante normal de <see cref="HumanInputBuffer"/>.
+        /// </summary>
+        public float HumanFirstTimeBuffer = 1.5f;
+        /// <summary>Con una orden de golpeo ya pedida antes de recibir, el jugador espera solo esto (s) tras controlar el balón: pasa al primer toque.</summary>
+        public float FirstTimeControlDelay = 0.03f;
         /// <summary>Probabilidad por segundo de un mal toque a máxima velocidad con habilidad mínima.</summary>
         public float HeavyTouchRate = 0.45f;
         /// <summary>Velocidad extra del balón en un mal toque (m/s).</summary>
