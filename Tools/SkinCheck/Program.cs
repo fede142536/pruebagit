@@ -86,14 +86,74 @@ static class P
         return null;
     }
 
+    // Comprobaciones del cuerpo importado: pesos, índices, regiones, proporción y que el juego lo arme con los dos LOD y todos los diseños.
+    static void HumanoidChecks()
+    {
+        var body = HumanoidBody.Current;
+        Console.WriteLine($"Cuerpo importado: {body.Lods.Length} LOD, huesos {body.Bones.Length}");
+        Check(body.Bones.Length == 20, "20 huesos");
+        Check(body.Bones[6].x < 0f && body.Bones[9].x > 0f, "el hombro izquierdo va en −X (Unity)");
+        Check(SkinnedBodyGeometry.BindPositions == body.Bones, "el esqueleto del juego pasó a ser el importado");
+        for (int l = 0; l < body.Lods.Length; l++)
+        {
+            var lod = body.Lods[l];
+            int n = lod.Positions.Length;
+            Check(lod.Triangles.Length % 3 == 0 && lod.Triangles.All(t => t < n), $"LOD{l}: índices válidos");
+            Check(lod.Bone0.All(b => b < 20) && lod.Bone1.All(b => b < 20), $"LOD{l}: huesos válidos");
+            Check(lod.Region.All(r => r <= (byte)BodyRegion.Boot), $"LOD{l}: regiones válidas");
+            var used = lod.Bone0.Distinct().Count();
+            float top = lod.Positions.Max(p => p.y), width = lod.Positions.Max(p => Math.Abs(p.x));
+            Console.WriteLine($"  LOD{l}: {n} vértices, {lod.Triangles.Length / 3} triángulos, huesos usados {used}, altura {top:0.00} m, ancho (brazos) ±{width:0.00} m, regiones " +
+                              string.Join("/", Enumerable.Range(0, 6).Select(r => lod.Region.Count(x => x == r))));
+            Check(used >= 14, $"LOD{l}: la malla debería usar casi todos los huesos");
+            Check(top > 1.5f && top < 1.6f, $"LOD{l}: el cuerpo llega hasta el cuello");
+            Check(width < 0.45f, $"LOD{l}: los brazos cuelgan (pose A)");
+        }
+
+        foreach (int lod in new[] { 0, 1 })
+            foreach (int pattern in new[] { 0, 1, 2, 3, 4, 5 })
+                foreach (bool keeper in new[] { false, true })
+                {
+                    var spec = Spec(0, 0, pattern, keeper, 9, 1);
+                    spec.Keeper = keeper;
+                    var g = SkinnedBodyGeometry.Build(spec, lod);
+                    Check(g.Vertices.Count == g.Colors.Count && g.Vertices.Count == g.Bone0.Count && g.Vertices.Count == g.DecalUv.Count, $"listas paralelas (LOD{lod}, diseño {pattern})");
+                    Check(g.Triangles.All(t => t >= 0 && t < g.Vertices.Count), "triángulos dentro de la malla");
+                    Check(g.Weight0.All(w => w >= 0f && w <= 1f), "pesos entre 0 y 1");
+                    if (pattern == 0 && !keeper) Console.WriteLine($"  Jugador completo LOD{lod}: {g.TriangleCount} triángulos, {g.Vertices.Count} vértices");
+                }
+
+        float h = SkinnedBodyGeometry.Build(Spec(0, 0, 0, false, 9, 1), 0).Vertices.Max(v => v.y);
+        Console.WriteLine($"  Altura total con cabeza: {h:0.00} m");
+        Check(h > 1.7f && h < 1.9f, "altura total entre 1,70 y 1,90 m");
+        Console.WriteLine(fails == 0 ? "TODO EN ORDEN" : fails + " COMPROBACIONES FALLARON");
+        Environment.Exit(fails == 0 ? 0 : 1);
+    }
+
     static void Main(string[] args)
     {
         // Volcado para mirar la malla fuera de Unity: --ply ruta [lod] escribe vértices con color y triángulos.
+        int humanoid = Array.IndexOf(args, "--humanoid");
+        if (humanoid >= 0 && !HumanoidBody.Install(System.IO.File.ReadAllBytes(args[humanoid + 1])))
+        {
+            Console.WriteLine("No se pudo leer el cuerpo importado");
+            Environment.Exit(1);
+        }
+
+        if (humanoid >= 0 && Array.IndexOf(args, "--ply") < 0)
+        {
+            HumanoidChecks();
+            return;
+        }
+
         int dump = Array.IndexOf(args, "--ply");
         if (dump >= 0)
         {
             int lod = dump + 2 < args.Length ? int.Parse(args[dump + 2]) : 0;
-            var m = SkinnedBodyGeometry.Build(Spec(0, 1, 1, false, 10, 2), lod);
+            int pat = Array.IndexOf(args, "--pattern"), keeper = Array.IndexOf(args, "--keeper");
+            var spec = Spec(0, 1, pat >= 0 ? int.Parse(args[pat + 1]) : 1, false, 10, 2);
+            if (keeper >= 0) { spec.Keeper = true; spec.Gloves = new Color(0.9f, 0.9f, 0.2f); spec.Shirt = new Color(0.1f, 0.6f, 0.2f); }
+            var m = SkinnedBodyGeometry.Build(spec, lod);
             using (var w = new System.IO.StreamWriter(args[dump + 1]))
             {
                 var inv = System.Globalization.CultureInfo.InvariantCulture;

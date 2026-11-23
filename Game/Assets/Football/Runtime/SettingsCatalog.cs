@@ -87,6 +87,31 @@ namespace Football.Game
             Materials.SetLighting(s.Quality > 0); // ni volumen de luz direccional
             Materials.SetPlanarShadows(s.Quality > 0); // la sombra proyectada es de calidad MEDIA y ALTA; en BAJA queda el disco de contacto
             AudioListener.volume = GameSettings.Volume(s.MasterVolume);
+            UseImportedBody(s.Quality > 0); // el cuerpo humano importado es de calidad MEDIA y ALTA; en BAJA se arma el procedural, más liviano
+        }
+
+        private const string HumanoidResource = "Humanoid/body";
+        private static byte[] _humanoidBytes;
+        private static bool _humanoidLoaded;
+
+        /// <summary>Instala o retira el cuerpo importado (se usa en los partidos que empiecen después). Si el archivo falta, queda el procedural.</summary>
+        private static void UseImportedBody(bool on)
+        {
+            if (!_humanoidLoaded)
+            {
+                _humanoidLoaded = true;
+                TextAsset asset = Resources.Load<TextAsset>(HumanoidResource);
+                _humanoidBytes = asset != null ? asset.bytes : null;
+                if (_humanoidBytes == null)
+                {
+                    Debug.LogWarning("Football: no se encontró Resources/" + HumanoidResource + ".bytes; los jugadores usan el cuerpo procedural.");
+                }
+            }
+
+            if (!HumanoidBody.Install(on ? _humanoidBytes : null) && on && _humanoidBytes != null)
+            {
+                Debug.LogWarning("Football: el archivo del cuerpo importado no se pudo leer; los jugadores usan el cuerpo procedural.");
+            }
         }
     }
 }

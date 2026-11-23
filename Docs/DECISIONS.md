@@ -389,3 +389,13 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **Núcleo sin basura**: `AllocationTests` mide 0 bytes por tick y 0 al copiar el estado. No reemplaza el benchmark en el celular (IL2CPP y Unity pueden asignar por su cuenta).
 - **Hinchada**: reacciones breves tomadas del archivo del grito (¡ooh! en remates y atajadas, protesta más grave en faltas, amarillas, rojas y offsides), con enfriamiento de 1,6 s para que no se pisen.
 - **APK**: `CONSTRUIR_APK.bat` compila sin abrir Unity (`BuildAndroid.BuildBatch`) y, si hay un celular con depuración USB y `adb`, lo instala. **No se probó**: requiere Unity y Android SDK.
+
+## D-32 · Cuerpo humano importado (Quaternius, CC0) — Aceptada (pedido del usuario, 23/11/2026)
+- El usuario aportó el pack «Universal Base Characters» (gratuito, CC0). El juego no puede leer glTF sin un paquete extra y el modelo trae 12.500 triángulos y texturas de 2K–4K, así que se **convierte fuera de Unity**
+  (`Tools/ImportHumanoid/convert.py`) a un archivo propio de 84 KB: cuerpo del cuello para abajo en pose A, reducido (LOD0 ≈ 3.700 triángulos, LOD1 ≈ 760), pesos sobre los 20 huesos del juego y una región por vértice.
+  Sin texturas: se pinta por vértice con los colores del club (camiseta, short, medias, botín, guantes del arquero, pantalón largo, manga larga). Los diseños (rayas, franja, banda, V, mitades) también por vértice, con bordes algo irregulares de cerca.
+- **Cabeza, pelo, cara y barba siguen siendo procedurales** (peinados y rasgos por jugador); el modelo importado no trae cabeza útil para eso. Cuello y cuello de camiseta son piezas procedurales.
+- Se usa en calidad MEDIA y ALTA; en BAJA (y si falta el archivo) queda el cuerpo procedural de siempre. Jugador completo: 4.540 triángulos en LOD0 y 970 en LOD1 (antes 2.700 y 860). **Costo en el A13 sin medir**: si baja el FPS, bajar `LOD0_TRIS` en `convert.py` o usar calidad BAJA.
+- `BindPositions` pasó de campo a propiedad: con el cuerpo importado el esqueleto del juego toma las posiciones de ese modelo (muslo 0,43 m, pierna 0,46 m, altura 1,82 m con cabeza).
+- Sin verificar en Unity: la apariencia con la luz y el shader del juego, la deformación al correr y patear (los pesos se redujeron de 4 huesos a 2), el anclaje de los pies y el tamaño del dorsal. Lo único comprobado es la malla armada (SkinCheck) y una vista previa por software.
+- Se quitaron del repositorio las texturas del pack (30 MB, sin uso) y los modelos pasaron a `ThirdParty/`.

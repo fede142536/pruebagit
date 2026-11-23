@@ -3,5 +3,6 @@
        Uso (desde la raíz): dotnet run, proyecto Tools/SkinCheck. -->
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>disable</Nullable><ImplicitUsings>disable</ImplicitUsings></PropertyGroup>
   <ItemGroup><Compile Include="../../Game/Assets/Football/Runtime/SkinnedBodyGeometry.cs" />
-    <Compile Include="../../Game/Assets/Football/Runtime/PlayerAtlasData.cs" /></ItemGroup>
+    <Compile Include="../../Game/Assets/Football/Runtime/PlayerAtlasData.cs" />
+    <Compile Include="../../Game/Assets/Football/Runtime/HumanoidBody.cs" /></ItemGroup>
 </Project>

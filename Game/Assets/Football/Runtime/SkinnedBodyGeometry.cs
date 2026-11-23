@@ -155,7 +155,7 @@ namespace Football.Game
         public static readonly int[] Parents = { -1, 0, 1, 2, 3, 4, 3, 6, 7, 3, 9, 10, 1, 12, 13, 14, 1, 16, 17, 18 };
 
         /// <summary>Posición de cada hueso en reposo, en el espacio del jugador (pies en el origen, mirando a +Z).</summary>
-        public static readonly Vector3[] BindPositions =
+        private static readonly Vector3[] ProceduralBind =
         {
             new Vector3(0f, 0f, 0f), new Vector3(0f, 0.95f, 0f), new Vector3(0f, 1.1f, 0f), new Vector3(0f, 1.28f, 0f),
             new Vector3(0f, 1.45f, 0f), new Vector3(0f, 1.53f, 0f),
@@ -164,6 +164,25 @@ namespace Football.Game
             new Vector3(-0.11f, 0.92f, 0f), new Vector3(-0.11f, 0.48f, 0f), new Vector3(-0.11f, 0.06f, 0f), new Vector3(-0.11f, 0.025f, 0.11f),
             new Vector3(0.11f, 0.92f, 0f), new Vector3(0.11f, 0.48f, 0f), new Vector3(0.11f, 0.06f, 0f), new Vector3(0.11f, 0.025f, 0.11f)
         };
+
+        /// <summary>
+        /// Posición de cada hueso en reposo, en el espacio del jugador: la del cuerpo procedural o, si hay un cuerpo importado instalado
+        /// (<see cref="HumanoidBody.Install"/>), la de ese esqueleto.
+        /// </summary>
+        public static Vector3[] BindPositions { get; private set; } = ProceduralBind;
+
+        private static HumanoidBody _humanoid;
+
+        /// <summary>Cambia entre el cuerpo importado (instalado con <see cref="HumanoidBody.Install"/>) y el procedural (null).</summary>
+        /// <param name="body">Cuerpo importado o null.</param>
+        public static void UseHumanoid(HumanoidBody body)
+        {
+            _humanoid = body;
+            BindPositions = body != null ? body.Bones : ProceduralBind;
+        }
+
+        /// <summary>Hay un cuerpo importado en uso.</summary>
+        public static bool UsesHumanoid => _humanoid != null;
 
         /// <summary>Nombres de los huesos (los del pedido: Pelvis, Spine, Chest… Toe_R).</summary>
         public static readonly string[] BoneNames =
@@ -459,11 +478,18 @@ namespace Football.Game
         {
             var g = new SkinnedBodyGeometry(lod) { _spec = spec };
             g.PrepareDecals();
-            g.BuildTrunk();
-            for (int side = -1; side <= 1; side += 2)
+            if (_humanoid != null)
             {
-                g.BuildLeg(side);
-                g.BuildArm(side);
+                g.BuildImportedBody(_humanoid.Lods[Math.Min(lod, _humanoid.Lods.Length - 1)]);
+            }
+            else
+            {
+                g.BuildTrunk();
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    g.BuildLeg(side);
+                    g.BuildArm(side);
+                }
             }
 
             g.BuildHead();
@@ -499,6 +525,110 @@ namespace Football.Game
             if (!_low)
             {
                 Sculpt(Collar, 10, null, Place.Identity, Tag(_spec.Secondary, FabricId), Bind.Auto, NoMask, false, true);
+            }
+        }
+
+        // ---- cuerpo importado (Tools/ImportHumanoid) ----
+
+        private const float NeckBackShift = -0.02f; // el cuello del modelo importado está un poco más atrás que el procedural
+        private const int ArmBoneFirst = (int)BodyBone.ShoulderL, ArmBoneLast = (int)BodyBone.WristR;
+        private const float PatternStripeHalf = 0.04f, PatternStripeStep = 0.13f, PatternBandLow = 1.28f, PatternBandHigh = 1.42f;
+        private const float PatternSashRise = 0.75f, PatternSashHalf = 0.045f, PatternSashCentreY = 1.29f, PatternChevronHalf = 0.035f, PatternChevronY = 1.32f;
+
+        /// <summary>
+        /// Cuerpo del cuello para abajo a partir del modelo importado: cada vértice se pinta según su región (piel, camiseta con su diseño, short, media, botín),
+        /// con los guantes del arquero, el pantalón largo y la manga larga cuando corresponde. El cuello y el cuello de la camiseta son piezas procedurales.
+        /// </summary>
+        private void BuildImportedBody(HumanoidBody.Lod lod)
+        {
+            _group = 0;
+            Color skin = Tag(_spec.Skin, SkinId), shirt = Tag(_spec.Shirt, FabricId), trim = Tag(_spec.Secondary, FabricId);
+            Color shorts = Tag(_spec.Shorts, FabricId), socks = Tag(_spec.Socks, FabricId), stripe = Tag(SockStripe(), FabricId);
+            Color boot = Tag(_spec.Boots, BootId), glove = Tag(_spec.Gloves, FabricId);
+            int offset = Vertices.Count;
+            for (int i = 0; i < lod.Positions.Length; i++)
+            {
+                Vector3 p = lod.Positions[i];
+                int b0 = lod.Bone0[i];
+                bool arm = b0 >= ArmBoneFirst && b0 <= ArmBoneLast;
+                bool hand = b0 == (int)BodyBone.WristL || b0 == (int)BodyBone.WristR;
+                BodyRegion region = (BodyRegion)lod.Region[i];
+                Color color;
+                DecalMode decal = DecalMode.None;
+                switch (region)
+                {
+                    case BodyRegion.Shirt:
+                        color = _spec.Pattern != 0 && InShirtPattern(_spec.Pattern, p, arm) ? trim : shirt;
+                        decal = arm ? DecalMode.None : DecalMode.Torso;
+                        break;
+                    case BodyRegion.Shorts: color = shorts; break;
+                    case BodyRegion.Sock: color = _spec.Trousers ? shorts : socks; break;
+                    case BodyRegion.Stripe: color = _spec.Trousers ? shorts : stripe; break;
+                    case BodyRegion.Boot: color = boot; break;
+                    default:
+                        color = skin;
+                        if (_spec.Keeper && hand)
+                        {
+                            color = glove;
+                        }
+                        else if (_spec.LongSleeves && arm && !hand)
+                        {
+                            color = shirt;
+                        }
+                        else if (_spec.Trousers && !arm && b0 >= (int)BodyBone.HipL)
+                        {
+                            color = shorts;
+                        }
+
+                        break;
+                }
+
+                bool isSkin = color.a == SkinId;
+                Vertices.Add(p);
+                BaseColors.Add(color);
+                Colors.Add(color);
+                Masks.Add(isSkin ? new Vector2(0.35f, 0f) : Vector2.zero);
+                Bone0.Add(b0);
+                Bone1.Add(lod.Bone1[i]);
+                Weight0.Add(lod.Weight0[i] / 255f);
+                Group.Add(_group);
+                AddDecal(decal, p);
+            }
+
+            for (int i = 0; i < lod.Triangles.Length; i++)
+            {
+                Triangles.Add(offset + lod.Triangles[i]);
+            }
+
+            // Cuello (procedural, une el cuerpo con la cabeza) y cuello de la camiseta.
+            Place neckAt = Place.Identity.Then(new Vector3(0f, 0f, NeckBackShift), Vector3.zero, Vector3.one);
+            Sculpt(Neck, _low ? 6 : 8, null, neckAt, skin, Bind.Single((int)BodyBone.Neck), SweatNeck, false, false);
+            if (!_low)
+            {
+                Sculpt(Collar, 10, null, neckAt, trim, Bind.Single((int)BodyBone.Chest), NoMask, false, true);
+            }
+        }
+
+        /// <summary>Si un punto de la camiseta cae sobre el diseño (rayas, franja, banda cruzada, V o mitades) y entonces va en el color secundario.</summary>
+        private static bool InShirtPattern(int pattern, Vector3 p, bool sleeve)
+        {
+            switch (pattern)
+            {
+                case 1: // rayas verticales
+                {
+                    double k = Math.Round(p.x / PatternStripeStep); // tres rayas: en el centro y a cada lado
+                    return !sleeve && Math.Abs(k) <= 1 && Math.Abs(p.x - k * PatternStripeStep) < PatternStripeHalf;
+                }
+                case 2: // franja horizontal
+                    return !sleeve && p.y > PatternBandLow && p.y < PatternBandHigh;
+                case 3: // banda cruzada
+                    return !sleeve && Mathf.Abs((p.y - PatternSashCentreY) * PatternSashRise - p.x) < PatternSashHalf;
+                case 4: // V
+                    return !sleeve && p.y < PatternChevronY && Mathf.Abs(Mathf.Abs(p.x) - (PatternChevronY - p.y) * 1.1f) < PatternChevronHalf;
+                case 5: // mitades
+                    return !sleeve && p.x > 0f;
+                default:
+                    return false;
             }
         }
 
@@ -1176,9 +1306,12 @@ namespace Football.Game
 
         private static Place At(int bone) => new Place { Origin = BindPositions[bone], Scale = Vector3.one };
 
+        private static float HeadFactor => _humanoid != null ? HumanoidBody.HeadSizeFactor : 1f;
+
         private static Place HeadAt(Vector3 position, Vector3 euler, Vector3 scale) => new Place
         {
-            Origin = BindPositions[(int)BodyBone.Head], Position = position * HeadScale, Euler = euler, Scale = scale * HeadScale
+            Origin = _humanoid != null ? HumanoidBody.HeadOrigin : BindPositions[(int)BodyBone.Head],
+            Position = position * HeadScale * HeadFactor, Euler = euler, Scale = scale * HeadScale * HeadFactor
         };
 
         /// <summary>Giro con el orden de Unity (Z, luego X, luego Y).</summary>
@@ -1405,14 +1538,15 @@ namespace Football.Game
 
             // El frente se ve desde +Z mirando hacia −Z (su derecha es +X); la espalda se ve desde −Z (su derecha es −X).
             float flag = Mathf.Clamp(p.z / DecalFlagRamp, -1f, 1f);
+            float shift = _humanoid != null ? HumanoidBody.DecalShiftY : 0f;
             Vector3 uv;
             if (flag < 0f)
             {
-                uv = new Vector3(0.5f - p.x / BackPatchW, (p.y - (BackPatchY - BackPatchH * 0.5f)) / BackPatchH, flag);
+                uv = new Vector3(0.5f - p.x / BackPatchW, (p.y - (BackPatchY + shift - BackPatchH * 0.5f)) / BackPatchH, flag);
             }
             else
             {
-                uv = new Vector3(0.5f + (p.x - CrestPatchX) / CrestPatchW, (p.y - (CrestPatchY - CrestPatchH * 0.5f)) / CrestPatchH, flag);
+                uv = new Vector3(0.5f + (p.x - CrestPatchX) / CrestPatchW, (p.y - (CrestPatchY + shift - CrestPatchH * 0.5f)) / CrestPatchH, flag);
             }
 
             DecalUv.Add(uv);
