@@ -58,7 +58,25 @@ namespace Football.Core.Career
         /// <summary>Socios por punto de reputación.</summary>
         public int MembersPerReputation = 900;
         /// <summary>Años de contrato iniciales (mínimo y máximo).</summary>
-        public int[] ContractYears = { 1, 4 };
+        public int[] ContractYears = { 1, 5 };
+        /// <summary>Años del primer contrato de un juvenil que sube de la cantera.</summary>
+        public int YouthContractYears = 3;
+        /// <summary>Máximo de años de un contrato (alta y renovación).</summary>
+        public int MaxContractYears = 5;
+        /// <summary>Aumento de sueldo que pide un jugador al renovar, sobre el que cobra (0,10 = 10 %).</summary>
+        public float RenewalRaise = 0.10f;
+        /// <summary>Moral por debajo de la cual un jugador no quiere renovar.</summary>
+        public float RenewalMinMorale = 30f;
+        /// <summary>Edades hasta las que se puede firmar 5, 4, 3 y 2 años de renovación (después, un año).</summary>
+        public int[] RenewalAgeLimits = { 29, 31, 33, 35 };
+        /// <summary>Años que firma un jugador libre en un club de la computadora (de 1 a esta cantidad).</summary>
+        public int FreeAgentContractYears = 3;
+        /// <summary>Qué parte del sueldo de mercado cobra un jugador libre (sin pase, firma más barato).</summary>
+        public float FreeAgentWageFactor = 0.7f;
+        /// <summary>Probabilidad de que un club de la computadora renueve a un jugador cuyo contrato vence (los de menor nivel del plantel se van libres).</summary>
+        public float AiRenewalChance = 0.75f;
+        /// <summary>Plantel mínimo que un club de la computadora completa con jugadores libres al cerrar la temporada.</summary>
+        public int MinAiSquadSize = 22;
         /// <summary>Cláusula de rescisión inicial, en veces el valor de mercado.</summary>
         public float ReleaseClauseFactor = 2.5f;
         /// <summary>Capacidad (1–20) del cuerpo técnico inicial de un club de reputación 50.</summary>
@@ -78,7 +96,17 @@ namespace Football.Core.Career
         /// <summary>Partidos que cuenta la racha.</summary>
         public int FormMatches = 5;
         /// <summary>Cantidad de clubes desde la que cada torneo se juega en dos zonas con cruces interzonales (por debajo, todos contra todos).</summary>
-        public int ZoneSplitFrom = 20;
+        public int ZoneSplitFrom = 24;
+        /// <summary>Cantidades de clubes de Primera entre las que se elige al crear la carrera (la mayor es «todos», sin Nacional B).</summary>
+        public int[] PrimeraSizes = { 30, 24, 22, 20, 18, 16 };
+        /// <summary>Clubes mínimos del Nacional B (si no, la cantidad de Primera no se ofrece).</summary>
+        public int MinSecondDivisionClubs = 6;
+        /// <summary>Clubes del Nacional B que ascienden directo (los de mejor tabla).</summary>
+        public int PromotedClubs = 2;
+        /// <summary>El tercero del Nacional B juega la promoción contra el club de Primera que quedó a esta cantidad de puestos del final de los promedios (17.º de 20).</summary>
+        public int PlayoffFromBottom = 3;
+        /// <summary>Días entre el último partido de liga y la ida de la promoción, y entre la ida y la vuelta.</summary>
+        public int PlayoffDelayDays = 10, PlayoffLegSpacingDays = 7;
         /// <summary>Días antes de un partido de local en que los socios revisan el precio.</summary>
         public int SupporterReviewDaysBefore = 3;
         /// <summary>Probabilidad de lluvia de cada mes (enero a diciembre; otoño e invierno más lluviosos).</summary>

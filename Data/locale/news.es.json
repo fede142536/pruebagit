@@ -27,5 +27,11 @@
   "news.board_review": "Balance de la directiva: tu popularidad quedó en {0}.",
   "news.cup_champion": "¡{0} es el campeón de la Copa Argentina {1}!",
   "news.user_champion": "¡Campeones! Ganaste el {0}.",
-  "news.competition_champion": "{1} se consagró campeón del {0}."
+  "news.competition_champion": "{1} se consagró campeón del {0}.",
+  "news.promoted": "{0} asciende a Primera.",
+  "news.user_promoted": "¡{0} asciende a Primera!",
+  "news.contract_renewed": "Renovaste a {0} hasta {1}.",
+  "news.contract_expired": "{0} terminó su contrato y se fue libre.",
+  "news.free_agent_signed": "Fichaste a {0}, jugador libre.",
+  "news.contracts_expiring": "Tienes {0} contratos que vencen esta temporada: renueva o se van libres."
 }

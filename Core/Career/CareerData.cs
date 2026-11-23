@@ -15,7 +15,11 @@ namespace Football.Core.Career
         /// <summary>Segunda mitad del año (mismos cruces con la localía invertida).</summary>
         Clausura,
         /// <summary>Copa Argentina: eliminación directa con todos los clubes.</summary>
-        Cup
+        Cup,
+        /// <summary>Nacional B (segunda división): todos contra todos, ida y vuelta.</summary>
+        NacionalB,
+        /// <summary>Promoción entre el tercero del Nacional B y un club de Primera: ida y vuelta.</summary>
+        Promotion
     }
 
     /// <summary>Precio cobrado y público de un partido de local del usuario (historial de entradas).</summary>
@@ -111,6 +115,11 @@ namespace Football.Core.Career
         public int UserClubId;
         /// <summary>Modo Torneo: un solo campeonato, sin mercado ni finanzas que gestionar.</summary>
         public bool TournamentOnly;
+        /// <summary>
+        /// Cantidad de clubes de Primera (los demás juegan el Nacional B, con ascensos y descensos). 0 = todos los clubes juegan una sola división
+        /// (sin Nacional B ni descensos de categoría).
+        /// </summary>
+        public int PrimeraSize;
         /// <summary>Táctica del club del usuario.</summary>
         public UserTactics Tactics = new UserTactics();
         /// <summary>Director técnico del usuario.</summary>

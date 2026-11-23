@@ -27,5 +27,11 @@
   "news.board_review": "Board review: your popularity is now {0}.",
   "news.cup_champion": "{0} win the Copa Argentina {1}!",
   "news.user_champion": "Champions! You won the {0}.",
-  "news.competition_champion": "{1} are the {0} champions."
+  "news.competition_champion": "{1} are the {0} champions.",
+  "news.promoted": "{0} are promoted to the top flight.",
+  "news.user_promoted": "{0} are promoted to the top flight!",
+  "news.contract_renewed": "You renewed {0} until {1}.",
+  "news.contract_expired": "{0} finished his contract and left on a free.",
+  "news.free_agent_signed": "You signed {0} on a free.",
+  "news.contracts_expiring": "{0} contracts expire this season: renew them or they leave on a free."
 }

@@ -172,7 +172,7 @@ namespace Football.Core.Career
             bool title = table[0].Points - table[pos].Points <= maxGain;
             int qualifying = Math.Min(_cfg.Career.CupQualifiers, table.Count) - 1;
             bool qualification = Math.Abs(table[qualifying].Points - table[pos].Points) <= maxGain;
-            bool danger = BuildAverages().Worst(Data.Clubs.Select(c => c.Id), Data.Season).Take(_cfg.Career.RelegatedClubs + 1).Contains(f.HomeClubId);
+            bool danger = Data.Club(f.HomeClubId).Division == 1 && BuildAverages().Worst(PrimeraIds(), Data.Season).Take(_cfg.Career.RelegatedClubs + 1).Contains(f.HomeClubId);
             return title || qualification || danger ? MatchImportance.Decisive : MatchImportance.Meaningless;
         }
 

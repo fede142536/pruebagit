@@ -59,8 +59,9 @@ namespace Football.Core.Persistence
                 UserTactics t = data.Tactics ?? new UserTactics();
                 SqlHelper.Execute(Connection,
                     @"INSERT INTO career_meta (id, seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style,
-                        fullback_duty, midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup)
-                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st, @level, @override, @startcash, @lineup)", tx,
+                        fullback_duty, midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup, primera_size)
+                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st, @level, @override, @startcash, @lineup, @primera)", tx,
+                    ("@primera", data.PrimeraSize),
                     ("@lineup", t.Lineup ?? string.Empty),
                     ("@level", (int)data.TicketLevel), ("@override", data.NextPriceOverride), ("@startcash", data.SeasonStartCash),
                     ("@seed", data.Seed), ("@season", data.Season), ("@today", DateFormat.ToText(data.Today)), ("@user", data.UserClubId),
@@ -80,7 +81,7 @@ namespace Football.Core.Persistence
 
             var data = new CareerData();
             Read(@"SELECT seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style, fullback_duty,
-                     midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup FROM career_meta", r =>
+                     midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup, primera_size FROM career_meta", r =>
             {
                 data.Seed = r.GetInt32(0);
                 data.Season = r.GetInt32(1);
@@ -93,6 +94,7 @@ namespace Football.Core.Persistence
                     FullbackDuty = (PlayerDuty)r.GetInt32(8), MidfieldDuty = (PlayerDuty)r.GetInt32(9), StrikerDuty = (PlayerDuty)r.GetInt32(10),
                     Lineup = r.GetString(14)
                 };
+                data.PrimeraSize = r.GetInt32(15);
                 data.TicketLevel = (TicketLevel)r.GetInt32(11);
                 data.NextPriceOverride = r.GetInt64(12);
                 data.SeasonStartCash = r.GetInt64(13);
@@ -113,8 +115,9 @@ namespace Football.Core.Persistence
             foreach (Club c in data.Clubs)
             {
                 SqlHelper.Execute(Connection,
-                    @"INSERT INTO clubs (id, name, short_name, country, primary_color, secondary_color, stadium_id, transfer_budget, wage_budget)
-                      VALUES (@id, @name, @short, @country, @primary, @secondary, @stadium, @transfer, @wage)", tx,
+                    @"INSERT INTO clubs (id, name, short_name, country, primary_color, secondary_color, stadium_id, transfer_budget, wage_budget, division)
+                      VALUES (@id, @name, @short, @country, @primary, @secondary, @stadium, @transfer, @wage, @division)", tx,
+                    ("@division", c.Division),
                     ("@id", c.Id), ("@name", c.Name), ("@short", c.ShortName ?? c.Name), ("@country", c.Country ?? string.Empty),
                     ("@primary", c.PrimaryColor ?? string.Empty), ("@secondary", c.SecondaryColor ?? string.Empty), ("@stadium", c.StadiumId),
                     ("@transfer", c.TransferBudget), ("@wage", c.WageBudget));
@@ -146,12 +149,12 @@ namespace Football.Core.Persistence
 
         private void LoadClubs(CareerData data)
         {
-            Read("SELECT id, name, short_name, country, primary_color, secondary_color, stadium_id, transfer_budget, wage_budget FROM clubs ORDER BY id",
+            Read("SELECT id, name, short_name, country, primary_color, secondary_color, stadium_id, transfer_budget, wage_budget, division FROM clubs ORDER BY id",
                 r => data.Clubs.Add(new Club
                 {
                     Id = r.GetInt32(0), Name = r.GetString(1), ShortName = r.GetString(2), Country = r.GetString(3), PrimaryColor = r.GetString(4),
                     SecondaryColor = r.GetString(5), StadiumId = r.IsDBNull(6) ? (int?)null : r.GetInt32(6), TransferBudget = r.GetInt64(7),
-                    WageBudget = r.GetInt64(8)
+                    WageBudget = r.GetInt64(8), Division = r.GetInt32(9)
                 }));
             Read("SELECT club_id, cash, transfer_budget, weekly_wage_budget, members, ticket_price, reputation FROM club_finances",
                 r => data.Finances[r.GetInt32(0)] = new ClubFinances

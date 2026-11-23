@@ -256,7 +256,11 @@ namespace Football.Core.Persistence
                 "ALTER TABLE career_meta ADD COLUMN season_start_cash INTEGER NOT NULL DEFAULT 0"),
 
             new SqlMigration(11, "Alineación elegida por el DT (once inicial y banco)",
-                "ALTER TABLE career_meta ADD COLUMN lineup TEXT NOT NULL DEFAULT ''")
+                "ALTER TABLE career_meta ADD COLUMN lineup TEXT NOT NULL DEFAULT ''"),
+
+            new SqlMigration(12, "Divisiones: Primera y Nacional B",
+                "ALTER TABLE clubs ADD COLUMN division INTEGER NOT NULL DEFAULT 1",
+                "ALTER TABLE career_meta ADD COLUMN primera_size INTEGER NOT NULL DEFAULT 0")
         };
     }
 }

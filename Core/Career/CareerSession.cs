@@ -181,8 +181,9 @@ namespace Football.Core.Career
         /// <param name="configs">Parámetros.</param>
         /// <param name="tournamentOnly">Modo Torneo: un solo campeonato a una rueda, sin temporadas siguientes.</param>
         /// <param name="manager">Director técnico del usuario (null = uno sin nombre).</param>
+        /// <param name="primeraSize">Clubes de Primera (los mejores por su puesto de la tabla anual anterior o, sin dato, por la media del plantel); los demás juegan el Nacional B. 0 o todos los clubes = una sola división.</param>
         public static CareerSession NewGame(TeamDatabase db, string userTeam, int season, int seed, CareerConfigs configs, bool tournamentOnly = false,
-            ManagerProfile manager = null)
+            ManagerProfile manager = null, int primeraSize = 0)
         {
             CareerConfig cc = configs.Career;
             var rng = new SeededRandom((ulong)(uint)seed);
@@ -192,6 +193,7 @@ namespace Football.Core.Career
             data.Supporters.Relation = cc.Supporters.StartingRelation;
             data.Tactics.Formation = cc.Formation;
             int nextPlayer = 1, nextStaff = 1;
+            var strength = new Dictionary<int, double>(); // para repartir las divisiones
             for (int t = 0; t < db.Teams.Length; t++)
             {
                 TeamDefinition def = db.Teams[t];
@@ -213,7 +215,7 @@ namespace Football.Core.Career
                     long wage = market.WageDemand(p, PlayingTimePromise.Regular);
                     p.Contract = new Contract
                     {
-                        WeeklyWage = wage, ExpiresOn = start.AddYears(teamRng.NextInt(cc.ContractYears[0], cc.ContractYears[1] + 1)),
+                        WeeklyWage = wage, ExpiresOn = new DateTime(season + teamRng.NextInt(cc.ContractYears[0], cc.ContractYears[1] + 1) - 1, 12, 31),
                         ReleaseClause = (long)(market.Value(p, start) * (double)cc.ReleaseClauseFactor)
                     };
                     data.Players[p.Id] = p;
@@ -221,6 +223,7 @@ namespace Football.Core.Career
                 }
 
                 float rating = (float)def.Players.OrderByDescending(x => x.Rating).Take(TeamBuilder.MinPlayers).Average(x => x.Rating);
+                strength[club.Id] = def.Club != null && def.Club.AnnualRank > 0 ? 1000.0 - def.Club.AnnualRank : rating;
                 int reputation = (int)MathUtil.Clamp(50f + (rating - cc.ReputationPivotRating) * cc.ReputationPerRating, MinReputation, MaxReputation);
                 long wages = data.Players.Values.Where(p => p.ClubId == club.Id).Sum(p => p.Contract.WeeklyWage);
                 // El mercado pide el mismo sueldo en todos lados; un club chico no lo puede pagar. Se ajusta la masa salarial a lo que el club factura.
@@ -276,6 +279,22 @@ namespace Football.Core.Career
                 throw new ArgumentException("El club del usuario no está en el archivo: " + userTeam, nameof(userTeam));
             }
 
+            if (!tournamentOnly && primeraSize > 0 && primeraSize < data.Clubs.Count)
+            {
+                if (primeraSize < 2 || data.Clubs.Count - primeraSize < cc.MinSecondDivisionClubs)
+                {
+                    throw new ArgumentException("Con " + primeraSize + " clubes en Primera quedan menos de " + cc.MinSecondDivisionClubs + " en el Nacional B.", nameof(primeraSize));
+                }
+
+                int placed = 0;
+                foreach (Club c in data.Clubs.OrderByDescending(c => strength[c.Id]).ThenBy(c => c.Id))
+                {
+                    c.Division = ++placed <= primeraSize ? 1 : 2;
+                }
+
+                data.PrimeraSize = primeraSize;
+            }
+
             foreach (RivalryDefinition r in db.Rivalries)
             {
                 Club a = data.Clubs.Find(c => c.Name == r.TeamA), b = data.Clubs.Find(c => c.Name == r.TeamB);
@@ -326,7 +345,8 @@ namespace Football.Core.Career
         {
             CareerConfig cc = _cfg.Career;
             int season = Data.Season;
-            List<int> ids = Data.Clubs.Select(c => c.Id).ToList();
+            bool divisions = Data.PrimeraSize > 0 && !Data.TournamentOnly;
+            List<int> ids = Data.Clubs.Where(c => !divisions || c.Division == 1).Select(c => c.Id).ToList(); // los de Primera (todos, sin divisiones)
             var first = new DateTime(season, cc.SeasonStartMonth, cc.SeasonStartDay);
             int aperturaId = CompetitionInfo.IdOf(season, TournamentKind.Apertura);
             int clausuraId = CompetitionInfo.IdOf(season, TournamentKind.Clausura);
@@ -349,8 +369,14 @@ namespace Football.Core.Career
                 return; // Torneo: una sola rueda
             }
 
+            PostExpiringContractsNews();
+
             Data.Competitions.Add(new CompetitionInfo { Id = clausuraId, Name = "Clausura " + season, Season = season, Kind = TournamentKind.Clausura });
             StartCup(first, ref nextId);
+            if (divisions)
+            {
+                StartSecondDivision(first, ref nextId);
+            }
 
             foreach (Fixture f in apertura)
             {
@@ -359,6 +385,24 @@ namespace Football.Core.Career
                     Id = nextId++, CompetitionId = clausuraId, Round = f.Round, Group = f.Group, HomeClubId = f.AwayClubId, AwayClubId = f.HomeClubId,
                     Date = clausuraStart.AddDays((f.Round - 1) * cc.DaysBetweenRounds)
                 });
+            }
+        }
+
+        /// <summary>Nacional B: los clubes de segunda juegan todos contra todos, ida y vuelta, desde la primera fecha del año.</summary>
+        private void StartSecondDivision(DateTime first, ref int nextId)
+        {
+            List<int> second = Data.Clubs.Where(c => c.Division == 2).Select(c => c.Id).ToList();
+            if (second.Count < 2)
+            {
+                return;
+            }
+
+            int id = CompetitionInfo.IdOf(Data.Season, TournamentKind.NacionalB);
+            Data.Competitions.Add(new CompetitionInfo { Id = id, Name = "Nacional B " + Data.Season, Season = Data.Season, Kind = TournamentKind.NacionalB });
+            foreach (Fixture f in FixtureGenerator.RoundRobin(id, second, first, _cfg.Career.DaysBetweenRounds, true, new SeededRandom(Mix(Data.Season * 7L + 1))))
+            {
+                f.Id = nextId++;
+                Data.Fixtures.Add(f);
             }
         }
 
@@ -399,6 +443,7 @@ namespace Football.Core.Career
             }
 
             AdvanceCup();
+            AdvancePromotion();
             CheckCompetitionEnds();
             ReviewSupporters();
             if (Data.Manager.Sacked)
@@ -466,6 +511,7 @@ namespace Football.Core.Career
             Play(f, report ?? throw new ArgumentNullException(nameof(report)));
             PendingUserFixture = null;
             AdvanceCup();
+            AdvancePromotion();
             CheckCompetitionEnds();
         }
 
@@ -476,6 +522,7 @@ namespace Football.Core.Career
             MatchReport report = Play(f, null);
             PendingUserFixture = null;
             AdvanceCup();
+            AdvancePromotion();
             CheckCompetitionEnds();
             return report;
         }
@@ -644,6 +691,11 @@ namespace Football.Core.Career
         /// <summary>Torneo en juego (el Apertura hasta que termina, después el Clausura).</summary>
         public CompetitionInfo CurrentTournament()
         {
+            if (UserDivision == 2)
+            {
+                return Data.Competitions.Find(c => c.Id == CompetitionInfo.IdOf(Data.Season, TournamentKind.NacionalB));
+            }
+
             CompetitionInfo apertura = Data.Competitions.Find(c => c.Id == CompetitionInfo.IdOf(Data.Season, TournamentKind.Apertura));
             bool aperturaOver = Data.Fixtures.Where(f => f.CompetitionId == apertura.Id).All(f => f.IsPlayed);
             CompetitionInfo clausura = Data.Competitions.Find(c => c.Id == CompetitionInfo.IdOf(Data.Season, TournamentKind.Clausura));
@@ -658,20 +710,42 @@ namespace Football.Core.Career
 
         /// <summary>Tabla anual de una temporada (la en curso o una ya jugada).</summary>
         /// <param name="season">Temporada (año).</param>
-        public List<Standing> AnnualTable(int season) => Table(f => f.CompetitionId / 10 == season && !IsCup(f));
+        public List<Standing> AnnualTable(int season) => AnnualTable(season, UserDivision);
+
+        /// <summary>Tabla anual de una división: Apertura y Clausura sumados (Primera) o el Nacional B (segunda).</summary>
+        /// <param name="season">Temporada (año).</param>
+        /// <param name="division">1 = Primera, 2 = Nacional B.</param>
+        public List<Standing> AnnualTable(int season, int division) =>
+            Table(f => f.CompetitionId / 10 == season && (division == 2 ? KindOf(f) == TournamentKind.NacionalB : IsFirstDivisionLeague(f)));
+
+        /// <summary>División del club del usuario (1 si no hay divisiones).</summary>
+        public int UserDivision => Data.PrimeraSize > 0 && !Data.TournamentOnly ? Data.Club(Data.UserClubId).Division : 1;
+
+        private static TournamentKind KindOf(Fixture f) => (TournamentKind)(f.CompetitionId % 10);
+
+        private static bool IsFirstDivisionLeague(Fixture f) => KindOf(f) == TournamentKind.Apertura || KindOf(f) == TournamentKind.Clausura;
+
+        /// <summary>Partido de una liga (Primera o Nacional B): cuenta para los promedios; la copa y la promoción no.</summary>
+        private static bool IsLeague(Fixture f) => IsFirstDivisionLeague(f) || KindOf(f) == TournamentKind.NacionalB;
+
+        /// <summary>Clubes de Primera esta temporada (todos si no hay divisiones).</summary>
+        private List<int> PrimeraIds() => Data.Clubs.Where(c => Data.PrimeraSize == 0 || c.Division == 1).Select(c => c.Id).ToList();
 
         /// <summary>Tabla de promedios: puntos por partido de las últimas temporadas (la en curso incluida).</summary>
         public List<AverageRow> AveragesTable()
         {
             AveragesTable averages = BuildAverages();
-            return Data.Clubs.Select(c => new AverageRow { ClubId = c.Id, Average = averages.Average(c.Id, Data.Season) })
+            return Data.Clubs.Where(c => Data.PrimeraSize == 0 || c.Division == 1).Select(c => new AverageRow { ClubId = c.Id, Average = averages.Average(c.Id, Data.Season) })
                 .OrderByDescending(r => r.Average).ToList();
         }
 
         private List<Standing> Table(Func<Fixture, bool> filter)
         {
-            var table = new LeagueTable(Data.Clubs.Select(c => c.Id), LeagueTable.ArgentineOrder);
-            foreach (Fixture f in Data.Fixtures.Where(f => f.IsPlayed && filter(f)))
+            // Los clubes de la tabla son los que juegan esas fechas (en dos divisiones, cada una tiene la suya).
+            List<Fixture> all = Data.Fixtures.Where(filter).ToList();
+            IEnumerable<int> members = all.SelectMany(f => new[] { f.HomeClubId, f.AwayClubId }).Distinct();
+            var table = new LeagueTable(all.Count == 0 ? Data.Clubs.Select(c => c.Id) : members, LeagueTable.ArgentineOrder);
+            foreach (Fixture f in all.Where(f => f.IsPlayed))
             {
                 table.Add(f);
             }
@@ -684,13 +758,7 @@ namespace Football.Core.Career
             var averages = new AveragesTable(_cfg.Career.AveragesSeasons);
             foreach (int season in Data.Competitions.Select(c => c.Season).Distinct())
             {
-                var table = new LeagueTable(Data.Clubs.Select(c => c.Id), LeagueTable.ArgentineOrder);
-                foreach (Fixture f in Data.Fixtures.Where(f => f.IsPlayed && f.CompetitionId / 10 == season && !IsCup(f)))
-                {
-                    table.Add(f);
-                }
-
-                foreach (Standing s in table.Ranked().Where(s => s.Played > 0))
+                foreach (Standing s in Table(f => f.CompetitionId / 10 == season && IsLeague(f)).Where(s => s.Played > 0))
                 {
                     averages.Record(s.ClubId, season, s.Points, s.Played);
                 }
@@ -724,15 +792,22 @@ namespace Football.Core.Career
         {
             CareerConfig cc = _cfg.Career;
             ReviewSeasonWithTheBoard();
-            List<int> ids = Data.Clubs.Select(c => c.Id).ToList();
-            foreach (int clubId in BuildAverages().Worst(ids, Data.Season).Take(cc.RelegatedClubs))
+            if (HasDivisions)
             {
-                ClubFinances fin = Data.Finances[clubId];
-                fin.Reputation = Math.Max(MinReputation, fin.Reputation - ReputationStepForRelegation);
-                _inbox.Post(clubId == Data.UserClubId ? "news.user_relegated" : "news.relegated", Data.Club(clubId).Name);
+                ApplyDivisionChanges();
+            }
+            else
+            {
+                List<int> ids = Data.Clubs.Select(c => c.Id).ToList();
+                foreach (int clubId in BuildAverages().Worst(ids, Data.Season).Take(cc.RelegatedClubs))
+                {
+                    ClubFinances fin = Data.Finances[clubId];
+                    fin.Reputation = Math.Max(MinReputation, fin.Reputation - ReputationStepForRelegation);
+                    _inbox.Post(clubId == Data.UserClubId ? "news.user_relegated" : "news.relegated", Data.Club(clubId).Name);
+                }
             }
 
-            foreach (Standing s in AnnualTable().Take(cc.CupQualifiers))
+            foreach (Standing s in AnnualTable(Data.Season, 1).Take(cc.CupQualifiers))
             {
                 ClubFinances fin = Data.Finances[s.ClubId];
                 fin.Reputation = Math.Min(MaxReputation, fin.Reputation + ReputationStepForQualifying);
@@ -754,6 +829,8 @@ namespace Football.Core.Career
                 p.Contract = null;
             }
 
+            ProcessExpiredContracts();
+
             foreach (Club club in Data.Clubs)
             {
                 StaffMember coach = Data.Staff.Find(s => s.ClubId == club.Id && s.Role == StaffRole.YouthCoach);
@@ -762,7 +839,7 @@ namespace Football.Core.Career
                 {
                     p.Contract = new Contract
                     {
-                        WeeklyWage = _market.WageDemand(p, PlayingTimePromise.Youngster), ExpiresOn = Data.Today.AddYears(cc.ContractYears[1])
+                        WeeklyWage = _market.WageDemand(p, PlayingTimePromise.Youngster), ExpiresOn = ContractEnd(cc.YouthContractYears + 1) // el contrato corre desde la temporada que viene
                     };
                     Data.Players[p.Id] = p;
                     Data.Conditions[p.Id] = new PlayerCondition { PlayerId = p.Id };
@@ -770,6 +847,7 @@ namespace Football.Core.Career
             }
 
             ReleaseSurplusPlayers();
+            RefillAiSquads();
 
             foreach (PlayerCondition c in Data.Conditions.Values)
             {
@@ -977,10 +1055,19 @@ namespace Football.Core.Career
         /// <summary>
         /// Búsqueda de jugadores ajenos por puesto, edad y media visible (la que ven los ojeadores: el centro del rango).
         /// </summary>
-        public List<Player> Search(Position? position, int minAge, int maxAge, int minRating, int maxRating, long maxValue)
+        /// <param name="position">Puesto (null = cualquiera).</param>
+        /// <param name="minAge">Edad mínima.</param>
+        /// <param name="maxAge">Edad máxima.</param>
+        /// <param name="minRating">Media visible mínima.</param>
+        /// <param name="maxRating">Media visible máxima.</param>
+        /// <param name="maxValue">Valor de mercado máximo.</param>
+        /// <param name="name">Texto a buscar en el nombre o el apellido (sin importar mayúsculas ni tildes); vacío = todos.</param>
+        public List<Player> Search(Position? position, int minAge, int maxAge, int minRating, int maxRating, long maxValue, string name = null)
         {
+            string needle = Normalize(name);
             return Data.Players.Values
-                .Where(p => p.ClubId.HasValue && p.ClubId != Data.UserClubId && (!position.HasValue || p.Position == position.Value))
+                .Where(p => (p.ClubId.HasValue && p.ClubId != Data.UserClubId || IsFreeAgent(p)) && (!position.HasValue || p.Position == position.Value))
+                .Where(p => needle.Length == 0 || Normalize(p.FirstName + " " + p.LastName).Contains(needle))
                 .Where(p => p.AgeOn(Data.Today) >= minAge && p.AgeOn(Data.Today) <= maxAge)
                 .Where(p => VisibleRating(p) >= minRating && VisibleRating(p) <= maxRating && _market.Value(p, Data.Today) <= maxValue)
                 .OrderByDescending(VisibleRating).ToList();

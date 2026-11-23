@@ -29,5 +29,8 @@ namespace Football.Core.Domain
 
         /// <summary>Presupuesto de salarios disponible.</summary>
         public long WageBudget { get; set; }
+
+        /// <summary>División en la que juega esta temporada: 1 = Primera, 2 = Nacional B (con varias categorías de clubes; 1 si no hay divisiones).</summary>
+        public int Division { get; set; } = 1;
     }
 }

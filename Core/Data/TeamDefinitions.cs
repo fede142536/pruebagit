@@ -88,6 +88,11 @@ namespace Football.Core.Data
         public string Tier = "Mid";
         /// <summary>Historia breve.</summary>
         public string History = string.Empty;
+        /// <summary>
+        /// Puesto del club en la tabla anual de la temporada anterior (1 = primero): decide quién empieza en Primera y quién en el Nacional B cuando
+        /// se elige jugar con menos de todos los clubes. 0 = sin dato (se usa la media del plantel). Es una estimación propia, editable.
+        /// </summary>
+        public int AnnualRank;
         /// <summary>Ciudad o barrio del club (se muestra junto al estadio); vacío si no se conoce.</summary>
         public string City = string.Empty;
         /// <summary>Plazas de estacionamiento iniciales; 0 = las de su jerarquía (<c>career.json</c>).</summary>

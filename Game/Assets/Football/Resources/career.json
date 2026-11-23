@@ -30,8 +30,22 @@
   "MembersPerReputation": 900,
   "ContractYears": [
     1,
-    4
+    5
   ],
+  "YouthContractYears": 3,
+  "MaxContractYears": 5,
+  "RenewalRaise": 0.1,
+  "RenewalMinMorale": 30,
+  "RenewalAgeLimits": [
+    29,
+    31,
+    33,
+    35
+  ],
+  "FreeAgentContractYears": 3,
+  "FreeAgentWageFactor": 0.7,
+  "AiRenewalChance": 0.75,
+  "MinAiSquadSize": 22,
   "ReleaseClauseFactor": 2.5,
   "StaffAbilityPivot": 10,
   "StaffWagePerAbility": 150000,
@@ -49,7 +63,20 @@
   "CupRoundSpacingDays": 35,
   "DecisiveRounds": 3,
   "FormMatches": 5,
-  "ZoneSplitFrom": 20,
+  "ZoneSplitFrom": 24,
+  "PrimeraSizes": [
+    30,
+    24,
+    22,
+    20,
+    18,
+    16
+  ],
+  "MinSecondDivisionClubs": 6,
+  "PromotedClubs": 2,
+  "PlayoffFromBottom": 3,
+  "PlayoffDelayDays": 10,
+  "PlayoffLegSpacingDays": 7,
   "SupporterReviewDaysBefore": 3,
   "RainChanceByMonth": [
     0.25,

@@ -12,6 +12,15 @@ namespace Football.Core.Tests.Career
         private const long FloorCash = -5_000_000_000;   // ~1,5 veces la caja inicial del club más rico: más abajo sería una quiebra descontrolada
         private const int MaxClubsInDebt = 10;           // de 30
 
+        /// <summary>Un DT que renueva a los que vencen (lo que hace una persona); si no, el plantel se vacía en pocas temporadas.</summary>
+        private static void RenewTheExpiring(CareerSession s)
+        {
+            foreach (Player p in s.ExpiringContracts())
+            {
+                s.Renew(p.Id, s.MaxRenewalYears(p));
+            }
+        }
+
         private static void PlaySeason(CareerSession s)
         {
             DayOutcome outcome;
@@ -35,6 +44,7 @@ namespace Football.Core.Tests.Career
             int cap = new CareerConfig().MaxAiSquadSize;
             for (int season = 1; season <= Seasons; season++)
             {
+                RenewTheExpiring(s);
                 PlaySeason(s);
                 long[] cash = s.Data.Clubs.Select(c => s.Data.Finances[c.Id].Cash).ToArray();
                 TestContext.Out.WriteLine($"temporada {season}: caja min/mediana/max {cash.Min():N0}/{cash.OrderBy(x => x).ElementAt(15):N0}/{cash.Max():N0}, " +

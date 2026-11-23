@@ -81,7 +81,11 @@ namespace Football.Core.Career
                 }
 
                 _announcedCompetitions.Add(c.Id);
-                _ceremonies.Add(record);
+                if (Data.Fixtures.Any(f => f.CompetitionId == c.Id && Involves(f, Data.UserClubId)))
+                {
+                    _ceremonies.Add(record); // solo se muestran las competiciones en las que jugó el usuario
+                }
+
                 if (record.UserChampion)
                 {
                     _inbox.Post("news.user_champion", c.Name);
@@ -95,8 +99,11 @@ namespace Football.Core.Career
 
         /// <summary>Todas las competiciones que se armaron (de la más reciente a la más antigua) con el resultado del usuario.</summary>
         public List<CompetitionRecord> CompetitionHistory() =>
-            Data.Competitions.OrderByDescending(c => c.Season).ThenBy(c => c.Kind == TournamentKind.Apertura ? 0 : c.Kind == TournamentKind.Cup ? 1 : 2)
-                .Select(RecordOf).ToList();
+            Data.Competitions.Where(c => Data.Fixtures.Any(f => f.CompetitionId == c.Id && Involves(f, Data.UserClubId)))
+                .OrderByDescending(c => c.Season).ThenBy(c => KindOrder(c.Kind)).Select(RecordOf).ToList();
+
+        private static int KindOrder(TournamentKind kind) =>
+            kind == TournamentKind.Apertura ? 0 : kind == TournamentKind.NacionalB ? 1 : kind == TournamentKind.Cup ? 2 : kind == TournamentKind.Clausura ? 3 : 4;
 
         private CompetitionRecord RecordOf(CompetitionInfo c)
         {
@@ -107,6 +114,14 @@ namespace Football.Core.Career
             if (c.Kind == TournamentKind.Cup)
             {
                 FillCupRecord(record, fixtures, mine);
+                record.UserChampion = record.Finished && record.ChampionClubId == Data.UserClubId;
+                return record;
+            }
+
+            if (c.Kind == TournamentKind.Promotion)
+            {
+                record.ChampionClubId = PromotionWinner(c.Season); // el club que juega en Primera
+                record.Finished = record.ChampionClubId != 0;
                 record.UserChampion = record.Finished && record.ChampionClubId == Data.UserClubId;
                 return record;
             }

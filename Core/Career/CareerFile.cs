@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 4; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida
+        private const int Version = 5; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B)
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -69,6 +69,7 @@ namespace Football.Core.Career
                 w.Write((int)t.MidfieldDuty);
                 w.Write((int)t.StrikerDuty);
                 w.Write(t.Lineup ?? string.Empty);
+                w.Write(d.PrimeraSize);
 
                 w.Write(d.Clubs.Count);
                 foreach (Club c in d.Clubs)
@@ -82,6 +83,7 @@ namespace Football.Core.Career
                     WriteInt(w, c.StadiumId);
                     w.Write(c.TransferBudget);
                     w.Write(c.WageBudget);
+                    w.Write(c.Division);
                     ClubFinances f = d.Finances[c.Id];
                     w.Write(f.Cash);
                     w.Write(f.TransferBudget);
@@ -282,6 +284,11 @@ namespace Football.Core.Career
                     d.Tactics.Lineup = r.ReadString();
                 }
 
+                if (version >= 5)
+                {
+                    d.PrimeraSize = r.ReadInt32();
+                }
+
                 int clubs = r.ReadInt32();
                 for (int i = 0; i < clubs; i++)
                 {
@@ -290,6 +297,11 @@ namespace Football.Core.Career
                         Id = r.ReadInt32(), Name = r.ReadString(), ShortName = r.ReadString(), Country = r.ReadString(), PrimaryColor = r.ReadString(),
                         SecondaryColor = r.ReadString(), StadiumId = ReadInt(r), TransferBudget = r.ReadInt64(), WageBudget = r.ReadInt64()
                     };
+                    if (version >= 5)
+                    {
+                        c.Division = r.ReadInt32();
+                    }
+
                     d.Clubs.Add(c);
                     var f = new ClubFinances
                     {
