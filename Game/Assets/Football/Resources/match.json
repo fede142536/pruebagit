@@ -32,6 +32,8 @@
     "LobDragCompensation": 1.12
   },
   "Player": {
+    "HeaderHeight": 1.25,
+    "TouchDisplaySeconds": 0.4,
     "MinTopSpeed": 5.2,
     "MaxTopSpeed": 9.8,
     "MinAcceleration": 3.8,

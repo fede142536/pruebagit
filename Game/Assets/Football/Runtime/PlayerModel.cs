@@ -77,6 +77,9 @@ namespace Football.Game
         private const float ArmSpread = 8f;
         private const float MaxLean = 14f;
         private const float Bob = 0.05f;
+        private const float TouchDuration = 0.4f;        // primer toque o cabezazo (igual que TouchDisplaySeconds del motor)
+        private const float ControlThigh = 38f, ControlKnee = 58f, ControlLean = -7f, ControlArms = 28f;
+        private const float HeaderArch = -14f, HeaderThrust = 12f, HeaderJump = 0.16f, HeaderArms = 42f, HeaderKnee = 22f;
         private const float KickDuration = 0.32f;
         private const float TackleLean = -68f;
         private const float ShotDuration = 0.45f;
@@ -165,6 +168,8 @@ namespace Football.Game
         private float _phase;
         private float _amplitude;
         private float _kickTimer;
+        private float _touchTimer;
+        private PlayerAction _touch;
         private PlayerAction _lastAction;
         private PlayerAction _strike;
         private float _lastHeading;
@@ -415,7 +420,20 @@ namespace Football.Game
                 _strike = action;
             }
 
+            if (action != _lastAction && (action == PlayerAction.Control || action == PlayerAction.Header))
+            {
+                _touchTimer = TouchDuration;
+                _touch = action;
+            }
+
             _lastAction = action;
+            float touchU = 0f; // avance del primer toque (0 = empieza, 1 = terminó)
+            if (_touchTimer > 0f)
+            {
+                _touchTimer -= deltaTime;
+                touchU = 1f - Mathf.Clamp01(_touchTimer / TouchDuration);
+            }
+
             float u = 0f; // avance del golpeo (0 = empieza, 1 = terminó)
             if (_kickTimer > 0f)
             {
@@ -463,6 +481,31 @@ namespace Football.Game
                     twist = _strike == PlayerAction.Pass ? PassTwist * hit : 0f;
                     lean = 6f;
                     armSpreadL = -25f;
+                }
+            }
+
+            if (_touchTimer > 0f && _kickTimer <= 0f)
+            {
+                float hit = Mathf.Sin(touchU * Mathf.PI);
+                if (_touch == PlayerAction.Header)
+                {
+                    // Cabezazo: el cuerpo se arquea hacia atrás, salta y cabecea hacia delante con los brazos abiertos.
+                    float thrust = Mathf.SmoothStep(0f, 1f, touchU);
+                    lean = Mathf.Lerp(HeaderArch, HeaderThrust, thrust);
+                    lift = HeaderJump * hit;
+                    armSpreadL = -HeaderArms;
+                    armSpreadR = HeaderArms;
+                    kneeL = HeaderKnee * hit;
+                    kneeR = HeaderKnee * hit;
+                }
+                else
+                {
+                    // Primer toque: el muslo sube y la pierna cede hacia atrás para amortiguar el balón; los brazos se abren para el equilibrio.
+                    legR = -ControlThigh * hit;
+                    kneeR = ControlKnee * hit;
+                    lean = ControlLean * hit;
+                    armSpreadL = -ControlArms;
+                    armSpreadR = ControlArms;
                 }
             }
 

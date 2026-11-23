@@ -231,6 +231,7 @@ namespace Football.Core.MatchCore
             }
 
             CountPossessionChange(p);
+            float heightAtTouch = Ball.Pos.Z;
             Owner = p;
             _holder = null;
             _boxOwner = null;
@@ -238,6 +239,13 @@ namespace Football.Core.MatchCore
             Ball.Spin = 0f;
             p.ActionTimer = Config.Player.ControlDelay;
             p.OwnerTimer = 0f;
+            if (!p.IsKeeper)
+            {
+                // Solo presentación: el motor no decide nada con la acción (la animación del primer toque).
+                p.Action = heightAtTouch >= Config.Player.HeaderHeight ? PlayerAction.Header : PlayerAction.Control;
+                p.ActionDisplayTimer = Config.Player.TouchDisplaySeconds;
+            }
+
             // El arquero se queda con el balón en las manos; los demás arrancan hacia delante sin salirse del campo.
             p.Target = p.IsKeeper ? p.Pos : Pitch.Clamp(p.Pos + Vec2.FromAngle(p.Heading) * Config.Ai.DribbleLookahead, -SafeMarginToLine);
             p.SpeedFactor = Config.Player.JogFraction;

@@ -77,6 +77,10 @@ namespace Football.Core.MatchCore
     [Serializable]
     public sealed class PlayerConfig
     {
+        /// <summary>Altura del balón (m) desde la que controlarlo es un cabezazo y no un control con el pie o el pecho (solo cambia la animación).</summary>
+        public float HeaderHeight = 1.25f;
+        /// <summary>Cuánto dura en pantalla la animación de primer toque o cabezazo (s).</summary>
+        public float TouchDisplaySeconds = 0.4f;
         /// <summary>Velocidad punta con Pace = 1 (m/s).</summary>
         public float MinTopSpeed = 5.2f;
         /// <summary>Velocidad punta con Pace = 100 (m/s).</summary>

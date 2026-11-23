@@ -238,7 +238,11 @@ namespace Football.Core.MatchCore
         /// <summary>Saque de banda con las dos manos por detrás de la cabeza.</summary>
         ThrowIn,
         /// <summary>Arquero que sale a achicar en el mano a mano.</summary>
-        Rush
+        Rush,
+        /// <summary>Primer toque: amortigua y controla el balón que le llega al piso o a la altura de la cintura.</summary>
+        Control,
+        /// <summary>Cabezazo: controla de cabeza un balón que le llega por arriba del pecho.</summary>
+        Header
     }
 
 }

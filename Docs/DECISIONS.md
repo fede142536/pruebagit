@@ -373,3 +373,12 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
   cuello de la camiseta y 14 lados en el tronco. LOD0 2.540–2.870 triángulos (antes 2.450–2.790).
 - **Aviso «EL PARTIDO DEJÓ DE AVANZAR»**: se quedaba pegado aunque el partido siguiera; ahora se retira apenas deja de cumplirse la condición.
 - `Tools/SkinCheck --ply ruta [lod]` vuelca la malla con colores para mirarla fuera de Unity.
+
+## D-30 · Primer toque y cabezazo, informe de benchmark y lista de verificación — Aceptada (pedido del usuario, 23/11/2026)
+- **Animación**: nuevas acciones `Control` (primer toque) y `Header` (cabezazo). El motor las publica al ganar la posesión un jugador de campo (`HeaderHeight` 1,25 m,
+  `TouchDisplaySeconds` 0,4 s en `match.json`); son solo presentación y no cambian el juego (mismas métricas). En 4 minutos hubo 517 controles y **ningún cabezazo**: el balón casi siempre viaja por el piso, así que el cabezazo queda implementado pero rara vez se verá.
+  En Unity `PlayerModel` anima el control (muslo arriba, pierna que cede, brazos abiertos) y el cabezazo (arco hacia atrás, salto, cabeceo).
+- **Modelo real (CC0)**: no se pudo incorporar. El entorno de nube no llega a los sitios de descarga (Quaternius, Kenney, Poly Pizza) ni tiene Blender. Queda como tarea del usuario: descargar un pack humanoide con licencia clara y registrarlo en `ASSETS_LICENSES.md`.
+  El rig actual de 20 huesos admite retargeting, pero **no se escribió el importador sin poder probarlo**.
+- **Benchmark**: el informe final suma asignaciones por segundo, ajustes gráficos y GPU, y se guarda en `benchmark_report.txt` (carpeta de datos de la aplicación).
+- `Docs/VERIFICACION_EN_CELULAR.md`: lista de lo que nunca se ejecutó en Unity, con objetivos medibles.

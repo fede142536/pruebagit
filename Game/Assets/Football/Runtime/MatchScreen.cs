@@ -20,6 +20,7 @@ namespace Football.Game
         private const float BannerSeconds = 2.4f;
         private const float EndDelaySeconds = 2.5f;
         private const ulong BenchmarkSeed = 12345UL;
+        private const string BenchmarkReportFile = "benchmark_report.txt";
         private const float BenchmarkHalfSeconds = 150f;
 
         private readonly Transform _parent;
@@ -376,7 +377,12 @@ namespace Football.Game
                 sb.Append("FPS medios: ").Append(AverageFps().ToString("F1")).Append('\n');
                 sb.Append("Fotograma medio / p99: ").Append(_debug.AverageFrameMs.ToString("F1")).Append(" / ").Append(_debug.P99FrameMs.ToString("F1")).Append(" ms\n");
                 sb.Append("Recolecciones de basura (gen0): ").Append(_debug.GcCollections).Append('\n');
-                sb.Append("Dispositivo: ").Append(SystemInfo.deviceModel).Append(", ").Append(SystemInfo.systemMemorySize).Append(" MB RAM");
+                sb.Append("Asignaciones: ").Append(_debug.AllocKbPerSecond.ToString("F1")).Append(" KB/s (objetivo: 0)\n");
+                sb.Append("Ajustes: calidad ").Append(GameSettings.QualityLabels[_settings.Quality]).Append(", resolución ")
+                    .Append(GameSettings.ResolutionLabels[_settings.Resolution]).Append(", límite ").Append(_settings.TargetFps).Append(" FPS\n");
+                sb.Append("Dispositivo: ").Append(SystemInfo.deviceModel).Append(", ").Append(SystemInfo.systemMemorySize).Append(" MB RAM, ")
+                    .Append(SystemInfo.graphicsDeviceName);
+                SaveBenchmarkReport(sb.ToString());
             }
 
             return sb.ToString();
@@ -1173,6 +1179,21 @@ namespace Football.Game
                 {
                     _pauseBase[i].SetActive(visible);
                 }
+            }
+        }
+
+        /// <summary>Guarda el informe del benchmark en el almacenamiento de la aplicación (para copiarlo desde el celular).</summary>
+        private static void SaveBenchmarkReport(string text)
+        {
+            try
+            {
+                string path = System.IO.Path.Combine(Application.persistentDataPath, BenchmarkReportFile);
+                System.IO.File.WriteAllText(path, DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "\n" + text);
+                Debug.Log("Football: informe del benchmark guardado en " + path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Football: no se pudo guardar el informe del benchmark (" + e.Message + ")");
             }
         }
 
