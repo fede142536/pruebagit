@@ -392,7 +392,8 @@ namespace Football.Core.Career
                 Id = id, ClubId = clubId, FirstName = space > 0 ? full.Substring(0, space) : string.Empty,
                 LastName = space > 0 ? full.Substring(space + 1) : full,
                 BirthDate = today.AddYears(-age).AddDays(-rng.NextInt(0, 365)), Position = position, JoinedOn = today,
-                Personality = (PersonalityTrait)rng.NextInt(0, Enum.GetValues(typeof(PersonalityTrait)).Length), ShirtNumber = pd.Number
+                Personality = (PersonalityTrait)rng.NextInt(0, Enum.GetValues(typeof(PersonalityTrait)).Length), ShirtNumber = pd.Number,
+                Nationality = string.IsNullOrWhiteSpace(pd.Nationality) ? "ARG" : pd.Nationality.Trim().ToUpperInvariant()
             };
             RosterFactory.FillAttributes(rng, pd.Rating, position, p.Attributes);
             p.Potential = Math.Min(AttributeScale.Max, pd.Rating + Math.Max(0, 24 - age) * 2);
@@ -706,7 +707,7 @@ namespace Football.Core.Career
             bool user = clubId == Data.UserClubId;
             Formation formation = user ? UserFormation() : _aiFormation;
             MatchTeamSetup setup = MatchPreparation.Prepare(club.Name, squad, Data.Conditions, formation, user ? UserStyle() : new TeamStyle(), home,
-                _cfg.Management, user ? Data.Tactics.Lineup : null);
+                _cfg.Management, user ? Data.Tactics.Lineup : null, _cfg.Career.MaxForeignersPerMatch, _cfg.Career.HomeNationality);
             if (user && !string.IsNullOrEmpty(Data.Tactics.DefensiveFormation))
             {
                 Formation defensive = TeamBuilder.ParseFormation(Data.Tactics.DefensiveFormation);
@@ -723,7 +724,8 @@ namespace Football.Core.Career
         /// Sirve para dibujar el once y el banco en la pantalla de alineación.
         /// </summary>
         public MatchPreparation.Lineup UserLineup() =>
-            MatchPreparation.Resolve(Data.Club(Data.UserClubId).Name, Squad(Data.UserClubId), Data.Conditions, UserFormation(), Data.Tactics.Lineup);
+            MatchPreparation.Resolve(Data.Club(Data.UserClubId).Name, Squad(Data.UserClubId), Data.Conditions, UserFormation(), Data.Tactics.Lineup,
+                _cfg.Career.MaxForeignersPerMatch, _cfg.Career.HomeNationality);
 
         /// <summary>Si el DT eligió su alineación (false = la arma la computadora).</summary>
         public bool HasCustomLineup => !string.IsNullOrWhiteSpace(Data.Tactics.Lineup);
@@ -740,7 +742,7 @@ namespace Football.Core.Career
             var squad = new HashSet<int>(Squad(Data.UserClubId).Select(p => p.Id));
             var all = starterIds.Concat(benchIds).ToList();
             if (starterIds.Count != UserFormation().Slots.Length || benchIds.Count > MatchPreparation.BenchSize
-                || all.Any(id => !squad.Contains(id)) || all.Distinct().Count() != all.Count)
+                || all.Any(id => !squad.Contains(id)) || all.Distinct().Count() != all.Count || ForeignAmong(all) > _cfg.Career.MaxForeignersPerMatch)
             {
                 return false;
             }
@@ -1114,8 +1116,36 @@ namespace Football.Core.Career
                 return OfferBlock.WindowClosed;
             }
 
+            if (WouldBreakForeignQuota(p, Data.UserClubId))
+            {
+                return OfferBlock.ForeignQuota;
+            }
+
             return fee > Data.Finances[Data.UserClubId].TransferBudget ? OfferBlock.OverBudget : OfferBlock.None;
         }
+
+        /// <summary>El jugador es extranjero: su nacionalidad no es la del campeonato (<see cref="CareerConfig.HomeNationality"/>).</summary>
+        /// <param name="p">Jugador.</param>
+        public bool IsForeign(Player p) => !string.IsNullOrEmpty(p.Nationality) && !string.Equals(p.Nationality, _cfg.Career.HomeNationality, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Extranjeros con contrato en un club.</summary>
+        /// <param name="clubId">Club.</param>
+        public int ForeignCount(int clubId) => Data.Players.Values.Count(p => p.ClubId == clubId && IsForeign(p));
+
+        /// <summary>Máximo de extranjeros con contrato por club.</summary>
+        public int MaxForeigners => _cfg.Career.MaxForeignersPerClub;
+
+        /// <summary>Máximo de extranjeros en la planilla de un partido.</summary>
+        public int MaxForeignersPerMatch => _cfg.Career.MaxForeignersPerMatch;
+
+        /// <summary>Fichar a este jugador rompería el cupo de extranjeros del club (ya tiene el máximo y el jugador no es argentino).</summary>
+        /// <param name="p">Jugador que llegaría.</param>
+        /// <param name="clubId">Club que lo ficha.</param>
+        public bool WouldBreakForeignQuota(Player p, int clubId) => IsForeign(p) && p.ClubId != clubId && ForeignCount(clubId) >= _cfg.Career.MaxForeignersPerClub;
+
+        /// <summary>Cantidad de extranjeros entre unos jugadores (para la planilla del partido).</summary>
+        /// <param name="ids">Ids de jugadores.</param>
+        public int ForeignAmong(IEnumerable<int> ids) => ids.Count(id => Data.Players.TryGetValue(id, out Player p) && IsForeign(p));
 
         /// <summary>Paga la cláusula de rescisión: el pase se cierra sin negociar.</summary>
         /// <param name="playerId">Jugador.</param>
@@ -1124,8 +1154,7 @@ namespace Football.Core.Career
         {
             Player p = Data.Players[playerId];
             long clause = p.Contract?.ReleaseClause ?? 0;
-            if (clause <= 0 || !p.ClubId.HasValue || p.ClubId == Data.UserClubId || !TransferWindowOpen
-                || clause > Data.Finances[Data.UserClubId].TransferBudget)
+            if (clause <= 0 || CheckOffer(playerId, clause) != OfferBlock.None)
             {
                 return false;
             }

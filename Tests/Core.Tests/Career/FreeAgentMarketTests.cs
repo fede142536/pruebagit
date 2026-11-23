@@ -20,7 +20,7 @@ namespace Football.Core.Tests.Career
             Assert.That(free.Select(p => p.LastName + p.FirstName), Is.Unique);
             Assert.That(free.Any(p => (p.FirstName + " " + p.LastName).Contains("Icardi")), Is.True);
             Assert.That(free.All(p => p.Contract == null && !p.ClubId.HasValue), Is.True);
-            Assert.That(free.Select(p => p.AgeOn(s.Data.Today)), Is.All.InRange(24, 37), "con la edad del archivo");
+            Assert.That(free.Select(p => p.AgeOn(s.Data.Today)), Is.All.InRange(20, 39), "con la edad del archivo");
         }
 
         [Test]

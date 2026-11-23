@@ -193,11 +193,11 @@ namespace Football.Core.Persistence
             foreach (Player p in data.Players.Values)
             {
                 SqlHelper.Execute(Connection,
-                    @"INSERT INTO players (id, club_id, first_name, last_name, birth_date, position, potential, personality, joined_on, shirt_number)
-                      VALUES (@id, @club, @first, @last, @birth, @position, @potential, @personality, @joined, @shirt)", tx,
+                    @"INSERT INTO players (id, club_id, first_name, last_name, birth_date, position, potential, personality, joined_on, shirt_number, nationality)
+                      VALUES (@id, @club, @first, @last, @birth, @position, @potential, @personality, @joined, @shirt, @nation)", tx,
                     ("@id", p.Id), ("@club", p.ClubId), ("@first", p.FirstName ?? string.Empty), ("@last", p.LastName ?? string.Empty),
                     ("@birth", DateFormat.ToText(p.BirthDate)), ("@position", (int)p.Position), ("@potential", p.Potential),
-                    ("@personality", (int)p.Personality), ("@joined", DateFormat.ToText(p.JoinedOn)), ("@shirt", p.ShirtNumber));
+                    ("@personality", (int)p.Personality), ("@joined", DateFormat.ToText(p.JoinedOn)), ("@shirt", p.ShirtNumber), ("@nation", p.Nationality ?? "ARG"));
                 foreach (AttributeId attribute in AttributeSet.All)
                 {
                     SqlHelper.Execute(Connection, "INSERT INTO player_attributes (player_id, attribute_id, value) VALUES (@id, @a, @v)", tx,
@@ -232,33 +232,33 @@ namespace Football.Core.Persistence
             foreach (RenewalTalk t in data.Talks.Values)
             {
                 SqlHelper.Execute(Connection,
-                    @"INSERT INTO renewal_talks (player_id, offer_wage, offer_years, offer_promise, sent_on, reply_on, status, reason, demand_wage, demand_years, rounds)
-                      VALUES (@id, @wage, @years, @promise, @sent, @reply, @status, @reason, @dwage, @dyears, @rounds)", tx,
+                    @"INSERT INTO renewal_talks (player_id, offer_wage, offer_years, offer_promise, sent_on, reply_on, status, reason, demand_wage, demand_years, rounds, demand_role)
+                      VALUES (@id, @wage, @years, @promise, @sent, @reply, @status, @reason, @dwage, @dyears, @rounds, @drole)", tx,
                     ("@id", t.PlayerId), ("@wage", t.OfferWage), ("@years", t.OfferYears), ("@promise", (int)t.OfferPromise),
                     ("@sent", DateFormat.ToText(t.SentOn)), ("@reply", DateFormat.ToText(t.ReplyOn)), ("@status", (int)t.Status), ("@reason", (int)t.Reason),
-                    ("@dwage", t.DemandWage), ("@dyears", t.DemandYears), ("@rounds", t.Rounds));
+                    ("@dwage", t.DemandWage), ("@dyears", t.DemandYears), ("@rounds", t.Rounds), ("@drole", (int)t.DemandRole));
             }
         }
 
         private void LoadTalks(CareerData data)
         {
-            Read("SELECT player_id, offer_wage, offer_years, offer_promise, sent_on, reply_on, status, reason, demand_wage, demand_years, rounds FROM renewal_talks",
+            Read("SELECT player_id, offer_wage, offer_years, offer_promise, sent_on, reply_on, status, reason, demand_wage, demand_years, rounds, demand_role FROM renewal_talks",
                 r => data.Talks[r.GetInt32(0)] = new RenewalTalk
                 {
                     PlayerId = r.GetInt32(0), OfferWage = r.GetInt64(1), OfferYears = r.GetInt32(2), OfferPromise = (PlayingTimePromise)r.GetInt32(3),
                     SentOn = DateFormat.Parse(r.GetString(4)), ReplyOn = DateFormat.Parse(r.GetString(5)), Status = (TalkStatus)r.GetInt32(6),
-                    Reason = (TalkReason)r.GetInt32(7), DemandWage = r.GetInt64(8), DemandYears = r.GetInt32(9), Rounds = r.GetInt32(10)
+                    Reason = (TalkReason)r.GetInt32(7), DemandWage = r.GetInt64(8), DemandYears = r.GetInt32(9), Rounds = r.GetInt32(10), DemandRole = (PlayingTimePromise)r.GetInt32(11)
                 });
         }
 
         private void LoadPlayers(CareerData data)
         {
-            Read("SELECT id, club_id, first_name, last_name, birth_date, position, potential, personality, joined_on, shirt_number FROM players ORDER BY id",
+            Read("SELECT id, club_id, first_name, last_name, birth_date, position, potential, personality, joined_on, shirt_number, nationality FROM players ORDER BY id",
                 r => data.Players[r.GetInt32(0)] = new Player
                 {
                     Id = r.GetInt32(0), ClubId = r.IsDBNull(1) ? (int?)null : r.GetInt32(1), FirstName = r.GetString(2), LastName = r.GetString(3),
                     BirthDate = DateFormat.Parse(r.GetString(4)), Position = (Position)r.GetInt32(5), Potential = r.GetInt32(6),
-                    Personality = (PersonalityTrait)r.GetInt32(7), JoinedOn = r.IsDBNull(8) ? DateTime.MinValue : DateFormat.Parse(r.GetString(8)), ShirtNumber = r.GetInt32(9)
+                    Personality = (PersonalityTrait)r.GetInt32(7), JoinedOn = r.IsDBNull(8) ? DateTime.MinValue : DateFormat.Parse(r.GetString(8)), ShirtNumber = r.GetInt32(9), Nationality = r.GetString(10)
                 });
             Read("SELECT player_id, attribute_id, value FROM player_attributes",
                 r => data.Players[r.GetInt32(0)].Attributes[(AttributeId)r.GetInt32(1)] = r.GetInt32(2));

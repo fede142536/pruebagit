@@ -295,7 +295,8 @@ namespace Football.Game
         {
             if (!Session.SetUserLineup(_starterIds, _benchIds))
             {
-                Host.SetStatus(Locale.Get("lineup.invalid"));
+                bool foreign = Session.ForeignAmong(_starterIds.Concat(_benchIds)) > Session.MaxForeignersPerMatch;
+                Host.SetStatus(Locale.Get(foreign ? "lineup.foreign_limit" : "lineup.invalid"));
                 LoadFromSession();
                 return;
             }

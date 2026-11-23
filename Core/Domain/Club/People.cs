@@ -120,7 +120,9 @@ namespace Football.Core.Domain
         /// <summary>Más de lo que hay en el presupuesto de fichajes.</summary>
         OverBudget,
         /// <summary>El jugador es propio o no tiene club.</summary>
-        NotForSale
+        NotForSale,
+        /// <summary>El club ya tiene el cupo de extranjeros: hay que vender uno antes.</summary>
+        ForeignQuota
     }
 
     /// <summary>Noticia del buzón (el texto sale de los archivos de idioma con la clave y los datos).</summary>

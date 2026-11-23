@@ -90,6 +90,8 @@ namespace Football.Core.Management
         // ---- Historia viva ----
         /// <summary>Edad desde la que un jugador puede retirarse.</summary>
         public int RetirementAge = 37;
+        /// <summary>Edad máxima de un jugador libre que figura en el mercado (los veteranos que siguen buscando club no se dan por retirados todavía).</summary>
+        public int FreeAgentMaxAge = 40;
         /// <summary>Probabilidad anual de retirarse por cada año sobre esa edad.</summary>
         public float RetirementChancePerYear = 0.25f;
         /// <summary>Goles en la carrera para entrar al salón de la fama al retirarse.</summary>

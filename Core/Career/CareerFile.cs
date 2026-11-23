@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 7; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación
+        private const int Version = 9; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -119,6 +119,7 @@ namespace Football.Core.Career
                     w.Write((int)p.Personality);
                     w.Write(p.JoinedOn.Ticks);
                     w.Write(p.ShirtNumber);
+                    w.Write(p.Nationality ?? "ARG");
                     foreach (AttributeId a in AttributeSet.All)
                     {
                         w.Write(p.Attributes[a]);
@@ -264,6 +265,7 @@ namespace Football.Core.Career
                     w.Write(talk.DemandWage);
                     w.Write(talk.DemandYears);
                     w.Write(talk.Rounds);
+                    w.Write((int)talk.DemandRole);
                 }
             }
         }
@@ -353,6 +355,11 @@ namespace Football.Core.Career
                     if (version >= 6)
                     {
                         p.ShirtNumber = r.ReadInt32();
+                    }
+
+                    if (version >= 8)
+                    {
+                        p.Nationality = r.ReadString();
                     }
 
                     foreach (AttributeId a in AttributeSet.All)
@@ -477,6 +484,10 @@ namespace Football.Core.Career
                             SentOn = new DateTime(r.ReadInt64()), ReplyOn = new DateTime(r.ReadInt64()), Status = (TalkStatus)r.ReadInt32(),
                             Reason = (TalkReason)r.ReadInt32(), DemandWage = r.ReadInt64(), DemandYears = r.ReadInt32(), Rounds = r.ReadInt32()
                         };
+                        if (version >= 9)
+                        {
+                            t.DemandRole = (PlayingTimePromise)r.ReadInt32();
+                        }
                         d.Talks[t.PlayerId] = t;
                     }
                 }

@@ -40,6 +40,8 @@ namespace Football.Core.Career
         public int Years;
         /// <summary>Exige que se le prometa ser titular (o figura): juega menos de lo que cree merecer.</summary>
         public bool WantsPlayingTime;
+        /// <summary>Rol que espera tener en el equipo (figura, titular, rotación o suplente), según su nivel en el plantel.</summary>
+        public PlayingTimePromise Role;
         /// <summary>Descuento sobre el sueldo pedido que acepta según su personalidad (los leales se conforman con menos).</summary>
         public float Flexibility;
     }
@@ -67,6 +69,8 @@ namespace Football.Core.Career
         public long DemandWage;
         /// <summary>Años que pide tras la última respuesta.</summary>
         public int DemandYears;
+        /// <summary>Rol que pide tras la última respuesta.</summary>
+        public PlayingTimePromise DemandRole = PlayingTimePromise.Regular;
         /// <summary>Rondas de oferta ya hechas.</summary>
         public int Rounds;
     }

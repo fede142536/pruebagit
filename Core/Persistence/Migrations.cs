@@ -269,7 +269,13 @@ namespace Football.Core.Persistence
                 @"CREATE TABLE renewal_talks (
                     player_id INTEGER PRIMARY KEY, offer_wage INTEGER NOT NULL, offer_years INTEGER NOT NULL, offer_promise INTEGER NOT NULL,
                     sent_on TEXT NOT NULL, reply_on TEXT NOT NULL, status INTEGER NOT NULL, reason INTEGER NOT NULL,
-                    demand_wage INTEGER NOT NULL, demand_years INTEGER NOT NULL, rounds INTEGER NOT NULL)")
+                    demand_wage INTEGER NOT NULL, demand_years INTEGER NOT NULL, rounds INTEGER NOT NULL)"),
+
+            new SqlMigration(15, "Nacionalidad de los jugadores",
+                "ALTER TABLE players ADD COLUMN nationality TEXT NOT NULL DEFAULT 'ARG'"),
+
+            new SqlMigration(16, "Rol que pide el jugador al renovar",
+                "ALTER TABLE renewal_talks ADD COLUMN demand_role INTEGER NOT NULL DEFAULT 2")
         };
     }
 }

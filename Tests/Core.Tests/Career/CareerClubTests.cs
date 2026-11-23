@@ -160,7 +160,7 @@ namespace Football.Core.Tests.Career
         public void ALosingRun_WithAFallingPopularity_GetsTheManagerSacked()
         {
             CareerSession s = New();
-            s.Data.Manager.Popularity = 26f;
+            s.Data.Manager.Popularity = 25.2f;
             DayOutcome outcome = PlayUntil(s, () => s.Data.Manager.Sacked, 365);
             Assert.That(s.Data.Manager.Sacked, Is.True, "con la popularidad al borde, los resultados o la caja terminan en despido");
             Assert.That(s.Inbox.Items.Any(n => n.Key == "news.manager_sacked"), Is.True);

@@ -19,7 +19,9 @@ namespace Football.Core.Career
         /// <summary>El jugador está descontento y no quiere renovar.</summary>
         Unhappy,
         /// <summary>El sueldo no entra en el presupuesto de sueldos del club.</summary>
-        NoBudget
+        NoBudget,
+        /// <summary>El club ya tiene el cupo de extranjeros.</summary>
+        ForeignQuota
     }
 
     // Contratos: vencimientos, renovaciones, jugadores libres.
@@ -101,7 +103,7 @@ namespace Football.Core.Career
 
         /// <summary>Un jugador sin club que todavía juega (los que ya pasaron la edad de retiro no figuran).</summary>
         /// <param name="p">Jugador.</param>
-        public bool IsFreeAgent(Player p) => !p.ClubId.HasValue && p.AgeOn(Data.Today) < _cfg.Management.RetirementAge;
+        public bool IsFreeAgent(Player p) => !p.ClubId.HasValue && p.AgeOn(Data.Today) < _cfg.Management.FreeAgentMaxAge;
 
         /// <summary>Sueldo semanal que pide un jugador libre para firmar con el club del usuario.</summary>
         /// <param name="p">Jugador libre.</param>
@@ -120,6 +122,11 @@ namespace Football.Core.Career
             if (years < 1 || years > _cfg.Career.MaxContractYears)
             {
                 return ContractOutcome.InvalidYears;
+            }
+
+            if (WouldBreakForeignQuota(p, Data.UserClubId))
+            {
+                return ContractOutcome.ForeignQuota;
             }
 
             long wage = FreeAgentWage(p);
@@ -208,7 +215,14 @@ namespace Football.Core.Career
                 while (squad.Count < cc.MinAiSquadSize && free.Count > 0)
                 {
                     bool needKeeper = squad.Count(p => p.Position == Position.Goalkeeper) < cc.MinAiGoalkeepers;
-                    Player pick = needKeeper ? free.FirstOrDefault(p => p.Position == Position.Goalkeeper) ?? free[0] : free.FirstOrDefault(p => p.Position != Position.Goalkeeper) ?? free[0];
+                    bool quotaFull = squad.Count(IsForeign) >= cc.MaxForeignersPerClub;
+                    List<Player> pool = quotaFull ? free.Where(p => !IsForeign(p)).ToList() : free;
+                    if (pool.Count == 0)
+                    {
+                        break;
+                    }
+
+                    Player pick = needKeeper ? pool.FirstOrDefault(p => p.Position == Position.Goalkeeper) ?? pool[0] : pool.FirstOrDefault(p => p.Position != Position.Goalkeeper) ?? pool[0];
                     free.Remove(pick);
                     SignPlayer(pick, club.Id, (long)(_market.WageDemand(pick, PlayingTimePromise.Regular) * (double)cc.FreeAgentWageFactor),
                         2 + pick.Id % cc.FreeAgentContractYears); // 1 a 3 temporadas de la que viene (se firma antes de pasar de año)

@@ -42,6 +42,9 @@
     33,
     35
   ],
+  "HomeNationality": "ARG",
+  "MaxForeignersPerClub": 6,
+  "MaxForeignersPerMatch": 5,
   "RenewalThinkDays": [
     3,
     14
@@ -55,6 +58,33 @@
     0.9,
     1.15
   ],
+  "RenewalWageWeight": [
+    1,
+    1,
+    0.9,
+    0.8,
+    0.7,
+    1.1
+  ],
+  "RenewalYearsWeight": [
+    0.6,
+    0.6,
+    0.6,
+    0.5,
+    0.8,
+    0.4
+  ],
+  "RenewalRoleWeight": [
+    0.8,
+    0.7,
+    0.9,
+    1.4,
+    0.5,
+    0.8
+  ],
+  "RenewalWageBonusCap": 0.5,
+  "RenewalPlayingTimeBoost": 2,
+  "RenewalYearsSpan": 3,
   "RenewalYearsByAge": [
     23,
     27,

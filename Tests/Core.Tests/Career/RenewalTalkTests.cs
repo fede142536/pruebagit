@@ -137,6 +137,52 @@ namespace Football.Core.Tests.Career
         }
 
         [Test]
+        public void ThePlayerWeighsWageYearsAndRole_TogetherNotOneByOne()
+        {
+            CareerSession s = New();
+            Player p = Expiring(s);
+            s.Data.Conditions[p.Id].Morale = 80f;
+            RenewalDemand d = s.DemandOf(p);
+            int shortYears = System.Math.Max(s.ContractYearsLeft(p) + 1, d.Years - 2);
+            Assert.That(shortYears, Is.LessThanOrEqualTo(s.MaxRenewalYears(p)));
+            PlayingTimePromise same = d.Role, better = d.Role == PlayingTimePromise.Star ? PlayingTimePromise.Star : PlayingTimePromise.Star;
+            float justRight = s.Satisfaction(p, d.Wage, d.Years, d.Role, out _);
+            Assert.That(justRight, Is.EqualTo(0f).Within(0.01f), "lo que pide: conforme");
+            float fewerYears = s.Satisfaction(p, d.Wage, shortYears, same, out TalkReason why);
+            if (shortYears < d.Years)
+            {
+                Assert.That(fewerYears, Is.LessThan(0f), "mismo sueldo y menos años: menos conforme");
+                Assert.That(why, Is.EqualTo(TalkReason.Years));
+            }
+
+            if (d.Role != PlayingTimePromise.Star)
+            {
+                float lessWageButStar = s.Satisfaction(p, (long)(d.Wage * 0.9), d.Years, better, out _);
+                Assert.That(lessWageButStar, Is.GreaterThan(s.Satisfaction(p, (long)(d.Wage * 0.9), d.Years, d.Role, out _)), "un rol más importante compensa");
+            }
+
+            float moreWageSameRole = s.Satisfaction(p, d.Wage * 2, d.Years, d.Role, out _);
+            Assert.That(moreWageSameRole, Is.LessThanOrEqualTo(Cfg.RenewalWageBonusCap * 1.1f + 0.001f), "pagar el doble no compra todo");
+        }
+
+        [Test]
+        public void AcceptingTheirDemand_SignsAtOnce()
+        {
+            CareerSession s = New();
+            Player p = Expiring(s);
+            s.Data.Conditions[p.Id].Morale = 80f;
+            long low = p.Contract.WeeklyWage / 3;
+            s.SendRenewalOffer(p.Id, low, s.ContractYearsLeft(p) + 1, PlayingTimePromise.Backup);
+            Days(s, 16);
+            RenewalTalk talk = s.TalkOf(p.Id);
+            Assert.That(talk.Status, Is.EqualTo(TalkStatus.Counter));
+            Assert.That(s.AcceptCounter(p.Id), Is.EqualTo(ContractOutcome.Accepted));
+            Assert.That(p.Contract.WeeklyWage, Is.EqualTo(talk.DemandWage));
+            Assert.That(s.TalkOf(p.Id).Status, Is.EqualTo(TalkStatus.Accepted));
+            Assert.That(s.AcceptCounter(p.Id), Is.EqualTo(ContractOutcome.NotAvailable));
+        }
+
+        [Test]
         public void ATalk_SurvivesTheBinaryFileAndSqlite()
         {
             CareerSession s = New();

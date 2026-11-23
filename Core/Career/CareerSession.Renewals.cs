@@ -35,9 +35,62 @@ namespace Football.Core.Career
 
             return new RenewalDemand
             {
-                Wage = wage, Years = Math.Min(years, MaxRenewalYears(p)), WantsPlayingTime = WantsPlayingTime(p),
+                Wage = wage, Years = Math.Min(years, MaxRenewalYears(p)), WantsPlayingTime = WantsPlayingTime(p), Role = ExpectedRole(p),
                 Flexibility = _cfg.Management.WageFlexibility[Math.Min(personality, _cfg.Management.WageFlexibility.Length - 1)]
             };
+        }
+
+        /// <summary>Rol que espera un jugador del club según su nivel en el plantel (los tres mejores, figuras; hasta el puesto 11, titulares; después rotación y suplentes); sube un escalón si reclama minutos.</summary>
+        /// <param name="p">Jugador.</param>
+        public PlayingTimePromise ExpectedRole(Player p)
+        {
+            CareerConfig cc = _cfg.Career;
+            List<Player> squad = Squad(p.ClubId ?? 0);
+            int rank = squad.OrderByDescending(x => RosterFactory.DisplayRating(x.Attributes, x.Position)).ToList().IndexOf(p);
+            int value = rank < 0 ? 1 : rank < 3 ? 3 : rank < 11 ? 2 : rank < 18 ? 1 : 0;
+            if (WantsPlayingTime(p))
+            {
+                value = Math.Min(3, value + 1);
+            }
+
+            return RoleOf(value);
+        }
+
+        private static int RoleValue(PlayingTimePromise r)
+        {
+            switch (r)
+            {
+                case PlayingTimePromise.Star: return 3;
+                case PlayingTimePromise.Regular: return 2;
+                case PlayingTimePromise.Backup: return 0;
+                default: return 1; // rotación, juvenil o sin promesa
+            }
+        }
+
+        private static PlayingTimePromise RoleOf(int value) =>
+            value >= 3 ? PlayingTimePromise.Star : value == 2 ? PlayingTimePromise.Regular : value == 1 ? PlayingTimePromise.Rotation : PlayingTimePromise.Backup;
+
+        /// <summary>
+        /// Qué tan conforme queda un jugador con una oferta (0 = justo lo que pide; negativo = menos; positivo = más). Mezcla sueldo, años y rol: se puede
+        /// compensar una cosa con otra (el mismo sueldo con menos años, o menos sueldo con un rol más importante).
+        /// </summary>
+        /// <param name="p">Jugador.</param>
+        /// <param name="wage">Sueldo semanal ofrecido.</param>
+        /// <param name="years">Años ofrecidos.</param>
+        /// <param name="role">Rol ofrecido.</param>
+        /// <param name="worst">El aspecto que más pesa en contra (para explicar el rechazo).</param>
+        public float Satisfaction(Player p, long wage, int years, PlayingTimePromise role, out TalkReason worst)
+        {
+            CareerConfig cc = _cfg.Career;
+            RenewalDemand want = DemandOf(p);
+            int k = Math.Min((int)p.Personality, cc.RenewalWageWeight.Length - 1);
+            float wageTerm = Math.Max(-1f, Math.Min(cc.RenewalWageBonusCap, want.Wage > 0 ? (float)wage / want.Wage - 1f : 0f));
+            float yearsTerm = Math.Max(-1f, Math.Min(1f, (years - want.Years) / cc.RenewalYearsSpan));
+            float roleTerm = Math.Max(-1f, Math.Min(1f, (RoleValue(role) - RoleValue(want.Role)) / 2f));
+            float roleWeight = cc.RenewalRoleWeight[k] * (want.WantsPlayingTime ? cc.RenewalPlayingTimeBoost : 1f);
+            float w = cc.RenewalWageWeight[k] * wageTerm, y = cc.RenewalYearsWeight[k] * yearsTerm, r = roleWeight * roleTerm;
+            worst = w <= y && w <= r ? TalkReason.Wage : y <= r ? TalkReason.Years : TalkReason.PlayingTime;
+            return w + y + r;
         }
 
         /// <summary>
@@ -140,33 +193,27 @@ namespace Football.Core.Career
             RenewalDemand want = DemandOf(p);
             talk.DemandWage = want.Wage;
             talk.DemandYears = want.Years;
+            talk.DemandRole = want.Role;
             TalkReason reason = TalkReason.None;
             bool unhappy = Data.Conditions.TryGetValue(p.Id, out PlayerCondition c) && c.Morale < _cfg.Career.RenewalMinMorale;
             if (unhappy)
             {
                 reason = TalkReason.Unhappy;
             }
-            else if (talk.OfferWage < want.Wage * (1f - want.Flexibility))
+            else
             {
-                reason = TalkReason.Wage;
-            }
-            else if (talk.OfferYears < want.Years)
-            {
-                reason = TalkReason.Years;
-            }
-            else if (want.WantsPlayingTime && talk.OfferPromise != PlayingTimePromise.Star && talk.OfferPromise != PlayingTimePromise.Regular)
-            {
-                reason = TalkReason.PlayingTime;
+                float satisfaction = Satisfaction(p, talk.OfferWage, talk.OfferYears, talk.OfferPromise, out TalkReason worst);
+                if (satisfaction < -want.Flexibility)
+                {
+                    reason = worst;
+                }
             }
 
             talk.Reason = reason;
             if (reason == TalkReason.None)
             {
-                p.Contract.WeeklyWage = talk.OfferWage;
-                p.Contract.ExpiresOn = ContractEnd(talk.OfferYears);
-                p.Contract.Promise = talk.OfferPromise;
+                Sign(p, talk.OfferWage, talk.OfferYears, talk.OfferPromise);
                 talk.Status = TalkStatus.Accepted;
-                _inbox.Post("news.contract_renewed", FullName(p), Num(Data.Season + talk.OfferYears - 1));
             }
             else if (reason == TalkReason.Unhappy || talk.Rounds >= _cfg.Career.RenewalMaxRounds)
             {
@@ -178,6 +225,46 @@ namespace Football.Core.Career
                 talk.Status = TalkStatus.Counter;
                 _inbox.Post("news.renewal_counter", FullName(p), Num(want.Wage), Num(want.Years));
             }
+        }
+
+        private void Sign(Player p, long wage, int years, PlayingTimePromise role)
+        {
+            p.Contract.WeeklyWage = wage;
+            p.Contract.ExpiresOn = ContractEnd(years);
+            p.Contract.Promise = role;
+            _inbox.Post("news.contract_renewed", FullName(p), Num(Data.Season + years - 1));
+        }
+
+        /// <summary>
+        /// Acepta lo que pidió el jugador en su última respuesta (sueldo, años y rol): se firma en el acto, sin esperar. El usuario también puede
+        /// hacer otra oferta, con más o menos de lo que pide.
+        /// </summary>
+        /// <param name="playerId">Jugador.</param>
+        public ContractOutcome AcceptCounter(int playerId)
+        {
+            RenewalTalk talk = TalkOf(playerId);
+            if (talk == null || talk.Status != TalkStatus.Counter || !Data.Players.TryGetValue(playerId, out Player p) || p.ClubId != Data.UserClubId || p.Contract == null)
+            {
+                return ContractOutcome.NotAvailable;
+            }
+
+            int years = Math.Max(talk.DemandYears, ContractYearsLeft(p) + 1);
+            if (years > MaxRenewalYears(p) || years > _cfg.Career.MaxContractYears)
+            {
+                return ContractOutcome.InvalidYears;
+            }
+
+            if (WeeklyWages(Data.UserClubId) - p.Contract.WeeklyWage + talk.DemandWage > Data.Finances[Data.UserClubId].WeeklyWageBudget)
+            {
+                return ContractOutcome.NoBudget;
+            }
+
+            Sign(p, talk.DemandWage, years, talk.DemandRole);
+            talk.Status = TalkStatus.Accepted;
+            talk.OfferWage = talk.DemandWage;
+            talk.OfferYears = years;
+            talk.OfferPromise = talk.DemandRole;
+            return ContractOutcome.Accepted;
         }
     }
 }

@@ -99,10 +99,10 @@ namespace Football.Core.Management
         /// <param name="c">Parámetros.</param>
         /// <param name="lineup">Alineación elegida por el DT (texto de <see cref="FormatLineup"/>); vacía o null = automática.</param>
         public static MatchTeamSetup Prepare(string name, IReadOnlyList<Player> squad, IReadOnlyDictionary<int, PlayerCondition> conditions,
-            Formation formation, TeamStyle style, bool home, ManagementConfig c, string lineup = null)
+            Formation formation, TeamStyle style, bool home, ManagementConfig c, string lineup = null, int maxForeigners = int.MaxValue, string homeNationality = "ARG")
         {
             PlayerCondition Cond(Player p) => conditions.TryGetValue(p.Id, out PlayerCondition pc) ? pc : new PlayerCondition { PlayerId = p.Id };
-            Lineup chosen = Resolve(name, squad, conditions, formation, lineup);
+            Lineup chosen = Resolve(name, squad, conditions, formation, lineup, maxForeigners, homeNationality);
             var players = new PlayerMatchView[formation.Slots.Length];
             for (int s = 0; s < players.Length; s++)
             {
@@ -124,7 +124,7 @@ namespace Football.Core.Management
         /// <param name="formation">Formación.</param>
         /// <param name="lineup">Alineación guardada o null.</param>
         public static Lineup Resolve(string name, IReadOnlyList<Player> squad, IReadOnlyDictionary<int, PlayerCondition> conditions,
-            Formation formation, string lineup)
+            Formation formation, string lineup, int maxForeigners = int.MaxValue, string homeNationality = "ARG")
         {
             bool Ok(Player p) => !conditions.TryGetValue(p.Id, out PlayerCondition pc) || pc.Available;
             var available = squad.Where(Ok).OrderByDescending(p => PlayerRatings.Overall(p.Attributes, p.Position)).ToList();
@@ -193,7 +193,53 @@ namespace Football.Core.Management
                 result.Bench.AddRange(available.Where(p => !result.Starters.Contains(p)).Take(BenchSize));
             }
 
+            LimitForeigners(result, available, maxForeigners, homeNationality);
             return result;
+        }
+
+        /// <summary>
+        /// Reglamento: no más de <paramref name="max"/> extranjeros en la planilla (titulares y suplentes). Si hay de más, salen primero los del banco
+        /// (los de menor media) y después los titulares, y los reemplaza el mejor argentino disponible que no esté anotado.
+        /// </summary>
+        private static void LimitForeigners(Lineup lineup, List<Player> available, int max, string home)
+        {
+            bool Foreign(Player p) => !string.IsNullOrEmpty(p.Nationality) && !string.Equals(p.Nationality, home, StringComparison.OrdinalIgnoreCase);
+            float Level(Player p) => PlayerRatings.Overall(p.Attributes, p.Position);
+            while (lineup.Starters.Concat(lineup.Bench).Count(Foreign) > max)
+            {
+                List<Player> chosen = lineup.Starters.Concat(lineup.Bench).ToList();
+                Player replacement = available.Where(p => !chosen.Contains(p) && !Foreign(p)).OrderByDescending(Level).FirstOrDefault();
+                Player out1 = lineup.Bench.Where(Foreign).OrderBy(Level).FirstOrDefault();
+                if (out1 != null)
+                {
+                    int at = lineup.Bench.IndexOf(out1);
+                    if (replacement != null)
+                    {
+                        lineup.Bench[at] = replacement;
+                    }
+                    else
+                    {
+                        lineup.Bench.RemoveAt(at);
+                    }
+
+                    continue;
+                }
+
+                Player starter = lineup.Starters.Where(Foreign).OrderBy(Level).FirstOrDefault();
+                int slot = starter == null ? -1 : lineup.Starters.IndexOf(starter);
+                if (slot >= 0)
+                {
+                    PitchLine line = PlayerRatings.LineOf(starter.Position);
+                    replacement = available.Where(p => !chosen.Contains(p) && !Foreign(p) && PlayerRatings.LineOf(p.Position) == line).OrderByDescending(Level).FirstOrDefault() ?? replacement;
+                }
+
+                if (slot < 0 || replacement == null)
+                {
+                    return; // no hay con qué reemplazar: se respeta lo que hay
+                }
+
+                lineup.Starters[slot] = replacement;
+            }
         }
     }
 }

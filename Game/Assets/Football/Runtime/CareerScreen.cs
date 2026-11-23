@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Football.Core.Career;
 using Football.Core.Data;
 using Football.Core.Domain;
@@ -114,6 +115,8 @@ namespace Football.Game
         public PointerInput Input => Pointers;
 
         // plantel
+        private GameObject _alert;
+        private Text _alertText;
         private TextGrid _squad;
         private UiButton _cardButton, _numMinus, _numPlus;
         private Text _numLabel;
@@ -121,6 +124,11 @@ namespace Football.Game
         private UiButton _squadPrev, _squadNext;
         private Text _squadPage;
         private int _squadOffset;
+        private UiButton _filterPosition, _filterNation;
+        private int _positionFilter, _nationFilter, _sortColumn = -1;
+        private bool _sortDescending;
+        private List<Player> _squadView = new List<Player>();
+        private static readonly string[] PositionGroups = { "all", "gk", "def", "mid", "att" };
         private readonly UiButton[] _tactic = new UiButton[6];
         private UiButton _openLineup, _openContracts;
 
@@ -160,6 +168,7 @@ namespace Football.Game
             _save.Label.color = UiTheme.OnAccent; // GUARDAR relleno de acento con texto oscuro; SALIR con borde (barra del diseño)
             _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1030f), new Vector2(150f, 76f), Locale.Get("career.exit"), 22, UiTheme.Button);
 
+            BuildAlert();
             _hub = new CareerHubScreen(Root, this);
             _squadPanel = SectionGroup("Plantilla");
             BuildSquad(_squadPanel);
@@ -270,6 +279,35 @@ namespace Football.Game
         public void SetStatus(string text)
         {
             _status.text = text ?? string.Empty;
+        }
+
+        /// <summary>Cartel de alerta en el centro de la pantalla (contorno ámbar); se cierra con un toque.</summary>
+        /// <param name="text">Mensaje.</param>
+        public void ShowAlert(string text)
+        {
+            _alertText.text = text;
+            _alert.SetActive(true);
+            _alert.transform.SetAsLastSibling();
+        }
+
+        private void BuildAlert()
+        {
+            var go = new GameObject("Alerta", typeof(RectTransform));
+            go.transform.SetParent(Root, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = Vector2.zero;
+            rect.sizeDelta = UiKit.Reference;
+            rect.anchoredPosition = Vector2.zero;
+            rect.pivot = Vector2.zero;
+            _alert = go;
+            UiKit.Panel(go.transform, "Velo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(0f, 0f, 0f, 0.6f));
+            UiKit.Panel(go.transform, "Borde", new Vector2(960f, 540f), new Vector2(1000f, 360f), UiTheme.Amber);
+            UiKit.Panel(go.transform, "Fondo", new Vector2(960f, 540f), new Vector2(992f, 352f), new Color(0.059f, 0.102f, 0.09f, 1f));
+            UiKit.Label(go.transform, "Titulo", new Vector2(960f, 650f), new Vector2(900f, 60f), Locale.Get("alert.title"), 40, UiTheme.Amber);
+            _alertText = UiKit.Label(go.transform, "Texto", new Vector2(960f, 540f), new Vector2(900f, 150f), string.Empty, 28, UiTheme.Text);
+            _alertText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            UiKit.Label(go.transform, "Cerrar", new Vector2(960f, 435f), new Vector2(900f, 40f), Locale.Get("alert.tap_to_close"), 20, UiTheme.TextDim);
+            go.SetActive(false);
         }
 
         /// <inheritdoc />
@@ -389,6 +427,12 @@ namespace Football.Game
                         TapStart(p);
                     }
 
+                    continue;
+                }
+
+                if (_alert.activeSelf)
+                {
+                    _alert.SetActive(false); // el cartel de alerta se cierra con cualquier toque y no deja pasar el toque
                     continue;
                 }
 
@@ -519,8 +563,8 @@ namespace Football.Game
         private void BuildSquad(Transform p)
         {
             UiTheme.Frame(p, "Plantel", new Vector2(640f, 520f), new Vector2(1200f, 900f));
-            _squad = new TextGrid(p, "Jugadores", new Vector2(60f, 940f), 56f, new[] { 230f, 470f, 560f, 660f, 760f, 860f, 990f, 1140f },
-                new[] { 330f, 90f, 90f, 90f, 90f, 100f, 150f, 150f }, SquadRows + 1, 24);
+            _squad = new TextGrid(p, "Jugadores", new Vector2(60f, 940f), 56f, new[] { 215f, 410f, 483f, 556f, 629f, 702f, 785f, 892f, 1040f },
+                new[] { 300f, 70f, 70f, 70f, 70f, 70f, 90f, 110f, 150f }, SquadRows + 1, 22);
             _squadPrev = UiKit.Button(p, "Anterior", new Vector2(420f, 110f), new Vector2(120f, 64f), "<", 34, UiTheme.Button);
             _squadNext = UiKit.Button(p, "Siguiente", new Vector2(860f, 110f), new Vector2(120f, 64f), ">", 34, UiTheme.Button);
             _squadPage = UiKit.Label(p, "Pagina", new Vector2(640f, 110f), new Vector2(300f, 60f), string.Empty, 24, UiTheme.TextDim);
@@ -539,29 +583,125 @@ namespace Football.Game
                 _tactic[i] = UiKit.Button(p, "Tactica" + i, new Vector2(1580f, y - 10f), new Vector2(520f, 64f), string.Empty, 28, UiTheme.Button);
             }
 
+            _filterPosition = UiKit.Button(p, "FiltroPuesto", new Vector2(250f, 168f), new Vector2(380f, 54f), string.Empty, 20, UiTheme.Button);
+            _filterNation = UiKit.Button(p, "FiltroNacion", new Vector2(650f, 168f), new Vector2(380f, 54f), string.Empty, 20, UiTheme.Button);
             _openLineup = UiKit.Button(p, "ArmarOnce", new Vector2(1450f, 108f), new Vector2(255f, 76f), Locale.Get("lineup.open"), 19, UiTheme.AccentDark);
             _openContracts = UiKit.Button(p, "Contratos", new Vector2(1710f, 108f), new Vector2(255f, 76f), Locale.Get("contracts.open"), 22, UiTheme.AccentDark);
+        }
+
+        private static string Arrow(bool on, bool descending) => on ? (descending ? " ▼" : " ▲") : string.Empty;
+
+        /// <summary>Plantel del usuario con el filtro por puesto y nacionalidad y el orden por columna elegidos.</summary>
+        private List<Player> SquadView()
+        {
+            CareerData d = _session.Data;
+            IEnumerable<Player> list = _session.Squad(d.UserClubId);
+            string group = PositionGroups[_positionFilter];
+            if (group != "all")
+            {
+                list = list.Where(x => PositionGroup(x.Position) == group);
+            }
+
+            List<string> nations = SquadNations();
+            if (_nationFilter == 1)
+            {
+                list = list.Where(x => !_session.IsForeign(x));
+            }
+            else if (_nationFilter == 2)
+            {
+                list = list.Where(x => _session.IsForeign(x));
+            }
+            else if (_nationFilter >= 3 && _nationFilter - 3 < nations.Count)
+            {
+                string code = nations[_nationFilter - 3];
+                list = list.Where(x => x.Nationality == code);
+            }
+
+            if (_sortColumn >= 0)
+            {
+                Func<Player, IComparable> key = SortKey(_sortColumn);
+                list = _sortDescending ? list.OrderByDescending(key).ThenBy(x => x.Id) : list.OrderBy(key).ThenBy(x => x.Id);
+            }
+
+            return list.ToList();
+        }
+
+        private static string PositionGroup(Position p)
+        {
+            switch (p)
+            {
+                case Position.Goalkeeper: return "gk";
+                case Position.CenterBack: case Position.LeftBack: case Position.RightBack: return "def";
+                case Position.Striker: case Position.LeftWinger: case Position.RightWinger: return "att";
+                default: return "mid";
+            }
+        }
+
+        /// <summary>Códigos de nacionalidad que hay en el plantel (para el filtro).</summary>
+        private List<string> SquadNations() =>
+            _session.Squad(_session.Data.UserClubId).Select(x => x.Nationality).Distinct().OrderBy(x => x).ToList();
+
+        private Func<Player, IComparable> SortKey(int column)
+        {
+            CareerData d = _session.Data;
+            switch (column)
+            {
+                case 0: return x => x.LastName;
+                case 1: return x => (int)x.Position;
+                case 2: return x => x.Nationality;
+                case 3: return x => _session.VisibleRating(x);
+                case 4: return x => d.Conditions[x.Id].Form;
+                case 5: return x => d.Conditions[x.Id].Morale;
+                case 6: return x => d.Conditions[x.Id].Fitness;
+                case 7: return x => x.Contract == null ? 0 : x.Contract.ExpiresOn.Year;
+                default: return x => d.Conditions[x.Id].InjuryDays + d.Conditions[x.Id].SuspendedMatches;
+            }
         }
 
         private void RefreshSquad()
         {
             CareerData d = _session.Data;
-            List<Player> squad = _session.Squad(d.UserClubId);
+            List<Player> squad = _squadView = SquadView();
+            _squadOffset = Math.Min(_squadOffset, Math.Max(0, (squad.Count - 1) / SquadRows * SquadRows));
             _squad.Clear();
-            _squad.SetRow(0, Locale.Get("career.col.name"), Locale.Get("career.col.pos"), Locale.Get("career.col.rating"), Locale.Get("career.col.form"),
-                Locale.Get("career.col.morale"), Locale.Get("career.col.fitness"), Locale.Get("career.col.contract"), Locale.Get("career.col.status"));
+            string[] headers =
+            {
+                Locale.Get("career.col.name"), Locale.Get("career.col.pos"), Locale.Get("career.col.nation"), Locale.Get("career.col.rating"), Locale.Get("career.col.form"),
+                Locale.Get("career.col.morale"), Locale.Get("career.col.fitness"), Locale.Get("career.col.contract"), Locale.Get("career.col.status")
+            };
+            for (int h = 0; h < headers.Length; h++)
+            {
+                headers[h] += Arrow(_sortColumn == h, _sortDescending);
+            }
+
+            _squad.SetRow(0, headers);
             for (int i = 0; i < SquadRows && _squadOffset + i < squad.Count; i++)
             {
                 Player pl = squad[_squadOffset + i];
                 PlayerCondition c = d.Conditions[pl.Id];
                 string status = c.InjuryDays > 0 ? Format("career.status.injured", c.InjuryDays)
                     : c.SuspendedMatches > 0 ? Format("career.status.banned", c.SuspendedMatches) : Locale.Get("career.status.ok");
-                _squad.SetRow(i + 1, Num(pl.ShirtNumber) + "  " + FullName(pl), PositionCode(pl.Position), Num(_session.VisibleRating(pl)),
+                _squad.SetRow(i + 1, Num(pl.ShirtNumber) + "  " + FullName(pl), PositionCode(pl.Position), pl.Nationality, Num(_session.VisibleRating(pl)),
                     c.Form.ToString("0.0", CultureInfo.InvariantCulture), Num((int)c.Morale), Num((int)(c.Fitness * 100f)) + "%",
                     pl.Contract != null ? pl.Contract.ExpiresOn.Year.ToString(CultureInfo.InvariantCulture) : "-", status);
                 int yearsLeft = _session.ContractYearsLeft(pl);
-                _squad.SetColor(i + 1, 6, yearsLeft <= 1 ? StatusColors.Bad : yearsLeft == 2 ? StatusColors.Fair : UiTheme.Text); // los que vencen este año, en rojo
+                _squad.SetColor(i + 1, 7, yearsLeft <= 1 ? StatusColors.Bad : yearsLeft == 2 ? StatusColors.Fair : UiTheme.Text); // los que vencen este año, en rojo
+                if (_session.IsForeign(pl))
+                {
+                    _squad.SetColor(i + 1, 2, UiTheme.AccentStrong); // extranjeros resaltados (ocupan cupo)
+                }
             }
+
+            List<string> nations = SquadNations();
+            if (_nationFilter >= 3 + nations.Count)
+            {
+                _nationFilter = 0;
+            }
+
+            _filterPosition.Label.text = Locale.Get("career.col.pos") + ": " + Locale.Get("filter.pos." + PositionGroups[_positionFilter]);
+            _filterNation.Label.text = Locale.Get("career.col.nation") + ": " + (_nationFilter == 0 ? Locale.Get("filter.nat.all")
+                : _nationFilter == 1 ? Locale.Get("filter.nat.domestic") : _nationFilter == 2
+                    ? Format("filter.nat.foreign", _session.ForeignCount(d.UserClubId), _session.MaxForeigners) : nations[_nationFilter - 3]);
 
             if (_squadSelected == 0 || !squad.Exists(x => x.Id == _squadSelected))
             {
@@ -588,8 +728,41 @@ namespace Football.Game
 
         private void TapSquad(Vector2 p)
         {
-            List<Player> squad = _session.Squad(_session.Data.UserClubId);
+            List<Player> squad = _squadView;
             int count = squad.Count;
+            if (_squad.RowAt(p) == 0)
+            {
+                // Encabezado: tocar una columna ordena por ella (otra vez, invierte el orden; una tercera, vuelve al orden de siempre).
+                int column = _squad.ColumnAt(p);
+                if (column >= 0)
+                {
+                    if (_sortColumn == column && _sortDescending) { _sortColumn = -1; _sortDescending = false; }
+                    else if (_sortColumn == column) { _sortDescending = true; }
+                    else { _sortColumn = column; _sortDescending = false; }
+
+                    _squadOffset = 0;
+                    RefreshSquad();
+                }
+
+                return;
+            }
+
+            if (_filterPosition.Contains(p))
+            {
+                _positionFilter = (_positionFilter + 1) % PositionGroups.Length;
+                _squadOffset = 0;
+                RefreshSquad();
+                return;
+            }
+
+            if (_filterNation.Contains(p))
+            {
+                _nationFilter = (_nationFilter + 1) % (3 + SquadNations().Count);
+                _squadOffset = 0;
+                RefreshSquad();
+                return;
+            }
+
             int row = _squad.RowAt(p) - 1;
             if (row >= 0 && _squadOffset + row < count)
             {
@@ -714,7 +887,7 @@ namespace Football.Game
             for (int i = 0; i < MarketRows && i < _found.Count; i++)
             {
                 Player pl = _found[i];
-                _results.SetRow(i + 1, FullName(pl), pl.ClubId.HasValue ? CareerText.Fit(d.Club(pl.ClubId.Value).Name, 24) : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
+                _results.SetRow(i + 1, FullName(pl) + (_session.IsForeign(pl) ? "  " + pl.Nationality : string.Empty), pl.ClubId.HasValue ? CareerText.Fit(d.Club(pl.ClubId.Value).Name, 24) : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
                     Num(_session.VisibleRating(pl)), Money(_session.Market.Value(pl, d.Today)), Money(pl.Contract?.ReleaseClause ?? 0));
             }
 
@@ -894,6 +1067,12 @@ namespace Football.Game
                 else if (_signFree.Contains(p))
                 {
                     ContractOutcome r = _session.SignFreeAgent(pl.Id, _signYearsValue);
+                    if (r == ContractOutcome.ForeignQuota)
+                    {
+                        ShowAlert(Format("alert.foreign_quota", _session.MaxForeigners));
+                        return;
+                    }
+
                     SetStatus(Locale.Get(r == ContractOutcome.Accepted ? "career.sign_ok" : r == ContractOutcome.NoBudget ? "career.sign_no_budget" : "career.sign_failed"));
                     if (r == ContractOutcome.Accepted)
                     {
@@ -920,6 +1099,12 @@ namespace Football.Game
                 if (block != OfferBlock.None)
                 {
                     long budget = _session.Data.Finances[_session.Data.UserClubId].TransferBudget;
+                    if (block == OfferBlock.ForeignQuota)
+                    {
+                        ShowAlert(Format("alert.foreign_quota", _session.MaxForeigners));
+                        return;
+                    }
+
                     SetStatus(block == OfferBlock.OverBudget ? Format("career.offer.over_budget", Money(_fee), Money(budget))
                         : Locale.Get(block == OfferBlock.WindowClosed ? "career.offer.window_closed" : "career.offer.not_for_sale"));
                     return;
@@ -935,6 +1120,12 @@ namespace Football.Game
             }
             else if (_clause.Contains(p))
             {
+                if (_session.CheckOffer(pl.Id, pl.Contract?.ReleaseClause ?? 0) == OfferBlock.ForeignQuota)
+                {
+                    ShowAlert(Format("alert.foreign_quota", _session.MaxForeigners));
+                    return;
+                }
+
                 SetStatus(Locale.Get(_session.PayReleaseClause(pl.Id) ? "career.clause_paid" : "career.clause_failed"));
             }
         }

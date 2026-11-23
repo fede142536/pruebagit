@@ -190,6 +190,7 @@ namespace Football.Game
         private readonly Text[,] _cells;
         private readonly Image[] _marks;
         private readonly float _top, _rowHeight, _left, _right;
+        private readonly float[] _centres, _widths;
 
         /// <summary>Crea la tabla vacía.</summary>
         /// <param name="parent">Padre.</param>
@@ -202,6 +203,8 @@ namespace Football.Game
         /// <param name="fontSize">Tamaño de letra.</param>
         public TextGrid(Transform parent, string name, Vector2 topLeft, float rowHeight, float[] columnCentres, float[] widths, int rows, int fontSize)
         {
+            _centres = columnCentres;
+            _widths = widths;
             _cells = new Text[rows, columnCentres.Length];
             _marks = new Image[rows];
             _top = topLeft.y;
@@ -223,6 +226,21 @@ namespace Football.Game
                         c == 1 || c == 0 && widths[c] > 200f ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter);
                 }
             }
+        }
+
+        /// <summary>Columna tocada, o -1.</summary>
+        /// <param name="p">Punto.</param>
+        public int ColumnAt(Vector2 p)
+        {
+            for (int c = 0; c < _centres.Length; c++)
+            {
+                if (Mathf.Abs(p.x - _centres[c]) <= _widths[c] * 0.5f + 2f)
+                {
+                    return c;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>Altura del centro de una fila.</summary>

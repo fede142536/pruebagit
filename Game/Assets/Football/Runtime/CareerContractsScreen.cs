@@ -20,7 +20,7 @@ namespace Football.Game
         private static readonly float[] Widths = { 330f, 80f, 80f, 90f, 160f, 110f, 120f };
 
         private readonly TextGrid _grid;
-        private readonly UiButton _pagePrev, _pageNext, _back, _yearsMinus, _yearsPlus, _renew, _wageMinus, _wagePlus, _promise;
+        private readonly UiButton _pagePrev, _pageNext, _back, _yearsMinus, _yearsPlus, _renew, _wageMinus, _wagePlus, _promise, _acceptDemand;
         private readonly Text _page, _name, _info, _years, _ask, _result, _note, _wage;
         private List<Player> _players = new List<Player>();
         private int _offset;
@@ -61,6 +61,8 @@ namespace Football.Game
             _renew = UiKit.Button(p, "Renovar", new Vector2(1545f, 355f), new Vector2(440f, 72f), Locale.Get("contracts.offer"), 30, UiTheme.AccentDark);
             _result = UiKit.Label(p, "Resultado", new Vector2(1545f, 275f), new Vector2(600f, 70f), string.Empty, 21, UiTheme.Accent);
             _result.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _acceptDemand = UiKit.Button(p, "AceptarPedido", new Vector2(1545f, 205f), new Vector2(520f, 64f), Locale.Get("contracts.accept_demand"), 24, UiTheme.AccentDark);
+            _acceptDemand.SetVisible(false);
             _note = UiKit.Label(p, "Aviso", new Vector2(1545f, 205f), new Vector2(580f, 70f), Locale.Get("contracts.free_note"), 18, UiTheme.TextDim);
             _note.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
@@ -144,24 +146,34 @@ namespace Football.Game
             bool signed = talk != null && talk.Status == TalkStatus.Accepted && left > 1;
             bool canOffer = canExtend && !thinking && !refused && !signed;
             SetControls(canOffer);
+            bool counter = talk != null && talk.Status == TalkStatus.Counter;
             if (_wagePlayer != pl.Id)
             {
+                // Las pretensiones no se ven hasta que el jugador responde: se empieza ofreciendo lo que cobra hoy.
                 _wagePlayer = pl.Id;
-                _chosenWage = talk != null && talk.DemandWage > 0 ? talk.DemandWage : want.Wage;
-                _chosenYears = 0;
+                _chosenWage = counter ? talk.DemandWage : pl.Contract.WeeklyWage;
+                _chosenYears = counter ? talk.DemandYears : left + 1;
+                _chosenPromise = counter ? talk.DemandRole : PlayingTimePromise.Regular;
             }
 
-            _chosenYears = canExtend ? Mathf.Clamp(Mathf.Max(_chosenYears, Mathf.Min(max, Mathf.Max(left + 1, want.Years))), left + 1, max) : left;
+            _chosenYears = canExtend ? Mathf.Clamp(_chosenYears, left + 1, max) : left;
+            _acceptDemand.SetVisible(counter);
+            _note.gameObject.SetActive(!counter);
             _wage.text = CareerText.Format("contracts.offer_wage", CareerText.Money(_chosenWage));
             _years.text = canExtend ? CareerText.Format("contracts.renew_for", _chosenYears) : Locale.Get("contracts.no_extension");
             _promise.Label.text = Locale.Get("contracts.promise") + ": " + Locale.Get("promise." + _chosenPromise);
-            string demand = CareerText.Format("contracts.asks", CareerText.Money(want.Wage), want.Years);
-            if (want.WantsPlayingTime)
+            if (talk == null)
             {
-                demand += "\n" + Locale.Get("contracts.wants_minutes");
+                _ask.text = Locale.Get("contracts.asks_hidden"); // todavía no se sabe qué pretende: primero se ofrece
             }
-
-            _ask.text = demand;
+            else if (counter || refused)
+            {
+                _ask.text = CareerText.Format("contracts.asks", CareerText.Money(talk.DemandWage), talk.DemandYears) + "  ·  " + Locale.Get("promise." + talk.DemandRole);
+            }
+            else
+            {
+                _ask.text = string.Empty;
+            }
             if (thinking)
             {
                 _result.text = CareerText.Format("contracts.thinking", talk.ReplyOn.ToString("dd/MM", CultureInfo.InvariantCulture));
@@ -232,6 +244,12 @@ namespace Football.Game
                 else if (_promise.Root.activeSelf && _promise.Contains(p))
                 {
                     _chosenPromise = Promises[(System.Array.IndexOf(Promises, _chosenPromise) + 1) % Promises.Length];
+                }
+                else if (_acceptDemand.Root.activeSelf && _acceptDemand.Contains(p))
+                {
+                    ContractOutcome accepted = Session.AcceptCounter(pl.Id);
+                    _result.text = Locale.Get(accepted == ContractOutcome.Accepted ? "contracts.result.Accepted" : "contracts.result." + accepted);
+                    _result.color = accepted == ContractOutcome.Accepted ? StatusColors.Good : StatusColors.Bad;
                 }
                 else if (_renew.Root.activeSelf && _renew.Contains(p))
                 {

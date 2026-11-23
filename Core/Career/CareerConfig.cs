@@ -69,12 +69,30 @@ namespace Football.Core.Career
         public float RenewalMinMorale = 30f;
         /// <summary>Edades hasta las que se puede firmar 5, 4, 3 y 2 años de renovación (después, un año).</summary>
         public int[] RenewalAgeLimits = { 29, 31, 33, 35 };
+        /// <summary>Nacionalidad de los jugadores que no ocupan cupo de extranjeros.</summary>
+        public string HomeNationality = "ARG";
+        /// <summary>Extranjeros con contrato que puede tener un club (Liga Profesional).</summary>
+        public int MaxForeignersPerClub = 6;
+        /// <summary>Extranjeros que se pueden anotar en la planilla de un partido (titulares y suplentes).</summary>
+        public int MaxForeignersPerMatch = 5;
         /// <summary>Días que tarda un jugador en responder una oferta de renovación (mínimo y máximo).</summary>
         public int[] RenewalThinkDays = { 3, 14 };
         /// <summary>Veces que un jugador contraoferta antes de negarse a renovar.</summary>
         public int RenewalMaxRounds = 3;
         /// <summary>Qué tanto más sueldo pide al renovar según su personalidad (equilibrado, profesional, líder, ambicioso, leal, temperamental).</summary>
         public float[] RenewalWageFactor = { 1.0f, 1.05f, 1.1f, 1.25f, 0.9f, 1.15f };
+        /// <summary>Cuánto pesa el sueldo en la decisión de un jugador (equilibrado, profesional, líder, ambicioso, leal, temperamental).</summary>
+        public float[] RenewalWageWeight = { 1.0f, 1.0f, 0.9f, 0.8f, 0.7f, 1.1f };
+        /// <summary>Cuánto pesan los años de contrato en la decisión.</summary>
+        public float[] RenewalYearsWeight = { 0.6f, 0.6f, 0.6f, 0.5f, 0.8f, 0.4f };
+        /// <summary>Cuánto pesa el rol prometido (los ambiciosos lo valoran más).</summary>
+        public float[] RenewalRoleWeight = { 0.8f, 0.7f, 0.9f, 1.4f, 0.5f, 0.8f };
+        /// <summary>Lo máximo que suma pagar de más: ofrecer el doble de sueldo no compra todo.</summary>
+        public float RenewalWageBonusCap = 0.5f;
+        /// <summary>Si el jugador reclama minutos, el rol pesa esta cantidad de veces más.</summary>
+        public float RenewalPlayingTimeBoost = 2f;
+        /// <summary>Años de diferencia con los que se agota el peso de los años (de −1 a +1).</summary>
+        public float RenewalYearsSpan = 3f;
         /// <summary>Edades hasta las que un jugador pide <see cref="RenewalYearsWanted"/> años mínimos (después, un año).</summary>
         public int[] RenewalYearsByAge = { 23, 27, 30 };
         /// <summary>Años mínimos que pide un jugador de cada tramo de <see cref="RenewalYearsByAge"/>.</summary>

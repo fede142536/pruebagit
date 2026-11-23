@@ -39,6 +39,8 @@ namespace Football.Core.Data
         public string Position = "MC";
         /// <summary>Media de 1 a 100.</summary>
         public int Rating = 65;
+        /// <summary>Nacionalidad (código de tres letras: ARG, URU, PAR, COL, CHI…); vacío = argentino.</summary>
+        public string Nationality = string.Empty;
         /// <summary>Edad real (años cumplidos) si el archivo la trae; 0 = se estima de forma fija a partir del nombre (D-21).</summary>
         public int Age;
     }
