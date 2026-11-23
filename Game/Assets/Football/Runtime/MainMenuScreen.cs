@@ -23,7 +23,11 @@ namespace Football.Game
         Benchmark
     }
 
-    /// <summary>Menú principal: modos de juego a la izquierda y una tarjeta con la descripción del modo elegido.</summary>
+    /// <summary>
+    /// Menú principal (diseño «Noche + verde cancha»): carrusel de modos con la tarjeta elegida grande y las demás chicas, puntos de posición,
+    /// botón de acción abajo a la derecha y los clubes de la portada arriba a la derecha. Se desliza con el dedo, tocar una tarjeta la elige y tocar
+    /// la elegida (o el botón) la abre.
+    /// </summary>
     public sealed class MainMenuScreen : MenuScreenBase
     {
         private struct Entry
@@ -43,17 +47,31 @@ namespace Football.Game
             new Entry { Key = "menu.benchmark", Choice = MainMenuChoice.Benchmark, Available = true }
         };
 
-        private const int ClubCards = 3;
-        private const float CardScale = 0.42f;
-        private readonly KitPreview[] _cardKits = new KitPreview[ClubCards];
-        private readonly Text[] _cardNames = new Text[ClubCards];
-        private readonly UiButton[] _items = new UiButton[Entries.Length];
-        private readonly Image[] _markers = new Image[Entries.Length];
-        private readonly Text _cardTitle;
-        private readonly Text _cardText;
+        // Paleta «Noche + verde cancha» del diseño del menú.
+        private static readonly Color Bg = new Color(0.059f, 0.102f, 0.090f);
+        private static readonly Color Ink = new Color(0.910f, 0.937f, 0.914f);
+        private static readonly Color Accent = new Color(0.247f, 0.714f, 0.478f);
+        private static readonly Color AccentSoft = new Color(0.102f, 0.227f, 0.176f);
+        private static readonly Color AccentText = new Color(0.498f, 0.863f, 0.667f);
+        private static readonly Color AccentStrong = new Color(0.663f, 0.925f, 0.780f);
+        private static readonly Color Line = new Color(0.239f, 0.318f, 0.282f);
+        private static readonly Color Dim = new Color(0.616f, 0.702f, 0.659f);
+        private static readonly Color ButtonText = new Color(0.047f, 0.102f, 0.078f);
+
+        private const int ClubTags = 3;
+        private const float CardY = 560f, BigW = 620f, BigH = 450f, SmallW = 330f, SmallH = 330f, Gap = 30f, Border = 3f;
+        private const float ScrollSpeed = 9f, SwipeDistance = 60f, DotsY = 130f;
+        private readonly Image[] _tagBack = new Image[ClubTags];
+        private readonly Text[] _tagText = new Text[ClubTags];
+        private readonly Image[] _edge = new Image[Entries.Length], _fill = new Image[Entries.Length], _dot = new Image[Entries.Length];
+        private readonly Text[] _number = new Text[Entries.Length], _title = new Text[Entries.Length], _desc = new Text[Entries.Length];
         private readonly UiButton _action;
         private readonly Text _error;
+        private readonly float[] _width = new float[Entries.Length], _center = new float[Entries.Length];
         private int _selected;
+        private float _scroll; // posición continua del carrusel (índice de la tarjeta centrada)
+        private int _dragId = -1;
+        private float _dragStartX;
 
         /// <summary>Opción elegida en este fotograma.</summary>
         public MainMenuChoice Choice { get; private set; }
@@ -61,60 +79,78 @@ namespace Football.Game
         /// <summary>Crea el menú.</summary>
         public MainMenuScreen(Transform parent, PointerInput pointers) : base(parent, pointers, "MenuPrincipalUI")
         {
-            UiKit.Label(Root, "Logo", new Vector2(420f, 960f), new Vector2(700f, 110f), Locale.Get("app.title"), 104, UiTheme.Accent, TextAnchor.MiddleLeft);
-            UiKit.Label(Root, "Lema", new Vector2(420f, 890f), new Vector2(700f, 40f), Locale.Get("app.tagline"), 26, UiTheme.TextDim, TextAnchor.MiddleLeft);
+            UiKit.Panel(Root, "FondoNoche", new Vector2(960f, 540f), new Vector2(1920f, 1080f), Bg);
+            DrawPitch();
+
+            UiKit.Label(Root, "Logo", new Vector2(420f, 975f), new Vector2(700f, 110f), Locale.Get("app.title"), 96, AccentStrong, TextAnchor.MiddleLeft);
+            UiKit.Label(Root, "Lema", new Vector2(420f, 895f), new Vector2(760f, 40f), Locale.Get("app.tagline"), 24, Dim, TextAnchor.MiddleLeft);
+
+            // Clubes de la portada (arriba a la derecha).
+            UiKit.Label(Root, "TuClub", new Vector2(1330f, 990f), new Vector2(240f, 36f), Locale.Get("title.favorite"), 22, Dim, TextAnchor.MiddleRight);
+            for (int i = 0; i < ClubTags; i++)
+            {
+                var center = new Vector2(1520f + i * 130f, 990f);
+                _tagBack[i] = UiKit.Panel(Root, "EtiquetaClub" + i, center, new Vector2(112f, 46f), i == 1 ? Accent : Line);
+                _tagText[i] = UiKit.Label(Root, "TextoClub" + i, center, new Vector2(112f, 46f), string.Empty, 24, i == 1 ? ButtonText : Ink);
+            }
 
             for (int i = 0; i < Entries.Length; i++)
             {
-                float y = 760f - i * 92f;
-                _markers[i] = UiKit.Panel(Root, "Marca" + i, new Vector2(80f, y), new Vector2(8f, 56f), UiTheme.Accent);
-                _items[i] = UiTheme.MenuItem(Root, "Opcion" + i, new Vector2(400f, y), new Vector2(600f, 76f), Locale.Get(Entries[i].Key), 40);
-                _items[i].Label.color = Entries[i].Available ? UiTheme.Text : UiTheme.TextMuted;
+                _edge[i] = UiKit.Panel(Root, "BordeModo" + i, new Vector2(960f, CardY), new Vector2(SmallW, SmallH), Line);
+                _fill[i] = UiKit.Panel(Root, "FondoModo" + i, new Vector2(960f, CardY), new Vector2(SmallW - 2f * Border, SmallH - 2f * Border), Bg);
+                _number[i] = UiKit.Label(Root, "NumeroModo" + i, new Vector2(960f, CardY), new Vector2(120f, 30f), (i + 1).ToString("00"), 22, Dim, TextAnchor.MiddleLeft);
+                _title[i] = UiKit.Label(Root, "TituloModo" + i, new Vector2(960f, CardY), new Vector2(SmallW - 40f, 120f), Locale.Get(Entries[i].Key).ToUpperInvariant(), 36, Ink,
+                    TextAnchor.LowerLeft);
+                _title[i].horizontalOverflow = HorizontalWrapMode.Wrap;
+                _desc[i] = UiKit.Label(Root, "DescModo" + i, new Vector2(960f, CardY), new Vector2(BigW - 60f, 130f), Locale.Get(Entries[i].Key + ".desc"), 24, AccentStrong,
+                    TextAnchor.UpperLeft);
+                _desc[i].horizontalOverflow = HorizontalWrapMode.Wrap;
+                _dot[i] = UiKit.Panel(Root, "Punto" + i, new Vector2(100f + i * 26f, DotsY), new Vector2(10f, 6f), Line);
             }
 
-            // Tarjetas de los clubes que visten las figuras de la portada (camiseta dibujada, sin escudos oficiales).
-            for (int i = 0; i < ClubCards; i++)
-            {
-                var center = new Vector2(1240f + i * 260f, 950f);
-                UiKit.Panel(Root, "TarjetaClub" + i, center, new Vector2(240f, 150f), UiTheme.Panel);
-                var holder = new GameObject("Camiseta" + i, typeof(RectTransform));
-                holder.transform.SetParent(Root, false);
-                var rect = (RectTransform)holder.transform;
-                rect.anchorMin = rect.anchorMax = Vector2.zero;
-                rect.anchoredPosition = center + new Vector2(-70f, 8f);
-                rect.localScale = new Vector3(CardScale, CardScale, 1f);
-                _cardKits[i] = new KitPreview(holder.transform, Vector2.zero);
-                _cardNames[i] = UiKit.Label(Root, "NombreClub" + i, center + new Vector2(40f, 0f), new Vector2(150f, 120f), string.Empty, 22, UiTheme.Text);
-            }
-
-            UiKit.Label(Root, "Favorito", new Vector2(1500f, 1045f), new Vector2(250f, 30f), Locale.Get("title.favorite"), 20, UiTheme.Accent);
-
-            // La tarjeta va a la derecha para dejar a la vista las figuras de la portada.
-            Image card = UiKit.Panel(Root, "Tarjeta", new Vector2(1530f, 430f), new Vector2(680f, 560f), UiTheme.Panel);
-            _cardTitle = UiKit.Label(card.transform, "Titulo", new Vector2(340f, 470f), new Vector2(640f, 90f), string.Empty, 52, UiTheme.Text);
-            _cardText = UiKit.Label(card.transform, "Texto", new Vector2(340f, 320f), new Vector2(640f, 200f), string.Empty, 27, UiTheme.TextDim);
-            _action = UiKit.Button(card.transform, "Accion", new Vector2(340f, 110f), new Vector2(420f, 100f), string.Empty, 46, UiTheme.AccentDark);
-            // El botón está dentro de la tarjeta: su zona táctil se expresa en coordenadas del lienzo.
-            _action.Center = new Vector2(1530f, 260f);
-            UiKit.Label(Root, "Version", new Vector2(960f, 40f), new Vector2(1800f, 40f), Locale.Get("app.version"), 22, UiTheme.TextMuted);
-            _error = UiKit.Label(Root, "Error", new Vector2(1530f, 100f), new Vector2(680f, 80f), string.Empty, 24, UiTheme.Warning);
-            Select(0);
+            _action = UiKit.Button(Root, "Accion", new Vector2(1640f, DotsY), new Vector2(440f, 100f), string.Empty, 44, Accent);
+            _action.Label.color = ButtonText;
+            UiKit.Label(Root, "Version", new Vector2(960f, 40f), new Vector2(1800f, 40f), Locale.Get("app.version"), 22, Dim);
+            _error = UiKit.Label(Root, "Error", new Vector2(960f, 230f), new Vector2(1200f, 60f), string.Empty, 24, UiTheme.Warning);
+            Select(0, true);
         }
 
-        /// <summary>Muestra en las tarjetas los clubes que visten las figuras de la portada (izquierda, favorito, derecha).</summary>
+        /// <summary>Dibuja las líneas de una cancha, tenues, de fondo (marco, línea media y áreas).</summary>
+        private void DrawPitch()
+        {
+            var c = new Color(Accent.r, Accent.g, Accent.b, 0.20f);
+            void Rect(string name, float cx, float cy, float w, float h)
+            {
+                const float t = 3f;
+                UiKit.Panel(Root, name + "N", new Vector2(cx, cy + h / 2f), new Vector2(w, t), c);
+                UiKit.Panel(Root, name + "S", new Vector2(cx, cy - h / 2f), new Vector2(w, t), c);
+                UiKit.Panel(Root, name + "O", new Vector2(cx - w / 2f, cy), new Vector2(t, h), c);
+                UiKit.Panel(Root, name + "E", new Vector2(cx + w / 2f, cy), new Vector2(t, h), c);
+            }
+
+            Rect("Cancha", 960f, 540f, 1800f, 960f);
+            UiKit.Panel(Root, "LineaMedia", new Vector2(960f, 540f), new Vector2(3f, 960f), c);
+            Rect("AreaIzq", 160f, 540f, 260f, 480f);
+            Rect("AreaDer", 1760f, 540f, 260f, 480f);
+            Rect("ChicaIzq", 100f, 540f, 140f, 250f);
+            Rect("ChicaDer", 1820f, 540f, 140f, 250f);
+            UiKit.Panel(Root, "Circulo", new Vector2(960f, 540f), new Vector2(240f, 240f), c, true);
+            UiKit.Panel(Root, "CirculoCentro", new Vector2(960f, 540f), new Vector2(234f, 234f), Bg, true);
+        }
+
+        /// <summary>Muestra en las etiquetas los clubes que visten las figuras de la portada (izquierda, favorito, derecha).</summary>
         /// <param name="clubs">Índices de <see cref="TeamCatalog.Teams"/>.</param>
         public void ShowClubs(int[] clubs)
         {
             TeamDefinition[] teams = TeamCatalog.Teams;
-            for (int i = 0; i < ClubCards && i < clubs.Length; i++)
+            for (int i = 0; i < ClubTags && i < clubs.Length; i++)
             {
                 TeamDefinition team = teams[clubs[i]];
-                _cardKits[i].Set(KitColors.From(team.Home));
-                _cardNames[i].text = string.IsNullOrEmpty(team.ShortName) ? team.Name : team.ShortName;
+                _tagText[i].text = string.IsNullOrEmpty(team.ShortName) ? team.Name : team.ShortName;
             }
         }
 
-        /// <summary>Muestra un aviso de error bajo la tarjeta (null para quitarlo).</summary>
+        /// <summary>Muestra un aviso de error bajo el carrusel (null para quitarlo).</summary>
         public void SetError(string message)
         {
             _error.text = message ?? string.Empty;
@@ -124,50 +160,139 @@ namespace Football.Game
         public override void Show()
         {
             Choice = MainMenuChoice.None;
+            _scroll = _selected;
+            Layout();
             base.Show();
         }
 
-        private void Select(int index)
+        private void Select(int index, bool instant = false)
         {
-            _selected = index;
-            Entry e = Entries[index];
-            for (int i = 0; i < _items.Length; i++)
-            {
-                _markers[i].gameObject.SetActive(i == index);
-                _items[i].Label.fontSize = i == index ? 46 : 40;
-            }
-
-            _cardTitle.text = Locale.Get(e.Key + ".title");
-            _cardText.text = Locale.Get(e.Key + ".desc");
+            _selected = Mathf.Clamp(index, 0, Entries.Length - 1);
+            Entry e = Entries[_selected];
             bool play = e.Choice == MainMenuChoice.Friendly || e.Choice == MainMenuChoice.Indoor || e.Choice == MainMenuChoice.Tournament;
             _action.Label.text = Locale.Get(e.Available ? (play ? "menu.play" : "menu.enter") : "menu.soon");
-            _action.Background.color = e.Available ? UiTheme.AccentDark : UiTheme.Button;
+            _action.Background.color = e.Available ? Accent : Line;
+            _action.Label.color = e.Available ? ButtonText : Dim;
+            for (int i = 0; i < _dot.Length; i++)
+            {
+                var rect = (RectTransform)_dot[i].transform;
+                rect.sizeDelta = new Vector2(i == _selected ? 24f : 10f, 6f);
+                _dot[i].color = i == _selected ? Accent : Line;
+            }
+
+            if (instant)
+            {
+                _scroll = _selected;
+                Layout();
+            }
         }
 
-        /// <summary>Procesa los toques del fotograma.</summary>
+        /// <summary>Coloca las tarjetas según la posición del carrusel: la más cercana al centro crece y las demás se achican.</summary>
+        private void Layout()
+        {
+            int n = Entries.Length;
+            for (int i = 0; i < n; i++)
+            {
+                float near = Mathf.Clamp01(1f - Mathf.Abs(i - _scroll));
+                _width[i] = Mathf.Lerp(SmallW, BigW, near);
+                _center[i] = i == 0 ? 0f : _center[i - 1] + _width[i - 1] * 0.5f + Gap + _width[i] * 0.5f;
+            }
+
+            int lo = Mathf.Clamp(Mathf.FloorToInt(_scroll), 0, n - 1), hi = Mathf.Min(lo + 1, n - 1);
+            float pivot = Mathf.Lerp(_center[lo], _center[hi], _scroll - lo);
+            for (int i = 0; i < n; i++)
+            {
+                float near = Mathf.Clamp01(1f - Mathf.Abs(i - _scroll));
+                float w = _width[i], h = Mathf.Lerp(SmallH, BigH, near), x = 960f + _center[i] - pivot;
+                bool on = near > 0.5f;
+                Place(_edge[i], new Vector2(x, CardY), new Vector2(w, h));
+                Place(_fill[i], new Vector2(x, CardY), new Vector2(w - 2f * Border, h - 2f * Border));
+                _edge[i].color = on ? AccentStrong : Line;
+                _fill[i].color = Color.Lerp(Bg, AccentSoft, near);
+                _number[i].rectTransform.anchoredPosition = new Vector2(x - w * 0.5f + 90f, CardY + h * 0.5f - 40f);
+                _title[i].rectTransform.anchoredPosition = new Vector2(x - 10f, CardY - h * 0.5f + (on ? 190f : 90f));
+                _title[i].rectTransform.sizeDelta = new Vector2(w - 50f, 120f);
+                _title[i].fontSize = on ? 52 : 34;
+                _title[i].color = on ? AccentStrong : Ink;
+                _desc[i].rectTransform.anchoredPosition = new Vector2(x, CardY - h * 0.5f + 90f);
+                _desc[i].gameObject.SetActive(near > 0.85f);
+            }
+        }
+
+        private static void Place(Image image, Vector2 center, Vector2 size)
+        {
+            RectTransform rect = image.rectTransform;
+            rect.anchoredPosition = center;
+            rect.sizeDelta = size;
+        }
+
+        private bool OnCard(int i, Vector2 point)
+        {
+            Vector2 c = _edge[i].rectTransform.anchoredPosition, s = _edge[i].rectTransform.sizeDelta;
+            return Mathf.Abs(point.x - c.x) <= s.x * 0.5f && Mathf.Abs(point.y - c.y) <= s.y * 0.5f;
+        }
+
+        /// <summary>Procesa los toques del fotograma y anima el carrusel.</summary>
         public void Update()
         {
             Choice = MainMenuChoice.None;
+            HandleDrag();
             int n = Taps(out Vector2[] taps);
             for (int t = 0; t < n; t++)
             {
-                for (int i = 0; i < _items.Length; i++)
-                {
-                    if (_items[i].Contains(taps[t]))
-                    {
-                        if (i == _selected && Entries[i].Available)
-                        {
-                            Choice = Entries[i].Choice; // tocar de nuevo la opción elegida la abre
-                        }
-
-                        Select(i);
-                    }
-                }
-
                 if (_action.Contains(taps[t]) && Entries[_selected].Available)
                 {
                     Choice = Entries[_selected].Choice;
+                    continue;
                 }
+
+                for (int i = 0; i < Entries.Length; i++)
+                {
+                    if (!OnCard(i, taps[t]))
+                    {
+                        continue;
+                    }
+
+                    if (i == _selected && Entries[i].Available)
+                    {
+                        Choice = Entries[i].Choice; // tocar de nuevo la tarjeta elegida la abre
+                    }
+
+                    Select(i);
+                }
+            }
+
+            _scroll = Mathf.Lerp(_scroll, _selected, 1f - Mathf.Exp(-ScrollSpeed * Time.unscaledDeltaTime));
+            Layout();
+        }
+
+        /// <summary>Deslizar el dedo hacia los lados pasa a la tarjeta anterior o siguiente.</summary>
+        private void HandleDrag()
+        {
+            for (int i = 0; i < Pointers.Count; i++)
+            {
+                PointerState p = Pointers.Pointers[i];
+                float x = UiKit.ToArea(p.Position).x;
+                if (p.Phase == PointerPhase.Began && _dragId < 0)
+                {
+                    _dragId = p.Id;
+                    _dragStartX = x;
+                }
+                else if (p.Id == _dragId && p.Phase == PointerPhase.Ended)
+                {
+                    float dx = x - _dragStartX;
+                    if (Mathf.Abs(dx) >= SwipeDistance)
+                    {
+                        Select(_selected + (dx < 0f ? 1 : -1));
+                    }
+
+                    _dragId = -1;
+                }
+            }
+
+            if (Pointers.Count == 0)
+            {
+                _dragId = -1;
             }
         }
     }
