@@ -208,6 +208,8 @@ namespace Football.Core.MatchCore
         public bool Keeper;
         /// <summary>Segunda marca (mantenido): sin balón, el compañero más cercano al poseedor rival sale a presionarlo.</summary>
         public bool SecondPress;
+        /// <summary>Saltar la espera de una pelota parada: el sacador aparece en el balón sin esperar a llegar (impulso).</summary>
+        public bool SkipWait;
     }
 
     /// <summary>Acción visible de un jugador, para elegir animación.</summary>

@@ -42,6 +42,32 @@
     33,
     35
   ],
+  "RenewalThinkDays": [
+    3,
+    14
+  ],
+  "RenewalMaxRounds": 3,
+  "RenewalWageFactor": [
+    1,
+    1.05,
+    1.1,
+    1.25,
+    0.9,
+    1.15
+  ],
+  "RenewalYearsByAge": [
+    23,
+    27,
+    30
+  ],
+  "RenewalYearsWanted": [
+    4,
+    3,
+    2
+  ],
+  "RenewalMinSeasonMinutes": 450,
+  "RenewalStarterRank": 14,
+  "RenewalMinutesShare": 0.4,
   "FreeAgentContractYears": 3,
   "FreeAgentWageFactor": 0.7,
   "AiRenewalChance": 0.75,

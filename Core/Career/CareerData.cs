@@ -148,6 +148,8 @@ namespace Football.Core.Career
         public readonly Dictionary<int, Player> Players = new Dictionary<int, Player>();
         /// <summary>Estado de cada jugador (forma, moral, físico, lesiones, sanciones).</summary>
         public readonly Dictionary<int, PlayerCondition> Conditions = new Dictionary<int, PlayerCondition>();
+        /// <summary>Negociaciones de renovación del usuario (por jugador).</summary>
+        public readonly Dictionary<int, RenewalTalk> Talks = new Dictionary<int, RenewalTalk>();
         /// <summary>Dinero de cada club.</summary>
         public readonly Dictionary<int, ClubFinances> Finances = new Dictionary<int, ClubFinances>();
         /// <summary>Instalaciones de cada club.</summary>

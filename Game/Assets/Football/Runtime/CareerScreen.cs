@@ -115,6 +115,9 @@ namespace Football.Game
 
         // plantel
         private TextGrid _squad;
+        private UiButton _cardButton, _numMinus, _numPlus;
+        private Text _numLabel;
+        private int _squadSelected; // jugador marcado en el plantel (para ver su ficha o cambiarle el dorsal)
         private UiButton _squadPrev, _squadNext;
         private Text _squadPage;
         private int _squadOffset;
@@ -451,7 +454,8 @@ namespace Football.Game
             CareerData d = _session.Data;
             string manager = d.TournamentOnly || d.Manager.FullName.Length == 0 ? string.Empty : "   ·   " + Locale.Get("manager.dt") + " " + d.Manager.FullName;
             _header.text = d.Club(d.UserClubId).Name.ToUpperInvariant() + "   ·   " + d.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
-                           + "   ·   " + CareerText.Money(d.Finances[d.UserClubId].Cash) + manager;
+                           + "   ·   " + CareerText.Money(d.Finances[d.UserClubId].Cash)
+                           + "   ·   " + Locale.Get("career.header.transfers") + " " + CareerText.Money(d.Finances[d.UserClubId].TransferBudget) + manager;
         }
 
         private void HideSections()
@@ -518,6 +522,10 @@ namespace Football.Game
             _squadPrev = UiKit.Button(p, "Anterior", new Vector2(420f, 110f), new Vector2(120f, 64f), "<", 34, UiTheme.Button);
             _squadNext = UiKit.Button(p, "Siguiente", new Vector2(860f, 110f), new Vector2(120f, 64f), ">", 34, UiTheme.Button);
             _squadPage = UiKit.Label(p, "Pagina", new Vector2(640f, 110f), new Vector2(300f, 60f), string.Empty, 24, UiTheme.TextDim);
+            _cardButton = UiKit.Button(p, "FichaJugador", new Vector2(200f, 110f), new Vector2(240f, 64f), Locale.Get("career.player_card"), 22, UiTheme.AccentDark);
+            _numMinus = UiKit.Button(p, "DorsalMenos", new Vector2(990f, 110f), new Vector2(80f, 64f), "-", 34, UiTheme.Button);
+            _numLabel = UiKit.Label(p, "DorsalTexto", new Vector2(1105f, 110f), new Vector2(150f, 64f), string.Empty, 22, UiTheme.Text);
+            _numPlus = UiKit.Button(p, "DorsalMas", new Vector2(1220f, 110f), new Vector2(80f, 64f), "+", 34, UiTheme.Button);
 
             UiKit.Panel(p, "Tactica", new Vector2(1580f, 520f), new Vector2(600f, 900f), UiTheme.Panel);
             UiKit.Label(p, "TacticaTitulo", new Vector2(1580f, 930f), new Vector2(560f, 50f), Locale.Get("career.tactics"), 30, UiTheme.Accent);
@@ -546,13 +554,25 @@ namespace Football.Game
                 PlayerCondition c = d.Conditions[pl.Id];
                 string status = c.InjuryDays > 0 ? Format("career.status.injured", c.InjuryDays)
                     : c.SuspendedMatches > 0 ? Format("career.status.banned", c.SuspendedMatches) : Locale.Get("career.status.ok");
-                _squad.SetRow(i + 1, ShortName(pl), PositionCode(pl.Position), Num(_session.VisibleRating(pl)),
+                _squad.SetRow(i + 1, Num(pl.ShirtNumber) + "  " + FullName(pl), PositionCode(pl.Position), Num(_session.VisibleRating(pl)),
                     c.Form.ToString("0.0", CultureInfo.InvariantCulture), Num((int)c.Morale), Num((int)(c.Fitness * 100f)) + "%",
                     pl.Contract != null ? pl.Contract.ExpiresOn.Year.ToString(CultureInfo.InvariantCulture) : "-", status);
                 int yearsLeft = _session.ContractYearsLeft(pl);
                 _squad.SetColor(i + 1, 6, yearsLeft <= 1 ? StatusColors.Bad : yearsLeft == 2 ? StatusColors.Fair : UiTheme.Text); // los que vencen este año, en rojo
             }
 
+            if (_squadSelected == 0 || !squad.Exists(x => x.Id == _squadSelected))
+            {
+                _squadSelected = squad.Count > 0 ? squad[0].Id : 0;
+            }
+
+            for (int i = 0; i < SquadRows; i++)
+            {
+                _squad.Highlight(i + 1, _squadOffset + i < squad.Count && squad[_squadOffset + i].Id == _squadSelected);
+            }
+
+            Player marked = squad.Find(x => x.Id == _squadSelected);
+            _numLabel.text = marked == null ? string.Empty : Format("career.shirt", marked.ShirtNumber);
             int pages = Math.Max(1, (squad.Count + SquadRows - 1) / SquadRows);
             _squadPage.text = Format("career.page", _squadOffset / SquadRows + 1, pages);
             UserTactics t = d.Tactics;
@@ -571,7 +591,23 @@ namespace Football.Game
             int row = _squad.RowAt(p) - 1;
             if (row >= 0 && _squadOffset + row < count)
             {
-                _card.Show(_session.Card(squad[_squadOffset + row].Id)); // tocar un jugador abre su ficha
+                _squadSelected = squad[_squadOffset + row].Id; // tocar un jugador lo marca; FICHA abre sus datos y +/- le cambian el dorsal
+                RefreshSquad();
+                return;
+            }
+
+            if (_cardButton.Contains(p) && _squadSelected != 0)
+            {
+                _card.Show(_session.Card(_squadSelected));
+                return;
+            }
+
+            if ((_numMinus.Contains(p) || _numPlus.Contains(p)) && _session.Data.Players.TryGetValue(_squadSelected, out Player marked))
+            {
+                int next = marked.ShirtNumber + (_numPlus.Contains(p) ? 1 : -1);
+                next = next < 1 ? CareerSession.MaxShirtNumber : next > CareerSession.MaxShirtNumber ? 1 : next;
+                _session.SetShirtNumber(marked.Id, next); // si otro lo lleva, intercambian
+                RefreshSquad();
                 return;
             }
 
@@ -676,7 +712,7 @@ namespace Football.Game
             for (int i = 0; i < MarketRows && i < _found.Count; i++)
             {
                 Player pl = _found[i];
-                _results.SetRow(i + 1, ShortName(pl), pl.ClubId.HasValue ? d.Club(pl.ClubId.Value).ShortName : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
+                _results.SetRow(i + 1, FullName(pl), pl.ClubId.HasValue ? d.Club(pl.ClubId.Value).ShortName : Locale.Get("career.free_agent"), Num(pl.AgeOn(d.Today)),
                     Num(_session.VisibleRating(pl)), Money(_session.Market.Value(pl, d.Today)), Money(pl.Contract?.ReleaseClause ?? 0));
             }
 
@@ -878,6 +914,15 @@ namespace Football.Game
             else if (_feePlus.Contains(p)) { _fee = (long)(_fee * (1.0 + FeeStep)); }
             else if (_offer.Contains(p))
             {
+                OfferBlock block = _session.CheckOffer(pl.Id, _fee);
+                if (block != OfferBlock.None)
+                {
+                    long budget = _session.Data.Finances[_session.Data.UserClubId].TransferBudget;
+                    SetStatus(block == OfferBlock.OverBudget ? Format("career.offer.over_budget", Money(_fee), Money(budget))
+                        : Locale.Get(block == OfferBlock.WindowClosed ? "career.offer.window_closed" : "career.offer.not_for_sale"));
+                    return;
+                }
+
                 OfferResponse r = _session.MakeOffer(pl.Id, _fee, out long counter);
                 SetStatus(r == OfferResponse.Accepted ? Locale.Get("career.offer.accepted")
                     : r == OfferResponse.CounterOffer ? Format("career.offer.counter", Money(counter)) : Locale.Get("career.offer.rejected"));
@@ -962,6 +1007,8 @@ namespace Football.Game
                 return new Dictionary<string, string>();
             }
         }
+
+        private static string FullName(Player p) => (p.FirstName + " " + p.LastName).Trim();
 
         private static string ShortName(Player p) => string.IsNullOrEmpty(p.FirstName) ? p.LastName : p.FirstName[0] + ". " + p.LastName;
 

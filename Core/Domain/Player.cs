@@ -35,6 +35,9 @@ namespace Football.Core.Domain
         /// <summary>Contrato vigente, o <c>null</c> si no tiene.</summary>
         public Contract Contract { get; set; }
 
+        /// <summary>Dorsal en su club (1–99); 0 = todavía sin asignar.</summary>
+        public int ShirtNumber { get; set; }
+
         /// <summary>Rasgo de personalidad.</summary>
         public PersonalityTrait Personality { get; set; }
 

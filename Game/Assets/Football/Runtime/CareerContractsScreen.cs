@@ -20,12 +20,17 @@ namespace Football.Game
         private static readonly float[] Widths = { 330f, 80f, 80f, 90f, 160f, 110f, 120f };
 
         private readonly TextGrid _grid;
-        private readonly UiButton _pagePrev, _pageNext, _back, _yearsMinus, _yearsPlus, _renew;
-        private readonly Text _page, _name, _info, _years, _ask, _result, _note;
+        private readonly UiButton _pagePrev, _pageNext, _back, _yearsMinus, _yearsPlus, _renew, _wageMinus, _wagePlus, _promise;
+        private readonly Text _page, _name, _info, _years, _ask, _result, _note, _wage;
         private List<Player> _players = new List<Player>();
         private int _offset;
         private int _selected = -1;
         private int _chosenYears;
+        private long _chosenWage;
+        private int _wagePlayer = -1; // jugador para el que se armó _chosenWage
+        private PlayingTimePromise _chosenPromise = PlayingTimePromise.Rotation;
+        private static readonly PlayingTimePromise[] Promises = { PlayingTimePromise.Star, PlayingTimePromise.Regular, PlayingTimePromise.Rotation, PlayingTimePromise.Backup };
+        private const double WageStep = 0.05;
 
         /// <summary>Crea la pantalla (oculta).</summary>
         public CareerContractsScreen(Transform root, ICareerHost host) : base(root, "Contratos", host)
@@ -44,14 +49,19 @@ namespace Football.Game
             _name = UiKit.Label(p, "Jugador", new Vector2(1545f, 840f), new Vector2(600f, 50f), string.Empty, 32, UiTheme.Text);
             _info = UiKit.Label(p, "Info", new Vector2(1545f, 735f), new Vector2(600f, 130f), string.Empty, 22, UiTheme.TextDim);
             _info.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _yearsMinus = UiKit.Button(p, "AniosMenos", new Vector2(1295f, 620f), new Vector2(90f, 70f), "-", 36, UiTheme.Button);
-            _years = UiKit.Label(p, "Anios", new Vector2(1545f, 620f), new Vector2(380f, 70f), string.Empty, 28, UiTheme.Text);
-            _yearsPlus = UiKit.Button(p, "AniosMas", new Vector2(1795f, 620f), new Vector2(90f, 70f), "+", 36, UiTheme.Button);
-            _ask = UiKit.Label(p, "Pide", new Vector2(1545f, 540f), new Vector2(600f, 50f), string.Empty, 24, UiTheme.Gold);
-            _renew = UiKit.Button(p, "Renovar", new Vector2(1545f, 440f), new Vector2(440f, 84f), Locale.Get("contracts.renew"), 32, UiTheme.AccentDark);
-            _result = UiKit.Label(p, "Resultado", new Vector2(1545f, 350f), new Vector2(600f, 60f), string.Empty, 24, UiTheme.Accent);
+            _ask = UiKit.Label(p, "Pide", new Vector2(1545f, 665f), new Vector2(600f, 80f), string.Empty, 21, UiTheme.Gold);
+            _ask.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _wageMinus = UiKit.Button(p, "SueldoMenos", new Vector2(1295f, 590f), new Vector2(90f, 62f), "-", 34, UiTheme.Button);
+            _wage = UiKit.Label(p, "SueldoOferta", new Vector2(1545f, 590f), new Vector2(380f, 62f), string.Empty, 24, UiTheme.Text);
+            _wagePlus = UiKit.Button(p, "SueldoMas", new Vector2(1795f, 590f), new Vector2(90f, 62f), "+", 34, UiTheme.Button);
+            _yearsMinus = UiKit.Button(p, "AniosMenos", new Vector2(1295f, 515f), new Vector2(90f, 62f), "-", 34, UiTheme.Button);
+            _years = UiKit.Label(p, "Anios", new Vector2(1545f, 515f), new Vector2(380f, 62f), string.Empty, 24, UiTheme.Text);
+            _yearsPlus = UiKit.Button(p, "AniosMas", new Vector2(1795f, 515f), new Vector2(90f, 62f), "+", 34, UiTheme.Button);
+            _promise = UiKit.Button(p, "Promesa", new Vector2(1545f, 440f), new Vector2(600f, 62f), string.Empty, 22, UiTheme.Button);
+            _renew = UiKit.Button(p, "Renovar", new Vector2(1545f, 355f), new Vector2(440f, 72f), Locale.Get("contracts.offer"), 30, UiTheme.AccentDark);
+            _result = UiKit.Label(p, "Resultado", new Vector2(1545f, 275f), new Vector2(600f, 70f), string.Empty, 21, UiTheme.Accent);
             _result.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _note = UiKit.Label(p, "Aviso", new Vector2(1545f, 265f), new Vector2(580f, 90f), Locale.Get("contracts.free_note"), 20, UiTheme.TextDim);
+            _note = UiKit.Label(p, "Aviso", new Vector2(1545f, 205f), new Vector2(580f, 70f), Locale.Get("contracts.free_note"), 18, UiTheme.TextDim);
             _note.horizontalOverflow = HorizontalWrapMode.Wrap;
         }
 
@@ -107,34 +117,83 @@ namespace Football.Game
             RefreshDetail();
         }
 
-        private static string Name(Player p) => string.IsNullOrEmpty(p.FirstName) ? p.LastName : p.FirstName[0] + ". " + p.LastName;
+        private static string Name(Player p) => (p.FirstName + " " + p.LastName).Trim();
 
         private void RefreshDetail()
         {
             bool has = _selected >= 0 && _selected < _players.Count;
-            _yearsMinus.SetVisible(has);
-            _yearsPlus.SetVisible(has);
-            _renew.SetVisible(has);
             if (!has)
             {
+                SetControls(false);
                 _name.text = Locale.Get("contracts.pick");
-                _info.text = _years.text = _ask.text = string.Empty;
+                _info.text = _years.text = _ask.text = _wage.text = string.Empty;
                 return;
             }
 
             Player pl = _players[_selected];
             int left = Session.ContractYearsLeft(pl), max = Session.MaxRenewalYears(pl);
             PlayerCondition c = Data.Conditions[pl.Id];
+            RenewalDemand want = Session.DemandOf(pl);
+            RenewalTalk talk = Session.TalkOf(pl.Id);
             _name.text = pl.FirstName + " " + pl.LastName;
             _info.text = CareerText.Format("contracts.info", pl.AgeOn(Data.Today), PlayerLabels.Code(pl.Position), Session.VisibleRating(pl),
                 CareerText.Num(pl.Contract.ExpiresOn.Year), CareerText.Money(pl.Contract.WeeklyWage), CareerText.Num((int)c.Morale));
             bool canExtend = left < max;
-            _chosenYears = canExtend ? Mathf.Clamp(_chosenYears, left + 1, max) : left;
-            _yearsMinus.SetVisible(canExtend);
-            _yearsPlus.SetVisible(canExtend);
-            _renew.SetVisible(canExtend);
+            bool thinking = talk != null && talk.Status == TalkStatus.Thinking;
+            bool refused = talk != null && talk.Status == TalkStatus.Refused;
+            bool signed = talk != null && talk.Status == TalkStatus.Accepted && left > 1;
+            bool canOffer = canExtend && !thinking && !refused && !signed;
+            SetControls(canOffer);
+            if (_wagePlayer != pl.Id)
+            {
+                _wagePlayer = pl.Id;
+                _chosenWage = talk != null && talk.DemandWage > 0 ? talk.DemandWage : want.Wage;
+                _chosenYears = 0;
+            }
+
+            _chosenYears = canExtend ? Mathf.Clamp(Mathf.Max(_chosenYears, Mathf.Min(max, Mathf.Max(left + 1, want.Years))), left + 1, max) : left;
+            _wage.text = CareerText.Format("contracts.offer_wage", CareerText.Money(_chosenWage));
             _years.text = canExtend ? CareerText.Format("contracts.renew_for", _chosenYears) : Locale.Get("contracts.no_extension");
-            _ask.text = canExtend ? CareerText.Format("contracts.asks", CareerText.Money(Session.RenewalWage(pl))) : string.Empty;
+            _promise.Label.text = Locale.Get("contracts.promise") + ": " + Locale.Get("promise." + _chosenPromise);
+            string demand = CareerText.Format("contracts.asks", CareerText.Money(want.Wage), want.Years);
+            if (want.WantsPlayingTime)
+            {
+                demand += "\n" + Locale.Get("contracts.wants_minutes");
+            }
+
+            _ask.text = demand;
+            if (thinking)
+            {
+                _result.text = CareerText.Format("contracts.thinking", talk.ReplyOn.ToString("dd/MM", CultureInfo.InvariantCulture));
+                _result.color = UiTheme.Gold;
+            }
+            else if (refused)
+            {
+                _result.text = Locale.Get("contracts.refused." + talk.Reason);
+                _result.color = StatusColors.Bad;
+            }
+            else if (signed)
+            {
+                _result.text = Locale.Get("contracts.result.Accepted");
+                _result.color = StatusColors.Good;
+            }
+            else if (talk != null && talk.Status == TalkStatus.Counter)
+            {
+                _result.text = Locale.Get("contracts.counter." + talk.Reason);
+                _result.color = StatusColors.Fair;
+            }
+        }
+
+        private void SetControls(bool visible)
+        {
+            _wageMinus.SetVisible(visible);
+            _wagePlus.SetVisible(visible);
+            _yearsMinus.SetVisible(visible);
+            _yearsPlus.SetVisible(visible);
+            _promise.SetVisible(visible);
+            _renew.SetVisible(visible);
+            _wage.gameObject.SetActive(visible);
+            _years.gameObject.SetActive(visible);
         }
 
         /// <inheritdoc />
@@ -151,6 +210,7 @@ namespace Football.Game
             {
                 _selected = _offset + row;
                 _chosenYears = 0;
+                _wagePlayer = -1;
                 _result.text = string.Empty;
             }
             else if (_pagePrev.Root.activeSelf && _pagePrev.Contains(p))
@@ -167,10 +227,16 @@ namespace Football.Game
                 int left = Session.ContractYearsLeft(pl), max = Session.MaxRenewalYears(pl);
                 if (_yearsMinus.Root.activeSelf && _yearsMinus.Contains(p)) { _chosenYears = Mathf.Max(left + 1, _chosenYears - 1); }
                 else if (_yearsPlus.Root.activeSelf && _yearsPlus.Contains(p)) { _chosenYears = Mathf.Min(max, _chosenYears + 1); }
+                else if (_wageMinus.Root.activeSelf && _wageMinus.Contains(p)) { _chosenWage = (long)(_chosenWage * (1.0 - WageStep)); }
+                else if (_wagePlus.Root.activeSelf && _wagePlus.Contains(p)) { _chosenWage = (long)(_chosenWage * (1.0 + WageStep)) + 1; }
+                else if (_promise.Root.activeSelf && _promise.Contains(p))
+                {
+                    _chosenPromise = Promises[(System.Array.IndexOf(Promises, _chosenPromise) + 1) % Promises.Length];
+                }
                 else if (_renew.Root.activeSelf && _renew.Contains(p))
                 {
-                    ContractOutcome outcome = Session.Renew(pl.Id, _chosenYears);
-                    _result.text = Locale.Get("contracts.result." + outcome);
+                    ContractOutcome outcome = Session.SendRenewalOffer(pl.Id, _chosenWage, _chosenYears, _chosenPromise);
+                    _result.text = Locale.Get(outcome == ContractOutcome.Accepted ? "contracts.sent" : "contracts.result." + outcome);
                     _result.color = outcome == ContractOutcome.Accepted ? StatusColors.Good : StatusColors.Bad;
                 }
             }

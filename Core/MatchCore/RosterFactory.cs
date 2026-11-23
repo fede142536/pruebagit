@@ -55,6 +55,34 @@ namespace Football.Core.MatchCore
             }
         }
 
+        /// <summary>
+        /// Media que se muestra al usuario: la misma escala del archivo de equipos. Los atributos propios del puesto quedan por encima de la media
+        /// (ver <see cref="FillAttributes"/>), así que el promedio de esos atributos (<see cref="PlayerRatings.Overall"/>) da unos 10 puntos más que el
+        /// dato del archivo; aquí se descuenta ese sesgo para que carrera, amistosos y fichas muestren el mismo número.
+        /// </summary>
+        /// <param name="a">Atributos.</param>
+        /// <param name="role">Puesto en el que se mide.</param>
+        public static float DisplayRating(AttributeSet a, Position role)
+        {
+            PitchLine line = PlayerRatings.LineOf(role);
+            if (!LineBias.TryGetValue((role, line), out float bias))
+            {
+                var probe = new AttributeSet();
+                foreach (AttributeId id in AttributeSet.All)
+                {
+                    probe[id] = (int)MathF.Round(50f + Offset(role, id));
+                }
+
+                bias = PlayerRatings.InLine(probe, line) - 50f;
+                LineBias[(role, line)] = bias;
+            }
+
+            return PlayerRatings.InLine(a, line) - bias;
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<(Position, PitchLine), float> LineBias =
+            new System.Collections.Generic.Dictionary<(Position, PitchLine), float>();
+
         private static float Offset(Position role, AttributeId id)
         {
             switch (role)

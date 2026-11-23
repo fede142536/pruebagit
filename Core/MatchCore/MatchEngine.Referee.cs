@@ -255,6 +255,12 @@ namespace Football.Core.MatchCore
 
             MovePlayers(dt);
 
+            if (Teams[0].Input.SkipWait || Teams[1].Input.SkipWait)
+            {
+                _phaseTimer = 0f; // la persona no quiere esperar: el sacador va directo al balón
+                _takerTimeout = 0f;
+            }
+
             _phaseTimer -= dt;
             if (_phaseTimer > 0f)
             {

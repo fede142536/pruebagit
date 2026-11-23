@@ -110,6 +110,19 @@ namespace Football.Core.Domain
         Rejected
     }
 
+    /// <summary>Motivo por el que una oferta del usuario no se presenta.</summary>
+    public enum OfferBlock
+    {
+        /// <summary>Se puede presentar.</summary>
+        None,
+        /// <summary>El libro de pases está cerrado.</summary>
+        WindowClosed,
+        /// <summary>Más de lo que hay en el presupuesto de fichajes.</summary>
+        OverBudget,
+        /// <summary>El jugador es propio o no tiene club.</summary>
+        NotForSale
+    }
+
     /// <summary>Noticia del buzón (el texto sale de los archivos de idioma con la clave y los datos).</summary>
     public sealed class NewsItem
     {

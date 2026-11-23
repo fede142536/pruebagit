@@ -69,6 +69,22 @@ namespace Football.Core.Career
         public float RenewalMinMorale = 30f;
         /// <summary>Edades hasta las que se puede firmar 5, 4, 3 y 2 años de renovación (después, un año).</summary>
         public int[] RenewalAgeLimits = { 29, 31, 33, 35 };
+        /// <summary>Días que tarda un jugador en responder una oferta de renovación (mínimo y máximo).</summary>
+        public int[] RenewalThinkDays = { 3, 14 };
+        /// <summary>Veces que un jugador contraoferta antes de negarse a renovar.</summary>
+        public int RenewalMaxRounds = 3;
+        /// <summary>Qué tanto más sueldo pide al renovar según su personalidad (equilibrado, profesional, líder, ambicioso, leal, temperamental).</summary>
+        public float[] RenewalWageFactor = { 1.0f, 1.05f, 1.1f, 1.25f, 0.9f, 1.15f };
+        /// <summary>Edades hasta las que un jugador pide <see cref="RenewalYearsWanted"/> años mínimos (después, un año).</summary>
+        public int[] RenewalYearsByAge = { 23, 27, 30 };
+        /// <summary>Años mínimos que pide un jugador de cada tramo de <see cref="RenewalYearsByAge"/>.</summary>
+        public int[] RenewalYearsWanted = { 4, 3, 2 };
+        /// <summary>Minutos que debe haber jugado el que más jugó del plantel para que se reclame lugar (evita pedidos al comienzo de la temporada).</summary>
+        public float RenewalMinSeasonMinutes = 450f;
+        /// <summary>Un jugador entre los N mejores del plantel (por media) espera ser titular.</summary>
+        public int RenewalStarterRank = 14;
+        /// <summary>Si jugó menos que esta parte de los minutos del que más jugó, reclama más lugar.</summary>
+        public float RenewalMinutesShare = 0.4f;
         /// <summary>Años que firma un jugador libre en un club de la computadora (de 1 a esta cantidad).</summary>
         public int FreeAgentContractYears = 3;
         /// <summary>Qué parte del sueldo de mercado cobra un jugador libre (sin pase, firma más barato).</summary>

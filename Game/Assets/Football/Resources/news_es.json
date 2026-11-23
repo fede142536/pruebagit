@@ -30,6 +30,8 @@
   "news.competition_champion": "{1} se consagró campeón del {0}.",
   "news.promoted": "{0} asciende a Primera.",
   "news.user_promoted": "¡{0} asciende a Primera!",
+  "news.renewal_counter": "{0} contestó: pide {1} por semana y al menos {2} años. Puedes mejorar la oferta.",
+  "news.renewal_refused": "{0} no quiere renovar: se irá libre cuando termine su contrato.",
   "news.contract_renewed": "Renovaste a {0} hasta {1}.",
   "news.contract_expired": "{0} terminó su contrato y se fue libre.",
   "news.free_agent_signed": "Fichaste a {0}, jugador libre.",

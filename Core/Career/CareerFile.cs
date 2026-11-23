@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 5; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B)
+        private const int Version = 7; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -118,6 +118,7 @@ namespace Football.Core.Career
                     w.Write(p.Potential);
                     w.Write((int)p.Personality);
                     w.Write(p.JoinedOn.Ticks);
+                    w.Write(p.ShirtNumber);
                     foreach (AttributeId a in AttributeSet.All)
                     {
                         w.Write(p.Attributes[a]);
@@ -249,6 +250,21 @@ namespace Football.Core.Career
                 }
 
                 WriteClubManagement(w, d);
+                w.Write(d.Talks.Count);
+                foreach (RenewalTalk talk in d.Talks.Values)
+                {
+                    w.Write(talk.PlayerId);
+                    w.Write(talk.OfferWage);
+                    w.Write(talk.OfferYears);
+                    w.Write((int)talk.OfferPromise);
+                    w.Write(talk.SentOn.Ticks);
+                    w.Write(talk.ReplyOn.Ticks);
+                    w.Write((int)talk.Status);
+                    w.Write((int)talk.Reason);
+                    w.Write(talk.DemandWage);
+                    w.Write(talk.DemandYears);
+                    w.Write(talk.Rounds);
+                }
             }
         }
 
@@ -334,6 +350,11 @@ namespace Football.Core.Career
                         Position = (Position)r.ReadInt32(), Potential = r.ReadInt32(), Personality = (PersonalityTrait)r.ReadInt32(),
                         JoinedOn = new DateTime(r.ReadInt64())
                     };
+                    if (version >= 6)
+                    {
+                        p.ShirtNumber = r.ReadInt32();
+                    }
+
                     foreach (AttributeId a in AttributeSet.All)
                     {
                         p.Attributes[a] = r.ReadInt32();
@@ -443,6 +464,21 @@ namespace Football.Core.Career
                 if (version >= 3)
                 {
                     ReadClubManagement(r, d);
+                }
+
+                if (version >= 7)
+                {
+                    int talks = r.ReadInt32();
+                    for (int i = 0; i < talks; i++)
+                    {
+                        var t = new RenewalTalk
+                        {
+                            PlayerId = r.ReadInt32(), OfferWage = r.ReadInt64(), OfferYears = r.ReadInt32(), OfferPromise = (PlayingTimePromise)r.ReadInt32(),
+                            SentOn = new DateTime(r.ReadInt64()), ReplyOn = new DateTime(r.ReadInt64()), Status = (TalkStatus)r.ReadInt32(),
+                            Reason = (TalkReason)r.ReadInt32(), DemandWage = r.ReadInt64(), DemandYears = r.ReadInt32(), Rounds = r.ReadInt32()
+                        };
+                        d.Talks[t.PlayerId] = t;
+                    }
                 }
 
                 return d;

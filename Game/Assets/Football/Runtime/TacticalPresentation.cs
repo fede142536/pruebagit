@@ -179,7 +179,7 @@ namespace Football.Game
                 players[i] = new Vector2(p.Pos.X, p.Pos.Y);
                 lines[i] = (int)PlayerRatings.LineOf(p.Role);
                 PlayerMatchView pv = i < _setups[side].Players.Length ? _setups[side].Players[i] : null;
-                _ovr[i].text = Mathf.RoundToInt(PlayerRatings.Overall(p.Attr, p.Role)).ToString();
+                _ovr[i].text = Mathf.RoundToInt(RosterFactory.DisplayRating(p.Attr, p.Role)).ToString();
                 _pos[i].text = PlayerLabels.Code(p.Role);
                 _name[i].text = PlayerLabels.Surname(p.Name).ToUpperInvariant();
                 float form = pv?.Form ?? 6f;

@@ -260,7 +260,16 @@ namespace Football.Core.Persistence
 
             new SqlMigration(12, "Divisiones: Primera y Nacional B",
                 "ALTER TABLE clubs ADD COLUMN division INTEGER NOT NULL DEFAULT 1",
-                "ALTER TABLE career_meta ADD COLUMN primera_size INTEGER NOT NULL DEFAULT 0")
+                "ALTER TABLE career_meta ADD COLUMN primera_size INTEGER NOT NULL DEFAULT 0"),
+
+            new SqlMigration(13, "Dorsales de los jugadores",
+                "ALTER TABLE players ADD COLUMN shirt_number INTEGER NOT NULL DEFAULT 0"),
+
+            new SqlMigration(14, "Negociaciones de renovación",
+                @"CREATE TABLE renewal_talks (
+                    player_id INTEGER PRIMARY KEY, offer_wage INTEGER NOT NULL, offer_years INTEGER NOT NULL, offer_promise INTEGER NOT NULL,
+                    sent_on TEXT NOT NULL, reply_on TEXT NOT NULL, status INTEGER NOT NULL, reason INTEGER NOT NULL,
+                    demand_wage INTEGER NOT NULL, demand_years INTEGER NOT NULL, rounds INTEGER NOT NULL)")
         };
     }
 }

@@ -143,6 +143,8 @@ namespace Football.Core.Career
                 WeeklyWage = wage, ExpiresOn = ContractEnd(years), Promise = PlayingTimePromise.Regular,
                 ReleaseClause = (long)(_market.Value(p, Data.Today) * (double)_cfg.Career.ReleaseClauseFactor)
             };
+            p.ShirtNumber = 0;
+            FixShirtNumbers(Data, clubId);
         }
 
         // ------------------------------------------------------------------ cierre de temporada

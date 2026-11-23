@@ -30,6 +30,8 @@
   "news.competition_champion": "{1} are the {0} champions.",
   "news.promoted": "{0} are promoted to the top flight.",
   "news.user_promoted": "{0} are promoted to the top flight!",
+  "news.renewal_counter": "{0} replied: asks for {1} per week and at least {2} years. You can improve your offer.",
+  "news.renewal_refused": "{0} will not renew: leaves on a free transfer when the contract ends.",
   "news.contract_renewed": "You renewed {0} until {1}.",
   "news.contract_expired": "{0} finished his contract and left on a free.",
   "news.free_agent_signed": "You signed {0} on a free.",

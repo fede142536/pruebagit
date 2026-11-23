@@ -119,6 +119,29 @@ namespace Football.Core.Tests.MatchCore
         }
 
         /// <summary>Lugar medio de los atacantes (sin el sacador ni el arquero) tras preparar un córner.</summary>
+        [Test]
+        public void SkipWait_PutsTheCornerTakerOnTheBallRightAway()
+        {
+            MatchEngine slow = CornerSetUp(CornerRoutine.Mixed, SetPieceMarking.Zonal, out _);
+            MatchEngine fast = CornerSetUp(CornerRoutine.Mixed, SetPieceMarking.Zonal, out _);
+            fast.Teams[0].Input = new MatchInput { SkipWait = true };
+            int Ticks(MatchEngine e)
+            {
+                int n = 0;
+                while (e.Phase == MatchPhase.SetPiece && n < 60 * 30)
+                {
+                    e.Tick();
+                    n++;
+                }
+
+                return n;
+            }
+
+            int waited = Ticks(slow), skipped = Ticks(fast);
+            Assert.That(skipped, Is.LessThan(waited), "tocar la pantalla acorta la espera");
+            Assert.That(skipped, Is.LessThan(30), "casi de inmediato");
+        }
+
         private static MatchEngine CornerSetUp(CornerRoutine routine, SetPieceMarking marking, out float postSide)
         {
             MatchEngine e = MatchEngineTests.NewEngine(6);

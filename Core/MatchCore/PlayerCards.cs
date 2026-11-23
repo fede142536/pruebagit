@@ -207,7 +207,7 @@ namespace Football.Core.MatchCore
         {
             var card = new PlayerCardInfo
             {
-                Name = name, Number = number, Position = position, Overall = (int)Math.Round(PlayerRatings.Overall(attributes, position)),
+                Name = name, Number = number, Position = position, Overall = (int)Math.Round(RosterFactory.DisplayRating(attributes, position)),
                 Foot = FootOf(name), HeightCm = HeightCm(name, position), Age = age, Face = Face(attributes)
             };
             TopAttributes(attributes, position, card.TopAttributes);

@@ -279,6 +279,11 @@ namespace Football.Core.Career
                 throw new ArgumentException("El club del usuario no está en el archivo: " + userTeam, nameof(userTeam));
             }
 
+            foreach (Club c in data.Clubs)
+            {
+                FixShirtNumbers(data, c.Id);
+            }
+
             if (!tournamentOnly && primeraSize > 0 && primeraSize < data.Clubs.Count)
             {
                 if (primeraSize < 2 || data.Clubs.Count - primeraSize < cc.MinSecondDivisionClubs)
@@ -367,7 +372,7 @@ namespace Football.Core.Career
         private static Player CreatePlayer(PlayerDefinition pd, int id, int clubId, DateTime today, IRandom rng, CareerConfig cc)
         {
             string full = (pd.Name ?? string.Empty).Trim();
-            int space = full.LastIndexOf(' ');
+            int space = full.IndexOf(' '); // nombre de pila = primera palabra; el resto es el apellido completo («Di Lollo», «Martínez Quarta»)
             int estimated = rng.NextInt(19, 34); // se sortea siempre para que la partida no cambie según el archivo
             int age = pd.Age > 0 ? pd.Age : estimated;
             Position position = TeamBuilder.ParsePosition(pd.Position);
@@ -376,7 +381,7 @@ namespace Football.Core.Career
                 Id = id, ClubId = clubId, FirstName = space > 0 ? full.Substring(0, space) : string.Empty,
                 LastName = space > 0 ? full.Substring(space + 1) : full,
                 BirthDate = today.AddYears(-age).AddDays(-rng.NextInt(0, 365)), Position = position, JoinedOn = today,
-                Personality = (PersonalityTrait)rng.NextInt(0, Enum.GetValues(typeof(PersonalityTrait)).Length)
+                Personality = (PersonalityTrait)rng.NextInt(0, Enum.GetValues(typeof(PersonalityTrait)).Length), ShirtNumber = pd.Number
             };
             RosterFactory.FillAttributes(rng, pd.Rating, position, p.Attributes);
             p.Potential = Math.Min(AttributeScale.Max, pd.Rating + Math.Max(0, 24 - age) * 2);
@@ -490,10 +495,15 @@ namespace Football.Core.Career
             Data.Today = _simClock.Today;
             _dayRng = DayRandom();
             _applier.RestDay(Data.Conditions.Values);
+            ResolveTalks();
             if (Data.Today.DayOfWeek == DayOfWeek.Monday)
             {
                 WeeklyScouting();
                 RivalOffers();
+                foreach (Club c in Data.Clubs)
+                {
+                    FixShirtNumbers(Data, c.Id); // los canteranos y los fichados reciben dorsal
+                }
             }
 
             foreach (Fixture f in Data.Fixtures.Where(f => f.Date == Data.Today && !f.IsPlayed).ToList())
@@ -1062,7 +1072,7 @@ namespace Football.Core.Career
         {
             counter = 0;
             Player p = Data.Players[playerId];
-            if (!p.ClubId.HasValue || p.ClubId == Data.UserClubId || !TransferWindowOpen || fee > Data.Finances[Data.UserClubId].TransferBudget)
+            if (CheckOffer(playerId, fee) != OfferBlock.None)
             {
                 return OfferResponse.Rejected;
             }
@@ -1075,6 +1085,25 @@ namespace Football.Core.Career
             }
 
             return response;
+        }
+
+        /// <summary>Por qué una oferta ni siquiera se presenta: libro cerrado, jugador propio o más de lo que hay en el presupuesto de fichajes.</summary>
+        /// <param name="playerId">Jugador.</param>
+        /// <param name="fee">Monto ofrecido.</param>
+        public OfferBlock CheckOffer(int playerId, long fee)
+        {
+            Player p = Data.Players[playerId];
+            if (!p.ClubId.HasValue || p.ClubId == Data.UserClubId)
+            {
+                return OfferBlock.NotForSale;
+            }
+
+            if (!TransferWindowOpen)
+            {
+                return OfferBlock.WindowClosed;
+            }
+
+            return fee > Data.Finances[Data.UserClubId].TransferBudget ? OfferBlock.OverBudget : OfferBlock.None;
         }
 
         /// <summary>Paga la cláusula de rescisión: el pase se cierra sin negociar.</summary>
@@ -1104,6 +1133,8 @@ namespace Football.Core.Career
             seller.Record(Data.Today, FinanceCategory.Transfers, offer.Fee);
             p.ClubId = offer.BuyerClubId;
             p.JoinedOn = Data.Today;
+            p.ShirtNumber = 0;
+            FixShirtNumbers(Data, offer.BuyerClubId);
             if (offer.BuyerClubId == Data.UserClubId)
             {
                 Data.Signings.Add(new SigningRecord { PlayerId = p.Id, Name = FullName(p), Fee = offer.Fee, Date = Data.Today });
@@ -1140,7 +1171,7 @@ namespace Football.Core.Career
         /// <summary>Media que ve el usuario: exacta para los propios, aproximada (según los ojeadores) para los ajenos.</summary>
         public int VisibleRating(Player p)
         {
-            int real = (int)Math.Round(PlayerRatings.Overall(p.Attributes, p.Position));
+            int real = (int)Math.Round(RosterFactory.DisplayRating(p.Attributes, p.Position));
             if (p.ClubId == Data.UserClubId)
             {
                 return real;

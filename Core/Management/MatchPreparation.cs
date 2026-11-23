@@ -74,7 +74,7 @@ namespace Football.Core.Management
                            - c.FitnessPenalty * (1f - condition.Fitness) + (home ? c.HomeAdvantage : 0f);
             var view = new PlayerMatchView
             {
-                Id = player.Id, Name = (player.FirstName + " " + player.LastName).Trim(), Number = number, Role = role,
+                Id = player.Id, Name = (player.FirstName + " " + player.LastName).Trim(), Number = player.ShirtNumber > 0 ? player.ShirtNumber : number, Role = role,
                 Form = condition.Form, Morale = condition.Morale
             };
             foreach (AttributeId id in AttributeSet.All)

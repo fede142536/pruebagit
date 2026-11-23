@@ -637,6 +637,7 @@ namespace Football.Game
             bool humanHadBall = _engine.Owner != null && _engine.Owner.Team == 0 && _engine.Teams[0].Controlled == _engine.Owner;
             if (!_benchmark)
             {
+                input.SkipWait = _engine.Phase == MatchPhase.SetPiece && !_engine.AwaitingHumanRestart && TappedThisFrame(); // un toque salta la espera
                 _engine.SetInput(0, input);
             }
 

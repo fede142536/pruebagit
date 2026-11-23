@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using Football.Core.Domain;
 using Football.Core.Management;
+using Football.Core.MatchCore;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -194,7 +195,7 @@ namespace Football.Game
                 Vector2 at = PitchPoint(slot);
                 _dots[i].Place(at, new Vector2(DotSize, DotSize));
                 ((RectTransform)_dotNames[i].transform).anchoredPosition = at - new Vector2(0f, DotSize * 0.5f + 12f);
-                _dots[i].Label.text = Mathf.RoundToInt(PlayerRatings.Overall(pl.Attributes, slot.Role)).ToString(CultureInfo.InvariantCulture);
+                _dots[i].Label.text = Mathf.RoundToInt(RosterFactory.DisplayRating(pl.Attributes, slot.Role)).ToString(CultureInfo.InvariantCulture);
                 _dotNames[i].text = PlayerLabels.Surname(pl.LastName);
                 bool selected = _selectedGroup == Group.Starter && _selectedIndex == i;
                 _dots[i].Background.color = selected ? UiTheme.Selected : !Available(pl.Id) ? Unavailable : LineColor(slot.Role);
