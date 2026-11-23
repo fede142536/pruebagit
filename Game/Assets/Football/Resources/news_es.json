@@ -25,5 +25,7 @@
   "news.manager_sacked": "La directiva de {0} decidió despedir al DT.",
   "news.stadium_work_done": "Obra terminada en el estadio: {0} (nivel {1}).",
   "news.board_review": "Balance de la directiva: tu popularidad quedó en {0}.",
-  "news.cup_champion": "¡{0} es el campeón de la Copa Argentina {1}!"
+  "news.cup_champion": "¡{0} es el campeón de la Copa Argentina {1}!",
+  "news.user_champion": "¡Campeones! Ganaste el {0}.",
+  "news.competition_champion": "{1} se consagró campeón del {0}."
 }

@@ -420,3 +420,12 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **Carrera de visitante**: el estadio ya era el del local (capacidad y obras), pero la tribuna, los carteles y el marcador usaban los colores del usuario. Ahora el dueño de casa va a la izquierda del marcador, la tribuna lleva sus colores y el visitante usa su camiseta alternativa si se confunden.
   Los cánticos de La 12 suenan **solo si Boca es el dueño de casa**; de visitante queda la hinchada genérica. El rótulo LOCAL/VISITANTE de la presentación sigue al dueño de casa.
   Sin verificar en Unity. El usuario sigue siendo el equipo 0 del motor (ataca hacia +X): el lado de la cancha no cambia.
+
+## D-36 · Modo carrera: calendario, historial, cruces de la copa y cartel de campeón — Aceptada (pedido del usuario, 23/11/2026)
+- **Calendario** (`CareerCalendarScreen`, botón en la Central): todos los partidos del club en una temporada (Apertura, Copa y Clausura) con el resultado (verde ganó, amarillo empató, rojo perdió; en la copa, el que definió por penales) y los que faltan; flechas para ver temporadas anteriores. Se lee de `Data.Fixtures`, que conserva todas las temporadas.
+- **Historial** (`CareerHistoryScreen`): cada competición con su campeón y cómo terminó el usuario (campeón, puesto, o hasta qué ronda llegó en la copa) y el conteo de títulos. Se calcula de los partidos guardados: **no hay datos nuevos que guardar** y las partidas viejas ya lo tienen.
+- **Cruces de la copa**: la Central tiene una cuarta pestaña COPA con todos los cruces de la ronda del usuario (con flechas para otras rondas y el club que pasó directo); se abre sola cuando el próximo partido es de copa. Antes mostraba la tabla del torneo, que en esas fechas está en cero.
+- **Cartel de campeón**: al terminar una competición (la última fecha o la final) aparece un cartel: «¡CAMPEÓN!» con estrellas si ganó el usuario, o el final del torneo con el campeón y la posición del usuario. También llega una noticia al buzón. `CareerSession.TakeCeremonies`; las competiciones que ya habían terminado al cargar una partida no se anuncian de nuevo.
+- La Central ya no dibuja las camisetas de los dos equipos (queda el escudo) y la calificación pasó de círculos a estrellas pequeñas (`UiKit.StarSprite`, también en la selección de equipos y de club).
+- El mensaje de fin de temporada ahora dice que se pulse AVANZAR para empezar la siguiente (la temporada nueva se arma al avanzar, no al jugar el último partido).
+- Sin verificar en Unity: distribución de las pantallas nuevas y legibilidad de las tablas.

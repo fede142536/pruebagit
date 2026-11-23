@@ -25,5 +25,7 @@
   "news.manager_sacked": "The {0} board has decided to sack the manager.",
   "news.stadium_work_done": "Stadium works finished: {0} (level {1}).",
   "news.board_review": "Board review: your popularity is now {0}.",
-  "news.cup_champion": "{0} win the Copa Argentina {1}!"
+  "news.cup_champion": "{0} win the Copa Argentina {1}!",
+  "news.user_champion": "Champions! You won the {0}.",
+  "news.competition_champion": "{1} are the {0} champions."
 }

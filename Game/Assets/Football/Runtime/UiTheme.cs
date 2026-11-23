@@ -112,7 +112,8 @@ namespace Football.Game
         {
             for (int i = 0; i < _stars.Length; i++)
             {
-                _stars[i] = UiKit.Panel(parent, "Estrella" + i, center + new Vector2((i - 2) * 42f, 0f), new Vector2(30f, 30f), UiTheme.TextMuted, true);
+                _stars[i] = UiKit.Panel(parent, "Estrella" + i, center + new Vector2((i - 2) * 26f, 0f), new Vector2(24f, 24f), UiTheme.TextMuted);
+                _stars[i].sprite = UiKit.StarSprite;
             }
         }
 

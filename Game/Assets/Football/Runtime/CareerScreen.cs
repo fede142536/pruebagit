@@ -80,6 +80,8 @@ namespace Football.Game
         private readonly CareerFinanceScreen _finance;
         private readonly CareerStadiumScreen _stadium;
         private readonly CareerLineupScreen _lineup;
+        private readonly CareerCalendarScreen _calendar;
+        private readonly CareerHistoryScreen _history;
         private CareerSession _session;
         private PlayerCardPanel _card;
         private CareerSection _section;
@@ -146,6 +148,8 @@ namespace Football.Game
             _finance = new CareerFinanceScreen(Root, this);
             _stadium = new CareerStadiumScreen(Root, this);
             _lineup = new CareerLineupScreen(Root, this);
+            _calendar = new CareerCalendarScreen(Root, this);
+            _history = new CareerHistoryScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(192f + i * BarStep, BarY), new Vector2(BarStep - 12f, BarHeight),
@@ -279,12 +283,15 @@ namespace Football.Game
             _section = section;
             _squadPanel.gameObject.SetActive(section == CareerSection.Squad);
             _lineup.SetVisible(section == CareerSection.Lineup);
+            _calendar.SetVisible(section == CareerSection.Calendar);
+            _history.SetVisible(section == CareerSection.History);
             _marketPanel.gameObject.SetActive(section == CareerSection.Market);
             _hub.SetVisible(section == CareerSection.Hub);
             _office.SetVisible(section == CareerSection.Office);
             _finance.SetVisible(section == CareerSection.Finance);
             _stadium.SetVisible(section == CareerSection.Stadium);
-            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup ? (int)CareerSection.Squad : (int)section;
+            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup ? (int)CareerSection.Squad
+                : section == CareerSection.Calendar || section == CareerSection.History ? (int)CareerSection.Hub : (int)section;
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i].Background.color = i == highlighted ? UiTheme.Selected : UiTheme.Button;
@@ -381,6 +388,8 @@ namespace Football.Game
                     case CareerSection.Finance: _finance.Tap(p); break;
                     case CareerSection.Stadium: _stadium.Tap(p); break;
                     case CareerSection.Lineup: _lineup.Tap(p); break;
+                    case CareerSection.Calendar: _calendar.Tap(p); break;
+                    case CareerSection.History: _history.Tap(p); break;
                 }
 
                 RefreshHeader();
@@ -405,6 +414,8 @@ namespace Football.Game
                 case CareerSection.Finance: _finance.Refresh(); break;
                 case CareerSection.Stadium: _stadium.Refresh(); break;
                 case CareerSection.Lineup: _lineup.Refresh(); break;
+                case CareerSection.Calendar: _calendar.Refresh(); break;
+                case CareerSection.History: _history.Refresh(); break;
             }
         }
 
@@ -425,6 +436,8 @@ namespace Football.Game
             _finance.SetVisible(false);
             _stadium.SetVisible(false);
             _lineup.SetVisible(false);
+            _calendar.SetVisible(false);
+            _history.SetVisible(false);
             _managerPage.SetVisible(false);
             _clubPage.SetVisible(false);
         }

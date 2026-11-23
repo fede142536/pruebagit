@@ -205,6 +205,71 @@ namespace Football.Game
             }
         }
 
+        private static Sprite _star;
+
+        /// <summary>Sprite de una estrella de cinco puntas blanca generada al vuelo (bordes suavizados por muestreo).</summary>
+        public static Sprite StarSprite
+        {
+            get
+            {
+                if (_star != null)
+                {
+                    return _star;
+                }
+
+                const int size = 64, samples = 3, points = 5;
+                const float outer = 0.96f, inner = 0.40f;   // radios relativos de las puntas y los vértices interiores
+                var polygon = new Vector2[points * 2];
+                for (int i = 0; i < polygon.Length; i++)
+                {
+                    float angle = Mathf.PI * 0.5f + i * Mathf.PI / points;
+                    float radius = (i % 2 == 0 ? outer : inner) * 0.5f;
+                    polygon[i] = new Vector2(0.5f + Mathf.Cos(angle) * radius * 2f * 0.5f, 0.5f + Mathf.Sin(angle) * radius * 2f * 0.5f);
+                }
+
+                var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                var pixels = new Color32[size * size];
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        int inside = 0;
+                        for (int sy = 0; sy < samples; sy++)
+                        {
+                            for (int sx = 0; sx < samples; sx++)
+                            {
+                                var p = new Vector2((x + (sx + 0.5f) / samples) / size, (y + (sy + 0.5f) / samples) / size);
+                                inside += InsidePolygon(polygon, p) ? 1 : 0;
+                            }
+                        }
+
+                        pixels[y * size + x] = new Color32(255, 255, 255, (byte)(255 * inside / (samples * samples)));
+                    }
+                }
+
+                texture.SetPixels32(pixels);
+                texture.Apply();
+                texture.filterMode = FilterMode.Bilinear;
+                _star = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+                return _star;
+            }
+        }
+
+        private static bool InsidePolygon(Vector2[] polygon, Vector2 point)
+        {
+            bool inside = false;
+            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            {
+                if ((polygon[i].y > point.y) != (polygon[j].y > point.y)
+                    && point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)
+                {
+                    inside = !inside;
+                }
+            }
+
+            return inside;
+        }
+
         /// <summary>Crea un panel o círculo coloreado anclado abajo a la izquierda.</summary>
         public static Image Panel(Transform parent, string name, Vector2 center, Vector2 size, Color color, bool circle = false)
         {

@@ -123,6 +123,7 @@ namespace Football.Core.Career
             _cfg = configs ?? throw new ArgumentNullException(nameof(configs));
             _aiFormation = TeamBuilder.ParseFormation(_cfg.Career.Formation);
             _simClock = new SimClock(data.Today);
+            SeedAnnouncedCompetitions();
             // La semana contable cierra cada domingo: depende solo de la fecha, igual en una partida nueva y en una cargada.
             _clock = new SeasonClock(_simClock, _bus, ((int)data.Today.DayOfWeek + DaysPerWeek - 1) % DaysPerWeek);
             _finance = new FinanceSystem(_cfg.Finance, this, _bus);
@@ -398,6 +399,7 @@ namespace Football.Core.Career
             }
 
             AdvanceCup();
+            CheckCompetitionEnds();
             ReviewSupporters();
             if (Data.Manager.Sacked)
             {
@@ -464,6 +466,7 @@ namespace Football.Core.Career
             Play(f, report ?? throw new ArgumentNullException(nameof(report)));
             PendingUserFixture = null;
             AdvanceCup();
+            CheckCompetitionEnds();
         }
 
         /// <summary>Simula con el simulador rápido el partido de hoy del usuario.</summary>
@@ -473,6 +476,7 @@ namespace Football.Core.Career
             MatchReport report = Play(f, null);
             PendingUserFixture = null;
             AdvanceCup();
+            CheckCompetitionEnds();
             return report;
         }
 

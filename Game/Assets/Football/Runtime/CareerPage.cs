@@ -22,7 +22,11 @@ namespace Football.Game
         /// <summary>Remodelación del estadio (se abre desde Finanzas).</summary>
         Stadium,
         /// <summary>Once inicial y banco (se abre desde Plantilla).</summary>
-        Lineup
+        Lineup,
+        /// <summary>Calendario de todos los partidos del club, jugados y por jugar (se abre desde la Central).</summary>
+        Calendar,
+        /// <summary>Historial de las competiciones jugadas (se abre desde la Central).</summary>
+        History
     }
 
     /// <summary>Lo que una pantalla de carrera necesita del contenedor: la partida, la línea de estado y la navegación.</summary>

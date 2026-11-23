@@ -31,6 +31,38 @@ namespace Football.Game
         /// <summary>Texto de la tabla de idioma con argumentos.</summary>
         public static string Format(string key, params object[] args) => string.Format(CultureInfo.InvariantCulture, Locale.Get(key), args);
 
+        /// <summary>Nombre de una ronda de la copa según cuántos cruces tiene (1 = final, 2 = semifinales, 4 = cuartos…).</summary>
+        /// <param name="ties">Cruces de la ronda.</param>
+        /// <param name="round">Número de ronda (desde 1).</param>
+        public static string CupStage(int ties, int round)
+        {
+            if (ties == 1 && round > 1)
+            {
+                return Locale.Get("cup.stage.final");
+            }
+
+            switch (ties)
+            {
+                case 2: return Locale.Get("cup.stage.semis");
+                case 4: return Locale.Get("cup.stage.quarters");
+                case 8: return Locale.Get("cup.stage.r16");
+                case 16: return Locale.Get("cup.stage.r32");
+                default: return Format("cup.stage.round", round);
+            }
+        }
+
+        /// <summary>Resultado de un partido («2 - 1», con los penales si los hubo); «—» si no se jugó.</summary>
+        public static string Score(Football.Core.Domain.Fixture f)
+        {
+            if (!f.IsPlayed)
+            {
+                return Locale.Get("calendar.pending");
+            }
+
+            string score = f.HomeGoals + " - " + f.AwayGoals;
+            return f.HomePenalties.HasValue && f.AwayPenalties.HasValue ? score + " (" + f.HomePenalties + "-" + f.AwayPenalties + ")" : score;
+        }
+
         /// <summary>Miles como texto corto («57,2k»).</summary>
         public static string Thousands(int value) => (value / (float)Thousand).ToString("0.#", CultureInfo.InvariantCulture) + "k";
     }
