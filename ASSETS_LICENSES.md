@@ -19,5 +19,7 @@ Se recodificaron con ffmpeg a MP3 (hinchada y cánticos: mono, 32 kHz, 64 kb/s; 
 |---|---|---|---|
 | `ThirdParty/Quaternius_UniversalBaseCharacters/*` (modelos `Superhero_Male/Female_FullBody`) | Quaternius, «Universal Base Characters Kit» (versión gratuita), https://quaternius.com | CC0 1.0 (ver `License_Standard.txt` del pack) | Cuerpo de los jugadores |
 | `Game/Assets/Football/Resources/Humanoid/body.bytes` | Derivado del anterior con `Tools/ImportHumanoid` (reducido, sin texturas, pintado por regiones) | CC0 | Lo que carga el juego |
+| `ThirdParty/Quaternius_UniversalAnimationLibrary/UAL1_Standard*.glb` | Quaternius, «Universal Animation Library» (Standard), https://quaternius.com (subido por el usuario, 23/11/2026) | CC0 1.0 (ver `License.txt` del pack) | 43 animaciones (reposo, caminar, trotar, correr, salto, caída, golpes…) para reemplazar las procedurales; mismo esqueleto de 65 huesos que el cuerpo |
+
 
 Las texturas del pack no se usan (el juego pinta por vértice con los colores de cada club); se quitaron del repositorio para no sumar 30 MB. Siguen en la descarga original.
