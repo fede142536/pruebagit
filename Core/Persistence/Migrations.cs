@@ -253,7 +253,10 @@ namespace Football.Core.Persistence
                     total REAL NOT NULL)",
                 "ALTER TABLE career_meta ADD COLUMN ticket_level INTEGER NOT NULL DEFAULT 1",
                 "ALTER TABLE career_meta ADD COLUMN next_price_override INTEGER NOT NULL DEFAULT 0",
-                "ALTER TABLE career_meta ADD COLUMN season_start_cash INTEGER NOT NULL DEFAULT 0")
+                "ALTER TABLE career_meta ADD COLUMN season_start_cash INTEGER NOT NULL DEFAULT 0"),
+
+            new SqlMigration(11, "Alineación elegida por el DT (once inicial y banco)",
+                "ALTER TABLE career_meta ADD COLUMN lineup TEXT NOT NULL DEFAULT ''")
         };
     }
 }

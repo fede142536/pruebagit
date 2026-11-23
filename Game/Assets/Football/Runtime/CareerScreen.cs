@@ -79,6 +79,7 @@ namespace Football.Game
         private readonly CareerObjectivesScreen _office;
         private readonly CareerFinanceScreen _finance;
         private readonly CareerStadiumScreen _stadium;
+        private readonly CareerLineupScreen _lineup;
         private CareerSession _session;
         private PlayerCardPanel _card;
         private CareerSection _section;
@@ -107,6 +108,7 @@ namespace Football.Game
         private Text _squadPage;
         private int _squadOffset;
         private readonly UiButton[] _tactic = new UiButton[6];
+        private UiButton _openLineup;
 
         // mercado
         private UiButton _filterPos, _ageMinus, _agePlus, _ageMaxMinus, _ageMaxPlus, _rateMinus, _ratePlus, _rateMaxMinus, _rateMaxPlus, _search;
@@ -143,6 +145,7 @@ namespace Football.Game
             _office = new CareerObjectivesScreen(Root, this);
             _finance = new CareerFinanceScreen(Root, this);
             _stadium = new CareerStadiumScreen(Root, this);
+            _lineup = new CareerLineupScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(192f + i * BarStep, BarY), new Vector2(BarStep - 12f, BarHeight),
@@ -275,12 +278,13 @@ namespace Football.Game
         {
             _section = section;
             _squadPanel.gameObject.SetActive(section == CareerSection.Squad);
+            _lineup.SetVisible(section == CareerSection.Lineup);
             _marketPanel.gameObject.SetActive(section == CareerSection.Market);
             _hub.SetVisible(section == CareerSection.Hub);
             _office.SetVisible(section == CareerSection.Office);
             _finance.SetVisible(section == CareerSection.Finance);
             _stadium.SetVisible(section == CareerSection.Stadium);
-            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : (int)section;
+            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup ? (int)CareerSection.Squad : (int)section;
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i].Background.color = i == highlighted ? UiTheme.Selected : UiTheme.Button;
@@ -376,6 +380,7 @@ namespace Football.Game
                     case CareerSection.Office: _office.Tap(p); break;
                     case CareerSection.Finance: _finance.Tap(p); break;
                     case CareerSection.Stadium: _stadium.Tap(p); break;
+                    case CareerSection.Lineup: _lineup.Tap(p); break;
                 }
 
                 RefreshHeader();
@@ -399,6 +404,7 @@ namespace Football.Game
                 case CareerSection.Office: _office.Refresh(); break;
                 case CareerSection.Finance: _finance.Refresh(); break;
                 case CareerSection.Stadium: _stadium.Refresh(); break;
+                case CareerSection.Lineup: _lineup.Refresh(); break;
             }
         }
 
@@ -418,6 +424,7 @@ namespace Football.Game
             _office.SetVisible(false);
             _finance.SetVisible(false);
             _stadium.SetVisible(false);
+            _lineup.SetVisible(false);
             _managerPage.SetVisible(false);
             _clubPage.SetVisible(false);
         }
@@ -480,6 +487,8 @@ namespace Football.Game
                 UiKit.Label(p, "TacticaNombre" + i, new Vector2(1580f, y + 40f), new Vector2(560f, 40f), Locale.Get(keys[i]), 24, UiTheme.TextDim);
                 _tactic[i] = UiKit.Button(p, "Tactica" + i, new Vector2(1580f, y - 10f), new Vector2(520f, 64f), string.Empty, 28, UiTheme.Button);
             }
+
+            _openLineup = UiKit.Button(p, "ArmarOnce", new Vector2(1580f, 108f), new Vector2(520f, 76f), Locale.Get("lineup.open"), 28, UiTheme.AccentDark);
         }
 
         private void RefreshSquad()
@@ -524,6 +533,12 @@ namespace Football.Game
 
             if (_squadPrev.Contains(p)) { _squadOffset = Math.Max(0, _squadOffset - SquadRows); }
             else if (_squadNext.Contains(p) && _squadOffset + SquadRows < count) { _squadOffset += SquadRows; }
+
+            if (_openLineup.Contains(p))
+            {
+                Open(CareerSection.Lineup);
+                return;
+            }
 
             UserTactics t = _session.Data.Tactics;
             if (_tactic[0].Contains(p)) { t.Formation = Next(FormationNames, t.Formation); }

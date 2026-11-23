@@ -59,8 +59,9 @@ namespace Football.Core.Persistence
                 UserTactics t = data.Tactics ?? new UserTactics();
                 SqlHelper.Execute(Connection,
                     @"INSERT INTO career_meta (id, seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style,
-                        fullback_duty, midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash)
-                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st, @level, @override, @startcash)", tx,
+                        fullback_duty, midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup)
+                      VALUES (1, @seed, @season, @today, @user, @tournament, @formation, @defensive, @style, @fb, @mid, @st, @level, @override, @startcash, @lineup)", tx,
+                    ("@lineup", t.Lineup ?? string.Empty),
                     ("@level", (int)data.TicketLevel), ("@override", data.NextPriceOverride), ("@startcash", data.SeasonStartCash),
                     ("@seed", data.Seed), ("@season", data.Season), ("@today", DateFormat.ToText(data.Today)), ("@user", data.UserClubId),
                     ("@tournament", data.TournamentOnly ? 1 : 0), ("@formation", t.Formation ?? string.Empty),
@@ -79,7 +80,7 @@ namespace Football.Core.Persistence
 
             var data = new CareerData();
             Read(@"SELECT seed, season, today, user_club_id, tournament_only, formation, defensive_formation, style, fullback_duty,
-                     midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash FROM career_meta", r =>
+                     midfield_duty, striker_duty, ticket_level, next_price_override, season_start_cash, lineup FROM career_meta", r =>
             {
                 data.Seed = r.GetInt32(0);
                 data.Season = r.GetInt32(1);
@@ -89,7 +90,8 @@ namespace Football.Core.Persistence
                 data.Tactics = new UserTactics
                 {
                     Formation = r.GetString(5), DefensiveFormation = r.GetString(6), Style = r.GetString(7),
-                    FullbackDuty = (PlayerDuty)r.GetInt32(8), MidfieldDuty = (PlayerDuty)r.GetInt32(9), StrikerDuty = (PlayerDuty)r.GetInt32(10)
+                    FullbackDuty = (PlayerDuty)r.GetInt32(8), MidfieldDuty = (PlayerDuty)r.GetInt32(9), StrikerDuty = (PlayerDuty)r.GetInt32(10),
+                    Lineup = r.GetString(14)
                 };
                 data.TicketLevel = (TicketLevel)r.GetInt32(11);
                 data.NextPriceOverride = r.GetInt64(12);

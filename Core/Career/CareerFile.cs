@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 3; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor
+        private const int Version = 4; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -68,6 +68,7 @@ namespace Football.Core.Career
                 w.Write((int)t.FullbackDuty);
                 w.Write((int)t.MidfieldDuty);
                 w.Write((int)t.StrikerDuty);
+                w.Write(t.Lineup ?? string.Empty);
 
                 w.Write(d.Clubs.Count);
                 foreach (Club c in d.Clubs)
@@ -276,6 +277,10 @@ namespace Football.Core.Career
                         FullbackDuty = (PlayerDuty)r.ReadInt32(), MidfieldDuty = (PlayerDuty)r.ReadInt32(), StrikerDuty = (PlayerDuty)r.ReadInt32()
                     }
                 };
+                if (version >= 4)
+                {
+                    d.Tactics.Lineup = r.ReadString();
+                }
 
                 int clubs = r.ReadInt32();
                 for (int i = 0; i < clubs; i++)

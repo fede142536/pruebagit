@@ -404,3 +404,10 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - Los cánticos de Boca ahora son dos canciones de La 12 que se encadenan **sin silencios** durante todo el partido: cuando a la que suena le quedan 3 s, la otra entra con fundido cruzado; arranca por una al azar y después se alternan.
   Antes sonaban a tramos al azar con 12–40 s de silencio (decisión de D-29), que el usuario percibió como baches. Se recortó además el silencio de ~2 s que tenía la primera canción al principio y al final.
 - Solo suenan si el equipo local es «Boca Juniors». Se retiró el archivo anterior de cánticos. Las canciones son de origen y licencia desconocidos (uso personal): ver `ASSETS_LICENSES.md`.
+
+## D-34 · Alineación del modo carrera: once inicial y banco a elección del DT — Aceptada (pedido del usuario, 23/11/2026)
+- Antes la carrera armaba sola el once y el banco (el mejor de cada línea). Ahora `UserTactics.Lineup` guarda lo que elige el DT («ids de titulares por puesto ; ids de suplentes») y `MatchPreparation.Resolve` lo respeta puesto por puesto.
+  Si un elegido no puede jugar (lesión, sanción o ya no está en el club) lo reemplaza el mejor disponible para ese puesto, sin tocar el resto; los suplentes que no puedan jugar se descartan. Sin elección (o texto inválido) sigue la alineación automática de siempre.
+- Banco de hasta 9 (`MatchPreparation.BenchSize`). Se guarda en el archivo de la partida (versión 4) y en SQLite (migración 11). Las partidas viejas cargan con alineación automática.
+- Pantalla `CareerLineupScreen` (botón «ARMAR ONCE Y BANCO» en Plantilla): cancha con el once, banco y no convocados; se toca un jugador y otro para intercambiarlos; «AUTOMÁTICA» devuelve la elección a la computadora. Sin verificar en Unity.
+- Al cambiar de formación se mantiene el orden de los titulares (el jugador i sigue en el puesto i): conviene revisar el once después de cambiar el dibujo. No hay penalización por jugar fuera de posición en los atributos.

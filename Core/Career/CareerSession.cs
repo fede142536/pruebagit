@@ -570,7 +570,7 @@ namespace Football.Core.Career
             bool user = clubId == Data.UserClubId;
             Formation formation = user ? UserFormation() : _aiFormation;
             MatchTeamSetup setup = MatchPreparation.Prepare(club.Name, squad, Data.Conditions, formation, user ? UserStyle() : new TeamStyle(), home,
-                _cfg.Management);
+                _cfg.Management, user ? Data.Tactics.Lineup : null);
             if (user && !string.IsNullOrEmpty(Data.Tactics.DefensiveFormation))
             {
                 Formation defensive = TeamBuilder.ParseFormation(Data.Tactics.DefensiveFormation);
@@ -581,6 +581,40 @@ namespace Football.Core.Career
             setup.Rivalry = other > 0 ? RivalryBetween(clubId, other) : RivalryLevel.None;
             return setup;
         }
+
+        /// <summary>
+        /// Alineación que saldría hoy: la elegida por el DT (con los lesionados y sancionados reemplazados) o la automática.
+        /// Sirve para dibujar el once y el banco en la pantalla de alineación.
+        /// </summary>
+        public MatchPreparation.Lineup UserLineup() =>
+            MatchPreparation.Resolve(Data.Club(Data.UserClubId).Name, Squad(Data.UserClubId), Data.Conditions, UserFormation(), Data.Tactics.Lineup);
+
+        /// <summary>Si el DT eligió su alineación (false = la arma la computadora).</summary>
+        public bool HasCustomLineup => !string.IsNullOrWhiteSpace(Data.Tactics.Lineup);
+
+        /// <summary>
+        /// Guarda la alineación elegida: un titular por puesto de la formación y el banco. Rechaza ids que no sean del plantel, repetidos o
+        /// una cantidad de titulares distinta de los puestos.
+        /// </summary>
+        /// <param name="starterIds">Ids de los titulares, uno por puesto.</param>
+        /// <param name="benchIds">Ids de los suplentes (hasta <see cref="MatchPreparation.BenchSize"/>).</param>
+        /// <returns>Verdadero si quedó guardada.</returns>
+        public bool SetUserLineup(IReadOnlyList<int> starterIds, IReadOnlyList<int> benchIds)
+        {
+            var squad = new HashSet<int>(Squad(Data.UserClubId).Select(p => p.Id));
+            var all = starterIds.Concat(benchIds).ToList();
+            if (starterIds.Count != UserFormation().Slots.Length || benchIds.Count > MatchPreparation.BenchSize
+                || all.Any(id => !squad.Contains(id)) || all.Distinct().Count() != all.Count)
+            {
+                return false;
+            }
+
+            Data.Tactics.Lineup = MatchPreparation.FormatLineup(starterIds, benchIds);
+            return true;
+        }
+
+        /// <summary>Vuelve a la alineación automática.</summary>
+        public void ClearUserLineup() => Data.Tactics.Lineup = string.Empty;
 
         /// <summary>Formación con balón del usuario.</summary>
         public Formation UserFormation() => TeamBuilder.ParseFormation(Data.Tactics.Formation);

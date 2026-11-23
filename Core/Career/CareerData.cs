@@ -79,6 +79,11 @@ namespace Football.Core.Career
         public PlayerDuty MidfieldDuty = PlayerDuty.Auto;
         /// <summary>Rol de los delanteros.</summary>
         public PlayerDuty StrikerDuty = PlayerDuty.Auto;
+        /// <summary>
+        /// Once inicial y banco elegidos por el DT («id,id,…;id,id,…»: titulares por puesto y suplentes, ids de jugador). Vacío = alineación automática.
+        /// Ver <see cref="Football.Core.Management.MatchPreparation.FormatLineup"/>.
+        /// </summary>
+        public string Lineup = string.Empty;
     }
 
     /// <summary>Oferta de un club rival por un jugador del usuario, pendiente de respuesta.</summary>

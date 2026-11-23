@@ -20,7 +20,9 @@ namespace Football.Game
         /// <summary>Finanzas y entradas.</summary>
         Finance,
         /// <summary>Remodelación del estadio (se abre desde Finanzas).</summary>
-        Stadium
+        Stadium,
+        /// <summary>Once inicial y banco (se abre desde Plantilla).</summary>
+        Lineup
     }
 
     /// <summary>Lo que una pantalla de carrera necesita del contenedor: la partida, la línea de estado y la navegación.</summary>
