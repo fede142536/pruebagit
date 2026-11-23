@@ -19,10 +19,10 @@ namespace Football.Game
     {
         private const int MaxStarters = 11;
         private const int MaxBench = MatchPreparation.BenchSize;
-        private const int ReserveRows = 10;
-        private const float PitchX = 400f, PitchY = 520f, PitchWidth = 540f, PitchHeight = 820f, PitchMargin = 0.9f, LineWidth = 3f;
+        private const int ReserveRows = 9;
+        private const float PitchX = 400f, PitchY = 565f, PitchWidth = 500f, PitchHeight = 720f, PitchMargin = 0.9f, LineWidth = 3f;
         private const float DotSize = 68f;
-        private const float BenchX = 1050f, ReserveX = 1600f, ListWidth = 500f, RowHeight = 62f, RowStep = 76f, ListTop = 840f;
+        private const float BenchX = 1050f, ReserveX = 1600f, ListWidth = 500f, RowHeight = 62f, RowStep = 76f, ListTop = 850f;
 
         private static readonly Color PitchColor = new Color(0.10f, 0.36f, 0.16f, 1f);
         private static readonly Color LineTint = new Color(1f, 1f, 1f, 0.55f);
@@ -50,10 +50,10 @@ namespace Football.Game
         public CareerLineupScreen(Transform root, ICareerHost host) : base(root, "Alineacion", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 520f), new Vector2(1840f, 900f), UiTheme.Panel);
-            _title = UiKit.Label(p, "Titulo", new Vector2(400f, 960f), new Vector2(560f, 44f), Locale.Get("lineup.title"), 32, UiTheme.Accent);
-            _formation = UiKit.Label(p, "Formacion", new Vector2(400f, 930f), new Vector2(560f, 30f), string.Empty, 22, UiTheme.TextDim);
-            _hint = UiKit.Label(p, "Ayuda", new Vector2(1320f, 990f), new Vector2(1000f, 36f), Locale.Get("lineup.hint"), 20, UiTheme.TextDim);
+            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            _title = UiKit.Label(p, "Titulo", new Vector2(400f, 945f), new Vector2(560f, 44f), Locale.Get("lineup.title"), 32, UiTheme.Accent);
+            _formation = UiKit.Label(p, "Formacion", new Vector2(400f, 915f), new Vector2(560f, 30f), string.Empty, 22, UiTheme.TextDim);
+            _hint = UiKit.Label(p, "Ayuda", new Vector2(1320f, 1000f), new Vector2(1000f, 36f), Locale.Get("lineup.hint"), 20, UiTheme.TextDim);
             BuildPitch(p);
             for (int i = 0; i < MaxStarters; i++)
             {
@@ -73,12 +73,12 @@ namespace Football.Game
                 _reserves[i] = Row(p, "Reserva" + i, ReserveX, i);
             }
 
-            _prev = UiKit.Button(p, "Anterior", new Vector2(ReserveX - 170f, 110f), new Vector2(110f, 60f), "<", 32, UiTheme.Button);
-            _next = UiKit.Button(p, "Siguiente", new Vector2(ReserveX + 170f, 110f), new Vector2(110f, 60f), ">", 32, UiTheme.Button);
-            _page = UiKit.Label(p, "Pagina", new Vector2(ReserveX, 110f), new Vector2(240f, 50f), string.Empty, 22, UiTheme.TextDim);
-            _mode = UiKit.Label(p, "Modo", new Vector2(BenchX, 170f), new Vector2(ListWidth, 40f), string.Empty, 22, UiTheme.Gold);
-            _auto = UiKit.Button(p, "Automatica", new Vector2(BenchX - 110f, 110f), new Vector2(280f, 64f), Locale.Get("lineup.auto"), 24, UiTheme.Button);
-            _back = UiKit.Button(p, "Volver", new Vector2(BenchX + 160f, 110f), new Vector2(200f, 64f), Locale.Get("career.back"), 26, UiTheme.AccentDark);
+            _prev = UiKit.Button(p, "Anterior", new Vector2(ReserveX - 170f, 120f), new Vector2(110f, 60f), "<", 32, UiTheme.Button);
+            _next = UiKit.Button(p, "Siguiente", new Vector2(ReserveX + 170f, 120f), new Vector2(110f, 60f), ">", 32, UiTheme.Button);
+            _page = UiKit.Label(p, "Pagina", new Vector2(ReserveX, 120f), new Vector2(240f, 50f), string.Empty, 22, UiTheme.TextDim);
+            _mode = UiKit.Label(p, "Modo", new Vector2(BenchX, 190f), new Vector2(ListWidth, 40f), string.Empty, 22, UiTheme.Gold);
+            _auto = UiKit.Button(p, "Automatica", new Vector2(BenchX - 110f, 120f), new Vector2(280f, 64f), Locale.Get("lineup.auto"), 24, UiTheme.Button);
+            _back = UiKit.Button(p, "Volver", new Vector2(BenchX + 160f, 120f), new Vector2(200f, 64f), Locale.Get("career.back"), 26, UiTheme.AccentDark);
         }
 
         private static UiButton Row(Transform parent, string name, float x, int index)

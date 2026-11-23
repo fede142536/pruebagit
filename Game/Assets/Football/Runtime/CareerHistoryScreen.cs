@@ -25,14 +25,14 @@ namespace Football.Game
         public CareerHistoryScreen(Transform root, ICareerHost host) : base(root, "Historial", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 520f), new Vector2(1840f, 900f), UiTheme.Panel);
-            UiKit.Label(p, "Titulo", new Vector2(520f, 960f), new Vector2(700f, 50f), Locale.Get("history.title"), 34, UiTheme.Accent, TextAnchor.MiddleLeft);
-            _titles = UiKit.Label(p, "Titulos", new Vector2(1550f, 960f), new Vector2(500f, 50f), string.Empty, 30, UiTheme.Gold);
-            _grid = new TextGrid(p, "Competiciones", new Vector2(100f, 890f), 56f, Centres, Widths, Rows + 1, 26);
-            _pagePrev = UiKit.Button(p, "PaginaAnterior", new Vector2(900f, 105f), new Vector2(110f, 56f), "<", 30, UiTheme.Button);
-            _pageNext = UiKit.Button(p, "PaginaSiguiente", new Vector2(1280f, 105f), new Vector2(110f, 56f), ">", 30, UiTheme.Button);
-            _page = UiKit.Label(p, "Pagina", new Vector2(1090f, 105f), new Vector2(240f, 56f), string.Empty, 22, UiTheme.TextDim);
-            _back = UiKit.Button(p, "Volver", new Vector2(250f, 105f), new Vector2(240f, 64f), Locale.Get("career.back"), 28, UiTheme.AccentDark);
+            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            UiKit.Label(p, "Titulo", new Vector2(520f, 932f), new Vector2(700f, 50f), Locale.Get("history.title"), 34, UiTheme.Accent, TextAnchor.MiddleLeft);
+            _titles = UiKit.Label(p, "Titulos", new Vector2(1550f, 932f), new Vector2(500f, 50f), string.Empty, 30, UiTheme.Gold);
+            _grid = new TextGrid(p, "Competiciones", new Vector2(100f, 872f), 52f, Centres, Widths, Rows + 1, 26);
+            _pagePrev = UiKit.Button(p, "PaginaAnterior", new Vector2(900f, 120f), new Vector2(110f, 56f), "<", 30, UiTheme.Button);
+            _pageNext = UiKit.Button(p, "PaginaSiguiente", new Vector2(1280f, 120f), new Vector2(110f, 56f), ">", 30, UiTheme.Button);
+            _page = UiKit.Label(p, "Pagina", new Vector2(1090f, 120f), new Vector2(240f, 56f), string.Empty, 22, UiTheme.TextDim);
+            _back = UiKit.Button(p, "Volver", new Vector2(250f, 120f), new Vector2(240f, 64f), Locale.Get("career.back"), 28, UiTheme.AccentDark);
         }
 
         /// <inheritdoc />

@@ -429,3 +429,5 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - La Central ya no dibuja las camisetas de los dos equipos (queda el escudo) y la calificación pasó de círculos a estrellas pequeñas (`UiKit.StarSprite`, también en la selección de equipos y de club).
 - El mensaje de fin de temporada ahora dice que se pulse AVANZAR para empezar la siguiente (la temporada nueva se arma al avanzar, no al jugar el último partido).
 - Sin verificar en Unity: distribución de las pantallas nuevas y legibilidad de las tablas.
+- **Menú de la carrera arriba (ajuste posterior)**: la barra de secciones (Central, Plantilla, Mercado, Oficina, Finanzas) pasó de abajo a arriba, en la fila de Guardar y Salir; abajo quedan la cabecera del club (nombre, fecha, caja, DT) y la línea de estado.
+  Así los botones propios de cada pantalla (Calendario, Historial, paginadores, Volver) ya no se pisan con la barra ni con la línea de estado. Las pantallas de alineación, calendario e historial subieron su borde inferior a y = 160.

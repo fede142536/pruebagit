@@ -51,8 +51,9 @@ namespace Football.Game
         private const int RatingStep = 2;
         private const float FeeStep = 0.1f;
         private const int Sections = 5;
-        private const float BarY = 58f, BarHeight = 92f, BarStep = 384f;
-        private const float StatusY = 122f, StartStatusY = 175f;
+        // Menú de secciones arriba (junto a Guardar y Salir); abajo quedan solo la cabecera del club y la línea de estado.
+        private const float BarY = 1035f, BarHeight = 56f, BarStep = 262f, BarLeft = 40f;
+        private const float HeaderY = 24f, StatusY = 62f, StartStatusY = 175f;
         // Plantilla y Mercado se diseñaron para toda la pantalla: se achican para dejar lugar a la cabecera y la barra.
         private const float SectionScale = 0.885f;
         private static readonly Vector2 SectionOffset = new Vector2(960f * (1f - SectionScale), 100f);
@@ -134,7 +135,7 @@ namespace Football.Game
         public CareerScreen(Transform parent, PointerInput pointers) : base(parent, pointers, "CarreraUI")
         {
             _newsTemplates = LoadNews();
-            _header = UiKit.Label(Root, "Cabecera", new Vector2(700f, 1035f), new Vector2(1300f, 50f), string.Empty, 28, UiTheme.Text, TextAnchor.MiddleLeft);
+            _header = UiKit.Label(Root, "Cabecera", new Vector2(700f, HeaderY), new Vector2(1300f, 36f), string.Empty, 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
             _status = UiKit.Label(Root, "Estado", new Vector2(960f, StatusY), new Vector2(1800f, 36f), string.Empty, 22, UiTheme.Accent);
             _save = UiKit.Button(Root, "Guardar", new Vector2(1660f, 1035f), new Vector2(160f, 54f), Locale.Get("career.save"), 22, UiTheme.AccentDark);
             _exit = UiKit.Button(Root, "Salir", new Vector2(1830f, 1035f), new Vector2(150f, 54f), Locale.Get("career.exit"), 22, UiTheme.Button);
@@ -152,8 +153,8 @@ namespace Football.Game
             _history = new CareerHistoryScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
-                _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(192f + i * BarStep, BarY), new Vector2(BarStep - 12f, BarHeight),
-                    Locale.Get("career.section." + i), 24, UiTheme.Button);
+                _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(BarLeft + BarStep * 0.5f + i * BarStep, BarY), new Vector2(BarStep - 10f, BarHeight),
+                    Locale.Get("career.section." + i), 20, UiTheme.Button);
             }
 
             _managerPage = new ManagerCreationScreen(Root, this);

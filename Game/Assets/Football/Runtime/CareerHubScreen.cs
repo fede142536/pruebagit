@@ -81,13 +81,13 @@ namespace Football.Game
             _keep = UiKit.Button(r, "Mantener", new Vector2(475f, 700f), new Vector2(280f, 64f), Locale.Get("supporters.keep"), 20, UiTheme.Button);
 
             // Buzón.
-            UiKit.Panel(p, "Buzon", new Vector2(330f, 390f), new Vector2(600f, 440f), UiTheme.Panel);
-            UiKit.Label(p, "BuzonTitulo", new Vector2(330f, 585f), new Vector2(560f, 40f), Locale.Get("career.news"), 26, UiTheme.Accent);
-            _openCalendar = UiKit.Button(p, "AbrirCalendario", new Vector2(185f, 115f), new Vector2(285f, 70f), Locale.Get("career.cal.open"), 24, UiTheme.Button);
-            _openHistory = UiKit.Button(p, "AbrirHistorial", new Vector2(475f, 115f), new Vector2(285f, 70f), Locale.Get("career.history.open"), 24, UiTheme.Button);
+            UiKit.Panel(p, "Buzon", new Vector2(330f, 400f), new Vector2(600f, 440f), UiTheme.Panel);
+            UiKit.Label(p, "BuzonTitulo", new Vector2(330f, 595f), new Vector2(560f, 40f), Locale.Get("career.news"), 26, UiTheme.Accent);
+            _openCalendar = UiKit.Button(p, "AbrirCalendario", new Vector2(185f, 125f), new Vector2(285f, 64f), Locale.Get("career.cal.open"), 24, UiTheme.Button);
+            _openHistory = UiKit.Button(p, "AbrirHistorial", new Vector2(475f, 125f), new Vector2(285f, 64f), Locale.Get("career.history.open"), 24, UiTheme.Button);
             for (int i = 0; i < NewsRows; i++)
             {
-                _news[i] = UiKit.Label(p, "Noticia" + i, new Vector2(330f, 525f - i * 76f), new Vector2(560f, 70f), string.Empty, 19, UiTheme.Text, TextAnchor.MiddleLeft);
+                _news[i] = UiKit.Label(p, "Noticia" + i, new Vector2(330f, 535f - i * 76f), new Vector2(560f, 70f), string.Empty, 19, UiTheme.Text, TextAnchor.MiddleLeft);
                 _news[i].horizontalOverflow = HorizontalWrapMode.Wrap;
             }
 
