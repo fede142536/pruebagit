@@ -65,7 +65,7 @@ namespace Football.Game
             Transform p = Panel;
 
             // Cartel del club y la competición.
-            UiKit.Panel(p, "Cartel", new Vector2(330f, 915f), new Vector2(600f, 130f), UiTheme.Panel);
+            UiTheme.Frame(p, "Cartel", new Vector2(330f, 915f), new Vector2(600f, 130f));
             UiKit.Panel(p, "CartelAcento", new Vector2(34f, 915f), new Vector2(8f, 130f), UiTheme.Accent);
             _bannerCrest = new ClubCrest(p, new Vector2(110f, 915f), 100f);
             _bannerClub = UiKit.Label(p, "CartelClub", new Vector2(400f, 940f), new Vector2(420f, 50f), string.Empty, 30, UiTheme.Text, TextAnchor.MiddleLeft);
@@ -81,7 +81,7 @@ namespace Football.Game
             _keep = UiKit.Button(r, "Mantener", new Vector2(475f, 700f), new Vector2(280f, 64f), Locale.Get("supporters.keep"), 20, UiTheme.Button);
 
             // Buzón.
-            UiKit.Panel(p, "Buzon", new Vector2(330f, 400f), new Vector2(600f, 440f), UiTheme.Panel);
+            UiTheme.Frame(p, "Buzon", new Vector2(330f, 400f), new Vector2(600f, 440f));
             UiKit.Label(p, "BuzonTitulo", new Vector2(330f, 595f), new Vector2(560f, 40f), Locale.Get("career.news"), 26, UiTheme.Accent);
             _openCalendar = UiKit.Button(p, "AbrirCalendario", new Vector2(185f, 125f), new Vector2(285f, 64f), Locale.Get("career.cal.open"), 24, UiTheme.Button);
             _openHistory = UiKit.Button(p, "AbrirHistorial", new Vector2(475f, 125f), new Vector2(285f, 64f), Locale.Get("career.history.open"), 24, UiTheme.Button);
@@ -92,7 +92,7 @@ namespace Football.Game
             }
 
             // Tarjeta del próximo partido.
-            UiKit.Panel(p, "Partido", new Vector2(985f, 660f), new Vector2(680f, 640f), UiTheme.Panel);
+            UiTheme.Frame(p, "Partido", new Vector2(985f, 660f), new Vector2(680f, 640f));
             _date = UiKit.Label(p, "Fecha", new Vector2(985f, 945f), new Vector2(640f, 44f), string.Empty, 28, UiTheme.Text);
             _round = UiKit.Label(p, "Jornada", new Vector2(985f, 900f), new Vector2(640f, 40f), string.Empty, 22, UiTheme.Accent);
             _weather = UiKit.Label(p, "Clima", new Vector2(985f, 860f), new Vector2(640f, 36f), string.Empty, 20, UiTheme.TextDim);
@@ -114,14 +114,14 @@ namespace Football.Game
             for (int i = 0; i < CalendarDays; i++)
             {
                 float x = 985f + (i - CalendarDays / 2) * DayStep;
-                _dayCell[i] = UiKit.Panel(p, "Dia" + i, new Vector2(x, 235f), new Vector2(DayWidth, 170f), UiTheme.Panel);
+                _dayCell[i] = UiTheme.Frame(p, "Dia" + i, new Vector2(x, 235f), new Vector2(DayWidth, 170f));
                 _dayName[i] = UiKit.Label(p, "DiaNombre" + i, new Vector2(x, 295f), new Vector2(DayWidth, 34f), string.Empty, 18, UiTheme.TextDim);
                 _dayNumber[i] = UiKit.Label(p, "DiaNumero" + i, new Vector2(x, 250f), new Vector2(DayWidth, 50f), string.Empty, 34, UiTheme.Text);
                 _dayMatch[i] = UiKit.Label(p, "DiaPartido" + i, new Vector2(x, 190f), new Vector2(DayWidth, 50f), string.Empty, 18, UiTheme.Accent);
             }
 
             // Tabla compacta.
-            UiKit.Panel(p, "Tabla", new Vector2(1625f, 560f), new Vector2(530f, 860f), UiTheme.Panel);
+            UiTheme.Frame(p, "Tabla", new Vector2(1625f, 560f), new Vector2(530f, 860f));
             string[] keys = { "career.table.tournament", "career.table.annual", "career.table.averages", "career.table.cup" };
             for (int i = 0; i < _tableTabs.Length; i++)
             {

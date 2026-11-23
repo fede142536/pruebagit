@@ -41,7 +41,7 @@ namespace Football.Game
             _back = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.exit"), 28, UiTheme.Button);
             UiKit.Label(p, "Titulo", new Vector2(760f, 1020f), new Vector2(900f, 80f), Locale.Get("manager.title"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
 
-            UiKit.Panel(p, "Datos", new Vector2(540f, 520f), new Vector2(900f, 860f), UiTheme.Panel);
+            UiTheme.Frame(p, "Datos", new Vector2(540f, 520f), new Vector2(900f, 860f));
             UiKit.Label(p, "NombreTitulo", new Vector2(540f, 910f), new Vector2(820f, 40f), Locale.Get("manager.first_name"), 24, UiTheme.TextDim, TextAnchor.MiddleLeft);
             _firstField = UiKit.Button(p, "Nombre", new Vector2(540f, 855f), new Vector2(820f, 72f), string.Empty, 32, UiTheme.Button);
             UiKit.Label(p, "ApellidoTitulo", new Vector2(540f, 790f), new Vector2(820f, 40f), Locale.Get("manager.last_name"), 24, UiTheme.TextDim, TextAnchor.MiddleLeft);
@@ -65,7 +65,7 @@ namespace Football.Game
                 _avatarViews[i] = new AvatarView(p, c, AvatarSize);
             }
 
-            UiKit.Panel(p, "Figura", new Vector2(1420f, 560f), new Vector2(700f, 780f), UiTheme.Panel);
+            UiTheme.Frame(p, "Figura", new Vector2(1420f, 560f), new Vector2(700f, 780f));
             _preview = UiKit.Label(p, "NombreDT", new Vector2(1420f, 905f), new Vector2(660f, 60f), string.Empty, 34, UiTheme.Text);
             _figure = new KitShowroom(p, new Vector2(1420f, 545f), new Vector2(420f, 660f), ShowroomIndex, ShowroomHeading, true);
             _suit = UiKit.Button(p, "Traje", new Vector2(1290f, 215f), new Vector2(240f, 70f), Locale.Get("manager.suit"), 28, UiTheme.Button);

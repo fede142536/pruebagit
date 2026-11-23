@@ -29,7 +29,7 @@ namespace Football.Game
         public CareerCalendarScreen(Transform root, ICareerHost host) : base(root, "Calendario", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            UiTheme.Frame(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f));
             _title = UiKit.Label(p, "Titulo", new Vector2(330f, 932f), new Vector2(500f, 50f), Locale.Get("calendar.title"), 36, UiTheme.Accent, TextAnchor.MiddleLeft);
             _seasonPrev = UiKit.Button(p, "TemporadaAnterior", new Vector2(1300f, 932f), new Vector2(90f, 54f), "<", 30, UiTheme.Button);
             _season = UiKit.Label(p, "Temporada", new Vector2(1480f, 932f), new Vector2(260f, 54f), string.Empty, 28, UiTheme.Text);

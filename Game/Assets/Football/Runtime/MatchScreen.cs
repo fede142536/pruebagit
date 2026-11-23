@@ -97,16 +97,16 @@ namespace Football.Game
             RectTransform board = ScoreboardRoot(_canvas.transform);
             _scoreboard = board;
             board.gameObject.AddComponent<Canvas>(); // lienzo propio: el reloj cambia seguido y no debe reconstruir el resto
-            Color dark = new Color(0.05f, 0.06f, 0.09f, 0.85f);
+            Color dark = new Color(0.047f, 0.102f, 0.078f, 0.88f);
             UiKit.Panel(board, "Fondo", new Vector2(ScoreboardWidth * 0.5f, ScoreboardHeight * 0.5f), new Vector2(ScoreboardWidth, ScoreboardHeight), dark);
-            UiKit.Panel(board, "FondoReloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, ScoreboardHeight), new Color(0.75f, 0.12f, 0.12f, 0.9f));
+            UiKit.Panel(board, "FondoReloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, ScoreboardHeight), UiTheme.Accent); // reloj verde con texto oscuro, como el diseño
             // Marcador compacto: escudo, sigla, goles, sigla, escudo y reloj.
             _homeCrest = new ClubCrest(board, new Vector2(30f, ScoreboardHeight * 0.5f), ScoreboardHeight - 8f);
             _homeName = UiKit.Label(board, "Local", new Vector2(115f, ScoreboardHeight * 0.5f), new Vector2(110f, 50f), string.Empty, 30, Color.white);
             _score = UiKit.Label(board, "Goles", new Vector2(240f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "0 - 0", 34, Color.white);
             _awayName = UiKit.Label(board, "Visitante", new Vector2(365f, ScoreboardHeight * 0.5f), new Vector2(110f, 50f), string.Empty, 30, Color.white);
             _awayCrest = new ClubCrest(board, new Vector2(450f, ScoreboardHeight * 0.5f), ScoreboardHeight - 8f);
-            _clock = UiKit.Label(board, "Reloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "00:00", 28, Color.white);
+            _clock = UiKit.Label(board, "Reloj", new Vector2(ScoreboardWidth - 60f, ScoreboardHeight * 0.5f), new Vector2(120f, 50f), "00:00", 28, UiTheme.OnAccent);
             _addedPanel = UiKit.Panel(board, "FondoAgregado", new Vector2(ScoreboardWidth + 34f, ScoreboardHeight * 0.5f), new Vector2(68f, ScoreboardHeight), new Color(0.05f, 0.06f, 0.09f, 0.9f));
             _addedLabel = UiKit.Label(board, "Agregado", new Vector2(ScoreboardWidth + 34f, ScoreboardHeight * 0.5f), new Vector2(68f, 50f), string.Empty, 28, new Color(1f, 0.85f, 0.2f));
             _addedPanel.gameObject.SetActive(false);

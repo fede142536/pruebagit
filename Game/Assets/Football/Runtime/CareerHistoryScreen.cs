@@ -25,7 +25,7 @@ namespace Football.Game
         public CareerHistoryScreen(Transform root, ICareerHost host) : base(root, "Historial", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            UiTheme.Frame(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f));
             UiKit.Label(p, "Titulo", new Vector2(520f, 932f), new Vector2(700f, 50f), Locale.Get("history.title"), 34, UiTheme.Accent, TextAnchor.MiddleLeft);
             _titles = UiKit.Label(p, "Titulos", new Vector2(1550f, 932f), new Vector2(500f, 50f), string.Empty, 30, UiTheme.Gold);
             _grid = new TextGrid(p, "Competiciones", new Vector2(100f, 872f), 52f, Centres, Widths, Rows + 1, 26);

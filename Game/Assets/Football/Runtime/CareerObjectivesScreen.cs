@@ -105,7 +105,7 @@ namespace Football.Game
         public CareerObjectivesScreen(Transform root, ICareerHost host) : base(root, "Oficina", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Cabecera", new Vector2(960f, 915f), new Vector2(1840f, 120f), UiTheme.Panel);
+            UiTheme.Frame(p, "Cabecera", new Vector2(960f, 915f), new Vector2(1840f, 120f));
             _crest = new ClubCrest(p, new Vector2(100f, 915f), 96f);
             _avatar = new AvatarView(p, new Vector2(215f, 915f), 96f);
             _manager = UiKit.Label(p, "DT", new Vector2(620f, 935f), new Vector2(760f, 50f), string.Empty, 32, UiTheme.Text, TextAnchor.MiddleLeft);
@@ -123,7 +123,7 @@ namespace Football.Game
                 _tileValue[i] = UiKit.Label(p, "MosaicoValor" + i, c + new Vector2(0f, -72f), new Vector2(350f, 36f), string.Empty, 22, UiTheme.Accent);
             }
 
-            UiKit.Panel(p, "Detalle", new Vector2(1365f, 465f), new Vector2(1070f, 730f), UiTheme.Panel);
+            UiTheme.Frame(p, "Detalle", new Vector2(1365f, 465f), new Vector2(1070f, 730f));
             _detailTitle = UiKit.Label(p, "DetalleTitulo", new Vector2(1365f, 790f), new Vector2(1000f, 50f), string.Empty, 32, UiTheme.Accent);
 
             _single = CreateGroup(p, "DetalleObjetivo").gameObject;

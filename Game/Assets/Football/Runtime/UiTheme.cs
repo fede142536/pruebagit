@@ -36,6 +36,32 @@ namespace Football.Game
         /// <summary>Estrella encendida.</summary>
         public static readonly Color Gold = new Color(1f, 0.82f, 0.25f);
 
+        /// <summary>Verde claro de los títulos pequeños y los encabezados de tabla.</summary>
+        public static readonly Color AccentText = new Color(0.498f, 0.863f, 0.667f);
+
+        private const float FrameBorder = 2f, CornerSize = 10f;
+
+        /// <summary>
+        /// Panel «plano técnico» del diseño: fondo translúcido, borde fino y una marca en cada esquina. Devuelve la imagen de relleno (se usa como cualquier panel).
+        /// </summary>
+        /// <param name="parent">Padre.</param>
+        /// <param name="name">Nombre.</param>
+        /// <param name="center">Centro.</param>
+        /// <param name="size">Tamaño.</param>
+        public static Image Frame(Transform parent, string name, Vector2 center, Vector2 size)
+        {
+            UiKit.Panel(parent, name + "Borde", center, size, Line);
+            Image fill = UiKit.Panel(parent, name, center, size - new Vector2(2f * FrameBorder, 2f * FrameBorder), Panel);
+            Vector2 half = size * 0.5f;
+            for (int i = 0; i < 4; i++)
+            {
+                var corner = new Vector2(i % 2 == 0 ? -half.x : half.x, i < 2 ? half.y : -half.y);
+                UiKit.Panel(parent, name + "Esquina" + i, center + corner, new Vector2(CornerSize, CornerSize), Accent);
+            }
+
+            return fill;
+        }
+
         private static Sprite _gradient;
         private const float BackgroundAlpha = 0.82f;
 
@@ -45,11 +71,18 @@ namespace Football.Game
             // Semitransparente: detrás se ve la portada del túnel (TitleStage).
             Image image = UiKit.Panel(parent, "Fondo", UiKit.Reference * 0.5f, UiKit.FullScreenSize, new Color(1f, 1f, 1f, BackgroundAlpha));
             image.sprite = Gradient();
-            // Líneas de cancha muy tenues como decoración.
-            Color line = new Color(UiTheme.Accent.r, UiTheme.Accent.g, UiTheme.Accent.b, 0.07f);
-            UiKit.Panel(parent, "LineaCentral", new Vector2(1500f, 540f), new Vector2(4f, 1080f), line);
-            UiKit.Panel(parent, "Circulo", new Vector2(1500f, 540f), new Vector2(420f, 420f), line, true);
-            UiKit.Panel(parent, "CirculoInterior", new Vector2(1500f, 540f), new Vector2(412f, 412f), new Color(0.04f, 0.075f, 0.06f, 0.9f), true);
+            // Líneas de cancha muy tenues como decoración (marco, línea media, círculo y áreas), como en el diseño.
+            Color line = new Color(Accent.r, Accent.g, Accent.b, 0.08f);
+            const float t = 3f, inset = 40f;
+            float w = UiKit.Reference.x - 2f * inset, h = UiKit.Reference.y - 2f * inset;
+            var centre = UiKit.Reference * 0.5f;
+            UiKit.Panel(parent, "MarcoN", centre + new Vector2(0f, h / 2f), new Vector2(w, t), line);
+            UiKit.Panel(parent, "MarcoS", centre - new Vector2(0f, h / 2f), new Vector2(w, t), line);
+            UiKit.Panel(parent, "MarcoO", centre - new Vector2(w / 2f, 0f), new Vector2(t, h), line);
+            UiKit.Panel(parent, "MarcoE", centre + new Vector2(w / 2f, 0f), new Vector2(t, h), line);
+            UiKit.Panel(parent, "LineaCentral", centre, new Vector2(t, h), line);
+            UiKit.Panel(parent, "Circulo", centre, new Vector2(300f, 300f), line, true);
+            UiKit.Panel(parent, "CirculoInterior", centre, new Vector2(294f, 294f), new Color(0.04f, 0.075f, 0.06f, 0.9f), true);
         }
 
         private static Sprite Gradient()

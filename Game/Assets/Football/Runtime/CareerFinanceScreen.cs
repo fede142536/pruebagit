@@ -147,7 +147,7 @@ namespace Football.Game
             for (int i = 0; i < 3; i++)
             {
                 float x = 330f + i * 420f;
-                UiKit.Panel(p, "Tarjeta" + i, new Vector2(x, 800f), new Vector2(400f, 180f), UiTheme.Panel);
+                UiTheme.Frame(p, "Tarjeta" + i, new Vector2(x, 800f), new Vector2(400f, 180f));
                 UiKit.Label(p, "TarjetaTitulo" + i, new Vector2(x, 850f), new Vector2(360f, 40f), Locale.Get(titles[i]), 22, UiTheme.TextDim);
                 values[i] = UiKit.Label(p, "TarjetaValor" + i, new Vector2(x, 785f), new Vector2(380f, 70f), string.Empty, 44, UiTheme.Text);
             }
@@ -156,12 +156,12 @@ namespace Football.Game
             _income = values[1];
             _expenses = values[2];
 
-            UiKit.Panel(p, "Valor", new Vector2(1600f, 845f), new Vector2(560f, 90f), UiTheme.Panel);
+            UiTheme.Frame(p, "Valor", new Vector2(1600f, 845f), new Vector2(560f, 90f));
             _value = UiKit.Label(p, "ValorTexto", new Vector2(1600f, 845f), new Vector2(520f, 60f), string.Empty, 26, UiTheme.Text);
-            UiKit.Panel(p, "Proyeccion", new Vector2(1600f, 745f), new Vector2(560f, 90f), UiTheme.Panel);
+            UiTheme.Frame(p, "Proyeccion", new Vector2(1600f, 745f), new Vector2(560f, 90f));
             _projection = UiKit.Label(p, "ProyeccionTexto", new Vector2(1600f, 745f), new Vector2(520f, 60f), string.Empty, 24, UiTheme.Text);
 
-            UiKit.Panel(p, "Anillo", new Vector2(960f, 390f), new Vector2(1840f, 520f), UiTheme.Panel);
+            UiTheme.Frame(p, "Anillo", new Vector2(960f, 390f), new Vector2(1840f, 520f));
             UiKit.Label(p, "AnilloTitulo", new Vector2(520f, 615f), new Vector2(700f, 40f), Locale.Get("finance.income_split"), 24, UiTheme.Accent);
             _donut = new DonutChart(p, new Vector2(520f, 370f), 380f, LegendRows, new Color(0.12f, 0.15f, 0.2f, 1f));
             for (int i = 0; i < LegendRows; i++)
@@ -201,7 +201,7 @@ namespace Football.Game
 
         private void BuildLedger(Transform p)
         {
-            UiKit.Panel(p, "Movimientos", new Vector2(960f, 520f), new Vector2(1500f, 820f), UiTheme.Panel);
+            UiTheme.Frame(p, "Movimientos", new Vector2(960f, 520f), new Vector2(1500f, 820f));
             _ledger = new TextGrid(p, "Libro", new Vector2(260f, 880f), 52f, new[] { 360f, 560f, 1100f, 1530f }, new[] { 200f, 160f, 600f, 300f },
                 LedgerRows + 1, 24);
         }
@@ -225,13 +225,13 @@ namespace Football.Game
 
         private void BuildBudget(Transform p)
         {
-            UiKit.Panel(p, "Dinero", new Vector2(480f, 520f), new Vector2(880f, 820f), UiTheme.Panel);
+            UiTheme.Frame(p, "Dinero", new Vector2(480f, 520f), new Vector2(880f, 820f));
             UiKit.Label(p, "DineroTitulo", new Vector2(480f, 880f), new Vector2(840f, 50f), Locale.Get("career.finances"), 30, UiTheme.Accent);
             _money = new TextGrid(p, "Dinero", new Vector2(80f, 810f), 70f, new[] { 330f, 760f }, new[] { 500f, 300f }, 6, 26);
             _toWages = UiKit.Button(p, "ASueldos", new Vector2(270f, 250f), new Vector2(360f, 80f), Locale.Get("career.to_wages"), 26, UiTheme.Button);
             _toTransfers = UiKit.Button(p, "AFichajes", new Vector2(690f, 250f), new Vector2(360f, 80f), Locale.Get("career.to_transfers"), 26, UiTheme.Button);
 
-            UiKit.Panel(p, "Obras", new Vector2(1420f, 720f), new Vector2(920f, 420f), UiTheme.Panel);
+            UiTheme.Frame(p, "Obras", new Vector2(1420f, 720f), new Vector2(920f, 420f));
             UiKit.Label(p, "ObrasTitulo", new Vector2(1420f, 895f), new Vector2(880f, 50f), Locale.Get("career.facilities"), 30, UiTheme.Accent);
             for (int i = 0; i < 4; i++)
             {
@@ -240,7 +240,7 @@ namespace Football.Game
                 _upgrade[i] = UiKit.Button(p, "Ampliar" + i, new Vector2(1700f, y), new Vector2(320f, 64f), string.Empty, 20, UiTheme.Button);
             }
 
-            UiKit.Panel(p, "CuerpoTecnico", new Vector2(1420f, 290f), new Vector2(920f, 420f), UiTheme.Panel);
+            UiTheme.Frame(p, "CuerpoTecnico", new Vector2(1420f, 290f), new Vector2(920f, 420f));
             UiKit.Label(p, "CuerpoTitulo", new Vector2(1420f, 465f), new Vector2(880f, 50f), Locale.Get("career.staff"), 30, UiTheme.Accent);
             for (int i = 0; i < 4; i++)
             {
@@ -317,7 +317,7 @@ namespace Football.Game
 
         private void BuildTickets(Transform p)
         {
-            UiKit.Panel(p, "Precio", new Vector2(560f, 520f), new Vector2(1060f, 820f), UiTheme.Panel);
+            UiTheme.Frame(p, "Precio", new Vector2(560f, 520f), new Vector2(1060f, 820f));
             UiKit.Label(p, "PrecioTitulo", new Vector2(560f, 880f), new Vector2(1000f, 44f), Locale.Get("tickets.title"), 28, UiTheme.Accent);
             for (int i = 0; i < _levels.Length; i++)
             {
@@ -339,7 +339,7 @@ namespace Football.Game
             _revenue = UiKit.Label(p, "Recaudacion", new Vector2(560f, 250f), new Vector2(900f, 40f), string.Empty, 26, UiTheme.Gold);
             _apply = UiKit.Button(p, "Aplicar", new Vector2(560f, 160f), new Vector2(560f, 84f), Locale.Get("tickets.apply"), 28, UiTheme.AccentDark);
 
-            UiKit.Panel(p, "EstadioResumen", new Vector2(1500f, 520f), new Vector2(760f, 820f), UiTheme.Panel);
+            UiTheme.Frame(p, "EstadioResumen", new Vector2(1500f, 520f), new Vector2(760f, 820f));
             UiKit.Label(p, "EstadioTitulo", new Vector2(1500f, 880f), new Vector2(720f, 44f), Locale.Get("stadium.title"), 28, UiTheme.Accent);
             _stadiumInfo = UiKit.Label(p, "EstadioTexto", new Vector2(1500f, 560f), new Vector2(680f, 560f), string.Empty, 24, UiTheme.Text, TextAnchor.UpperLeft);
             _stadiumInfo.horizontalOverflow = HorizontalWrapMode.Wrap;

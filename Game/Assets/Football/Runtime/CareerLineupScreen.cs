@@ -51,7 +51,7 @@ namespace Football.Game
         public CareerLineupScreen(Transform root, ICareerHost host) : base(root, "Alineacion", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            UiTheme.Frame(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f));
             _title = UiKit.Label(p, "Titulo", new Vector2(400f, 945f), new Vector2(560f, 44f), Locale.Get("lineup.title"), 32, UiTheme.Accent);
             _formation = UiKit.Label(p, "Formacion", new Vector2(400f, 915f), new Vector2(560f, 30f), string.Empty, 22, UiTheme.TextDim);
             _hint = UiKit.Label(p, "Ayuda", new Vector2(1320f, 1000f), new Vector2(1000f, 36f), Locale.Get("lineup.hint"), 20, UiTheme.TextDim);

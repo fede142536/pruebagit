@@ -111,7 +111,7 @@ namespace Football.Game
             _mode = UiKit.Button(p, "Modalidad", new Vector2(930f, 1020f), new Vector2(300f, 70f), string.Empty, 20, UiTheme.AccentDark);
 
             // Ficha del club.
-            UiKit.Panel(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f), UiTheme.Panel);
+            UiTheme.Frame(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f));
             _flag = new FlagView(p, new Vector2(110f, 885f), new Vector2(84f, 54f));
             _flag.Set(NationFlag.All[0]);
             _league = UiKit.Label(p, "Liga", new Vector2(370f, 885f), new Vector2(400f, 40f), Locale.Get("career.league"), 22, UiTheme.TextDim, TextAnchor.MiddleLeft);
@@ -126,7 +126,7 @@ namespace Football.Game
             _capacity = UiKit.Label(p, "Capacidad", new Vector2(330f, 205f), new Vector2(540f, 40f), string.Empty, 22, UiTheme.TextDim);
 
             // Expectativas de la directiva.
-            UiKit.Panel(p, "Expectativas", new Vector2(960f, 545f), new Vector2(640f, 760f), UiTheme.Panel);
+            UiTheme.Frame(p, "Expectativas", new Vector2(960f, 545f), new Vector2(640f, 760f));
             UiKit.Label(p, "ExpTitulo", new Vector2(960f, 885f), new Vector2(600f, 44f), Locale.Get("career.board_expectations"), 28, UiTheme.Accent);
             for (int i = 0; i < Objectives; i++)
             {
@@ -138,7 +138,7 @@ namespace Football.Game
             }
 
             // Historia, dinero y camisetas.
-            UiKit.Panel(p, "Historia", new Vector2(1590f, 545f), new Vector2(580f, 760f), UiTheme.Panel);
+            UiTheme.Frame(p, "Historia", new Vector2(1590f, 545f), new Vector2(580f, 760f));
             _founded = UiKit.Label(p, "Fundacion", new Vector2(1590f, 885f), new Vector2(540f, 44f), string.Empty, 28, UiTheme.Accent);
             _history = UiKit.Label(p, "HistoriaTexto", new Vector2(1590f, 770f), new Vector2(520f, 170f), string.Empty, 20, UiTheme.Text, TextAnchor.UpperLeft);
             _history.horizontalOverflow = HorizontalWrapMode.Wrap;

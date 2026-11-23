@@ -518,7 +518,7 @@ namespace Football.Game
 
         private void BuildSquad(Transform p)
         {
-            UiKit.Panel(p, "Plantel", new Vector2(640f, 520f), new Vector2(1200f, 900f), UiTheme.Panel);
+            UiTheme.Frame(p, "Plantel", new Vector2(640f, 520f), new Vector2(1200f, 900f));
             _squad = new TextGrid(p, "Jugadores", new Vector2(60f, 940f), 56f, new[] { 230f, 470f, 560f, 660f, 760f, 860f, 990f, 1140f },
                 new[] { 330f, 90f, 90f, 90f, 90f, 100f, 150f, 150f }, SquadRows + 1, 24);
             _squadPrev = UiKit.Button(p, "Anterior", new Vector2(420f, 110f), new Vector2(120f, 64f), "<", 34, UiTheme.Button);
@@ -529,7 +529,7 @@ namespace Football.Game
             _numLabel = UiKit.Label(p, "DorsalTexto", new Vector2(1105f, 110f), new Vector2(150f, 64f), string.Empty, 22, UiTheme.Text);
             _numPlus = UiKit.Button(p, "DorsalMas", new Vector2(1220f, 110f), new Vector2(80f, 64f), "+", 34, UiTheme.Button);
 
-            UiKit.Panel(p, "Tactica", new Vector2(1580f, 520f), new Vector2(600f, 900f), UiTheme.Panel);
+            UiTheme.Frame(p, "Tactica", new Vector2(1580f, 520f), new Vector2(600f, 900f));
             UiKit.Label(p, "TacticaTitulo", new Vector2(1580f, 930f), new Vector2(560f, 50f), Locale.Get("career.tactics"), 30, UiTheme.Accent);
             string[] keys = { "career.formation", "career.defensive_formation", "career.style", "career.role.fullbacks", "career.role.midfield", "career.role.strikers" };
             for (int i = 0; i < _tactic.Length; i++)
@@ -648,7 +648,7 @@ namespace Football.Game
 
         private void BuildMarket(Transform p)
         {
-            UiKit.Panel(p, "Filtros", new Vector2(960f, 905f), new Vector2(1800f, 160f), UiTheme.Panel);
+            UiTheme.Frame(p, "Filtros", new Vector2(960f, 905f), new Vector2(1800f, 160f));
             _filterPos = UiKit.Button(p, "Puesto", new Vector2(200f, 945f), new Vector2(260f, 70f), string.Empty, 24, UiTheme.Button);
             _ageMinus = UiKit.Button(p, "EdadMin-", new Vector2(390f, 945f), new Vector2(70f, 70f), "-", 32, UiTheme.Button);
             _agePlus = UiKit.Button(p, "EdadMin+", new Vector2(470f, 945f), new Vector2(70f, 70f), "+", 32, UiTheme.Button);
@@ -668,13 +668,13 @@ namespace Football.Game
             _nameClear = UiKit.Button(p, "NombreBorrar", new Vector2(835f, 868f), new Vector2(64f, 64f), "X", 28, UiTheme.Button);
             _freeToggle = UiKit.Button(p, "SoloLibres", new Vector2(1130f, 868f), new Vector2(400f, 64f), string.Empty, 24, UiTheme.Button);
 
-            UiKit.Panel(p, "Resultados", new Vector2(700f, 495f), new Vector2(1280f, 660f), UiTheme.Panel);
+            UiTheme.Frame(p, "Resultados", new Vector2(700f, 495f), new Vector2(1280f, 660f));
             _resultMark = UiKit.Panel(p, "Marca", new Vector2(700f, 0f), new Vector2(1260f, 58f), UiTheme.Selected);
             _resultMark.gameObject.SetActive(false);
             _results = new TextGrid(p, "Lista", new Vector2(80f, 785f), 64f, new[] { 250f, 600f, 820f, 930f, 1090f, 1250f },
                 new[] { 340f, 340f, 90f, 130f, 170f, 170f }, MarketRows + 1, 24);
 
-            UiKit.Panel(p, "Acciones", new Vector2(1660f, 620f), new Vector2(480f, 400f), UiTheme.Panel);
+            UiTheme.Frame(p, "Acciones", new Vector2(1660f, 620f), new Vector2(480f, 400f));
             _scout = UiKit.Button(p, "Ojear", new Vector2(1660f, 765f), new Vector2(420f, 70f), Locale.Get("career.scout"), 28, UiTheme.Button);
             _feeText = UiKit.Label(p, "Oferta", new Vector2(1660f, 685f), new Vector2(420f, 60f), string.Empty, 24, UiTheme.Text);
             _feeMinus = UiKit.Button(p, "Oferta-", new Vector2(1520f, 605f), new Vector2(120f, 64f), "-10%", 24, UiTheme.Button);
@@ -685,7 +685,7 @@ namespace Football.Game
             _signFree = UiKit.Button(p, "FicharLibre", new Vector2(1660f, 605f), new Vector2(420f, 64f), Locale.Get("career.sign_free"), 26, UiTheme.AccentDark);
             _signYears = UiKit.Button(p, "AniosLibre", new Vector2(1660f, 495f), new Vector2(420f, 70f), string.Empty, 26, UiTheme.Button);
 
-            UiKit.Panel(p, "Recibidas", new Vector2(1660f, 240f), new Vector2(480f, 330f), UiTheme.Panel);
+            UiTheme.Frame(p, "Recibidas", new Vector2(1660f, 240f), new Vector2(480f, 330f));
             UiKit.Label(p, "RecibidasTitulo", new Vector2(1660f, 375f), new Vector2(440f, 40f), Locale.Get("career.offers_in"), 24, UiTheme.Accent);
             for (int i = 0; i < OfferRows; i++)
             {

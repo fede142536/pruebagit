@@ -49,7 +49,7 @@ namespace Football.Game
         public CareerStadiumScreen(Transform root, ICareerHost host) : base(root, "Estadio", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Obras", new Vector2(510f, 545f), new Vector2(960f, 830f), UiTheme.Panel);
+            UiTheme.Frame(p, "Obras", new Vector2(510f, 545f), new Vector2(960f, 830f));
             for (int i = 0; i < Categories; i++)
             {
                 _tabs[i] = UiKit.Button(p, "Categoria" + i, new Vector2(150f + i * 240f, 905f), new Vector2(228f, 64f), Locale.Get("stadium.tab." + i), 22, UiTheme.Button);
@@ -77,7 +77,7 @@ namespace Football.Game
             _contract = UiKit.Button(p, "Contratar", new Vector2(640f, 190f), new Vector2(300f, 84f), Locale.Get("stadium.contract"), 26, UiTheme.AccentDark);
             _back = UiKit.Button(p, "Volver", new Vector2(880f, 190f), new Vector2(150f, 84f), Locale.Get("career.back"), 24, UiTheme.Button);
 
-            UiKit.Panel(p, "Vista", new Vector2(1450f, 545f), new Vector2(860f, 830f), UiTheme.Panel);
+            UiTheme.Frame(p, "Vista", new Vector2(1450f, 545f), new Vector2(860f, 830f));
             _crest = new ClubCrest(p, new Vector2(1090f, 900f), 90f);
             _clubName = UiKit.Label(p, "Club", new Vector2(1480f, 920f), new Vector2(660f, 44f), string.Empty, 28, UiTheme.Text, TextAnchor.MiddleLeft);
             _stadiumName = UiKit.Label(p, "Nombre", new Vector2(1480f, 878f), new Vector2(660f, 36f), string.Empty, 22, UiTheme.TextDim, TextAnchor.MiddleLeft);

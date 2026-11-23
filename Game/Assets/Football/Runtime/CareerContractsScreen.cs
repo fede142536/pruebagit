@@ -36,7 +36,7 @@ namespace Football.Game
         public CareerContractsScreen(Transform root, ICareerHost host) : base(root, "Contratos", host)
         {
             Transform p = Panel;
-            UiKit.Panel(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f), UiTheme.Panel);
+            UiTheme.Frame(p, "Fondo", new Vector2(960f, 565f), new Vector2(1840f, 810f));
             UiKit.Label(p, "Titulo", new Vector2(330f, 932f), new Vector2(520f, 50f), Locale.Get("contracts.title"), 36, UiTheme.Accent, TextAnchor.MiddleLeft);
             _grid = new TextGrid(p, "Plantel", new Vector2(80f, 872f), 52f, Centres, Widths, Rows + 1, 22);
             _pagePrev = UiKit.Button(p, "PaginaAnterior", new Vector2(420f, 120f), new Vector2(110f, 56f), "<", 30, UiTheme.Button);

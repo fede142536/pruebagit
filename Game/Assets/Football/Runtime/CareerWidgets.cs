@@ -206,13 +206,15 @@ namespace Football.Game
             for (int r = 0; r < rows; r++)
             {
                 float y = RowY(r);
+                UiKit.Panel(parent, name + "Linea" + r, new Vector2((_left + _right) * 0.5f, y + rowHeight * 0.5f), new Vector2(_right - _left, 1.5f),
+                    new Color(UiTheme.Line.r, UiTheme.Line.g, UiTheme.Line.b, 0.6f)); // separador fino entre filas (tabla del diseño)
                 _marks[r] = UiKit.Panel(parent, name + "Fila" + r, new Vector2((_left + _right) * 0.5f, y), new Vector2(_right - _left, rowHeight - 4f),
                     new Color(UiTheme.Accent.r, UiTheme.Accent.g, UiTheme.Accent.b, 0.18f));
                 _marks[r].gameObject.SetActive(false);
                 for (int c = 0; c < columnCentres.Length; c++)
                 {
                     _cells[r, c] = UiKit.Label(parent, name + r + "_" + c, new Vector2(columnCentres[c], y), new Vector2(widths[c], rowHeight),
-                        string.Empty, fontSize, r == 0 ? UiTheme.TextDim : UiTheme.Text,
+                        string.Empty, fontSize, r == 0 ? UiTheme.AccentText : UiTheme.Text,
                         c == 1 || c == 0 && widths[c] > 200f ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter);
                 }
             }
@@ -230,7 +232,7 @@ namespace Football.Game
                 for (int c = 0; c < _cells.GetLength(1); c++)
                 {
                     _cells[r, c].text = string.Empty;
-                    _cells[r, c].color = r == 0 ? UiTheme.TextDim : UiTheme.Text;
+                    _cells[r, c].color = r == 0 ? UiTheme.AccentText : UiTheme.Text;
                 }
             }
         }
