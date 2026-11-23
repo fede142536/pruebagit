@@ -115,6 +115,8 @@ namespace Football.Core.Data
         public string Notes;
         /// <summary>Equipos.</summary>
         public TeamDefinition[] Teams = Array.Empty<TeamDefinition>();
+        /// <summary>Jugadores libres (sin club) con los que empieza el mercado de una carrera nueva.</summary>
+        public PlayerDefinition[] FreeAgents = Array.Empty<PlayerDefinition>();
         /// <summary>Clásicos y rivalidades entre equipos del archivo.</summary>
         public RivalryDefinition[] Rivalries = Array.Empty<RivalryDefinition>();
 

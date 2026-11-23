@@ -1374,7 +1374,7 @@ namespace Football.Game
                 }
                 else if (_squadButton.Contains(point) && _engine != null)
                 {
-                    _tacticsPanel.Show(_engine);
+                    _tacticsPanel.Show(_engine, _homeKit.Shirt);
                     SetPauseBaseVisible(false);
                 }
                 else if (_resume.Contains(point))

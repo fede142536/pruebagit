@@ -63,7 +63,7 @@ namespace Football.Core.Tests.Career
             buffer.Position = 0;
             CareerData back = CareerFile.Read(buffer);
             Assert.That(back.Players[p.Id].ShirtNumber, Is.EqualTo(88));
-            Assert.That(back.Players.Values.Count(x => x.ShirtNumber == 0), Is.EqualTo(0));
+            Assert.That(back.Players.Values.Count(x => x.ClubId.HasValue && x.ShirtNumber == 0), Is.EqualTo(0));
         }
 
         [Test]

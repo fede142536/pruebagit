@@ -27,16 +27,17 @@ namespace Football.Game
         private const float RowTop = 760f;
         private const float RowStep = 56f;
 
-        private static readonly Color RowColor = new Color(0.16f, 0.18f, 0.24f, 0.95f);
-        private static readonly Color Selected = new Color(0.12f, 0.42f, 0.38f, 0.95f);
-        private static readonly Color Pending = new Color(0.45f, 0.35f, 0.1f, 0.95f);
-        private static readonly Color PitchColor = new Color(0.10f, 0.36f, 0.16f, 1f);
+        private static readonly Color RowColor = UiTheme.Button;
+        private static readonly Color Selected = UiTheme.Selected;
+        private static readonly Color Pending = new Color(0.30f, 0.24f, 0.08f, 0.95f);
+        private static readonly Color PitchColor = new Color(0.10f, 0.36f, 0.16f, 1f); // la misma cancha verde de la alineación
         private static readonly Color LineTint = new Color(1f, 1f, 1f, 0.55f);
         private static readonly Color KeeperDot = new Color(0.85f, 0.65f, 0.10f, 1f);
         private static readonly Color DefenderDot = new Color(0.18f, 0.40f, 0.80f, 1f);
         private static readonly Color MidfielderDot = new Color(0.20f, 0.62f, 0.55f, 1f);
         private static readonly Color AttackerDot = new Color(0.80f, 0.25f, 0.22f, 1f);
-        private static readonly Color Unavailable = new Color(0.12f, 0.12f, 0.14f, 0.9f);
+        private static readonly Color Unavailable = new Color(0.07f, 0.1f, 0.09f, 0.9f);
+        private Color _kit = new Color(0.8f, 0.2f, 0.2f);
 
         private readonly GameObject _root;
         private readonly UiButton[] _field = new UiButton[MaxRows];
@@ -58,20 +59,21 @@ namespace Football.Game
         /// <summary>Crea el panel (oculto) dentro del menú de pausa.</summary>
         public TacticsPanel(Transform parent)
         {
-            Image back = UiKit.Panel(parent, "PlantelTactica", UiKit.Reference * 0.5f, UiKit.Reference, new Color(0.03f, 0.04f, 0.07f, 0.97f));
+            Image back = UiKit.Panel(parent, "PlantelTactica", UiKit.Reference * 0.5f, UiKit.Reference, new Color(0.059f, 0.102f, 0.09f, 0.98f));
             _root = back.gameObject;
             Transform t = back.transform;
-            UiKit.Label(t, "Titulo", new Vector2(960f, 1010f), new Vector2(1200f, 70f), "PLANTEL Y TÁCTICA", 48, Color.white);
+            UiKit.Panel(t, "Acento", new Vector2(68f, 1010f), new Vector2(8f, 64f), UiTheme.Accent);
+            UiKit.Label(t, "Titulo", new Vector2(600f, 1010f), new Vector2(1000f, 70f), "PLANTEL Y TÁCTICA", 48, UiTheme.Text, TextAnchor.MiddleLeft);
             _formationPrevious = UiKit.Button(t, "FormacionAnterior", new Vector2(760f, 920f), new Vector2(90f, 70f), "‹", 48, UiTheme.Button);
-            _formation = UiKit.Label(t, "Formacion", new Vector2(960f, 920f), new Vector2(300f, 70f), string.Empty, 40, UiTheme.Accent);
+            _formation = UiKit.Label(t, "Formacion", new Vector2(960f, 920f), new Vector2(300f, 70f), string.Empty, 40, UiTheme.AccentStrong);
             _formationNext = UiKit.Button(t, "FormacionSiguiente", new Vector2(1160f, 920f), new Vector2(90f, 70f), "›", 48, UiTheme.Button);
             // Doble dibujo y pelota parada.
             _defensive = UiKit.Button(t, "SinBalon", new Vector2(300f, 920f), new Vector2(440f, 60f), string.Empty, 24, UiTheme.Button);
             _corners = UiKit.Button(t, "Corners", new Vector2(1620f, 955f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
             _marking = UiKit.Button(t, "Marca", new Vector2(1620f, 895f), new Vector2(440f, 52f), string.Empty, 22, UiTheme.Button);
-            _status = UiKit.Label(t, "Cupos", new Vector2(960f, 850f), new Vector2(1400f, 44f), string.Empty, 28, Color.white);
-            UiKit.Label(t, "EnCampo", new Vector2(FieldX, 805f), new Vector2(RowWidth, 36f), "EN EL CAMPO (toca uno y luego otro para cambiar puestos)", 17, UiTheme.TextDim);
-            UiKit.Label(t, "Suplentes", new Vector2(BenchX, 805f), new Vector2(RowWidth, 36f), "SUPLENTES (toca uno del campo y luego un suplente)", 17, UiTheme.TextDim);
+            _status = UiKit.Label(t, "Cupos", new Vector2(960f, 850f), new Vector2(1400f, 44f), string.Empty, 28, UiTheme.Text);
+            UiKit.Label(t, "EnCampo", new Vector2(FieldX, 805f), new Vector2(RowWidth, 36f), "EN EL CAMPO · toca uno y luego otro para cambiar puestos", 17, UiTheme.AccentText);
+            UiKit.Label(t, "Suplentes", new Vector2(BenchX, 805f), new Vector2(RowWidth, 36f), "SUPLENTES · toca uno del campo y luego un suplente", 17, UiTheme.AccentText);
             BuildPitch(t);
             for (int i = 0; i < MaxRows; i++)
             {
@@ -163,8 +165,10 @@ namespace Football.Game
         }
 
         /// <summary>Abre el panel para el partido en curso (equipo 0, el de la persona).</summary>
-        public void Show(MatchEngine engine)
+        /// <param name="kit">Color de la camiseta del equipo: las fichas de la cancha se pintan con él, como en la pantalla de alineación.</param>
+        public void Show(MatchEngine engine, Color kit)
         {
+            _kit = kit;
             _engine = engine;
             _selected = -1;
             BackRequested = false;
@@ -314,9 +318,10 @@ namespace Football.Game
             _dots[i].Place(at, new Vector2(DotSize, DotSize));
             ((RectTransform)_dotNames[i].transform).anchoredPosition = at - new Vector2(0f, DotSize * 0.5f + 10f);
             PlayerMatchView incoming = pending ? _engine.PendingIncoming(0, p.Index) : null;
-            _dots[i].Label.text = (incoming != null ? incoming.Number : p.Number).ToString();
+            _dots[i].Label.text = Mathf.RoundToInt(RosterFactory.DisplayRating(incoming != null ? incoming.Attributes : p.Attr, p.Role)).ToString();
+            _dots[i].Label.color = LineupBoard.ReadableOn(_kit);
             _dotNames[i].text = PlayerLabels.Surname(incoming != null ? incoming.Name : p.Name);
-            _dots[i].Background.color = i == _selected ? Selected : pending ? Pending : p.SentOff ? Unavailable : LineColor(p.Role);
+            _dots[i].Background.color = i == _selected ? UiTheme.Accent : pending ? Pending : p.SentOff ? Unavailable : _kit;
         }
 
         private void Refresh()

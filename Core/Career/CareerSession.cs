@@ -284,6 +284,17 @@ namespace Football.Core.Career
                 FixShirtNumbers(data, c.Id);
             }
 
+            // Jugadores libres del archivo: sin club ni contrato, se ven en el mercado y se firman sin transferencia.
+            IRandom freeRng = rng.Fork("libres");
+            foreach (PlayerDefinition pd in db.FreeAgents ?? Array.Empty<PlayerDefinition>())
+            {
+                Player free = CreatePlayer(pd, nextPlayer++, 0, start, freeRng, cc);
+                free.ClubId = null;
+                free.ShirtNumber = 0;
+                data.Players[free.Id] = free;
+                data.Conditions[free.Id] = new PlayerCondition { PlayerId = free.Id };
+            }
+
             if (!tournamentOnly && primeraSize > 0 && primeraSize < data.Clubs.Count)
             {
                 if (primeraSize < 2 || data.Clubs.Count - primeraSize < cc.MinSecondDivisionClubs)
@@ -337,7 +348,7 @@ namespace Football.Core.Career
                 return db;
             }
 
-            return new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Rivalries = db.Rivalries, Teams = db.Teams.Where(t => !t.VintageOnly).ToArray() };
+            return new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Rivalries = db.Rivalries, FreeAgents = db.FreeAgents, Teams = db.Teams.Where(t => !t.VintageOnly).ToArray() };
         }
 
         /// <summary>Clubes de Primera en «Fútbol vintage».</summary>

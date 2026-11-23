@@ -30,7 +30,7 @@ namespace Football.Core.Tests.Career
         public void NoContractIsLongerThanFiveYears_AndSomeExpireInTheFirstSeason()
         {
             CareerSession s = Start();
-            Assert.That(s.Data.Players.Values.All(p => s.ContractYearsLeft(p) >= 1 && s.ContractYearsLeft(p) <= 5), Is.True);
+            Assert.That(s.Data.Players.Values.Where(p => p.ClubId.HasValue).All(p => s.ContractYearsLeft(p) >= 1 && s.ContractYearsLeft(p) <= 5), Is.True);
             Assert.That(s.ExpiringContracts(), Is.Not.Empty, "hay contratos que vencen este año");
             Assert.That(s.Inbox.Items.Any(n => n.Key == "news.contracts_expiring"), Is.True, "el buzón avisa");
         }

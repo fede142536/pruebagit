@@ -14,28 +14,13 @@ namespace Football.Game
     {
         private const int MaxBench = SquadSelection.DefaultBenchSize;
         private const int MaxReserves = 14;
-        private const float PitchCenterX = 520f;
-        private const float PitchCenterY = 505f;
-        private const float PitchWidth = 820f;
-        private const float PitchHeight = 790f;
-        private const float BenchX = 1265f;
-        private const float ReserveX = 1675f;
-        private const float RowTop = 880f;
-        private const float RowStep = 56f;
-
-        private static readonly Color RowColor = new Color(0.16f, 0.2f, 0.26f, 0.95f);
         private static readonly Color OutOfPosition = new Color(1f, 0.6f, 0.3f);
-
-        private sealed class Token
-        {
-            public UiButton Circle;
-            public Text Role, Name;
-        }
+        private static readonly Color RowColor = UiTheme.Button;
 
         private readonly FriendlySetup _setup;
-        private readonly Token[] _tokens = new Token[11];
-        private readonly UiButton[] _bench = new UiButton[MaxBench];
-        private readonly UiButton[] _reserves = new UiButton[MaxReserves];
+        private readonly LineupBoard _board;
+        private readonly LineupBoard.Token[] _tokens;
+        private readonly UiButton[] _bench, _reserves;
         private readonly Text _title, _formation, _rating, _reservesHeader;
         private readonly UiButton _formationPrevious, _formationNext, _auto, _done;
         private int _side;
@@ -51,57 +36,20 @@ namespace Football.Game
         public LineupScreen(Transform parent, PointerInput pointers, FriendlySetup setup) : base(parent, pointers, "AlineacionUI")
         {
             _setup = setup;
-            _title = Title("ALINEACIÓN", "Toca un jugador y luego otro para intercambiarlos  ·  " + Locale.Get("card.hint"));
+            _board = new LineupBoard(Root, MaxBench, MaxReserves, Vector2.one, Vector2.zero, 1f, true);
             _card = new PlayerCardPanel(parent);
-            BuildPitch();
-
-            _formationPrevious = UiKit.Button(Root, "FormacionAnterior", new Vector2(1180f, 990f), new Vector2(80f, 76f), "<", 40, UiTheme.Button);
-            _formation = UiKit.Label(Root, "Formacion", new Vector2(1340f, 990f), new Vector2(220f, 76f), string.Empty, 40, UiTheme.Text);
-            _formationNext = UiKit.Button(Root, "FormacionSiguiente", new Vector2(1500f, 990f), new Vector2(80f, 76f), ">", 40, UiTheme.Button);
-            _rating = UiKit.Label(Root, "Media", new Vector2(1740f, 990f), new Vector2(300f, 76f), string.Empty, 30, UiTheme.TextDim);
-
-            UiKit.Label(Root, "Suplentes", new Vector2(BenchX, 930f), new Vector2(380f, 44f), "SUPLENTES", 30, UiTheme.Accent);
-            _reservesHeader = UiKit.Label(Root, "Reservas", new Vector2(ReserveX, 930f), new Vector2(380f, 44f), "NO CONVOCADOS", 30, UiTheme.Accent);
-            for (int i = 0; i < MaxBench; i++)
-            {
-                _bench[i] = Row("Suplente" + i, BenchX, i);
-            }
-
-            for (int i = 0; i < MaxReserves; i++)
-            {
-                _reserves[i] = Row("Reserva" + i, ReserveX, i);
-            }
-
-            for (int i = 0; i < _tokens.Length; i++)
-            {
-                var token = new Token();
-                token.Circle = UiKit.Button(Root, "Titular" + i, Vector2.zero, new Vector2(92f, 92f), string.Empty, 32, Color.white, true);
-                token.Role = UiKit.Label(Root, "Puesto" + i, Vector2.zero, new Vector2(120f, 30f), string.Empty, 20, UiTheme.TextDim);
-                token.Name = UiKit.Label(Root, "NombreTitular" + i, Vector2.zero, new Vector2(200f, 30f), string.Empty, 24, UiTheme.Text);
-                _tokens[i] = token;
-            }
-
-            _auto = UiKit.Button(Root, "Automatica", new Vector2(BenchX, 55f), new Vector2(380f, 80f), "AUTOMÁTICA", 32, UiTheme.Button);
-            _done = UiKit.Button(Root, "Listo", new Vector2(ReserveX, 55f), new Vector2(380f, 80f), "LISTO", 36, UiTheme.AccentDark);
-        }
-
-        private UiButton Row(string name, float x, int index)
-        {
-            UiButton row = UiKit.Button(Root, name, new Vector2(x, RowTop - index * RowStep), new Vector2(390f, 50f), string.Empty, 24, RowColor);
-            row.Label.alignment = TextAnchor.MiddleLeft;
-            return row;
-        }
-
-        private void BuildPitch()
-        {
-            var grass = new Color(0.1f, 0.36f, 0.16f, 0.95f);
-            var line = new Color(1f, 1f, 1f, 0.35f);
-            var center = new Vector2(PitchCenterX, PitchCenterY);
-            UiKit.Panel(Root, "Cancha", center, new Vector2(PitchWidth, PitchHeight), grass);
-            UiKit.Panel(Root, "LineaMedia", center, new Vector2(PitchWidth, 3f), line);
-            UiKit.Panel(Root, "AreaPropia", center + new Vector2(0f, -PitchHeight * 0.5f + 70f), new Vector2(380f, 3f), line);
-            UiKit.Panel(Root, "AreaRival", center + new Vector2(0f, PitchHeight * 0.5f - 70f), new Vector2(380f, 3f), line);
-            UiKit.Label(Root, "Ataque", center + new Vector2(0f, PitchHeight * 0.5f - 22f), new Vector2(400f, 30f), "ATAQUE", 20, line);
+            _title = _board.Title;
+            _board.Hint.text = "Toca un jugador y luego otro para intercambiarlos  ·  " + Locale.Get("card.hint");
+            _tokens = _board.Tokens;
+            _bench = _board.Bench;
+            _reserves = _board.Reserves;
+            _formation = _board.Formation;
+            _rating = _board.Rating;
+            _reservesHeader = _board.ReservesHeader;
+            _formationPrevious = _board.FormationPrevious;
+            _formationNext = _board.FormationNext;
+            _auto = _board.Auto;
+            _done = _board.Done;
         }
 
         /// <inheritdoc />
@@ -121,14 +69,6 @@ namespace Football.Game
             Refresh();
         }
 
-        private Vector2 SlotPosition(FormationSlot slot)
-        {
-            // Avance 0..0,75 de abajo (propia portería) hacia arriba; lado positivo = izquierda del equipo.
-            float y = PitchCenterY - PitchHeight * 0.5f + 70f + Mathf.Clamp01(slot.X / 0.75f) * (PitchHeight - 150f);
-            float x = PitchCenterX - slot.Y * (PitchWidth * 0.5f - 90f);
-            return new Vector2(x, y);
-        }
-
         private void Refresh()
         {
             TeamDefinition team = _setup.Definition(_side);
@@ -139,48 +79,22 @@ namespace Football.Game
 
             float sum = 0f;
             int starters = squad.Formation.Slots.Length; // 11, o 3 en la cancha cerrada
-            for (int i = 0; i < _tokens.Length; i++)
+            _board.HideTokensFrom(starters);
+            for (int i = 0; i < starters && i < _tokens.Length; i++)
             {
-                Token token = _tokens[i];
-                bool used = i < starters;
-                token.Circle.SetVisible(used);
-                token.Role.gameObject.SetActive(used);
-                token.Name.gameObject.SetActive(used);
-                if (!used)
-                {
-                    continue;
-                }
-
                 PlayerDefinition p = team.Players[squad.Starters[i]];
                 FormationSlot slot = squad.Formation.Slots[i];
-                Vector2 pos = SlotPosition(slot);
                 int effective = squad.EffectiveRating(team, i);
                 sum += effective;
-                token.Circle.Place(pos, token.Circle.Size);
-                token.Circle.Background.color = IsSelected(SquadGroup.Starter, i) ? UiTheme.Accent : kit.Shirt;
-                token.Circle.Label.text = effective.ToString();
-                token.Circle.Label.color = effective < p.Rating ? OutOfPosition : ReadableOn(kit.Shirt);
-                Place(token.Role, pos + new Vector2(0f, 62f));
-                token.Role.text = UiTheme.Code(slot.Role);
-                Place(token.Name, pos + new Vector2(0f, -64f));
-                token.Name.text = TeamBuilder.DisplayName(p);
+                Color fill = IsSelected(SquadGroup.Starter, i) ? UiTheme.Accent : kit.Shirt;
+                Color ink = effective < p.Rating ? OutOfPosition : LineupBoard.ReadableOn(kit.Shirt);
+                _board.SetToken(i, _board.SlotPosition(slot.X, slot.Y), UiTheme.Code(slot.Role), TeamBuilder.DisplayName(p), effective, fill, ink);
             }
 
             _rating.text = "Media " + (sum / starters).ToString("F1");
             FillRows(_bench, squad.Bench, SquadGroup.Bench, team);
             FillRows(_reserves, squad.Reserves, SquadGroup.Reserve, team);
             _reservesHeader.text = squad.Reserves.Count > MaxReserves ? "NO CONVOCADOS (" + squad.Reserves.Count + ")" : "NO CONVOCADOS";
-        }
-
-        private static void Place(Text label, Vector2 position)
-        {
-            ((RectTransform)label.transform).anchoredPosition = position;
-        }
-
-        private static Color ReadableOn(Color background)
-        {
-            float brightness = background.r * 0.3f + background.g * 0.59f + background.b * 0.11f;
-            return brightness > 0.6f ? new Color(0.08f, 0.08f, 0.1f) : Color.white;
         }
 
         private void FillRows(UiButton[] rows, System.Collections.Generic.List<int> players, SquadGroup group, TeamDefinition team)

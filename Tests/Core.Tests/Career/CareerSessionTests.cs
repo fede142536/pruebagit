@@ -44,7 +44,7 @@ namespace Football.Core.Tests.Career
             Assert.That(d.Clubs, Has.Count.EqualTo(30), "toda la Primera");
             Assert.That(d.Club(d.UserClubId).Name, Is.EqualTo(UserTeam));
             Assert.That(d.Clubs.All(c => s.Squad(c.Id).Count >= 20), Is.True);
-            Assert.That(d.Players.Values.All(p => p.Contract != null && p.Contract.WeeklyWage > 0), Is.True);
+            Assert.That(d.Players.Values.Where(p => p.ClubId.HasValue).All(p => p.Contract != null && p.Contract.WeeklyWage > 0), Is.True);
             Assert.That(d.Staff.Count(st => st.ClubId == d.UserClubId), Is.EqualTo(4));
             Assert.That(d.Competitions.Select(c => c.Kind), Is.EquivalentTo(new[] { TournamentKind.Apertura, TournamentKind.Clausura, TournamentKind.Cup }));
             // Dos zonas de 15: 14 partidos de zona y 1 interzonal por club en cada torneo = 30 × 15 / 2 partidos.
@@ -168,7 +168,7 @@ namespace Football.Core.Tests.Career
         public void Market_ReleaseClauseClosesTheDeal_AndRivalOffersArriveInTheWindow()
         {
             CareerSession s = NewCareer();
-            Player cheapest = s.Data.Players.Values.Where(p => p.ClubId != s.Data.UserClubId).OrderBy(p => p.Contract.ReleaseClause).First();
+            Player cheapest = s.Data.Players.Values.Where(p => p.ClubId.HasValue && p.ClubId != s.Data.UserClubId).OrderBy(p => p.Contract.ReleaseClause).First();
             Assert.That(s.TransferWindowOpen, Is.True, "enero: libro abierto");
             s.Data.Finances[s.Data.UserClubId].TransferBudget = cheapest.Contract.ReleaseClause * 2;
             long budget = s.Data.Finances[s.Data.UserClubId].TransferBudget;

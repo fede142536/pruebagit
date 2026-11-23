@@ -1,7 +1,7 @@
 {
   "Source": "Búsquedas web del 20 y 21 de noviembre de 2026: listas de convocados y planteles publicados por medios (El Gráfico, RPP, La Página Millonaria, Fichajes.com, Vavel, ESPN, sitios oficiales). Las fuentes tienen fechas distintas y no siempre coinciden. Clubes agregados el 23/11/2026 (Vélez, Defensa y Justicia, Banfield, Lanús, Gimnasia, Talleres, Belgrano, Rosario Central y Newell's): nombres tomados de resúmenes de búsquedas web (Vavel, ESPN, Fichajes, Flashscore, Livefutbol, Tribuna, Football-Lineups, La Capital, La Unión); las páginas de plantel no se pudieron abrir desde la sesión. Clubes agregados el 22/11/2026: es.wikipedia.org (artículos de cada club, sección de plantel 2026; Unión muestra ya el plantel 2027) y en.wikipedia.org para Instituto.",
   "Updated": "2026-11-22",
-  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC. Los 15 clubes agregados el 22/11/2026 (Huracán, Argentinos, Godoy Cruz, Tigre, Platense, Unión, Instituto, Atlético Tucumán, Central Córdoba, Barracas Central, Sarmiento, Independiente Rivadavia, Riestra, Aldosivi y San Martín de San Juan) salen de los planteles de Wikipedia (nombres, dorsales y fecha de nacimiento): 22 jugadores reales por club, sin ficticios. Los dorsales que Wikipedia no trae (Godoy Cruz y San Martín de San Juan, y alguno suelto) se asignaron por la costumbre del puesto. Las posiciones finas (LD, LI, MCD, MCO, MI, MD, ED, EI) se infirieron del dorsal porque Wikipedia solo distingue arquero, defensor, mediocampista y delantero. Pierna hábil y altura no vienen en las fuentes: se estiman por jugador de forma fija (D-21). Instituto sale de la versión en inglés porque la española trae solo 13 jugadores. Algunos apellidos sin nombre de pila figuran tal como aparecieron en la fuente. Clubes con \"VintageOnly\" (solo juegan Fútbol vintage, 23/11/2026): nombre real; planteles GENERADOS por Tools/DataGen/vintage_clubs.py (jugadores ficticios, medias estimadas); estadio, capacidad y fundación aproximados. El puesto en la tabla anual 2026 (Club.AnnualRank) viene de las capturas del usuario.   ",
+  "Notes": "Plantillas aproximadas: pueden faltar jugadores o sobrar alguno que ya se fue; edita este archivo para corregirlas. Las medias (Rating) son una ESTIMACIÓN PROPIA para diferenciar a los jugadores; no son oficiales ni salen de EA FC ni de Transfermarkt. Dorsales sin verificar (0 = se asignan automáticamente). Posiciones: POR, DFC, LI, LD, MCD, MC, MCO, MI, MD, EI, ED, DC. Los 15 clubes agregados el 22/11/2026 (Huracán, Argentinos, Godoy Cruz, Tigre, Platense, Unión, Instituto, Atlético Tucumán, Central Córdoba, Barracas Central, Sarmiento, Independiente Rivadavia, Riestra, Aldosivi y San Martín de San Juan) salen de los planteles de Wikipedia (nombres, dorsales y fecha de nacimiento): 22 jugadores reales por club, sin ficticios. Los dorsales que Wikipedia no trae (Godoy Cruz y San Martín de San Juan, y alguno suelto) se asignaron por la costumbre del puesto. Las posiciones finas (LD, LI, MCD, MCO, MI, MD, ED, EI) se infirieron del dorsal porque Wikipedia solo distingue arquero, defensor, mediocampista y delantero. Pierna hábil y altura no vienen en las fuentes: se estiman por jugador de forma fija (D-21). Instituto sale de la versión en inglés porque la española trae solo 13 jugadores. Algunos apellidos sin nombre de pila figuran tal como aparecieron en la fuente. Clubes con \"VintageOnly\" (solo juegan Fútbol vintage, 23/11/2026): nombre real; planteles GENERADOS por Tools/DataGen/vintage_clubs.py (jugadores ficticios, medias estimadas); estadio, capacidad y fundación aproximados. El puesto en la tabla anual 2026 (Club.AnnualRank) viene de las capturas del usuario.    FreeAgents: jugadores libres del mercado al empezar una carrera (lista aportada por el usuario el 23/11/2026: nombre, puesto y edad reales de la captura; la media es una ESTIMACIÓN propia a partir de su valor de mercado y su edad).",
   "Teams": [
     {
       "Name": "Boca Juniors",
@@ -10277,6 +10277,136 @@
       "TeamB": "Atlético Tucumán",
       "Level": "Rivalry",
       "Name": "Duelo del interior"
+    }
+  ],
+  "FreeAgents": [
+    {
+      "Name": "Mauro Icardi",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DC",
+      "Rating": 76,
+      "Age": 33
+    },
+    {
+      "Name": "Rodrigo Schlegel",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DFC",
+      "Rating": 72,
+      "Age": 29
+    },
+    {
+      "Name": "Renzo Saravia",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "LD",
+      "Rating": 70,
+      "Age": 33
+    },
+    {
+      "Name": "Luciano Vietto",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DC",
+      "Rating": 70,
+      "Age": 32
+    },
+    {
+      "Name": "Yamil Asad",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "EI",
+      "Rating": 68,
+      "Age": 32
+    },
+    {
+      "Name": "Carlos Valenzuela",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "EI",
+      "Rating": 66,
+      "Age": 29
+    },
+    {
+      "Name": "Gerónimo Poblete",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "MCD",
+      "Rating": 66,
+      "Age": 33
+    },
+    {
+      "Name": "Roberto Pereyra",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "MC",
+      "Rating": 68,
+      "Age": 35
+    },
+    {
+      "Name": "Gustavo Blanco Leschuk",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DC",
+      "Rating": 67,
+      "Age": 35
+    },
+    {
+      "Name": "Brian Ramírez",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "MCO",
+      "Rating": 64,
+      "Age": 26
+    },
+    {
+      "Name": "Alexis Gómez",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "MCO",
+      "Rating": 64,
+      "Age": 26
+    },
+    {
+      "Name": "Fabián Noguera",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DFC",
+      "Rating": 66,
+      "Age": 33
+    },
+    {
+      "Name": "José Luis Palomino",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DFC",
+      "Rating": 67,
+      "Age": 36
+    },
+    {
+      "Name": "Facundo González",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "LI",
+      "Rating": 64,
+      "Age": 26
+    },
+    {
+      "Name": "Alexander Sosa",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DC",
+      "Rating": 64,
+      "Age": 25
+    },
+    {
+      "Name": "Gaspar Servio",
+      "ShortName": "",
+      "Number": 0,
+      "Position": "DC",
+      "Rating": 64,
+      "Age": 34
     }
   ]
 }

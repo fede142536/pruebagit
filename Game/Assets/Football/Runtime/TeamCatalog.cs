@@ -135,7 +135,7 @@ namespace Football.Game
             get
             {
                 TeamDatabase classic = Database;
-                return new TeamDatabase { Source = classic.Source, Updated = classic.Updated, Notes = classic.Notes, Teams = AllTeams, Rivalries = classic.Rivalries };
+                return new TeamDatabase { Source = classic.Source, Updated = classic.Updated, Notes = classic.Notes, Teams = AllTeams, Rivalries = classic.Rivalries, FreeAgents = classic.FreeAgents };
             }
         }
 
@@ -237,7 +237,7 @@ namespace Football.Game
                             _teams = _all;
                         }
 
-                        _database = new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Teams = _teams, Rivalries = db.Rivalries ?? Array.Empty<RivalryDefinition>() };
+                        _database = new TeamDatabase { Source = db.Source, Updated = db.Updated, Notes = db.Notes, Teams = _teams, Rivalries = db.Rivalries ?? Array.Empty<RivalryDefinition>(), FreeAgents = db.FreeAgents ?? Array.Empty<PlayerDefinition>() };
                         return;
                     }
 

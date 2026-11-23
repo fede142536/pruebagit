@@ -145,7 +145,7 @@ namespace Football.Core.Tests.Career
         public void TheManagementRating_IsTrackedMatchByMatch_AndSigningsCount()
         {
             CareerSession s = New();
-            Player target = s.Data.Players.Values.Where(p => p.ClubId != s.Data.UserClubId).OrderBy(p => p.Contract.ReleaseClause).First();
+            Player target = s.Data.Players.Values.Where(p => p.ClubId.HasValue && p.ClubId != s.Data.UserClubId).OrderBy(p => p.Contract.ReleaseClause).First();
             s.Data.Finances[s.Data.UserClubId].TransferBudget = target.Contract.ReleaseClause * 2;
             Assert.That(s.PayReleaseClause(target.Id), Is.True);
             Assert.That(s.Data.Signings.Single().PlayerId, Is.EqualTo(target.Id));
