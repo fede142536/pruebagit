@@ -562,3 +562,7 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - La pantalla de ajustes muestra ahora dos columnas (el audio tiene 13 filas).
 - Audio en `Resources/Audio` recodificado a mono y con `.meta` de *Streaming* para las canciones de menú (ver `ASSETS_LICENSES.md`); **los `.meta` están escritos a mano y sin probar en Unity**: si Unity los rehace o muestra un error de importación, ajustar «Load Type: Streaming» desde el Inspector.
 - Se subieron 5 archivos, no 2 como decía el mensaje: están los 5 en el menú.
+
+## D-56 · Dorsal y escudo en espejo — Corregido (reporte del usuario, 24/11/2026)
+- El dorsal de la espalda se veía espejado (un 12 se leía como «S1»). En `SkinnedBodyGeometry.AddDecal` el sentido horizontal del parche estaba al revés para ejes de mano izquierda de Unity: ahora la espalda usa `0.5 + x/ancho` y el escudo del pecho `0.5 − (x − centro)/ancho`. `Tools/SkinCheck` sigue en orden. **Sin ver en Unity**: confirmar con una captura de espaldas; el escudo conserva su lugar en el pecho (si estuviera en el lado equivocado, se cambia el signo de `CrestPatchX`).
+- Botones de ataque y defensa: ya cambian según la situación (`TouchControls.SetContext`); ver el mensaje de entrega.

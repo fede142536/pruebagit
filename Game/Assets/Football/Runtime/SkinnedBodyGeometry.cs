@@ -1536,17 +1536,18 @@ namespace Football.Game
                 return;
             }
 
-            // El frente se ve desde +Z mirando hacia −Z (su derecha es +X); la espalda se ve desde −Z (su derecha es −X).
+            // Unity usa ejes de mano izquierda: quien mira la espalda (desde −Z, hacia +Z) tiene su derecha en +X, y quien mira el frente (desde +Z,
+            // hacia −Z) la tiene en −X. El dorsal y el escudo crecen hacia la derecha de quien los mira; con los signos al revés salían en espejo.
             float flag = Mathf.Clamp(p.z / DecalFlagRamp, -1f, 1f);
             float shift = _humanoid != null ? HumanoidBody.DecalShiftY : 0f;
             Vector3 uv;
             if (flag < 0f)
             {
-                uv = new Vector3(0.5f - p.x / BackPatchW, (p.y - (BackPatchY + shift - BackPatchH * 0.5f)) / BackPatchH, flag);
+                uv = new Vector3(0.5f + p.x / BackPatchW, (p.y - (BackPatchY + shift - BackPatchH * 0.5f)) / BackPatchH, flag);
             }
             else
             {
-                uv = new Vector3(0.5f + (p.x - CrestPatchX) / CrestPatchW, (p.y - (CrestPatchY + shift - CrestPatchH * 0.5f)) / CrestPatchH, flag);
+                uv = new Vector3(0.5f - (p.x - CrestPatchX) / CrestPatchW, (p.y - (CrestPatchY + shift - CrestPatchH * 0.5f)) / CrestPatchH, flag);
             }
 
             DecalUv.Add(uv);
