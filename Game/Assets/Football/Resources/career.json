@@ -448,5 +448,21 @@
   "PlayoffTeamsPerZone": 8,
   "PlayoffFirstDelayDays": 7,
   "PlayoffRoundSpacingDays": 7,
-  "TrofeoDelayDays": 14
+  "TrofeoDelayDays": 14,
+  "ExpectedRatingBase": 6,
+  "ExpectedRatingPerOverall": 0.03,
+  "ExpectedRatingPivot": 65,
+  "PerformanceScale": 1.5,
+  "GrowthPerformanceRange": [
+    0.5,
+    1.4
+  ],
+  "DeclinePerformanceRange": [
+    1.4,
+    0.6
+  ],
+  "DriftPointsPerWeek": 0.2,
+  "DriftOverPotential": 3,
+  "DriftPhysicalShare": 0.15,
+  "EmergencyCallUpTarget": 18
 }

@@ -56,6 +56,10 @@ namespace Football.Game
             }
         }
 
+        /// <summary>Cambio de media con signo («+2», «-1»); vacío si no cambió.</summary>
+        /// <param name="change">Puntos que subió o bajó.</param>
+        public static string Delta(int change) => change == 0 ? string.Empty : (change > 0 ? "+" : string.Empty) + change.ToString(CultureInfo.InvariantCulture);
+
         /// <summary>Resultado de un partido («2 - 1», con los penales si los hubo); «—» si no se jugó.</summary>
         public static string Score(Football.Core.Domain.Fixture f)
         {

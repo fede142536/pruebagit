@@ -212,8 +212,11 @@ namespace Football.Core.Career
                 }
 
                 float mood = (Data.Conditions[p.Id].Morale - ReserveNeutralMorale) / ReserveMoraleScale;
-                st.RatingSum += Math.Max(ReserveMinRating, Math.Min(ReserveMaxRating, ReserveBaseRating + (overall - ReserveReferenceRating) / ReserveRatingScale + mood + (rng.NextFloat() - 0.5f)));
+                float mark = Math.Max(ReserveMinRating, Math.Min(ReserveMaxRating, ReserveBaseRating + (overall - ReserveReferenceRating) / ReserveRatingScale + mood + (rng.NextFloat() - 0.5f)));
+                st.RatingSum += mark;
                 st.Rated++;
+                PlayerCondition cond = Data.Conditions[p.Id];
+                cond.Form += _cfg.Management.FormSmoothing * (mark - cond.Form); // la reserva también cuenta para el rendimiento
             }
         }
 
@@ -263,18 +266,28 @@ namespace Football.Core.Career
                     float week = Math.Max(0f, cond.SeasonMinutes - cond.DevMinutesMark) + fromReserve;
                     cond.DevMinutesMark = cond.SeasonMinutes;
                     int age = p.AgeOn(Data.Today);
+                    float overall = PlayerRatings.Overall(p.Attributes, p.Position);
+                    float performance = YouthDevelopment.PerformanceIndex(cond.Form, overall, cc.ExpectedRatingBase, cc.ExpectedRatingPerOverall, cc.ExpectedRatingPivot, cc.PerformanceScale);
+                    bool declining = age >= cc.DeclineMinAge && age >= YouthDevelopment.OnsetAge(decline, p.Id);
                     if (age >= cc.DeclineMinAge)
                     {
-                        float loss = YouthDevelopment.WeeklyDecline(decline, p.Id, age, p.Position, p.Personality == PersonalityTrait.Professional, rng);
+                        float loss = YouthDevelopment.WeeklyDecline(decline, p.Id, age, p.Position, p.Personality == PersonalityTrait.Professional, rng)
+                                     * YouthDevelopment.PerformanceFactor(cc.DeclinePerformanceRange, performance); // rendir bien frena el declive; rendir mal lo acelera
                         YouthDevelopment.ApplyDecline(p, cond, loss, cc.DeclinePhysicalShare, rng);
                     }
 
                     if (age > cc.DevMaxAge)
                     {
+                        if (!declining)
+                        {
+                            DriftInPrime(p, cond, performance, rng); // en su madurez, sube o baja un poco según cómo rinde
+                        }
+
                         continue;
                     }
 
-                    float points = YouthDevelopment.WeeklyPoints(dev, age, PlayerRatings.Overall(p.Attributes, p.Position), p.Potential, week, cond.Morale, ability);
+                    float points = YouthDevelopment.WeeklyPoints(dev, age, overall, p.Potential, week, cond.Morale, ability)
+                                   * YouthDevelopment.PerformanceFactor(cc.GrowthPerformanceRange, performance); // rendir bien acelera el crecimiento
                     YouthDevelopment.Apply(p, cond, points, rng);
                 }
             }
@@ -309,6 +322,31 @@ namespace Football.Core.Career
                 }
             }
         }
+
+        /// <summary>
+        /// Jugadores en su madurez (pasado el crecimiento y antes del declive): con buen rendimiento mejoran de a poco (hasta un margen sobre su potencial) y con mal
+        /// rendimiento empeoran de a poco. Los puntos son chicos para que el cambio de una temporada no sea brusco.
+        /// </summary>
+        private void DriftInPrime(Player p, PlayerCondition cond, float performance, Common.IRandom rng)
+        {
+            CareerConfig cc = _cfg.Career;
+            float points = cc.DriftPointsPerWeek * Math.Abs(performance);
+            if (performance > 0f)
+            {
+                YouthDevelopment.Apply(p, cond, points, rng, cc.DriftOverPotential);
+            }
+            else if (performance < 0f)
+            {
+                YouthDevelopment.ApplyDecline(p, cond, points, cc.DriftPhysicalShare, rng);
+            }
+        }
+
+        /// <summary>Cuánto subió (o bajó) la media del jugador desde que empezó la temporada (0 si no hay registro).</summary>
+        /// <param name="p">Jugador.</param>
+        public int RatingChange(Player p) =>
+            Data.Conditions.TryGetValue(p.Id, out PlayerCondition c) && c.SeasonStartRating > 0
+                ? (int)Math.Round(PlayerRatings.Overall(p.Attributes, p.Position)) - c.SeasonStartRating
+                : 0;
 
         /// <summary>Si un canterano de un club de la computadora está para jugar en primera (cerca del nivel de sus titulares).</summary>
         private bool WorthPromoting(int clubId, Player p)
@@ -391,5 +429,35 @@ namespace Football.Core.Career
         /// <summary>Estadísticas de la temporada en los partidos de primera (null si todavía no jugó).</summary>
         /// <param name="playerId">Jugador.</param>
         public CardStats FirstTeamStatsOf(int playerId) => Data.SeasonStats.TryGetValue(playerId, out CardStats s) ? s : null;
+
+        /// <summary>
+        /// Plantel con el que se juega un partido: el de primera y, si por lesiones, sanciones o bajas no alcanzan los jugadores disponibles
+        /// (<see cref="CareerConfig.EmergencyCallUpTarget"/>), los mejores de la reserva a partir de la edad mínima, como hace cualquier club con sus juveniles.
+        /// Siguen en la reserva; al jugar, debutan.
+        /// </summary>
+        /// <param name="clubId">Club.</param>
+        public List<Player> MatchSquad(int clubId)
+        {
+            List<Player> squad = Squad(clubId);
+            int available = squad.Count(p => !Data.Conditions.TryGetValue(p.Id, out PlayerCondition c) || c.Available);
+            if (available >= _cfg.Career.EmergencyCallUpTarget)
+            {
+                return squad;
+            }
+
+            foreach (Player kid in ReserveSquad(clubId).Where(k => k.AgeOn(Data.Today) >= _cfg.Career.MinFirstTeamAge && Data.Conditions[k.Id].Available)
+                         .OrderByDescending(k => PlayerRatings.Overall(k.Attributes, k.Position)).ThenBy(k => k.Id))
+            {
+                if (available >= _cfg.Career.EmergencyCallUpTarget)
+                {
+                    break;
+                }
+
+                squad.Add(kid);
+                available++;
+            }
+
+            return squad;
+        }
     }
 }

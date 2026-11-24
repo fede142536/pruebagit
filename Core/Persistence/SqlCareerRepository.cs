@@ -217,15 +217,15 @@ namespace Football.Core.Persistence
                 {
                     SqlHelper.Execute(Connection,
                         @"INSERT INTO player_conditions (player_id, form, morale, fitness, injury_days, suspended_matches, accumulated_yellows,
-                            season_minutes, promise, promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress)
+                            season_minutes, promise, promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress, season_start_rating)
                           VALUES (@id, @form, @morale, @fitness, @injury, @suspended, @yellows, @minutes, @promise, @pmatches, @pminutes,
-                            @reserve, @debuted, @devp, @devm, @retiring, @decline)", tx,
+                            @reserve, @debuted, @devp, @devm, @retiring, @decline, @startrating)", tx,
                         ("@id", p.Id), ("@form", (double)c.Form), ("@morale", (double)c.Morale), ("@fitness", (double)Math.Max(0f, Math.Min(1f, c.Fitness))),
                         ("@injury", c.InjuryDays), ("@suspended", c.SuspendedMatches), ("@yellows", c.AccumulatedYellows),
                         ("@minutes", (double)c.SeasonMinutes), ("@promise", (int)c.Promise), ("@pmatches", c.TeamMatchesSincePromise),
                         ("@pminutes", (double)c.MinutesSincePromise), ("@reserve", c.InReserve ? 1 : 0), ("@debuted", c.Debuted ? 1 : 0),
                         ("@devp", (double)c.DevProgress), ("@devm", (double)c.DevMinutesMark), ("@retiring", c.RetiringAtEnd ? 1 : 0),
-                        ("@decline", (double)c.DeclineProgress));
+                        ("@decline", (double)c.DeclineProgress), ("@startrating", c.SeasonStartRating));
                 }
             }
         }
@@ -272,7 +272,7 @@ namespace Football.Core.Persistence
                     Promise = (PlayingTimePromise)r.GetInt32(4)
                 });
             Read(@"SELECT player_id, form, morale, fitness, injury_days, suspended_matches, accumulated_yellows, season_minutes, promise,
-                     promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress FROM player_conditions",
+                     promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress, season_start_rating FROM player_conditions",
                 r => data.Conditions[r.GetInt32(0)] = new PlayerCondition
                 {
                     PlayerId = r.GetInt32(0), Form = (float)r.GetDouble(1), Morale = (float)r.GetDouble(2), Fitness = (float)r.GetDouble(3),
@@ -280,7 +280,7 @@ namespace Football.Core.Persistence
                     SeasonMinutes = (float)r.GetDouble(7), Promise = (PlayingTimePromise)r.GetInt32(8), TeamMatchesSincePromise = r.GetInt32(9),
                     MinutesSincePromise = (float)r.GetDouble(10), InReserve = r.GetInt32(11) != 0, Debuted = r.GetInt32(12) != 0,
                     DevProgress = (float)r.GetDouble(13), DevMinutesMark = (float)r.GetDouble(14), RetiringAtEnd = r.GetInt32(15) != 0,
-                    DeclineProgress = (float)r.GetDouble(16)
+                    DeclineProgress = (float)r.GetDouble(16), SeasonStartRating = r.GetInt32(17)
                 });
         }
 

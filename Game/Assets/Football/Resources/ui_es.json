@@ -707,5 +707,6 @@
   "kit.row.shirt": "CAMISETA",
   "kit.row.secondary": "SECUNDARIO (FRANJAS, MANGAS, CUELLO)",
   "kit.row.shorts": "SHORT",
-  "kit.row.socks": "MEDIAS"
+  "kit.row.socks": "MEDIAS",
+  "career.rating_change": "Media {0} esta temporada"
 }

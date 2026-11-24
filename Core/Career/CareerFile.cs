@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 12; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras; 11: reserva, debut y desarrollo; 12: declive, retiro anunciado y estadísticas de la reserva
+        private const int Version = 13; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras; 11: reserva, debut y desarrollo; 12: declive, retiro anunciado y estadísticas de la reserva; 13: media al empezar la temporada
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -151,6 +151,7 @@ namespace Football.Core.Career
                     w.Write(k.DevMinutesMark);
                     w.Write(k.RetiringAtEnd);
                     w.Write(k.DeclineProgress);
+                    w.Write(k.SeasonStartRating);
                 }
 
                 w.Write(d.Staff.Count);
@@ -447,6 +448,11 @@ namespace Football.Core.Career
                         PlayerCondition cond12 = d.Conditions[p.Id];
                         cond12.RetiringAtEnd = r.ReadBoolean();
                         cond12.DeclineProgress = r.ReadSingle();
+                    }
+
+                    if (version >= 13)
+                    {
+                        d.Conditions[p.Id].SeasonStartRating = r.ReadInt32();
                     }
                 }
 

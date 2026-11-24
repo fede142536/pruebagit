@@ -17,7 +17,7 @@ namespace Football.Game
     {
         private const int Rows = 11;
         private const float GridLeft = 80f;
-        private static readonly float[] Widths = { 280f, 64f, 54f, 64f, 74f, 64f, 54f, 54f, 74f, 64f, 84f, 74f };
+        private static readonly float[] Widths = { 270f, 64f, 54f, 92f, 74f, 64f, 54f, 54f, 74f, 64f, 84f, 70f };
         private static readonly float[] Centres = BuildCentres();
         private const int SortModes = 6;
 
@@ -133,7 +133,7 @@ namespace Football.Game
                 CardStats r = Session.ReserveStatsOf(pl.Id), f = Session.FirstTeamStatsOf(pl.Id);
                 int row = k + 1;
                 _grid.SetRow(row, CareerText.Fit(Name(pl), 17) + (c.Debuted ? string.Empty : "*"), PlayerLabels.Code(pl.Position), CareerText.Num(pl.AgeOn(Data.Today)),
-                    CareerText.Num(Session.VisibleRating(pl)), "~" + CareerText.Num(Session.VisiblePotential(pl)), CareerText.Num(r?.Matches ?? 0), CareerText.Num(r?.Goals ?? 0),
+                    CareerText.Num(Session.VisibleRating(pl)) + " " + CareerText.Delta(Session.RatingChange(pl)), "~" + CareerText.Num(Session.VisiblePotential(pl)), CareerText.Num(r?.Matches ?? 0), CareerText.Num(r?.Goals ?? 0),
                     CareerText.Num(r?.Assists ?? 0), Rating(r), CareerText.Num(f?.Matches ?? 0), CareerText.Num((int)c.SeasonMinutes), CareerText.Num((int)c.Morale));
                 _grid.SetColor(row, 11, c.Morale >= 60f ? StatusColors.Good : c.Morale >= 40f ? StatusColors.Fair : StatusColors.Bad);
                 _grid.Highlight(row, _offset + k == _selected);

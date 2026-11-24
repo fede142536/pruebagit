@@ -707,5 +707,6 @@
   "kit.row.shirt": "SHIRT",
   "kit.row.secondary": "SECONDARY (STRIPES, SLEEVES, COLLAR)",
   "kit.row.shorts": "SHORTS",
-  "kit.row.socks": "SOCKS"
+  "kit.row.socks": "SOCKS",
+  "career.rating_change": "Rating {0} this season"
 }

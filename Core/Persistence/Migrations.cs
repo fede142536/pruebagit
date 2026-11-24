@@ -286,7 +286,10 @@ namespace Football.Core.Persistence
                 "ALTER TABLE player_conditions ADD COLUMN decline_progress REAL NOT NULL DEFAULT 0",
                 @"CREATE TABLE reserve_stats (
                     player_id INTEGER PRIMARY KEY, matches INTEGER NOT NULL, goals INTEGER NOT NULL, assists INTEGER NOT NULL,
-                    rating_sum REAL NOT NULL, rated INTEGER NOT NULL)")
+                    rating_sum REAL NOT NULL, rated INTEGER NOT NULL)"),
+
+            new SqlMigration(18, "Media al empezar la temporada",
+                "ALTER TABLE player_conditions ADD COLUMN season_start_rating INTEGER NOT NULL DEFAULT 0")
         };
     }
 }

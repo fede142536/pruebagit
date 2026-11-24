@@ -83,6 +83,24 @@ namespace Football.Core.Management
             return s.PointsPerWeek * byAge * played * byMorale * byCoach * bySlow;
         }
 
+        /// <summary>
+        /// Qué tan bien rinde un jugador respecto de lo que se espera de su nivel, de −1 (muy por debajo) a 1 (muy por encima). Se espera una nota de
+        /// <paramref name="baseRating"/> más <paramref name="perOverall"/> por cada punto de media sobre <paramref name="pivot"/> (los mejores deben rendir más para destacarse).
+        /// </summary>
+        /// <param name="form">Forma actual (media móvil de sus notas, de 1 a 10).</param>
+        /// <param name="overall">Media del jugador.</param>
+        /// <param name="baseRating">Nota esperada de un jugador de la media pivote.</param>
+        /// <param name="perOverall">Nota esperada de más por cada punto de media sobre el pivote.</param>
+        /// <param name="pivot">Media pivote.</param>
+        /// <param name="scale">Diferencia de nota que da el efecto completo.</param>
+        public static float PerformanceIndex(float form, float overall, float baseRating, float perOverall, float pivot, float scale) =>
+            MathUtil.Clamp((form - (baseRating + (overall - pivot) * perOverall)) / scale, -1f, 1f);
+
+        /// <summary>Interpola un multiplicador según el rendimiento: <paramref name="range"/>[0] con el peor (−1) y <paramref name="range"/>[1] con el mejor (+1).</summary>
+        /// <param name="range">Multiplicador con el peor y con el mejor rendimiento.</param>
+        /// <param name="performance">Índice de rendimiento (−1 a 1).</param>
+        public static float PerformanceFactor(float[] range, float performance) => range[0] + (range[1] - range[0]) * (performance + 1f) * 0.5f;
+
         private static readonly AttributeId[] Physical =
             { AttributeId.Pace, AttributeId.Acceleration, AttributeId.Stamina, AttributeId.Strength, AttributeId.Agility, AttributeId.Jumping };
 
@@ -150,7 +168,8 @@ namespace Football.Core.Management
         /// <param name="points">Puntos ganados.</param>
         /// <param name="rng">Azar.</param>
         /// <returns>Cantidad de atributos que subieron.</returns>
-        public static int Apply(Player p, PlayerCondition cond, float points, IRandom rng)
+        /// <param name="ceilingBonus">Puntos por encima del potencial hasta los que todavía puede subir (0 para los jóvenes; un margen chico para los que rinden bien en su madurez).</param>
+        public static int Apply(Player p, PlayerCondition cond, float points, IRandom rng, float ceilingBonus = 0f)
         {
             cond.DevProgress += points;
             AttributeId[] key = PlayerRatings.KeyAttributes(PlayerRatings.LineOf(p.Position));
@@ -158,7 +177,7 @@ namespace Football.Core.Management
             while (cond.DevProgress >= 1f)
             {
                 cond.DevProgress -= 1f;
-                if (PlayerRatings.Overall(p.Attributes, p.Position) >= p.Potential)
+                if (PlayerRatings.Overall(p.Attributes, p.Position) >= p.Potential + ceilingBonus)
                 {
                     cond.DevProgress = 0f;
                     break;

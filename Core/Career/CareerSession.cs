@@ -430,6 +430,14 @@ namespace Football.Core.Career
             }
 
             AnnounceRetirements();
+            foreach (Player p in Data.Players.Values)
+            {
+                if (p.ClubId.HasValue && Data.Conditions.TryGetValue(p.Id, out PlayerCondition start))
+                {
+                    start.SeasonStartRating = (int)Math.Round(PlayerRatings.Overall(p.Attributes, p.Position));
+                }
+            }
+
             Data.SeasonStartCash = Data.Finances[Data.UserClubId].Cash;
             if (Data.TournamentOnly)
             {
@@ -708,7 +716,7 @@ namespace Football.Core.Career
         private MatchTeamSetup Setup(int clubId, bool home)
         {
             Club club = Data.Club(clubId);
-            List<Player> squad = Squad(clubId);
+            List<Player> squad = MatchSquad(clubId);
             bool user = clubId == Data.UserClubId;
             Formation formation = user ? UserFormation() : _aiFormation;
             MatchTeamSetup setup = MatchPreparation.Prepare(club.Name, squad, Data.Conditions, formation, user ? UserStyle() : new TeamStyle(), home,
@@ -729,7 +737,7 @@ namespace Football.Core.Career
         /// Sirve para dibujar el once y el banco en la pantalla de alineación.
         /// </summary>
         public MatchPreparation.Lineup UserLineup() =>
-            MatchPreparation.Resolve(Data.Club(Data.UserClubId).Name, Squad(Data.UserClubId), Data.Conditions, UserFormation(), Data.Tactics.Lineup,
+            MatchPreparation.Resolve(Data.Club(Data.UserClubId).Name, MatchSquad(Data.UserClubId), Data.Conditions, UserFormation(), Data.Tactics.Lineup,
                 _cfg.Career.MaxForeignersPerMatch, _cfg.Career.HomeNationality);
 
         /// <summary>Si el DT eligió su alineación (false = la arma la computadora).</summary>
@@ -744,7 +752,7 @@ namespace Football.Core.Career
         /// <returns>Verdadero si quedó guardada.</returns>
         public bool SetUserLineup(IReadOnlyList<int> starterIds, IReadOnlyList<int> benchIds)
         {
-            var squad = new HashSet<int>(Squad(Data.UserClubId).Select(p => p.Id));
+            var squad = new HashSet<int>(MatchSquad(Data.UserClubId).Select(p => p.Id));
             var all = starterIds.Concat(benchIds).ToList();
             if (starterIds.Count != UserFormation().Slots.Length || benchIds.Count > MatchPreparation.BenchSize
                 || all.Any(id => !squad.Contains(id)) || all.Distinct().Count() != all.Count || ForeignAmong(all) > _cfg.Career.MaxForeignersPerMatch)

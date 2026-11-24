@@ -303,6 +303,7 @@ namespace Football.Core.Tests.Career
             CareerSession s = New();
             Player vet = Old(s, 0, 35);
             Player prime = Old(s, 1, 26);
+            s.Data.Conditions[prime.Id].Form = 6f + (70f - 65f) * 0.03f; // rinde lo que se espera de su nivel
             float vetBefore = PlayerRatings.Overall(vet.Attributes, vet.Position), primeBefore = PlayerRatings.Overall(prime.Attributes, prime.Position);
             for (int w = 0; w < 52; w++)
             {

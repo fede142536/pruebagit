@@ -145,6 +145,11 @@ namespace Football.Game
             _name.text = pl.FirstName + " " + pl.LastName;
             _info.text = CareerText.Format("contracts.info", pl.AgeOn(Data.Today), PlayerLabels.Code(pl.Position), Session.VisibleRating(pl),
                 CareerText.Num(pl.Contract.ExpiresOn.Year), CareerText.Money(pl.Contract.WeeklyWage), CareerText.Num((int)c.Morale));
+            if (Session.RatingChange(pl) != 0)
+            {
+                _info.text += "\n" + CareerText.Format("career.rating_change", CareerText.Delta(Session.RatingChange(pl)));
+            }
+
             if (Session.IsRetiringThisSeason(pl.Id))
             {
                 _info.text += "\n" + Locale.Get("contracts.retiring");

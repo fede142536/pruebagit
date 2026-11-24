@@ -225,6 +225,15 @@ namespace Football.Core.Career
                     squad.Add(kid);
                 }
 
+                // Los arqueros no pueden faltar aunque el plantel esté completo (un retiro o una baja los deja cortos).
+                while (squad.Count(p => p.Position == Position.Goalkeeper) < cc.MinAiGoalkeepers && free.Any(p => p.Position == Position.Goalkeeper))
+                {
+                    Player keeper = free.First(p => p.Position == Position.Goalkeeper);
+                    free.Remove(keeper);
+                    SignPlayer(keeper, club.Id, (long)(_market.WageDemand(keeper, PlayingTimePromise.Regular) * (double)cc.FreeAgentWageFactor), 2 + keeper.Id % cc.FreeAgentContractYears);
+                    squad.Add(keeper);
+                }
+
                 while (squad.Count < cc.MinAiSquadSize && free.Count > 0)
                 {
                     bool needKeeper = squad.Count(p => p.Position == Position.Goalkeeper) < cc.MinAiGoalkeepers;

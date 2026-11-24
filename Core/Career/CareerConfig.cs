@@ -290,5 +290,28 @@ namespace Football.Core.Career
         public int PlayoffRoundSpacingDays = 7;
         /// <summary>Días entre la final del Clausura y el Trofeo de Campeones.</summary>
         public int TrofeoDelayDays = 14;
+
+        // ------------------------------------------------------------------ rendimiento
+
+        /// <summary>Nota esperada de un jugador de la media pivote (la forma normal es 6).</summary>
+        public float ExpectedRatingBase = 6f;
+        /// <summary>Nota esperada de más por cada punto de media sobre el pivote.</summary>
+        public float ExpectedRatingPerOverall = 0.03f;
+        /// <summary>Media a partir de la cual se mide la nota esperada.</summary>
+        public float ExpectedRatingPivot = 65f;
+        /// <summary>Diferencia entre la forma y la nota esperada que da el efecto completo.</summary>
+        public float PerformanceScale = 1.5f;
+        /// <summary>Multiplicador del crecimiento de los jóvenes con el peor y con el mejor rendimiento.</summary>
+        public float[] GrowthPerformanceRange = { 0.5f, 1.4f };
+        /// <summary>Multiplicador del declive de los veteranos con el peor y con el mejor rendimiento.</summary>
+        public float[] DeclinePerformanceRange = { 1.4f, 0.6f };
+        /// <summary>Puntos de atributo por semana que suben o bajan los jugadores en su madurez (entre el fin del crecimiento y el comienzo del declive) con rendimiento extremo.</summary>
+        public float DriftPointsPerWeek = 0.2f;
+        /// <summary>Puntos por encima del potencial hasta los que puede subir un jugador maduro que rinde bien.</summary>
+        public float DriftOverPotential = 3f;
+        /// <summary>Fracción de la baja por mal rendimiento que cae en atributos físicos.</summary>
+        public float DriftPhysicalShare = 0.15f;
+        /// <summary>Jugadores disponibles con los que un club quiere llegar a un partido: si en primera hay menos, se convoca a los mejores de la reserva.</summary>
+        public int EmergencyCallUpTarget = 18;
     }
 }

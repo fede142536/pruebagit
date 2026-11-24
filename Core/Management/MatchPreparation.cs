@@ -130,7 +130,7 @@ namespace Football.Core.Management
             var available = squad.Where(Ok).OrderByDescending(p => PlayerRatings.Overall(p.Attributes, p.Position)).ToList();
             if (available.Count < formation.Slots.Length)
             {
-                throw new InvalidOperationException($"{name}: solo hay {available.Count} jugadores disponibles.");
+                throw new InvalidOperationException($"{name}: solo hay {available.Count} jugadores disponibles de {squad.Count} en el plantel.");
             }
 
             var result = new Lineup();
