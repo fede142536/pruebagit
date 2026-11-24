@@ -51,7 +51,7 @@ Reglas:
 
 ## Contenido y licencias
 
-- **Sin escudos, logotipos ni diseños oficiales.** Por pedido explícito del usuario (D-12), `Data/teams/argentina.json` tiene nombres reales de jugadores de los 30 clubes de Primera con medias **estimadas por nosotros**; es para uso personal. El juego debe seguir funcionando sin ese archivo (equipos ficticios de reserva). Tras editarlo, `Tools/build-core.sh` lo copia a `Game/Assets/Football/Resources/teams.json` (una prueba verifica que coinciden).
+- **Escudos reales: solo si los pone el usuario** (D-66): el repositorio no incluye ninguno; `CrestLibrary` usa los PNG de `Assets/MisEscudos/Resources/Crests` de su proyecto (ver `Docs/COMO_AGREGAR_ESCUDOS.md`) y, si no hay imagen, el escudo procedural. **Sin logotipos ni diseños oficiales en el repositorio.** Por pedido explícito del usuario (D-12), `Data/teams/argentina.json` tiene nombres reales de jugadores de los 30 clubes de Primera con medias **estimadas por nosotros**; es para uso personal. El juego debe seguir funcionando sin ese archivo (equipos ficticios de reserva). Tras editarlo, `Tools/build-core.sh` lo copia a `Game/Assets/Football/Resources/teams.json` (una prueba verifica que coinciden).
 - Solo assets con licencia clara (CC0/MIT o equivalente), registrados en `ASSETS_LICENSES.md` (fuente, autor, licencia, URL, fecha).
 - La capa de arte es intercambiable: la lógica no depende de modelos, texturas ni audio concretos.
 

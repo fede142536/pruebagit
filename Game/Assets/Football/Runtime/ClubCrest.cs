@@ -20,6 +20,7 @@ namespace Football.Game
         private readonly Image[] _bars = new Image[Bars];
         private readonly Image[] _chevron = new Image[2];
         private readonly Text _initials;
+        private readonly RawImage _real;
 
         /// <summary>Crea el escudo centrado en un punto.</summary>
         /// <param name="parent">Padre (coordenadas desde su esquina inferior izquierda).</param>
@@ -71,6 +72,18 @@ namespace Football.Game
             _initials = UiKit.Label(_root, "Siglas", new Vector2(width * 0.5f, size * 0.36f), new Vector2(width, size * 0.3f), string.Empty,
                 Mathf.Max(10, Mathf.RoundToInt(size * 0.2f)), Color.white);
             _initials.fontStyle = FontStyle.Bold;
+
+            // Escudo real (si el usuario puso la imagen): cuadrado, centrado y por encima del procedural.
+            var realObject = new GameObject("EscudoReal", typeof(RectTransform));
+            realObject.transform.SetParent(_root, false);
+            var realRect = (RectTransform)realObject.transform;
+            realRect.anchorMin = realRect.anchorMax = Vector2.zero;
+            realRect.pivot = new Vector2(0.5f, 0.5f);
+            realRect.sizeDelta = new Vector2(size, size);
+            realRect.anchoredPosition = new Vector2(width * 0.5f, size * 0.5f);
+            _real = realObject.AddComponent<RawImage>();
+            _real.raycastTarget = false;
+            _real.gameObject.SetActive(false);
         }
 
         /// <summary>Raíz del escudo (para moverlo u ocultarlo).</summary>
@@ -80,6 +93,20 @@ namespace Football.Game
         /// <param name="team">Club.</param>
         public void Set(TeamDefinition team)
         {
+            Texture real = CrestLibrary.Find(team);
+            _real.texture = real;
+            _real.gameObject.SetActive(real != null);
+            bool procedural = real == null;
+            _borderTop.gameObject.SetActive(procedural);
+            _borderPoint.gameObject.SetActive(procedural);
+            _point.gameObject.SetActive(procedural);
+            _top.gameObject.SetActive(procedural);
+            _initials.gameObject.SetActive(procedural);
+            if (!procedural)
+            {
+                return;
+            }
+
             KitColors kit = KitColors.From(team.Home);
             Color dark = Color.Lerp(kit.Secondary, Color.black, 0.55f);
             _borderTop.color = dark;
