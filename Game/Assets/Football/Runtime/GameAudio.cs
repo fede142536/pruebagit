@@ -40,12 +40,17 @@ namespace Football.Game
         private const float ReactGain = 0.7f;
         private const float ProtestPitch = 0.82f;                           // la protesta suena más grave que el ¡ooh!
         private const float MusicGain = 0.6f;
+        private const float RainGain = 0.45f;          // el golpeteo de la lluvia, bajo la hinchada
         private const float MusicFadeSeconds = 1.2f;
 
         private readonly GameSettings _settings;
         private readonly AudioSource _crowd;
         private readonly AudioSource _effects;
         private readonly AudioSource _cheerSource, _music;
+        private AudioSource _rain;
+        private AudioClip _rainClip;
+        private bool _rainOn;
+        private readonly GameObject _owner;
         private readonly AudioSource[] _bocaSources = new AudioSource[2];   // dos voces: una termina mientras la otra entra
         private readonly float[] _bocaLevel = new float[2];
         private readonly float[] _voiceGain = new float[2];
@@ -75,6 +80,7 @@ namespace Football.Game
         public GameAudio(GameObject owner, GameSettings settings)
         {
             _settings = settings;
+            _owner = owner;
             var rng = new SeededRandom(NoiseSeed);
             _crowd = owner.AddComponent<AudioSource>();
             _crowd.loop = true;
@@ -132,9 +138,41 @@ namespace Football.Game
             }
         }
 
+        /// <summary>Enciende o apaga el ruido de la lluvia (suena durante todo el partido, a un volumen bajo).</summary>
+        /// <param name="on">Verdadero con lluvia.</param>
+        public void SetRain(bool on)
+        {
+            _rainOn = on;
+            if (on && _rain == null)
+            {
+                _rainClip = SynthRain(new SeededRandom(NoiseSeed + 1));
+                _rain = NewSource(_owner, true);
+                _rain.clip = _rainClip;
+            }
+
+            if (_rain == null)
+            {
+                return;
+            }
+
+            if (on && !_rain.isPlaying)
+            {
+                _rain.Play();
+            }
+            else if (!on)
+            {
+                _rain.Stop();
+            }
+        }
+
         /// <summary>Detiene la hinchada, el grito y los cánticos (al salir del partido).</summary>
         public void StopCrowd()
         {
+            if (_rain != null)
+            {
+                _rain.Stop();
+            }
+
             _matchRunning = false;
             _crowd.Stop();
             _cheerSource.Stop();
@@ -321,6 +359,10 @@ namespace Football.Game
             _crowdTarget = Mathf.Max(target, _crowdTarget - deltaTime * 0.3f); // tras un gol, el estruendo baja despacio
             _crowdLevel = Mathf.Lerp(_crowdLevel, _crowdTarget, 1f - Mathf.Exp(-CrowdFade * deltaTime));
             _crowd.volume = _crowdLevel * GameSettings.Volume(_settings.StadiumVolume);
+            if (_rain != null)
+            {
+                _rain.volume = _rainOn && _matchRunning ? RainGain * GameSettings.Volume(_settings.StadiumVolume) : 0f;
+            }
             if (_matchRunning && !_crowd.isPlaying && !AudioListener.pause)
             {
                 _crowd.time = _presentationRng.NextFloat() * Mathf.Max(0f, _crowd.clip.length - 1f); // el archivo se acabó: otro punto al azar
@@ -484,6 +526,30 @@ namespace Football.Game
             var loop = new float[d.Length - fade];
             System.Array.Copy(d, loop, loop.Length);
             return Make("Hinchada", loop);
+        }
+
+        private static AudioClip SynthRain(IRandom rng)
+        {
+            const float seconds = 3f;
+            var d = new float[(int)(Rate * seconds)];
+            float low = 0f;
+            for (int i = 0; i < d.Length; i++)
+            {
+                float white = rng.NextFloat() * 2f - 1f;
+                low += 0.12f * (white - low);
+                d[i] = (white - low) * 0.5f; // pasa-altos: el siseo de las gotas
+            }
+
+            int fade = Rate / 4;
+            for (int i = 0; i < fade; i++)
+            {
+                float w = i / (float)fade;
+                d[i] = d[i] * w + d[d.Length - fade + i] * (1f - w);
+            }
+
+            var loop = new float[d.Length - fade];
+            System.Array.Copy(d, loop, loop.Length);
+            return Make("Lluvia", loop);
         }
 
         private static AudioClip SynthCheer(IRandom rng)

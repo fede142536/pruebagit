@@ -78,7 +78,7 @@ namespace Football.Game
                 return StadiumLook.Full;
             }
 
-            return StadiumLook.From(stadium, Session.ExpectedAttendance(f));
+            return StadiumLook.From(stadium, Session.ExpectedAttendance(f), Session.ForecastOf(f).Weather); // el mismo cielo que anuncia el pronóstico
         }
 
         /// <summary>Oculta la pantalla.</summary>

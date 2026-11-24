@@ -721,7 +721,14 @@ namespace Football.Core.MatchCore
                         if (MathF.Abs(yAt) < Pitch.GoalHalfWidth + KeeperLateralBand)
                         {
                             float reach = Pitch.GoalHalfWidth + KeeperDiveMargin;
-                            keeper.Target = new Vec2(end * (Pitch.HalfLength - KeeperGoalInset), MathUtil.Clamp(yAt, -reach, reach));
+                            float aimY = MathUtil.Clamp(yAt, -reach, reach);
+                            bool committed = keeper.Action == PlayerAction.Dive && keeper.ActionDisplayTimer > 0f;
+                            if (committed && MathF.Abs(aimY - keeper.Target.Y) < pc.KeeperDiveRetarget)
+                            {
+                                aimY = keeper.Target.Y; // ya está en el aire: no se corrige por pequeñas variaciones de la trayectoria
+                            }
+
+                            keeper.Target = new Vec2(end * (Pitch.HalfLength - KeeperGoalInset), aimY);
                             keeper.Diving = true;
                             keeper.Action = PlayerAction.Dive;
                             keeper.DiveHeight = MathF.Max(0f, Ball.Pos.Z + Ball.Vel.Z * t - 0.5f * Config.Ball.Gravity * t * t);

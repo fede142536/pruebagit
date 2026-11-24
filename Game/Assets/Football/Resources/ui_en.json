@@ -571,5 +571,9 @@
   "record.career_goals": "Most career goals",
   "record.biggest_win": "Biggest win (goal difference)",
   "manager.type_hint": "Tap a field and type with the keyboard (Enter to finish).",
-  "match.tactic_help": "Attacking: higher line and\nmore direct, riskier play.\nHigh press: they go and win it high up."
+  "match.tactic_help": "Attacking: higher line and\nmore direct, riskier play.\nHigh press: they go and win it high up.",
+  "match.second_half": "SECOND HALF",
+  "match.second_half_detail": "The second half begins",
+  "weather.random": "Random",
+  "setup.weather": "WEATHER"
 }

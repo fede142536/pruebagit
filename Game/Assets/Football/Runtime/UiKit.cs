@@ -417,6 +417,7 @@ namespace Football.Game
         public static void FitToBox(Text label, float minScale = FitMinScale)
         {
             label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.verticalOverflow = VerticalWrapMode.Truncate; // con Truncate el ajuste automático mide también el alto del recuadro
             label.resizeTextForBestFit = true;
             label.resizeTextMaxSize = label.fontSize;
             label.resizeTextMinSize = Mathf.Max(10, Mathf.RoundToInt(label.fontSize * minScale));

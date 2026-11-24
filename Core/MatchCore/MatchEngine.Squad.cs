@@ -82,9 +82,9 @@ namespace Football.Core.MatchCore
             _pendingIn[k] = benchIndex;
             _pendingCount[team]++;
             t.BenchUsed[benchIndex] = true;
-            if (Phase != MatchPhase.Playing)
+            if (Phase != MatchPhase.Playing || AwaitingSecondHalf)
             {
-                ApplySubstitutions(team);
+                ApplySubstitutions(team); // en el descanso el cambio se hace en el acto
             }
 
             return SubstitutionResult.Accepted;

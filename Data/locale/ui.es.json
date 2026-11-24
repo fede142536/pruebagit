@@ -571,5 +571,9 @@
   "record.career_goals": "Más goles en la carrera",
   "record.biggest_win": "Mayor goleada (diferencia de goles)",
   "manager.type_hint": "Tocá un campo y escribí con el teclado (Enter para terminar).",
-  "match.tactic_help": "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba."
+  "match.tactic_help": "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.",
+  "match.second_half": "SEGUNDO TIEMPO",
+  "match.second_half_detail": "Empieza el segundo tiempo",
+  "weather.random": "Al azar",
+  "setup.weather": "CLIMA"
 }

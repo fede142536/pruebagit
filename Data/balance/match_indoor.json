@@ -89,7 +89,9 @@
     "HumanDefendBuffer": 0.18,
     "SecondPressMaxDistance": 28,
     "SecondPressStaminaDrain": 0.004,
-    "KeeperHoldHeight": 1,
+    "KeeperHoldHeight": 1.2,
+    "KeeperHoldForward": 0.32,
+    "KeeperDiveRetarget": 1.2,
     "KeeperLineInset": 0.5,
     "KickCooldown": 0.5,
     "ControlDelay": 0.18,
@@ -97,6 +99,8 @@
     "FirstTimeControlDelay": 0.03,
     "HeavyTouchRate": 0.45,
     "HeavyTouchSpeed": 4.5,
+    "HumanHeavyTouchScale": 0.5,
+    "HumanHeavyTouchRange": 4,
     "KeeperDiveSpeed": 6.5,
     "KeeperBaseReach": 1.35,
     "KeeperExtraReach": 1.5,
@@ -212,6 +216,8 @@
     "ThreatExponent": 4,
     "ThreatCentralityLoss": 0.5,
     "LossWeight": 0.8,
+    "FreeTeammateWeight": 0.06,
+    "FreeTeammateRange": 8,
     "PassBase": 0.55,
     "PassSkillSpread": 0.4,
     "PassDistanceScale": 20,
@@ -349,6 +355,10 @@
     "WasteTimeDelayFactor": 1.6,
     "TalkErrorStep": 0.08,
     "TalkPressStep": 0.1
+  },
+  "Weather": {
+    "RainRollScale": 0.8,
+    "RainMiscontrolScale": 1.3
   },
   "Difficulties": [
     {

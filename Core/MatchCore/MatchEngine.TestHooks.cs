@@ -47,6 +47,10 @@ namespace Football.Core.MatchCore
 
         internal bool TestPassInFlight => _passActive;
 
+        internal MatchPlayer TestPassTarget => _passTarget;
+
+        internal float TestNearestOpponentDistance(Vec2 pos, int team) => NearestOpponentDistance(pos, team);
+
         internal void TestKickoff(int team) => PlaceForKickoff(team);
 
         internal Vec2 TestRunIntoSpace(MatchPlayer p) => RunIntoSpace(p, Teams[p.Team].AttackDirection);

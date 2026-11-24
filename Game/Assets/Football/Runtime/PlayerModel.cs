@@ -64,7 +64,8 @@ namespace Football.Game
         private const float ElbowRest = 14f;
         private const float ElbowRunFactor = 1.3f;
         private const float ElbowStraight = 4f;
-        private const float ElbowHold = 70f;
+        private const float ElbowHold = 85f;
+        private const float HoldArm = -42f, HoldSpread = 14f; // brazos abrazando el balón contra el pecho, las manos a los costados
         private const float IdleSpeed = 0.35f;
         private const float MinSwing = 14f;
         private const float MaxSwing = 52f;
@@ -595,10 +596,10 @@ namespace Football.Game
             else if (holdingBall)
             {
                 // Arquero con el balón: lo sujeta contra el pecho con los dos brazos hacia delante.
-                armL = -70f;
-                armR = -70f;
-                armSpreadL = -18f;
-                armSpreadR = 18f;
+                armL = HoldArm;
+                armR = HoldArm;
+                armSpreadL = -HoldSpread;
+                armSpreadR = HoldSpread;
             }
 
             // Codo: algo doblado en reposo y más al correr; estirado al lanzarse, festejar o sacar de banda.

@@ -69,7 +69,8 @@ namespace Football.Core.MatchCore
             PlayerConfig c = Config.Player;
             if (KeeperHolding(p))
             {
-                Ball.Pos = new Vec3(p.Pos.X, p.Pos.Y, c.KeeperHoldHeight);
+                Vec2 chest = p.Pos + Vec2.FromAngle(p.Heading) * c.KeeperHoldForward;
+                Ball.Pos = new Vec3(chest.X, chest.Y, c.KeeperHoldHeight);
                 Ball.Vel = new Vec3(p.Velocity.X, p.Velocity.Y, 0f);
                 Ball.Spin = 0f;
                 return;
@@ -85,6 +86,12 @@ namespace Football.Core.MatchCore
             float relative = p.Speed / p.TopSpeed;
             float skill = 0.5f * (p.Skill(AttributeId.Dribbling) + p.Skill(AttributeId.FirstTouch));
             float rate = c.HeavyTouchRate * relative * relative * (1f - 0.7f * skill);
+            if (Teams[p.Team].IsHuman && Teams[p.Team].Controlled == p)
+            {
+                // La persona no pidió soltar la pelota: sin rival cerca nunca se escapa sola, y con uno cerca es menos probable.
+                rate = NearestOpponentDistance(p.Pos, p.Team) < c.HumanHeavyTouchRange ? rate * c.HumanHeavyTouchScale : 0f;
+            }
+
             if (_rng.NextFloat() < rate * dt)
             {
                 Vec2 push = Vec2.FromAngle(p.Heading) * c.HeavyTouchSpeed;

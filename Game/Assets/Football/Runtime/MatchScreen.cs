@@ -90,6 +90,8 @@ namespace Football.Game
             _pointers = pointers;
             _settings = settings;
             _canvas = UiKit.CreateCanvas("PartidoUI", parent, 10);
+            _weatherTint = UiKit.Panel(_canvas.transform, "Clima", new Vector2(UiKit.Reference.x * 0.5f, UiKit.Reference.y * 0.5f), UiKit.FullScreenSize, Color.clear);
+            _weatherTint.raycastTarget = false; // primero entre los hijos: queda debajo del marcador y los botones
             // El marcador y los avisos van en un lienzo anidado: al cambiar el reloj no se reconstruye el resto de la interfaz.
             RectTransform area = UiKit.CreateArea(_canvas);
             area.gameObject.AddComponent<Canvas>();
@@ -115,6 +117,9 @@ namespace Football.Game
             _banner = UiKit.Label(c, "Aviso", new Vector2(960f, 800f), new Vector2(1200f, 120f), string.Empty, 72, Color.white);
             _hint = UiKit.Label(c, "Ayuda", new Vector2(960f, 905f), new Vector2(1500f, 90f), string.Empty, 30, new Color(1f, 1f, 1f, 0.95f));
             _warning = UiKit.Label(c, "Error", new Vector2(960f, 640f), new Vector2(1700f, 300f), string.Empty, 28, new Color(1f, 0.35f, 0.3f));
+            Readable(_hint);
+            Readable(_banner);
+            Readable(_warning);
 
             _plate = new LowerThird(_canvas.transform);
             BuildLineupCard(c);
@@ -285,6 +290,8 @@ namespace Football.Game
             _homeTeam = homeTeam;
             _awayTeam = awayTeam;
             _benchmark = benchmark;
+            AllocProbe.Enabled = benchmark;
+            AllocProbe.Reset();
             Finished = false;
             QuitRequested = false;
             _paused = false;
@@ -301,7 +308,15 @@ namespace Football.Game
             IRandom teams = rng.Fork("teams");
             MatchTeamSetup home = prebuiltHome ?? TeamBuilder.Build(homeTeam, config, teams.Fork("home"), homeSquad);
             MatchTeamSetup away = prebuiltAway ?? TeamBuilder.Build(awayTeam, config, teams.Fork("away"), awaySquad);
+            StadiumLook look = stadium ?? StadiumLook.Full;
+            if (!stadium.HasValue && !benchmark)
+            {
+                look.Weather = PickWeather(rng.Fork("weather")); // los amistosos usan el clima elegido (o al azar); la carrera, el del pronóstico
+            }
+
+            config.ApplyWeather(look.Weather); // césped mojado: el balón rueda más y los controles fallan más
             _engine = new MatchEngine(config, rng.Fork("engine"), home, away, difficulty, difficulty);
+            _engine.ManualHalfTime = !benchmark; // en el descanso el partido espera a que salgas del menú (el benchmark sigue solo)
             _engine.SetHuman(0, !benchmark);
 
             _view?.Destroy();
@@ -312,7 +327,7 @@ namespace Football.Game
                 numbers[home.Players.Length + n] = away.Players[n].Number;
             }
 
-            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, stadium ?? StadiumLook.Full, numbers, hostIsSecondTeam);
+            _view = new MatchView(_engine.Pitch, homeKit, awayKit, _engine.PlayersPerTeam, _engine.Config.TickRate, look, numbers, hostIsSecondTeam, HostKits(hostIsSecondTeam ? awayTeam : homeTeam));
             _nameTags.Setup(_engine);
             _radar.Setup(_engine, _engine.PlayersPerTeam == RadarTeamSize); // en 3 contra 3 no hace falta
             _playerHud.SetVisible(!benchmark);
@@ -329,6 +344,8 @@ namespace Football.Game
             _homeKit = homeKit;
             _awayKit = awayKit;
             _plate.Hide();
+            _weatherTint.color = look.Weather == MatchWeather.Rain ? RainTint : look.Weather == MatchWeather.Cloudy ? CloudyTint : Color.clear;
+            _audio.SetRain(look.Weather == MatchWeather.Rain);
             _homeSetup = home;
             _awaySetup = away;
             bool presentation = !benchmark && _engine.PlayersPerTeam == FullTeam;
@@ -405,6 +422,7 @@ namespace Football.Game
                 sb.Append("Fotograma medio / p99: ").Append(_debug.AverageFrameMs.ToString("F1")).Append(" / ").Append(_debug.P99FrameMs.ToString("F1")).Append(" ms\n");
                 sb.Append("Recolecciones de basura (gen0): ").Append(_debug.GcCollections).Append('\n');
                 sb.Append("Asignaciones: ").Append(_debug.AllocKbPerSecond.ToString("F1")).Append(" KB/s (objetivo: 0)\n");
+                sb.Append(AllocProbe.Report());
                 sb.Append("Ajustes: calidad ").Append(GameSettings.QualityLabels[_settings.Quality]).Append(", resolución ")
                     .Append(GameSettings.ResolutionLabels[_settings.Resolution]).Append(", límite ").Append(_settings.TargetFps).Append(" FPS\n");
                 sb.Append("Dispositivo: ").Append(SystemInfo.deviceModel).Append(", ").Append(SystemInfo.systemMemorySize).Append(" MB RAM, ")
@@ -531,9 +549,11 @@ namespace Football.Game
 
         private void UpdateUnsafe(float deltaTime)
         {
+            AllocProbe.Begin(deltaTime);
             PlaceScoreboard();
 
             MatchInput input = _controls.Read(_pointers, Time.realtimeSinceStartup);
+            AllocProbe.Mark(AllocProbe.Part.Controls);
             if (_controls.PauseDown || _pointers.Keyboard.PauseDown)
             {
                 SetPaused(!_paused);
@@ -594,9 +614,11 @@ namespace Football.Game
             }
 
             int steps = Step(deltaTime, input);
+            AllocProbe.Mark(AllocProbe.Part.Engine);
             HandleEvents();
             UpdateHud();
             _audio.UpdateCrowd(Mathf.Abs(_engine.Ball.Pos.X) / _engine.Pitch.HalfLength, deltaTime);
+            AllocProbe.Mark(AllocProbe.Part.EventsAndHud);
 
             float alpha = Mathf.Clamp01(_accumulator * _engine.Config.TickRate);
             int controlled = _engine.Teams[0].Controlled != null ? _engine.Teams[0].Controlled.Index : -1;
@@ -618,9 +640,12 @@ namespace Football.Game
             }
 
             MatchPlayer next = _benchmark ? null : _engine.PreviewSwitchTarget(0);
+            AllocProbe.Mark(AllocProbe.Part.Previews);
             _view.Render(_previous, _current, alpha, controlled, target, deltaTime, next != null ? next.Index : -1);
+            AllocProbe.Mark(AllocProbe.Part.ViewRender);
             MatchPlayer holder = _engine.Owner ?? _engine.LastToucher;
             _radar.Update(_current, _view, controlled, holder != null && holder.Team == 0);
+            AllocProbe.Mark(AllocProbe.Part.Radar);
             if (!_benchmark)
             {
                 float charge = Mathf.Max(_controls.ShootCharge, Mathf.Max(_controls.PassCharge, _controls.CrossCharge));
@@ -628,9 +653,12 @@ namespace Football.Game
                 _playerHud.Update(_view, controlled, charge, stamina);
             }
 
+            AllocProbe.Mark(AllocProbe.Part.PlayerHud);
             _nameTags.Update(_view, _settings.Names, controlled, _engine.Owner != null ? _engine.Owner.Index : -1, _engine.Teams[0].Players.Length);
+            AllocProbe.Mark(AllocProbe.Part.NameTags);
             UpdateHint(deltaTime, input);
             _debug.Frame(deltaTime, steps);
+            AllocProbe.Mark(AllocProbe.Part.Rest);
 
             if (_engine.IsFinished && _celebrationTimer <= 0f)
             {
@@ -1089,6 +1117,9 @@ namespace Football.Game
         private static float ScoreboardMargin => ViewTuning.Current.Hud.ScoreboardMargin;
 
         private RectTransform _scoreboard;
+        private Image _weatherTint;
+        private static readonly Color CloudyTint = new Color(0.32f, 0.38f, 0.48f, 0.16f), RainTint = new Color(0.1f, 0.16f, 0.26f, 0.34f);
+        private const float RainChance = 0.2f, CloudChance = 0.25f; // clima «al azar» de los amistosos
         private Rect _scoreboardSafeArea;
 
         /// <summary>Recoloca el marcador dentro de la zona segura si cambió (muesca a la izquierda o a la derecha según el giro).</summary>
@@ -1146,6 +1177,29 @@ namespace Football.Game
             }
         }
 
+        /// <summary>Contorno oscuro para que un aviso se lea también sobre el público y el césped.</summary>
+        private static void Readable(Text label)
+        {
+            var outline = label.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(2.5f, -2.5f);
+        }
+
+        /// <summary>Camisetas titular y suplente de un club (los colores del público de su estadio).</summary>
+        private static KitColors[] HostKits(TeamDefinition team) => new[] { KitColors.From(team.Home), KitColors.From(team.Away) };
+
+        /// <summary>Clima de un amistoso: el elegido en los ajustes del partido o, con «al azar», uno según el sorteo de la semilla.</summary>
+        private MatchWeather PickWeather(IRandom rng)
+        {
+            if (_settings.Weather > 0)
+            {
+                return (MatchWeather)(_settings.Weather - 1);
+            }
+
+            float roll = rng.NextFloat();
+            return roll < RainChance ? MatchWeather.Rain : roll < RainChance + CloudChance ? MatchWeather.Cloudy : MatchWeather.Sunny;
+        }
+
         private void SetPaused(bool paused)
         {
             if (!paused)
@@ -1158,6 +1212,11 @@ namespace Football.Game
             if (!paused)
             {
                 _card.Hide();
+                if (_engine != null && _engine.AwaitingSecondHalf)
+                {
+                    _engine.StartSecondHalf(); // sale del descanso: los equipos se acomodan para el saque del medio
+                    _plate.Show(Locale.Get("match.second_half"), new Color(0.3f, 0.75f, 1f), Locale.Get("match.second_half_detail"), Color.white);
+                }
             }
             AudioListener.pause = paused;
             if (paused)

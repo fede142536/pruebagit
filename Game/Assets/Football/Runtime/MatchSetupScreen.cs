@@ -23,6 +23,7 @@ namespace Football.Game
         private readonly UiButton[] _difficulties;
         private readonly UiButton[] _lengths;
         private readonly UiButton _names, _speed, _back, _play;
+        private readonly UiButton[] _weather;
 
         /// <summary>Acción pedida en este fotograma.</summary>
         public MatchSetupAction Action { get; private set; }
@@ -35,26 +36,34 @@ namespace Football.Game
             Title("AJUSTES DEL PARTIDO");
             _match = UiKit.Label(Root, "Partido", new Vector2(960f, 880f), new Vector2(1700f, 70f), string.Empty, 46, UiTheme.Text);
 
-            UiKit.Label(Root, "Dificultad", new Vector2(960f, 770f), new Vector2(800f, 50f), "DIFICULTAD DEL RIVAL", 32, UiTheme.Accent);
+            UiKit.Label(Root, "Dificultad", new Vector2(960f, 800f), new Vector2(800f, 50f), "DIFICULTAD DEL RIVAL", 32, UiTheme.Accent);
             _difficulties = new UiButton[TeamCatalog.DifficultyLabels.Length];
             for (int i = 0; i < _difficulties.Length; i++)
             {
-                _difficulties[i] = UiKit.Button(Root, "Dif" + i, new Vector2(360f + i * 300f, 690f), new Vector2(280f, 84f),
+                _difficulties[i] = UiKit.Button(Root, "Dif" + i, new Vector2(360f + i * 300f, 725f), new Vector2(280f, 84f),
                     TeamCatalog.DifficultyLabels[i].ToUpperInvariant(), 28, UiTheme.Button);
             }
 
-            UiKit.Label(Root, "Duracion", new Vector2(960f, 570f), new Vector2(800f, 50f), "MINUTOS POR TIEMPO", 32, UiTheme.Accent);
+            UiKit.Label(Root, "Duracion", new Vector2(960f, 645f), new Vector2(800f, 50f), "MINUTOS POR TIEMPO", 32, UiTheme.Accent);
             _lengths = new UiButton[TeamCatalog.HalfMinutes.Length];
             for (int i = 0; i < _lengths.Length; i++)
             {
-                _lengths[i] = UiKit.Button(Root, "Dur" + i, new Vector2(760f + i * 200f, 490f), new Vector2(170f, 84f),
+                _lengths[i] = UiKit.Button(Root, "Dur" + i, new Vector2(760f + i * 200f, 570f), new Vector2(170f, 84f),
                     TeamCatalog.HalfMinutes[i].ToString(), 36, UiTheme.Button);
             }
 
-            UiKit.Label(Root, "Nombres", new Vector2(640f, 380f), new Vector2(600f, 50f), "NOMBRES SOBRE LOS JUGADORES", 32, UiTheme.Accent);
-            _names = UiKit.Button(Root, "ModoNombres", new Vector2(640f, 300f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
-            UiKit.Label(Root, "Velocidad", new Vector2(1280f, 380f), new Vector2(600f, 50f), "VELOCIDAD DEL JUEGO", 32, UiTheme.Accent);
-            _speed = UiKit.Button(Root, "ModoVelocidad", new Vector2(1280f, 300f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
+            UiKit.Label(Root, "Nombres", new Vector2(640f, 480f), new Vector2(600f, 50f), "NOMBRES SOBRE LOS JUGADORES", 32, UiTheme.Accent);
+            _names = UiKit.Button(Root, "ModoNombres", new Vector2(640f, 405f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
+            UiKit.Label(Root, "Velocidad", new Vector2(1280f, 480f), new Vector2(600f, 50f), "VELOCIDAD DEL JUEGO", 32, UiTheme.Accent);
+            _speed = UiKit.Button(Root, "ModoVelocidad", new Vector2(1280f, 405f), new Vector2(600f, 84f), string.Empty, 30, UiTheme.Button);
+
+            UiKit.Label(Root, "Clima", new Vector2(960f, 315f), new Vector2(800f, 50f), Locale.Get("setup.weather"), 32, UiTheme.Accent);
+            _weather = new UiButton[4];
+            for (int i = 0; i < _weather.Length; i++)
+            {
+                _weather[i] = UiKit.Button(Root, "Clima" + i, new Vector2(510f + i * 300f, 240f), new Vector2(280f, 84f),
+                    Locale.Get(i == 0 ? "weather.random" : "weather." + (i - 1)).ToUpperInvariant(), 28, UiTheme.Button);
+            }
 
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
             _play = UiKit.Button(Root, "Jugar", new Vector2(1660f, 80f), new Vector2(440f, 120f), "JUGAR", 56, UiTheme.AccentDark);
@@ -79,6 +88,11 @@ namespace Football.Game
             for (int i = 0; i < _lengths.Length; i++)
             {
                 _lengths[i].Background.color = i == _settings.Length ? UiTheme.Selected : UiTheme.Button;
+            }
+
+            for (int i = 0; i < _weather.Length; i++)
+            {
+                _weather[i].Background.color = i == _settings.Weather ? UiTheme.Selected : UiTheme.Button;
             }
 
             _names.Label.text = NameModeLabel(_settings.Names);
@@ -116,6 +130,14 @@ namespace Football.Game
                     if (_lengths[i].Contains(p))
                     {
                         _settings.Length = i;
+                    }
+                }
+
+                for (int i = 0; i < _weather.Length; i++)
+                {
+                    if (_weather[i].Contains(p))
+                    {
+                        _settings.Weather = i;
                     }
                 }
 

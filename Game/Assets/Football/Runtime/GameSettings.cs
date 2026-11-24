@@ -13,6 +13,7 @@ namespace Football.Game
         private const string HomeKitKey = "football.homekit";
         private const string AwayKitKey = "football.awaykit";
         private const string DifficultyKey = "football.difficulty";
+        private const string WeatherKey = "football.weather";
         private const string LengthKey = "football.length";
         private const string NamesKey = "football.names";
         private const string SpeedKey = "football.speed";
@@ -54,6 +55,8 @@ namespace Football.Game
         public int AwayKit = 1;
         /// <summary>Dificultad elegida (0..4).</summary>
         public int Difficulty = 2;
+        /// <summary>Clima de los amistosos: 0 al azar, 1 despejado, 2 nublado, 3 lluvia.</summary>
+        public int Weather;
         /// <summary>Duración elegida (índice en <see cref="TeamCatalog.HalfMinutes"/>).</summary>
         public int Length = 1;
         /// <summary>Qué nombres se muestran sobre los jugadores.</summary>
@@ -136,6 +139,7 @@ namespace Football.Game
                 HomeKit = Mathf.Clamp(PlayerPrefs.GetInt(HomeKitKey, 0), 0, 1),
                 AwayKit = Mathf.Clamp(PlayerPrefs.GetInt(AwayKitKey, 1), 0, 1),
                 Difficulty = Mathf.Clamp(PlayerPrefs.GetInt(DifficultyKey, 2), 0, TeamCatalog.DifficultyLabels.Length - 1),
+                Weather = Mathf.Clamp(PlayerPrefs.GetInt(WeatherKey, 0), 0, 3),
                 Length = Mathf.Clamp(PlayerPrefs.GetInt(LengthKey, 1), 0, TeamCatalog.HalfMinutes.Length - 1),
                 Names = (NameMode)Mathf.Clamp(PlayerPrefs.GetInt(NamesKey, 0), 0, 2),
                 Speed = Mathf.Clamp(PlayerPrefs.GetInt(SpeedKey, 1), 0, Speeds.Length - 1),
@@ -175,6 +179,7 @@ namespace Football.Game
             PlayerPrefs.SetInt(HomeKitKey, HomeKit);
             PlayerPrefs.SetInt(AwayKitKey, AwayKit);
             PlayerPrefs.SetInt(DifficultyKey, Difficulty);
+            PlayerPrefs.SetInt(WeatherKey, Weather);
             PlayerPrefs.SetInt(LengthKey, Length);
             PlayerPrefs.SetInt(NamesKey, (int)Names);
             PlayerPrefs.SetInt(SpeedKey, Speed);

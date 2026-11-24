@@ -99,6 +99,8 @@ namespace Football.Game
         private Confetti _confetti;
         private readonly KitColors _homeKit, _awayKit;
         private readonly StadiumLook _look;
+        private Rain _rain;
+        private readonly KitColors[] _hostKits;   // camiseta titular y suplente del dueño de casa: los colores de todo el público
         private readonly int[] _shirtNumbers;
         private const float LodHysteresis = 2f;
         private GrassBurst _grass;
@@ -107,6 +109,9 @@ namespace Football.Game
         private const float RunUpDistance = 2.4f;   // el sacador de córner o de saque de arco toma carrera en diagonal
         private const float RunUpSeconds = 0.22f;
         private const float HoldBallHeight = 0.5f;
+        private const float DiveSideMinDegrees = 8f;   // por debajo, la estirada es casi de frente: se tira hacia donde está el balón
+        private readonly bool[] _diveLatched = new bool[MatchSnapshot.PlayerCount], _diveRight = new bool[MatchSnapshot.PlayerCount];
+        private readonly float[] _diveFacing = new float[MatchSnapshot.PlayerCount];
         private float[] _runUp;
         private float _zoom = 1f;
         private float _lookAheadX;
@@ -142,10 +147,12 @@ namespace Football.Game
         /// <param name="tickRate">Pasos por segundo del motor (para medir la velocidad del balón entre instantáneas).</param>
         /// <param name="look">Público (ocupación), anillos de tribuna y obras del estadio; sin indicar, estadio lleno.</param>
         /// <param name="shirtNumbers">Dorsales por jugador (opcional).</param>
+        /// <param name="hostKits">Camisetas titular y suplente del dueño de casa (el público solo lleva esos colores); sin indicar, la que viste en el partido.</param>
         /// <param name="hostIsSecondTeam">El dueño de casa es el segundo equipo (el usuario juega de visitante en el modo carrera): la tribuna y los carteles llevan sus colores.</param>
         public MatchView(Pitch pitch, KitColors homeKit, KitColors awayKit, int playersPerTeam, int tickRate, StadiumLook? look = null, int[] shirtNumbers = null,
-            bool hostIsSecondTeam = false)
+            bool hostIsSecondTeam = false, KitColors[] hostKits = null)
         {
+            _hostKits = hostKits != null && hostKits.Length > 0 ? hostKits : null;
             _hostIsSecondTeam = hostIsSecondTeam;
             _look = look ?? StadiumLook.Full;
             _shirtNumbers = shirtNumbers;
@@ -171,6 +178,13 @@ namespace Football.Game
             Safe("balón", BuildBall);
             Safe("indicadores", BuildIndicators);
             Safe("terrones", () => _grass = new GrassBurst(_root.transform));
+            Safe("lluvia", () =>
+            {
+                if (_look.Weather == MatchWeather.Rain)
+                {
+                    _rain = new Rain(_root.transform, _meshes);
+                }
+            });
             Safe("papelitos", () => _confetti = new Confetti(_root.transform, pitch.HalfLength, pitch.HalfWidth,
                 new[] { homeKit.Shirt, awayKit.Shirt, Color.white }, _meshes));
         }
@@ -299,6 +313,26 @@ namespace Football.Game
 
         // ---- Campo y estadio ---------------------------------------------------------------------------------------
 
+        private const float RainDarken = 0.78f, RainStripeFade = 0.5f, CloudDarken = 0.93f;
+
+        /// <summary>Césped según el clima: mojado y más oscuro con lluvia (las franjas casi no se distinguen), algo apagado con el cielo nublado.</summary>
+        private Color WetTint(Color color)
+        {
+            switch (_look.Weather)
+            {
+                case MatchWeather.Rain:
+                    Color wet = color * RainDarken;
+                    wet.a = 1f;
+                    return color == StripeColor ? Color.Lerp(wet, GrassColor * RainDarken, RainStripeFade) : wet;
+                case MatchWeather.Cloudy:
+                    Color dull = color * CloudDarken;
+                    dull.a = 1f;
+                    return dull;
+                default:
+                    return color;
+            }
+        }
+
         private void BuildPitch()
         {
             float halfL = _pitch.HalfLength;
@@ -312,7 +346,7 @@ namespace Football.Game
 
             var grass = new MeshBuilder();
             grass.Quad(-halfL - GrassMargin, -halfW - GrassMargin, halfL + GrassMargin, halfW + GrassMargin, StripeHeight * 0.5f);
-            AddMesh("Cesped", grass, GrassColor);
+            AddMesh("Cesped", grass, WetTint(GrassColor));
 
             var stripes = new MeshBuilder();
             float band = _pitch.Length / StripeCount;
@@ -321,7 +355,7 @@ namespace Football.Game
                 stripes.Quad(-halfL + i * band, -halfW, -halfL + (i + 1) * band, halfW, StripeHeight);
             }
 
-            AddMesh("Franjas", stripes, StripeColor);
+            AddMesh("Franjas", stripes, WetTint(StripeColor));
 
             var lines = new MeshBuilder();
             Rectangle(lines, -halfL, -halfW, halfL, halfW);
@@ -365,10 +399,10 @@ namespace Football.Game
 
             // Gradas escalonadas detrás de los carteles: cada anillo son escalones que suben (cemento en tonos por anillo), con pasillos oscuros,
             // un muro al fondo y, en los estadios de dos anillos o más, techo sobre los últimos escalones.
-            Color[] tiers = { new Color(0.36f, 0.37f, 0.41f), new Color(0.3f, 0.32f, 0.38f), new Color(0.41f, 0.41f, 0.44f) };
+            Color[] tiers = { new Color(0.36f, 0.37f, 0.41f), new Color(0.3f, 0.32f, 0.38f), new Color(0.41f, 0.41f, 0.44f), new Color(0.33f, 0.34f, 0.4f) };
             int built = Mathf.Clamp(_look.Tiers, 1, tiers.Length);
             BuildStands(halfL, halfW, built, tiers);
-            BuildFloodlights(halfL, halfW);
+            BuildFloodlights(halfL, halfW, StandFront + built * StepsPerTier * StepDepth + TowerGap);
 
             if (!walls)
             {
@@ -392,7 +426,7 @@ namespace Football.Game
         private const int RoofMinTiers = 2;
         private const float WallExtraHeight = 2.5f, WallThickness = 0.5f;
         private const float LateralExtra = 30f, EndExtra = 20f;          // cuánto sobresale cada tribuna del largo/ancho del campo
-        private const float TowerHeight = 30f, TowerPole = 0.7f, TowerOutX = 22f, TowerOutZ = 16f;
+        private const float TowerHeight = 34f, TowerPole = 0.7f, TowerOutX = 2f, TowerOutZ = 2f, TowerGap = 3f;  // las torres quedan detrás de las gradas
         private static readonly Color WallColor = new Color(0.16f, 0.17f, 0.2f), AisleColor = new Color(0.07f, 0.07f, 0.09f);
         private static readonly Color RoofColor = new Color(0.82f, 0.83f, 0.86f), ColumnColor = new Color(0.55f, 0.56f, 0.6f);
         private static readonly Color LampFrame = new Color(0.1f, 0.1f, 0.12f), LampLight = new Color(0.97f, 0.96f, 0.84f);
@@ -475,13 +509,13 @@ namespace Football.Game
         }
 
         /// <summary>Cuatro torres de reflectores en las esquinas (postes y paneles de luz apuntando al centro del campo).</summary>
-        private void BuildFloodlights(float halfL, float halfW)
+        private void BuildFloodlights(float halfL, float halfW, float standDepth)
         {
             for (int sx = -1; sx <= 1; sx += 2)
             {
                 for (int sz = -1; sz <= 1; sz += 2)
                 {
-                    var foot = new Vector3(sx * (halfL + TowerOutX), 0f, sz * (halfW + TowerOutZ));
+                    var foot = new Vector3(sx * (halfL + standDepth + TowerOutX), 0f, sz * (halfW + standDepth + TowerOutZ));
                     StaticShape("Torre", MeshKit.Box, ColumnColor, foot + new Vector3(0f, TowerHeight * 0.5f, 0f), new Vector3(TowerPole, TowerHeight, TowerPole));
                     Vector3 toCenter = new Vector3(-foot.x, 0f, -foot.z);
                     Quaternion face = Quaternion.LookRotation(toCenter.normalized, Vector3.up);
@@ -615,8 +649,8 @@ namespace Football.Game
 
         /// <summary>
         /// Público en las gradas: una fila de figuras simples (torso y cabeza) sobre cada escalón, agrupadas en una malla por tribuna.
-        /// La cabecera de la izquierda es la «popular» del local (casi todos con su camiseta), la de la derecha tiene mucha gente del visitante y
-        /// el lateral es mezclado. La densidad depende del perfil gráfico y la ocupación (<see cref="StadiumLook.Attendance"/>): cada lugar se
+        /// Todos son del local: la cabecera de la izquierda es la «popular» (casi todos con la camiseta titular), la de la derecha lleva más la suplente
+        /// y el lateral es mezclado. La densidad depende del perfil gráfico y la ocupación (<see cref="StadiumLook.Attendance"/>): cada lugar se
         /// llena o no según un hash fijo. Los pasillos quedan libres.
         /// </summary>
         private void BuildCrowd(float halfL, float halfW, int tiers)
@@ -624,16 +658,15 @@ namespace Football.Game
             _crowd = new GameObject("Publico").transform;
             _crowd.SetParent(_root.transform, false);
             float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
-            KitColors host = _hostIsSecondTeam ? _awayKit : _homeKit, guest = _hostIsSecondTeam ? _homeKit : _awayKit;
-            Color white = new Color(0.92f, 0.92f, 0.92f), dark = new Color(0.15f, 0.15f, 0.18f);
+            // Todo el público es del local, con las camisetas titular y suplente de su club (más los detalles de cada una).
+            KitColors host = _hostIsSecondTeam ? _awayKit : _homeKit;
+            KitColors first = _hostKits != null ? _hostKits[0] : host, second = _hostKits != null && _hostKits.Length > 1 ? _hostKits[1] : first;
             Color[] mixed =
             {
-                host.Shirt, host.Shirt, host.Secondary, host.Shirt, guest.Shirt, guest.Secondary,
-                white, dark, new Color(0.55f, 0.4f, 0.3f), new Color(0.85f, 0.2f, 0.2f),
-                new Color(0.2f, 0.45f, 0.85f), new Color(0.95f, 0.8f, 0.2f), new Color(0.3f, 0.65f, 0.35f), new Color(0.9f, 0.5f, 0.2f)
+                first.Shirt, first.Shirt, first.Shirt, second.Shirt, second.Shirt, first.Secondary, second.Secondary, first.Shirt
             };
-            Color[] homeEnd = { host.Shirt, host.Shirt, host.Shirt, host.Secondary, host.Shirt, host.Shirt, white, host.Shirt };
-            Color[] awayEnd = { guest.Shirt, guest.Shirt, guest.Secondary, guest.Shirt, guest.Shirt, white, dark, host.Shirt };
+            Color[] homeEnd = { first.Shirt, first.Shirt, first.Shirt, first.Shirt, first.Shirt, second.Shirt, first.Secondary, first.Shirt };
+            Color[] awayEnd = { first.Shirt, second.Shirt, second.Shirt, first.Shirt, second.Shirt, second.Shirt, second.Secondary, first.Shirt };
             MeshMerge lateral = new MeshMerge(), left = new MeshMerge(), right = new MeshMerge();
             int seed = 0;
             int steps = tiers * StepsPerTier;
@@ -1127,6 +1160,7 @@ namespace Football.Game
 
             _confetti?.Update(deltaTime);
             _grass?.Update(deltaTime);
+            _rain?.Update(deltaTime, new Vector2(Mathf.Lerp(previous.BallX, current.BallX, alpha), Mathf.Lerp(previous.BallY, current.BallY, alpha)));
             UpdateLedBoards(deltaTime);
             UpdateCrowd(deltaTime);
             AnimateNets(deltaTime);
@@ -1189,12 +1223,34 @@ namespace Football.Game
                     _grass.Emit(ToUnity(x, y, 0.05f), new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)));
                 }
 
+                bool diveRight = relative < 0f;
+                if (action == PlayerAction.Dive)
+                {
+                    // La estirada se decide al lanzarse y no cambia en el aire: el cuerpo mira hacia donde miraba y se tira hacia el lado del salto.
+                    if (!_diveLatched[i])
+                    {
+                        _diveLatched[i] = true;
+                        _diveFacing[i] = heading;
+                        float toBallStart = Mathf.Atan2(by - y, bx - x) * Mathf.Rad2Deg;
+                        float side = Mathf.DeltaAngle(toBallStart, heading); // hacia dónde se mueve respecto de donde mira el balón
+                        _diveRight[i] = Mathf.Abs(side) > DiveSideMinDegrees ? side < 0f : relative < 0f;
+                    }
+
+                    heading = _diveFacing[i];
+                    diveRight = _diveRight[i];
+                    relative = 0f;
+                }
+                else
+                {
+                    _diveLatched[i] = false;
+                }
+
                 bool holdingThrow = current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && current.Restart == RestartKind.ThrowIn;
                 bool holdingBall = current.OwnerIndex == i && i % _perTeam == 0 && current.BallZ > HoldBallHeight;
                 float ballDistance = Mathf.Max(MinLookDistance, Mathf.Sqrt((bx - x) * (bx - x) + (by - y) * (by - y)));
                 float lookPitch = Mathf.Atan2(bz - EyeHeight, ballDistance) * Mathf.Rad2Deg;
                 UpdateDetail(model, ToUnity(x, y, 0f));
-                model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, relative < 0f, deltaTime,
+                model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, diveRight, deltaTime,
                     current.DiveHeight[i], holdingThrow, holdingBall, lookPitch);
                 _heads[i] = ToUnity(x, y, NameHeight);
             }

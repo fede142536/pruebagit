@@ -181,6 +181,7 @@ namespace Football.Core.MatchCore
             TeamState team = Teams[p.Team];
             float dir = team.AttackDirection;
             float currentProgress = Pitch.Progress(dir, origin.X);
+            int firstPass = _optionCount;
             for (int i = 0; i < team.Players.Length && _optionCount < MaxOptions; i++)
             {
                 MatchPlayer t = team.Players[i];
@@ -208,7 +209,8 @@ namespace Football.Core.MatchCore
                     continue;
                 }
 
-                float success = PassSuccess(p, origin, point, slack, NearestOpponentDistance(point, p.Team));
+                float receiverRival = NearestOpponentDistance(point, p.Team);
+                float success = PassSuccess(p, origin, point, slack, receiverRival);
                 success = MathF.Pow(success, RiskBase - team.Style.Risk);
 
                 float value = Threat(dir, point);
@@ -218,9 +220,30 @@ namespace Football.Core.MatchCore
                 utility += DirectnessWeight * (team.Style.Directness - 0.5f) * gain;
                 utility += _rng.NextGaussian(0f, noiseSigma);
 
+                _freeness[_optionCount] = MathUtil.Clamp01(receiverRival / ai.FreeTeammateRange);
                 _options[_optionCount++] = new Option { Kind = OptionKind.Pass, Target = t, Point = point, Utility = utility };
             }
+
+            // Prefiere al compañero que está solo: se reparte entre los pases un premio centrado en el promedio, así cambia A QUIÉN se pasa
+            // pero no cuánto se pasa frente a conducir o tirar.
+            int passes = _optionCount - firstPass;
+            if (passes > 1 && ai.FreeTeammateWeight > 0f)
+            {
+                float mean = 0f;
+                for (int i = firstPass; i < _optionCount; i++)
+                {
+                    mean += _freeness[i];
+                }
+
+                mean /= passes;
+                for (int i = firstPass; i < _optionCount; i++)
+                {
+                    _options[i].Utility += ai.FreeTeammateWeight * (_freeness[i] - mean);
+                }
+            }
         }
+
+        private readonly float[] _freeness = new float[MaxOptions];
 
         /// <summary>
         /// Conducir o proteger el balón obliga a girar hacia ese punto: cuanto más hay que girar desde donde mira el jugador, menos conviene.

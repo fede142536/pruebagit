@@ -5,17 +5,6 @@ using Football.Core.Domain;
 
 namespace Football.Core.Career
 {
-    /// <summary>Cielo del día de un partido.</summary>
-    public enum MatchWeather
-    {
-        /// <summary>Despejado.</summary>
-        Sunny,
-        /// <summary>Nublado.</summary>
-        Cloudy,
-        /// <summary>Lluvia.</summary>
-        Rain
-    }
-
     /// <summary>Pronóstico de un partido: cielo y temperatura.</summary>
     public struct MatchForecast
     {

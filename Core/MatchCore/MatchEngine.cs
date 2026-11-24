@@ -244,8 +244,9 @@ namespace Football.Core.MatchCore
         /// <summary>Avanza la simulación un paso fijo.</summary>
         public void Tick()
         {
-            if (Phase == MatchPhase.Finished)
+            if (Phase == MatchPhase.Finished || AwaitingSecondHalf)
             {
+                ClearInputImpulses();
                 return;
             }
 
@@ -636,6 +637,34 @@ namespace Football.Core.MatchCore
             HalfElapsed = 0f;
             Teams[0].AttackDirection = -1f;
             Teams[1].AttackDirection = 1f;
+            if (ManualHalfTime)
+            {
+                // El campo queda como estaba (nadie se teletransporta): el segundo tiempo empieza cuando quien juega sale del menú del descanso.
+                AwaitingSecondHalf = true;
+                return;
+            }
+
+            PlaceForKickoff(1);
+        }
+
+        /// <summary>
+        /// Si es verdadero, el motor se detiene al final del primer tiempo (<see cref="AwaitingSecondHalf"/>) hasta que se llame a
+        /// <see cref="StartSecondHalf"/>. Es falso por defecto: simulaciones y pruebas pasan solas al segundo tiempo.
+        /// </summary>
+        public bool ManualHalfTime { get; set; }
+
+        /// <summary>Verdadero en el descanso, con el motor detenido a la espera de <see cref="StartSecondHalf"/>.</summary>
+        public bool AwaitingSecondHalf { get; private set; }
+
+        /// <summary>Termina el descanso: los equipos salen a sus posiciones y se prepara el saque del medio del segundo tiempo.</summary>
+        public void StartSecondHalf()
+        {
+            if (!AwaitingSecondHalf)
+            {
+                return;
+            }
+
+            AwaitingSecondHalf = false;
             PlaceForKickoff(1);
         }
     }

@@ -41,6 +41,16 @@ namespace Football.Core.MatchCore
         public float WallRestitution = 0.6f;
     }
 
+    /// <summary>Efecto del clima en el juego (se aplica con <see cref="MatchConfig.ApplyWeather"/>).</summary>
+    [Serializable]
+    public sealed class WeatherConfig
+    {
+        /// <summary>Con lluvia el césped mojado frena menos: la fricción del balón se multiplica por esto (menor que 1: rueda más lejos).</summary>
+        public float RainRollScale = 0.8f;
+        /// <summary>Con lluvia los malos controles y toques son más probables (multiplica <see cref="PlayerConfig.MiscontrolChance"/> y <see cref="PlayerConfig.HeavyTouchRate"/>).</summary>
+        public float RainMiscontrolScale = 1.3f;
+    }
+
     /// <summary>Física del balón.</summary>
     [Serializable]
     public sealed class BallConfig
@@ -196,7 +206,11 @@ namespace Football.Core.MatchCore
         /// <summary>Segunda marca: gasto extra de resistencia por segundo del compañero que presiona (además de correr).</summary>
         public float SecondPressStaminaDrain = 0.004f;
         /// <summary>Altura a la que el arquero sostiene el balón en las manos (m).</summary>
-        public float KeeperHoldHeight = 1.0f;
+        public float KeeperHoldHeight = 1.2f;
+        /// <summary>Cuánto adelante del cuerpo (m) sostiene el arquero el balón: contra el pecho, no encima de la barriga.</summary>
+        public float KeeperHoldForward = 0.32f;
+        /// <summary>Una vez lanzado, el arquero mantiene su estirada salvo que el punto de llegada cambie más de esto (m): no se corrige en el aire.</summary>
+        public float KeeperDiveRetarget = 1.2f;
         /// <summary>Distancia mínima del arquero con balón a su línea de gol (m): nunca la cruza con el balón en las manos.</summary>
         public float KeeperLineInset = 0.5f;
         /// <summary>Tras patear, el jugador no puede recuperar el balón durante este tiempo (s).</summary>
@@ -214,6 +228,13 @@ namespace Football.Core.MatchCore
         public float HeavyTouchRate = 0.45f;
         /// <summary>Velocidad extra del balón en un mal toque (m/s).</summary>
         public float HeavyTouchSpeed = 4.5f;
+        /// <summary>
+        /// Mal toque de quien controla la persona: solo ocurre con un rival a menos de <see cref="HumanHeavyTouchRange"/> (con la cancha libre
+        /// la pelota nunca se escapa sola: la persona no pidió soltarla) y con esta proporción de la probabilidad normal.
+        /// </summary>
+        public float HumanHeavyTouchScale = 0.5f;
+        /// <summary>Distancia (m) a la que un rival hace posible un mal toque del jugador controlado por la persona.</summary>
+        public float HumanHeavyTouchRange = 4f;
 
         /// <summary>Velocidad lateral del portero al lanzarse (m/s).</summary>
         public float KeeperDiveSpeed = 6.5f;
@@ -510,6 +531,10 @@ namespace Football.Core.MatchCore
         public float ThreatCentralityLoss = 0.5f;
         /// <summary>Peso de perder el balón (valor de la posesión rival en ese punto).</summary>
         public float LossWeight = 0.8f;
+        /// <summary>Premio de utilidad a pasarle a un compañero solo (sin rival cerca de donde recibe): se reparte entre los pases, centrado en el promedio, según qué tan libre está cada uno.</summary>
+        public float FreeTeammateWeight = 0.06f;
+        /// <summary>Distancia (m) al rival más cercano desde la que un compañero cuenta como totalmente libre para <see cref="FreeTeammateWeight"/>.</summary>
+        public float FreeTeammateRange = 8f;
 
         /// <summary>Probabilidad base de pase con Passing = 1.</summary>
         public float PassBase = 0.55f;
@@ -759,6 +784,26 @@ namespace Football.Core.MatchCore
         public RoleConfig Roles = new RoleConfig();
         /// <summary>Director técnico en vivo.</summary>
         public CoachConfig Coach = new CoachConfig();
+        /// <summary>Efecto del clima en el juego.</summary>
+        public WeatherConfig Weather = new WeatherConfig();
+
+        /// <summary>
+        /// Ajusta esta configuración al clima del partido (césped mojado: el balón rueda más y los controles fallan más). Se llama una vez,
+        /// con una configuración recién creada para ese partido.
+        /// </summary>
+        /// <param name="weather">Clima.</param>
+        public void ApplyWeather(MatchWeather weather)
+        {
+            if (weather != MatchWeather.Rain)
+            {
+                return;
+            }
+
+            Ball.RollDeceleration *= Weather.RainRollScale;
+            Ball.RollDrag *= Weather.RainRollScale;
+            Player.MiscontrolChance *= Weather.RainMiscontrolScale;
+            Player.HeavyTouchRate *= Weather.RainMiscontrolScale;
+        }
 
         /// <summary>Niveles de dificultad: Principiante, Amateur, Profesional, Mundial, Leyenda.</summary>
         public DifficultyProfile[] Difficulties =
