@@ -690,5 +690,22 @@
   "reserve.col.f_matches": "1st Ap",
   "reserve.col.f_minutes": "1st Min",
   "reserve.stats": "Reserves: {0} matches · {1} goals · {2} assists · mark {3}\\nFirst team: {4} matches · {5} min · {6} goals",
-  "contracts.retiring": "Announced this is his last season: he retires when it ends."
+  "contracts.retiring": "Announced this is his last season: he retires when it ends.",
+  "kit.title": "KIT EDITOR",
+  "kit.subtitle": "HOME SHIRT",
+  "kit.pattern": "PATTERN",
+  "kit.back": "BACK",
+  "kit.save": "SAVE",
+  "kit.reset": "RESTORE ORIGINAL",
+  "kit.edit": "EDIT KIT",
+  "kit.pattern.0": "PLAIN",
+  "kit.pattern.1": "STRIPES",
+  "kit.pattern.2": "DIAGONAL SASH",
+  "kit.pattern.3": "BAND",
+  "kit.pattern.4": "HALVES",
+  "kit.pattern.5": "CONTRAST SLEEVES",
+  "kit.row.shirt": "SHIRT",
+  "kit.row.secondary": "SECONDARY (STRIPES, SLEEVES, COLLAR)",
+  "kit.row.shorts": "SHORTS",
+  "kit.row.socks": "SOCKS"
 }

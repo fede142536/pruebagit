@@ -627,6 +627,8 @@ namespace Football.Game
                     return !sleeve && p.y < PatternChevronY && Mathf.Abs(Mathf.Abs(p.x) - (PatternChevronY - p.y) * 1.1f) < PatternChevronHalf;
                 case 5: // mitades
                     return !sleeve && p.x > 0f;
+                case 6: // mangas en contraste (el cuello ya va en el color secundario)
+                    return sleeve;
                 default:
                     return false;
             }

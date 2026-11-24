@@ -690,5 +690,22 @@
   "reserve.col.f_matches": "1ª PJ",
   "reserve.col.f_minutes": "1ª Min",
   "reserve.stats": "Reserva: {0} partidos · {1} goles · {2} asist. · nota {3}\\nPrimera: {4} partidos · {5} min · {6} goles",
-  "contracts.retiring": "Anunció que esta es su última temporada: se retira al terminar."
+  "contracts.retiring": "Anunció que esta es su última temporada: se retira al terminar.",
+  "kit.title": "EDITOR DE EQUIPACIÓN",
+  "kit.subtitle": "CAMISETA CASA",
+  "kit.pattern": "PATRÓN",
+  "kit.back": "ATRÁS",
+  "kit.save": "GUARDAR",
+  "kit.reset": "RESTAURAR ORIGINAL",
+  "kit.edit": "EDITAR CAMISETA",
+  "kit.pattern.0": "LISA",
+  "kit.pattern.1": "BASTONES",
+  "kit.pattern.2": "BANDA DIAGONAL",
+  "kit.pattern.3": "FRANJA",
+  "kit.pattern.4": "MITADES",
+  "kit.pattern.5": "MANGAS CONTRASTE",
+  "kit.row.shirt": "CAMISETA",
+  "kit.row.secondary": "SECUNDARIO (FRANJAS, MANGAS, CUELLO)",
+  "kit.row.shorts": "SHORT",
+  "kit.row.socks": "MEDIAS"
 }

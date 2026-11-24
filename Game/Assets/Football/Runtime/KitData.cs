@@ -71,6 +71,16 @@ namespace Football.Game
         public const string DarkText = "#0c1a14";
         /// <summary>Líneas finas y grilla.</summary>
         public const string Grid = "#2a3b34";
+
+        /// <summary>
+        /// Muestras que ofrece el editor de camisetas: la paleta del manual y unos colores de uso común en los clubes (blanco, negro, azul, celeste, rojo y amarillo), para poder
+        /// armar los colores reales de un equipo.
+        /// </summary>
+        public static readonly string[] Swatches =
+        {
+            NightBlack, Bone, Grass, DarkGreen, LightGrey, Amber, Coral,
+            "#ffffff", "#000000", "#1f4fa3", "#6cb4ee", "#c62828", "#f2c200", "#7a1f3d"
+        };
     }
 
     /// <summary>
@@ -159,6 +169,7 @@ namespace Football.Game
                 case "band": pattern = KitPatternId.FranjaHorizontal; break;
                 case "sash": pattern = KitPatternId.BandaDiagonal; break;
                 case "halves": pattern = KitPatternId.Mitades; break;
+                case "sleeves": pattern = KitPatternId.MangasContraste; break;
                 default: pattern = KitPatternId.PlanoTecnico; break;
             }
 
@@ -168,6 +179,26 @@ namespace Football.Game
                 patternId = KitPatterns.NameOf(pattern), primaryColorHex = kit.Shirt, secondaryColorHex = kit.Secondary, trimColorHex = kit.Secondary,
                 shortsColorHex = kit.Shorts, socksColorHex = kit.Socks, numberColorHex = BestNumberColorHex(shirt)
             };
+        }
+
+        /// <summary>
+        /// Convierte la equipación al formato de los archivos de equipos (lo contrario de <see cref="FromDefinition"/>): el detalle se pierde (en cancha el cuello y los puños
+        /// usan el color secundario).
+        /// </summary>
+        public KitDefinition ToDefinition()
+        {
+            string pattern;
+            switch (Pattern)
+            {
+                case KitPatternId.Bastones: pattern = "Stripes"; break;
+                case KitPatternId.FranjaHorizontal: pattern = "Band"; break;
+                case KitPatternId.BandaDiagonal: pattern = "Sash"; break;
+                case KitPatternId.Mitades: pattern = "Halves"; break;
+                case KitPatternId.MangasContraste: pattern = "Sleeves"; break;
+                default: pattern = "Solid"; break;
+            }
+
+            return new KitDefinition { Shirt = primaryColorHex, Secondary = secondaryColorHex, Pattern = pattern, Shorts = shortsColorHex, Socks = socksColorHex };
         }
 
         /// <summary>Color plano del dorsal con más contraste sobre una camiseta: texto oscuro del manual sobre las claras, blanco hueso sobre las oscuras.</summary>

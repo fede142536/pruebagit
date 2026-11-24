@@ -10,7 +10,7 @@ namespace Football.Game
     /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
-        private enum State { MainMenu, Teams, Lineup, MatchSetup, Settings, Controls, Match, Result, Career }
+        private enum State { MainMenu, Teams, Lineup, KitEditor, MatchSetup, Settings, Controls, Match, Result, Career }
 
         private readonly PointerInput _pointers = new PointerInput();
         private GameSettings _settings;
@@ -18,6 +18,7 @@ namespace Football.Game
         private MainMenuScreen _mainMenu;
         private TeamSelectScreen _teams;
         private LineupScreen _lineup;
+        private KitEditorScreen _kitEditor;
         private MatchSetupScreen _matchSetup;
         private SettingsScreen _settingsScreen;
         private ControlsScreen _controlsScreen;
@@ -52,6 +53,7 @@ namespace Football.Game
             _mainMenu = new MainMenuScreen(transform, _pointers);
             _teams = new TeamSelectScreen(transform, _pointers, _friendly);
             _lineup = new LineupScreen(transform, _pointers, _friendly);
+            _kitEditor = new KitEditorScreen(transform, _pointers);
             _matchSetup = new MatchSetupScreen(transform, _pointers, _settings, _friendly);
             _settingsScreen = new SettingsScreen(transform, _pointers, _settings);
             _controlsScreen = new ControlsScreen(transform, _pointers);
@@ -127,6 +129,7 @@ namespace Football.Game
             _mainMenu.Hide();
             _teams.Hide();
             _lineup.Hide();
+            _kitEditor.Hide();
             _matchSetup.Hide();
             _settingsScreen.Hide();
             _controlsScreen.Hide();
@@ -278,6 +281,7 @@ namespace Football.Game
                         case TeamSelectAction.Continue: Go(State.MatchSetup); break;
                         case TeamSelectAction.EditHomeLineup: EditLineup(0); break;
                         case TeamSelectAction.EditAwayLineup: EditLineup(1); break;
+                        case TeamSelectAction.EditKit: Go(State.KitEditor); _kitEditor.Show(_friendly.Definition(_teams.Side)); break;
                     }
 
                     break;
@@ -285,6 +289,15 @@ namespace Football.Game
                 case State.Lineup:
                     _lineup.Update();
                     if (_lineup.Done)
+                    {
+                        Go(State.Teams);
+                    }
+
+                    break;
+
+                case State.KitEditor:
+                    _kitEditor.Update();
+                    if (_kitEditor.Done)
                     {
                         Go(State.Teams);
                     }

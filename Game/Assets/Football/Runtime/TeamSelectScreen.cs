@@ -19,7 +19,9 @@ namespace Football.Game
         /// <summary>Editar la alineación de tu equipo.</summary>
         EditHomeLineup,
         /// <summary>Editar la alineación del rival.</summary>
-        EditAwayLineup
+        EditAwayLineup,
+        /// <summary>Editar la camiseta CASA del equipo elegido.</summary>
+        EditKit
     }
 
     /// <summary>
@@ -87,11 +89,15 @@ namespace Football.Game
         private readonly Text _name, _info, _versus, _clash;
         private readonly StarRating _stars;
         private readonly KitShowroom _showroom;
+        private readonly UiButton _editKit;
         private readonly IRandom _randomSource = new SeededRandom((ulong)DateTime.Now.Ticks);
         private readonly UiButton _prevPage, _nextPage, _filter;
         private readonly Text _pageLabel;
         private readonly System.Collections.Generic.List<int> _shown = new System.Collections.Generic.List<int>();
         private int _side, _page, _filterIndex;
+
+        /// <summary>Lado elegido en las pestañas: 0 = tu equipo, 1 = el rival.</summary>
+        public int Side => _side;
 
         /// <summary>Acción pedida en este fotograma.</summary>
         public TeamSelectAction Action { get; private set; }
@@ -134,7 +140,8 @@ namespace Football.Game
             }
 
             _showroom = new KitShowroom(Root, new Vector2(1680f, 470f), new Vector2(300f, 520f), 0, 200f);
-            _lineup = UiKit.Button(Root, "Alineacion", new Vector2(1390f, 170f), new Vector2(460f, 76f), "EDITAR ALINEACIÓN", 28, UiTheme.Button);
+            _lineup = UiKit.Button(Root, "Alineacion", new Vector2(1210f, 170f), new Vector2(520f, 76f), "EDITAR ALINEACIÓN", 28, UiTheme.Button);
+            _editKit = UiKit.Button(Root, "EditarCamiseta", new Vector2(1670f, 170f), new Vector2(360f, 76f), Locale.Get("kit.edit"), 26, UiTheme.Button);
             _versus = UiKit.Label(Root, "Versus", new Vector2(960f, 115f), new Vector2(1400f, 40f), string.Empty, 26, UiTheme.Text);
             _clash = UiKit.Label(Root, "Choque", new Vector2(960f, 82f), new Vector2(1400f, 30f), string.Empty, 22, UiTheme.Warning);
             _back = UiKit.Button(Root, "Atras", new Vector2(220f, 60f), new Vector2(300f, 84f), "ATRÁS", 36, UiTheme.Button);
@@ -332,6 +339,10 @@ namespace Football.Game
                 else if (_lineup.Contains(p))
                 {
                     Action = _side == 0 ? TeamSelectAction.EditHomeLineup : TeamSelectAction.EditAwayLineup;
+                }
+                else if (_editKit.Contains(p))
+                {
+                    Action = TeamSelectAction.EditKit;
                 }
                 else if (_back.Contains(p))
                 {

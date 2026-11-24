@@ -21,7 +21,9 @@ namespace Football.Game
         /// <summary>V en el pecho (como la de Vélez).</summary>
         Chevron,
         /// <summary>Mitades verticales de dos colores (como la de Newell's).</summary>
-        Halves
+        Halves,
+        /// <summary>Torso de un color y mangas de otro (mangas en contraste).</summary>
+        Sleeves
     }
 
     /// <summary>Colores de una equipación ya convertidos para Unity.</summary>
@@ -230,6 +232,7 @@ namespace Football.Game
 
                     if (valid.Count >= 2)
                     {
+                        KitStore.ApplyTo(valid); // equipaciones editadas por el usuario
                         _all = valid.ToArray();
                         _teams = valid.FindAll(t => !t.VintageOnly).ToArray(); // los exclusivos de Fútbol vintage van al final del archivo
                         if (_teams.Length < 2)
