@@ -34,7 +34,7 @@ namespace Football.Game
         private int _priority;
         private Hold _hold;
         private PlayerAction _lastAction;
-        private AnimClip _idle, _keeperIdle, _walk, _jog, _run, _sprint, _kick, _shoot, _shootRun, _pass, _control, _header, _slide;
+        private AnimClip _idle, _keeperIdle, _walk, _jog, _run, _sprint, _kick, _shoot, _shootRun, _pass, _control, _header, _slide, _keeperKick;
         private AnimClip _diveRight, _diveLeft, _rush, _holdBall, _stumble, _throw, _throwHold;
         private int _band = -1; // 0 reposo, 1 caminata, 2 trote, 3 carrera, 4 esprint (con histéresis)
 
@@ -54,6 +54,7 @@ namespace Football.Game
             _run = AnimClips.Find("run");
             _sprint = AnimClips.Find("sprint");
             _kick = AnimClips.Find("kick");
+            _keeperKick = AnimClips.Find("keeper_kick");
             _shoot = AnimClips.Find("shoot");
             _shootRun = AnimClips.Find("shoot_run") ?? _shoot;
             _pass = AnimClips.Find("pass");
@@ -135,9 +136,10 @@ namespace Football.Game
                     case PlayerAction.Dive: gesture = diveRight ? _diveRight : _diveLeft; priority = 3; break;
                     case PlayerAction.Slide: gesture = _slide; priority = 2; break;
                     case PlayerAction.Stumble: gesture = _stumble; priority = 2; break;
-                    case PlayerAction.Kick: gesture = _kick; priority = 1; break;
-                    case PlayerAction.Pass: gesture = _pass; priority = 1; break;
-                    case PlayerAction.Shoot: gesture = speed > RunningShotSpeed ? _shootRun : _shoot; priority = 1; break;
+                    // El arquero saca con su patada de arquero (saque de arco, despeje); los demás, la suya.
+                    case PlayerAction.Kick: gesture = _keeper && _keeperKick != null ? _keeperKick : _kick; priority = 1; break;
+                    case PlayerAction.Pass: gesture = _keeper && _keeperKick != null ? _keeperKick : _pass; priority = 1; break;
+                    case PlayerAction.Shoot: gesture = _keeper && _keeperKick != null ? _keeperKick : speed > RunningShotSpeed ? _shootRun : _shoot; priority = 1; break;
                     case PlayerAction.Control: gesture = _control; priority = 1; break;
                     case PlayerAction.Header: gesture = _header; priority = 1; break;
                     case PlayerAction.ThrowIn: gesture = _throw; priority = 1; break;

@@ -840,7 +840,12 @@ namespace Football.Core.MatchCore
 
                 if (p == _taker)
                 {
-                    p.Target = r.Position - new Vec2(dir * TakerOffset, 0f);
+                    p.Target = _takerArrived ? p.Pos : TakerSpot(); // ya llegó: no se mueve (se está dando vuelta)
+                    if (_takerArrived)
+                    {
+                        p.SpeedFactor = 0f;
+                    }
+
                     continue;
                 }
 

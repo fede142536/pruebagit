@@ -109,6 +109,7 @@ namespace Football.Game
         private const float RunUpDistance = 2.4f;   // el sacador de córner o de saque de arco toma carrera en diagonal
         private const float RunUpSeconds = 0.22f;
         private const float HoldBallHeight = 0.5f;
+        private const float HoldThrowMaxSpeed = 0.6f;  // el que saca de banda solo levanta el balón cuando ya está quieto
         private const float DiveSideMinDegrees = 8f;   // por debajo, la estirada es casi de frente: se tira hacia donde está el balón
         private readonly bool[] _diveLatched = new bool[MatchSnapshot.PlayerCount], _diveRight = new bool[MatchSnapshot.PlayerCount];
         private readonly float[] _diveFacing = new float[MatchSnapshot.PlayerCount];
@@ -1245,7 +1246,8 @@ namespace Football.Game
                     _diveLatched[i] = false;
                 }
 
-                bool holdingThrow = current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && current.Restart == RestartKind.ThrowIn;
+                // En el lateral, el que saca camina al balón con los brazos normales y solo cuando llega a la línea y se queda quieto levanta el balón.
+                bool holdingThrow = current.Phase == MatchPhase.SetPiece && current.TakerIndex == i && current.Restart == RestartKind.ThrowIn && speed < HoldThrowMaxSpeed;
                 bool holdingBall = current.OwnerIndex == i && i % _perTeam == 0 && current.BallZ > HoldBallHeight;
                 float ballDistance = Mathf.Max(MinLookDistance, Mathf.Sqrt((bx - x) * (bx - x) + (by - y) * (by - y)));
                 float lookPitch = Mathf.Atan2(bz - EyeHeight, ballDistance) * Mathf.Rad2Deg;

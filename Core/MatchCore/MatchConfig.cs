@@ -402,6 +402,18 @@ namespace Football.Core.MatchCore
         public float TakerTimeout = 4f;
         /// <summary>Distancia al balón a la que se considera que el ejecutor ya está listo (m).</summary>
         public float TakerReach = 2.2f;
+        /// <summary>El ejecutante se da vuelta hacia donde va a patear a esta velocidad (rad/s) antes de sacar.</summary>
+        public float TakerTurnRate = 7f;
+        /// <summary>Se considera de frente al balón si le faltan menos que esto (rad).</summary>
+        public float TakerFaceTolerance = 0.5f;
+        /// <summary>Tiempo máximo que se espera a que el ejecutante termine de girar (s).</summary>
+        public float TakerFaceTimeout = 1.2f;
+        /// <summary>Saque de banda: tiempo entre que arranca el gesto con las manos y que el balón sale (s); coincide con la animación.</summary>
+        public float ThrowInReleaseDelay = 0.5f;
+        /// <summary>Saque de banda: distancia al punto del saque a la que el que saca está listo (m); más chica que la de los otros saques, para sacar desde la línea.</summary>
+        public float ThrowInReach = 0.6f;
+        /// <summary>Saque de banda: cuánto afuera de la línea se para el que saca (m).</summary>
+        public float ThrowInStandOutside = 0.35f;
         /// <summary>Distancia mínima del rival en saques.</summary>
         public float SetPieceDistance = 9.15f;
         /// <summary>Duración de una barrida (s).</summary>

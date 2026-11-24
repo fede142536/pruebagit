@@ -60,7 +60,8 @@ namespace Football.Core.Tests.MatchCore
         public void WasteTime_SlowsDownOwnRestarts()
         {
             float normal = RestartWait(TouchlineShout.None), slow = RestartWait(TouchlineShout.WasteTime);
-            Assert.That(slow, Is.GreaterThan(normal * 1.4f), $"normal {normal} pasos, perdiendo tiempo {slow}");
+            // Ahora el ejecutante camina hasta la línea (0,6 m) y se da vuelta antes de sacar: el retraso del DT pesa menos sobre el total, pero se nota.
+            Assert.That(slow, Is.GreaterThan(normal + 20f), $"normal {normal} pasos, perdiendo tiempo {slow}");
         }
 
         private static float RestartWait(TouchlineShout shout)

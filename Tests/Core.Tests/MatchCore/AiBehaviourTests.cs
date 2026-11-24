@@ -267,6 +267,13 @@ namespace Football.Core.Tests.MatchCore
 
             e.SetInput(0, new MatchInput { Pass = true, Move = new Vec2(1f, -1f).Normalized });
             e.Tick();
+            Assert.That(e.Phase, Is.EqualTo(MatchPhase.SetPiece), "primero el gesto de las manos: el balón todavía no salió");
+            Assert.That(e.Ball.Pos.Z, Is.GreaterThan(1f), "con el balón en las manos, arriba de la cabeza");
+            for (int i = 0; i < 60 && e.Phase == MatchPhase.SetPiece; i++)
+            {
+                e.Tick();
+            }
+
             Assert.That(e.Phase, Is.EqualTo(MatchPhase.Playing));
             Assert.That(e.Ball.Vel.X, Is.GreaterThan(0f), "sale hacia donde apunta el joystick");
             Assert.That(e.Ball.Vel.Y, Is.LessThan(0f));

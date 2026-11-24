@@ -150,6 +150,8 @@ namespace Football.Core.MatchCore
                           * (Teams[restart.Team].Shout == TouchlineShout.WasteTime ? Config.Coach.WasteTimeDelayFactor : 1f);
             _takerTimeout = Config.Rules.TakerTimeout;
             _humanRestartTimer = 0f;
+            _pendingExec = _windStarted = _takerArrived = false;
+            _windTimer = _faceTimer = 0f;
 
             for (int i = 0; i < Players.Length; i++)
             {
@@ -269,42 +271,146 @@ namespace Football.Core.MatchCore
 
             _takerTimeout -= dt;
             float distance = Vec2.Distance(_taker.Pos, _restart.Position);
-            if (distance <= Config.Rules.TakerReach || _takerTimeout <= 0f)
+            if (distance <= TakerReachDistance || _takerTimeout <= 0f)
             {
-                if (distance > Config.Rules.TakerReach)
+                if (distance > TakerReachDistance)
                 {
-                    _taker.Pos = _restart.Position - new Vec2(Teams[_taker.Team].AttackDirection * TakerOffset, 0f);
+                    _taker.Pos = TakerSpot();
                 }
+
+                _takerArrived = true; // llegó: se queda quieto donde está y se da vuelta
+                _taker.Target = _taker.Pos;
+                _taker.SpeedFactor = 0f;
 
                 TeamState team = Teams[_taker.Team];
-                if (HumanTakes(team))
+                bool facing = FaceRestartTarget(dt);
+                bool throwIn = _restart.Kind == RestartKind.ThrowIn;
+                if (!_pendingExec)
                 {
-                    // Saca la persona: apunta con el joystick y elige pase, centro o tiro. Si no hace nada, saca la IA.
-                    _humanRestartTimer += dt;
-                    MatchInput input = team.Input;
-                    if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
+                    if (HumanTakes(team))
                     {
-                        ExecuteHumanRestart(team, input);
-                        ConsumeKick(team);
-                        return;
+                        // Saca la persona: apunta con el joystick y elige pase, centro o tiro. Si no hace nada, saca la IA.
+                        _humanRestartTimer += dt;
+                        MatchInput input = team.Input;
+                        if (input.Pass || input.Through || input.Cross || input.Shoot || input.Clear)
+                        {
+                            _pendingExec = true;
+                            _pendingHuman = true;
+                            _pendingInput = input;
+                            ConsumeKick(team);
+                        }
+                        else if (_humanRestartTimer >= Config.Rules.HumanRestartTimeout)
+                        {
+                            _pendingExec = true;
+                            _pendingHuman = false;
+                        }
+                    }
+                    else
+                    {
+                        _pendingExec = true;
+                        _pendingHuman = false;
                     }
 
-                    if (_humanRestartTimer < Config.Rules.HumanRestartTimeout)
+                    if (throwIn)
+                    {
+                        HoldThrowInBall(); // con el balón en las manos, arriba de la cabeza
+                    }
+                }
+
+                if (!_pendingExec || !facing)
+                {
+                    return;
+                }
+
+                if (throwIn)
+                {
+                    // Saque de banda: primero el gesto, y el balón sale cuando las manos lo sueltan.
+                    if (!_windStarted)
+                    {
+                        _windStarted = true;
+                        _windTimer = Config.Rules.ThrowInReleaseDelay;
+                        _taker.Action = PlayerAction.ThrowIn;
+                        _taker.ActionDisplayTimer = _windTimer + KickDisplay;
+                    }
+
+                    HoldThrowInBall();
+                    _windTimer -= dt;
+                    if (_windTimer > 0f)
                     {
                         return;
                     }
                 }
 
-                ExecuteRestart();
+                _pendingExec = false;
+                if (_pendingHuman)
+                {
+                    ExecuteHumanRestart(team, _pendingInput);
+                }
+                else
+                {
+                    ExecuteRestart();
+                }
             }
         }
+
+        private bool _pendingExec, _pendingHuman, _windStarted, _takerArrived;
+
+        private float TakerReachDistance => _restart.Kind == RestartKind.ThrowIn ? Config.Rules.ThrowInReach : Config.Rules.TakerReach;
+
+        /// <summary>Donde se para el que saca: pegado a la línea en un lateral, detrás del balón en los demás saques.</summary>
+        private Vec2 TakerSpot() => _restart.Kind == RestartKind.ThrowIn
+            ? _restart.Position + new Vec2(0f, (_restart.Position.Y > 0f ? 1f : -1f) * Config.Rules.ThrowInStandOutside)
+            : _restart.Position - new Vec2(Teams[_restart.Team].AttackDirection * TakerOffset, 0f);
+        private MatchInput _pendingInput;
+        private float _windTimer, _faceTimer;
+
+        /// <summary>
+        /// El ejecutante se da vuelta hacia donde va a sacar antes de hacerlo (el arquero que llega al balón de espaldas al campo se giraba y pateaba
+        /// de un salto): mira hacia adentro en un lateral, hacia el balón en los demás saques.
+        /// </summary>
+        /// <returns>Verdadero si ya está de frente (o se acabó la espera).</returns>
+        private bool FaceRestartTarget(float dt)
+        {
+            RulesConfig r = Config.Rules;
+            Vec2 to;
+            if (_restart.Kind == RestartKind.ThrowIn)
+            {
+                to = new Vec2(0f, _restart.Position.Y > 0f ? -1f : 1f);
+            }
+            else
+            {
+                to = _restart.Position - _taker.Pos;
+                if (to.Length < 0.25f)
+                {
+                    to = new Vec2(Teams[_taker.Team].AttackDirection, 0f);
+                }
+            }
+
+            float diff = MathUtil.AngleDiff(to.Angle, _taker.Heading);
+            float step = r.TakerTurnRate * dt;
+            _taker.Heading += MathUtil.Clamp(diff, -step, step);
+            _taker.Speed = 0f;
+            _faceTimer += dt;
+            return MathF.Abs(MathUtil.AngleDiff(to.Angle, _taker.Heading)) <= r.TakerFaceTolerance || _faceTimer >= r.TakerFaceTimeout;
+        }
+
+        /// <summary>Lateral: el balón va en las manos del que saca, arriba de su cabeza (sale de ahí).</summary>
+        private void HoldThrowInBall()
+        {
+            Vec2 hands = _taker.Pos + Vec2.FromAngle(_taker.Heading) * ThrowInHandsForward;
+            Ball.Pos = new Vec3(hands.X, hands.Y, Config.Rules.ThrowInReleaseHeight);
+            Ball.Vel = Vec3.Zero;
+            _prevBallPos = Ball.Pos;
+        }
+
+        private const float ThrowInHandsForward = 0.2f;
 
         private float _humanRestartTimer;
 
         /// <summary>El saque está listo y espera a que la persona elija (para mostrar la ayuda en pantalla).</summary>
         public bool AwaitingHumanRestart =>
             Phase == MatchPhase.SetPiece && _taker != null && HumanTakes(Teams[_taker.Team]) && _phaseTimer <= 0f
-            && Vec2.Distance(_taker.Pos, _restart.Position) <= Config.Rules.TakerReach;
+            && Vec2.Distance(_taker.Pos, _restart.Position) <= TakerReachDistance;
 
         private bool HumanTakes(TeamState team) => team.IsHuman && _restart.Kind != RestartKind.Penalty;
 

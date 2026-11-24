@@ -11,6 +11,7 @@
     { "name": "kick",        "file": "kick soccerball (2).fbx",      "start": 0.12, "end": 0.5 },
     { "name": "shoot",       "file": "kick soccerball.fbx",          "start": 0.15, "end": 0.57 },
     { "name": "shoot_run",   "file": "strike foward jog.fbx",        "start": 0.2, "end": 1.0 },
+    { "name": "keeper_kick", "file": "goalkeeper drop kick.fbx",    "start": 1.95, "end": 2.95 },
     { "name": "pass",        "file": "Soccer Pass.fbx",              "start": 0.45, "end": 1.1 },
     { "name": "control",     "file": "kneeing soccerball (2).fbx",   "start": 0.0, "end": 0.6, "rate": 1.5 },
     { "name": "header",      "file": "header soccerball.fbx",        "start": 0.45, "end": 1.05, "rate": 1.3 },
