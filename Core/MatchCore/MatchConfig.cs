@@ -587,6 +587,10 @@ namespace Football.Core.MatchCore
         public float DecisionNoise = 0.04f;
         /// <summary>Ventaja de mantener el balón conduciendo frente a pasar en igualdad de utilidad.</summary>
         public float DribbleBias = 0.002f;
+        /// <summary>Castigo (en utilidad) por girar medio vuelta para conducir o proteger el balón: evita que el poseedor zigzaguee y dé vueltas al recibir.</summary>
+        public float TurnPenalty = 0.05f;
+        /// <summary>Decisiones seguidas en las que el poseedor mantiene el rumbo elegido al conducir o proteger el balón (solo un pase o un tiro lo interrumpen).</summary>
+        public int OwnerCommitDecisions = 2;
         /// <summary>Distancia del rival más cercano que obliga a despejar dentro del área propia (m).</summary>
         public float ClearancePressure = 4f;
 

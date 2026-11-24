@@ -58,11 +58,8 @@ namespace Football.Game
         private static readonly Color Dim = new Color(0.616f, 0.702f, 0.659f);
         private static readonly Color ButtonText = new Color(0.047f, 0.102f, 0.078f);
 
-        private const int ClubTags = 3;
         private const float CardY = 540f, BigW = 640f, BigH = 460f, SmallW = 330f, SmallH = 330f, Gap = 30f, Border = 3f, MarginX = 90f, Pad = 30f;
         private const float ScrollSpeed = 9f, SwipeDistance = 60f, DotsY = 130f;
-        private readonly Image[] _tagBack = new Image[ClubTags];
-        private readonly Text[] _tagText = new Text[ClubTags];
         private Image _shadow;
         private readonly Image[] _edge = new Image[Entries.Length], _fill = new Image[Entries.Length], _dot = new Image[Entries.Length];
         private readonly Text[] _number = new Text[Entries.Length], _title = new Text[Entries.Length], _desc = new Text[Entries.Length];
@@ -86,16 +83,6 @@ namespace Football.Game
             UiKit.Label(Root, "Logo", new Vector2(MarginX + 350f, 960f), new Vector2(700f, 100f), Locale.Get("app.title"), 84, AccentStrong, TextAnchor.MiddleLeft);
             UiKit.Label(Root, "Lema", new Vector2(MarginX + 380f, 890f), new Vector2(760f, 36f), Locale.Get("app.tagline"), 22, Dim, TextAnchor.MiddleLeft);
 
-            // Clubes de la portada (arriba a la derecha).
-            UiKit.Label(Root, "TuClub", new Vector2(1920f - MarginX - 3f * 126f - 130f, 960f), new Vector2(240f, 36f), Locale.Get("title.favorite"), 20, Dim, TextAnchor.MiddleRight);
-            for (int i = 0; i < ClubTags; i++)
-            {
-                var center = new Vector2(1920f - MarginX - 60f - (ClubTags - 1 - i) * 126f, 960f);
-                _tagBack[i] = UiKit.Panel(Root, "EtiquetaClub" + i, center, new Vector2(116f, 46f), i == 1 ? Accent : Line);
-                _tagText[i] = UiKit.Label(Root, "TextoClub" + i, center, new Vector2(116f, 46f), string.Empty, 22, i == 1 ? ButtonText : Ink);
-            }
-
-            _shadow = UiKit.Panel(Root, "SombraModo", new Vector2(960f, CardY), new Vector2(BigW, BigH), Accent); // sombra sólida de la tarjeta elegida (manual de diseño)
             for (int i = 0; i < Entries.Length; i++)
             {
                 _edge[i] = UiKit.Panel(Root, "BordeModo" + i, new Vector2(960f, CardY), new Vector2(SmallW, SmallH), Line);
@@ -136,16 +123,10 @@ namespace Football.Game
             UiKit.Panel(Root, "CirculoCentro", new Vector2(960f, 540f), new Vector2(254f, 254f), Bg, true);
         }
 
-        /// <summary>Muestra en las etiquetas los clubes que visten las figuras de la portada (izquierda, favorito, derecha).</summary>
-        /// <param name="clubs">Índices de <see cref="TeamCatalog.Teams"/>.</param>
+        /// <summary>Ya no se muestran los clubes de la portada en el menú (se quitó «TU CLUB»); se conserva para no cambiar a quien la llama.</summary>
+        /// <param name="clubs">Índices de <see cref="TeamCatalog.Teams"/> (se ignoran).</param>
         public void ShowClubs(int[] clubs)
         {
-            TeamDefinition[] teams = TeamCatalog.Teams;
-            for (int i = 0; i < ClubTags && i < clubs.Length; i++)
-            {
-                TeamDefinition team = teams[clubs[i]];
-                _tagText[i].text = string.IsNullOrEmpty(team.ShortName) ? team.Name : team.ShortName;
-            }
         }
 
         /// <summary>Muestra un aviso de error bajo el carrusel (null para quitarlo).</summary>

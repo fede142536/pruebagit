@@ -30,6 +30,12 @@ namespace Football.Game
         private readonly RectTransform _ballDot;
         private readonly RectTransform[] _chips = new RectTransform[MatchSnapshot.PlayerCount];
         private readonly Text[] _chipLabels = new Text[MatchSnapshot.PlayerCount];
+        // Líneas de la cancha del minimapa: cada una con su centro y tamaño como fracción del radar (el alto cambia con la cancha).
+        private struct Line { public RectTransform Rect; public float Fx, Fy, Fw, Fh; }
+        private const float LineThickness = 2f;
+        private static readonly Color LineColor = new Color(1f, 1f, 1f, 0.45f);
+        private readonly System.Collections.Generic.List<Line> _lines = new System.Collections.Generic.List<Line>();
+        private RectTransform _circle, _circleInner;
         private float _height;
         private float _halfLength = 1f, _halfWidth = 1f;
         private int _count, _perTeam;
@@ -50,6 +56,7 @@ namespace Football.Game
             back.color = new Color(0.05f, 0.25f, 0.1f, 0.45f);
             back.raycastTarget = false;
 
+            BuildPitchLines();
             for (int i = 0; i < _dots.Length; i++)
             {
                 _dotImages[i] = UiKit.Panel(_panel, "Punto" + i, Vector2.zero, new Vector2(DotSize, DotSize), Own, true);
@@ -65,6 +72,51 @@ namespace Football.Game
             _canvas.gameObject.SetActive(false);
         }
 
+        /// <summary>Dibuja el contorno de la cancha (bordes, línea media, círculo central y las dos áreas) con proporciones reglamentarias.</summary>
+        private void BuildPitchLines()
+        {
+            AddBox("Contorno", 0.5f, 0.5f, 1f, 1f);
+            AddLine("Media", 0.5f, 0.5f, 0f, 1f);
+            const float penaltyDepth = 0.157f, penaltyWidth = 0.593f, goalDepth = 0.052f, goalWidth = 0.269f;
+            AddBox("AreaIzq", penaltyDepth * 0.5f, 0.5f, penaltyDepth, penaltyWidth);
+            AddBox("AreaDer", 1f - penaltyDepth * 0.5f, 0.5f, penaltyDepth, penaltyWidth);
+            AddBox("AreaChicaIzq", goalDepth * 0.5f, 0.5f, goalDepth, goalWidth);
+            AddBox("AreaChicaDer", 1f - goalDepth * 0.5f, 0.5f, goalDepth, goalWidth);
+            _circle = (RectTransform)UiKit.Panel(_panel, "CirculoCentral", Vector2.zero, Vector2.one, LineColor, true).transform;
+            _circleInner = (RectTransform)UiKit.Panel(_panel, "CirculoCentralInterior", Vector2.zero, Vector2.one, new Color(0.05f, 0.25f, 0.1f, 1f), true).transform;
+        }
+
+        private void AddBox(string name, float fx, float fy, float fw, float fh)
+        {
+            AddLine(name + "N", fx, fy + fh * 0.5f, fw, 0f);
+            AddLine(name + "S", fx, fy - fh * 0.5f, fw, 0f);
+            AddLine(name + "O", fx - fw * 0.5f, fy, 0f, fh);
+            AddLine(name + "E", fx + fw * 0.5f, fy, 0f, fh);
+        }
+
+        private void AddLine(string name, float fx, float fy, float fw, float fh)
+        {
+            Image image = UiKit.Panel(_panel, name, Vector2.zero, Vector2.one, LineColor);
+            _lines.Add(new Line { Rect = (RectTransform)image.transform, Fx = fx, Fy = fy, Fw = fw, Fh = fh });
+        }
+
+        /// <summary>Coloca las líneas según el tamaño actual del radar.</summary>
+        private void LayoutPitchLines()
+        {
+            for (int i = 0; i < _lines.Count; i++)
+            {
+                Line l = _lines[i];
+                l.Rect.anchoredPosition = new Vector2(l.Fx * Width, l.Fy * _height);
+                l.Rect.sizeDelta = new Vector2(l.Fw > 0f ? l.Fw * Width : LineThickness, l.Fh > 0f ? l.Fh * _height : LineThickness);
+            }
+
+            const float circleShare = 0.174f; // el círculo central mide el 17,4 % del largo de la cancha
+            float d = Width * circleShare;
+            _circle.anchoredPosition = _circleInner.anchoredPosition = new Vector2(Width * 0.5f, _height * 0.5f);
+            _circle.sizeDelta = new Vector2(d, d);
+            _circleInner.sizeDelta = new Vector2(d - 2f * LineThickness, d - 2f * LineThickness);
+        }
+
         /// <summary>Prepara el radar para un partido.</summary>
         /// <param name="engine">Motor del partido.</param>
         /// <param name="showRadar">Mostrar el radar (en 3 contra 3 no hace falta).</param>
@@ -76,6 +128,7 @@ namespace Football.Game
             _halfWidth = engine.Pitch.HalfWidth;
             _height = Width * engine.Pitch.Width / engine.Pitch.Length;
             _panel.sizeDelta = new Vector2(Width, _height);
+            LayoutPitchLines();
             _radarEnabled = showRadar;
             _panel.gameObject.SetActive(showRadar);
             for (int i = 0; i < _dots.Length; i++)

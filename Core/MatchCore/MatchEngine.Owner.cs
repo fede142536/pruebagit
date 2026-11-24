@@ -222,6 +222,34 @@ namespace Football.Core.MatchCore
             }
         }
 
+        /// <summary>
+        /// Conducir o proteger el balón obliga a girar hacia ese punto: cuanto más hay que girar desde donde mira el jugador, menos conviene.
+        /// Sin esto, el poseedor cambia de rumbo (adelante, atrás, al otro lado) en cada decisión y da vueltas antes de arrancar.
+        /// </summary>
+        private MatchPlayer _commitFor;
+        private int _commitLeft;
+
+        private void PenalizeTurns(MatchPlayer p, Vec2 pos)
+        {
+            float penalty = Config.Ai.TurnPenalty;
+            for (int i = 0; i < _optionCount; i++)
+            {
+                if (_options[i].Kind != OptionKind.Dribble && _options[i].Kind != OptionKind.Hold)
+                {
+                    continue;
+                }
+
+                Vec2 to = _options[i].Point - pos;
+                if (to.LengthSquared < 0.0001f)
+                {
+                    continue;
+                }
+
+                float turn = MathF.Abs(MathUtil.AngleDiff(to.Angle, p.Heading));
+                _options[i].Utility -= penalty * turn / MathF.PI;
+            }
+        }
+
         private int BestOption()
         {
             int best = -1;
@@ -357,6 +385,7 @@ namespace Football.Core.MatchCore
             AddDribbleOptions(p, pos, noise);
             AddHoldOption(p, pos, opponentDistance, noise);
 
+            PenalizeTurns(p, pos);
             int chosen = BestOption();
             if (chosen < 0)
             {
@@ -364,6 +393,20 @@ namespace Football.Core.MatchCore
             }
 
             Option o = _options[chosen];
+            if (_commitFor != p)
+            {
+                _commitFor = p;
+                _commitLeft = 0;
+            }
+
+            bool carrying = o.Kind == OptionKind.Dribble || o.Kind == OptionKind.Hold;
+            if (carrying && _commitLeft > 0)
+            {
+                _commitLeft--;
+                return; // mantiene el rumbo que ya eligió: cambiarlo en cada decisión lo hace zigzaguear
+            }
+
+            _commitLeft = carrying ? Config.Ai.OwnerCommitDecisions : 0;
             switch (o.Kind)
             {
                 case OptionKind.Shoot:
