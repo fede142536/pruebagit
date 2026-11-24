@@ -33,3 +33,9 @@ Se recodificaron con ffmpeg a MP3 (hinchada, cánticos y temas: mono, 32 kHz, 64
 
 
 Las texturas del pack no se usan (el juego pinta por vértice con los colores de cada club); se quitaron del repositorio para no sumar 30 MB. Siguen en la descarga original.
+
+## Animaciones de fútbol (Mixamo)
+
+| Archivo | Origen | Licencia | Uso |
+|---|---|---|---|
+| `ThirdParty/Mixamo_Soccer/*.fbx` (54 animaciones + `X Bot.fbx`) | Mixamo (Adobe), descargadas por el usuario el 24/11/2026 | Términos de Mixamo: uso gratuito en proyectos propios; **no redistribuir las animaciones sueltas** | Patear, entradas, atajadas, estiradas, saque de banda, cabezazos y trote en 8 direcciones (a integrar al esqueleto del juego) |
