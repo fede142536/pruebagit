@@ -573,12 +573,41 @@ namespace Football.Game
                 if (input.Pass || !_presentation.Update(deltaTime, FirstTap()))
                 {
                     _presentation.Stop();
-                    _introTimer = AfterPresentationSeconds;
-                    _view.PlayIntro(AfterPresentationSeconds);
+                    if (_settings.TeamIntro && !_benchmark)
+                    {
+                        // Introducción de TV: salen del túnel, posan y corren a sus puestos (un toque la salta).
+                        _view.BeginTeamIntro(_current, _hostIsSecondTeam);
+                        _introShownTeam = -2;
+                        _hint.text = Locale.Get("intro.skip");
+                        _hintTimer = 0f;
+                    }
+                    else
+                    {
+                        _introTimer = AfterPresentationSeconds;
+                        _view.PlayIntro(AfterPresentationSeconds);
+                    }
                 }
 
                 _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
                 return;
+            }
+
+            if (_view.TeamIntroRunning)
+            {
+                if (TappedThisFrame() || input.Pass || input.Shoot || _view.TeamIntroDone)
+                {
+                    _view.EndTeamIntro();
+                    _hint.text = string.Empty;
+                    _plate.Hide();
+                    _introTimer = 0f;
+                    _lineupCard.SetActive(false);
+                }
+                else
+                {
+                    ShowIntroPlate(_view.IntroTeamShown);
+                    _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
+                    return;
+                }
             }
 
             if (_introTimer > 0f)
@@ -1175,6 +1204,29 @@ namespace Football.Game
             {
                 SetPaused(true);
             }
+        }
+
+        private int _introShownTeam = -2;
+
+        /// <summary>Placa de TV del equipo que presenta la introducción (cambia a lo largo de la secuencia) y un rugido de la hinchada al aparecer.</summary>
+        private void ShowIntroPlate(int team)
+        {
+            if (team == _introShownTeam)
+            {
+                return;
+            }
+
+            _introShownTeam = team;
+            if (team < 0)
+            {
+                return;
+            }
+
+            bool host = (team == 0) != _hostIsSecondTeam;
+            TeamDefinition definition = team == 0 ? _homeTeam : _awayTeam;
+            KitColors kit = team == 0 ? _homeKit : _awayKit;
+            _plate.Show(Locale.Get(host ? "intro.home" : "intro.away"), new Color(0.3f, 0.75f, 1f), definition.Name.ToUpperInvariant() + "  ·  " + _engine.Teams[team].Formation.Name, kit.Shirt);
+            _audio.React(ReactMedium, false);
         }
 
         /// <summary>Contorno oscuro para que un aviso se lea también sobre el público y el césped.</summary>

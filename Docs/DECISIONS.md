@@ -580,3 +580,9 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - El arquero saca (saque de arco, despeje) con su **patada de arquero** de Mixamo (`keeper_kick`).
 - Prueba nueva: en 12 partidos (75 saques) el ejecutante mira hacia adentro o hacia el campo rival y en el lateral el balón sale ≥ 0,4 s después de empezar el gesto.
 - **Sin ver en Unity**: confirmar que el giro previo se ve natural (giro en el lugar) y que el balón sale en el momento de soltarlo.
+
+## D-59 · Introducción de TV antes del partido — Aceptada (pedido del usuario, 24/11/2026)
+- Después de las dos pantallas de alineación (`TacticalPresentation`) y solo en 11 contra 11 (no en el benchmark): el **visitante y 3 s después el local** salen del túnel de a uno (cada 0,28 s, al trote suave) y se ubican en dos filas frente a la cámara, junto a la banda de los bancos; cada equipo **posa para la foto** (2,6 s, con una cámara baja de frente) y por último todos **corren a su puesto de saque** (escalonados) mientras la cámara vuelve a la transmisión. Duración ≈ 20 s. La placa de TV muestra LOCAL o VISITANTE con el nombre del club y su dibujo cuando empieza a salir cada equipo y en cada foto, y la hinchada ruge en cada una. Sin música: hinchada y el pitazo del saque.
+- Un toque en cualquier parte salta la secuencia (también PASE o TIRO). **Ajustes → Gráficos → INTRODUCCIÓN DE LOS EQUIPOS** la apaga (se guarda).
+- Es solo visual, como la salida del final: `MatchView.BeginTeamIntro` pone a cada jugador según el tiempo (hidden mientras está en el túnel); el motor espera. Todas las cifras (tiempos, separaciones, alturas de cámara) son constantes `Intro*` de `MatchView`.
+- **Sin ver en Unity**: confirmar los encuadres (la toma general abarca las dos filas, la de la foto el equipo entero), los tiempos y que la cámara no atraviesa los bancos ni el túnel. Sin árbitro, capitanes ni moneda (nivel «medio» elegido); la pose de la foto es la de reposo porque «Male Action Pose» es una estocada.

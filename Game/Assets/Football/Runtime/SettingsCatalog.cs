@@ -47,6 +47,7 @@ namespace Football.Game
             Item(SettingCategory.Graphics, true, s => "ESCALA DE RESOLUCIÓN: " + GameSettings.ResolutionLabels[s.Resolution],
                 s => s.Resolution = (s.Resolution + 1) % GameSettings.ResolutionLabels.Length),
             Item(SettingCategory.Graphics, true, s => "LÍMITE DE FPS: " + s.TargetFps, s => s.TargetFps = s.TargetFps == 30 ? 60 : 30),
+            Item(SettingCategory.Graphics, false, s => Locale.Get("settings.intro") + ": " + YesNo(s.TeamIntro), s => s.TeamIntro = !s.TeamIntro),
             Item(SettingCategory.Graphics, false, s => "PANEL DE DEPURACIÓN: " + YesNo(s.ShowDebug), s => s.ShowDebug = !s.ShowDebug),
 
             Item(SettingCategory.Audio, true, s => "VOLUMEN GENERAL: " + GameSettings.VolumeLabels[s.MasterVolume], s => s.MasterVolume = (s.MasterVolume + 1) % 5),

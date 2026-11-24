@@ -1048,6 +1048,194 @@ namespace Football.Game
         /// <param name="passTarget">Índice del receptor previsto del pase, o -1.</param>
         /// <param name="deltaTime">Tiempo del fotograma.</param>
         /// <param name="switchTarget">Jugador que tomarías con CAMBIAR, o -1.</param>
+        // ------------------------------------------------------------------ introducción de TV
+
+        private const float IntroRowInset = 10f;          // las filas de la foto quedan a esta distancia de la banda de los bancos
+        private const float IntroRowGap = 1.35f;          // separación entre jugadores de la fila
+        private const float IntroTeamCenterX = 9f;        // el local, a un lado del centro; el visitante, al otro
+        private const float IntroAerialSeconds = 2f;      // plano aéreo antes de que salga el primero
+        private const float IntroHostDelay = 3f;          // el local sale este tiempo después del visitante
+        private const float IntroGap = 0.28f;             // entre un jugador y el siguiente al salir del túnel
+        private const float IntroWalkSpeed = 3.1f;        // m/s al salir del túnel (trote suave)
+        private const float IntroPhotoSeconds = 2.6f;     // cada equipo posa para la foto
+        private const float IntroRunSpeed = 4.4f;         // m/s hacia su posición de saque
+        private const float IntroRunJitter = 0.7f;        // no arrancan todos a la vez
+        private const float IntroEndPause = 0.4f;
+        private const float IntroPhotoDistance = 14f;     // la cámara de la foto, a esta distancia de la fila
+        private const float IntroPhotoHeight = 1.9f;
+        private const float IntroWideHeight = 7f, IntroWideDistance = 25f; // la toma general abarca las dos filas
+        private const float IntroCameraResponse = 2.6f;
+        private bool _teamIntro;
+        private float _teamIntroTime;
+        private float[] _tiSlotX, _tiSlotY, _tiStart, _tiArrive, _tiKickX, _tiKickY, _tiRunStart, _tiRunSeconds;
+        private float _tiPhotoFirst, _tiPhotoSecond, _tiRunBegin, _tiEnd;
+        private int _tiFirstTeam, _tiSecondTeam;
+
+        /// <summary>Terminó la introducción (ya están en sus posiciones de saque).</summary>
+        public bool TeamIntroDone { get; private set; }
+
+        /// <summary>Equipo (índice del motor) que se está presentando ahora en la placa de TV, o -1; cambia a lo largo de la secuencia.</summary>
+        public int IntroTeamShown { get; private set; } = -1;
+
+        /// <summary>Hay una introducción en curso.</summary>
+        public bool TeamIntroRunning => _teamIntro;
+
+        /// <summary>
+        /// Empieza la introducción de TV: el visitante y después el local salen del túnel en fila y se ubican en dos filas frente a la cámara, cada equipo
+        /// posa para la foto y por último todos corren a su posición de saque. Es solo visual: el motor espera.
+        /// </summary>
+        /// <param name="kickoff">Posiciones de saque (donde terminan los jugadores).</param>
+        /// <param name="hostIsSecondTeam">El dueño de casa es el segundo equipo del motor.</param>
+        public void BeginTeamIntro(MatchSnapshot kickoff, bool hostIsSecondTeam)
+        {
+            int n = _players.Length;
+            _tiSlotX = new float[n]; _tiSlotY = new float[n]; _tiStart = new float[n]; _tiArrive = new float[n];
+            _tiKickX = new float[n]; _tiKickY = new float[n]; _tiRunStart = new float[n]; _tiRunSeconds = new float[n];
+            int host = hostIsSecondTeam ? 1 : 0;
+            _tiFirstTeam = 1 - host;   // sale primero el visitante
+            _tiSecondTeam = host;
+            float rowY = -(_pitch.HalfWidth - IntroRowInset);
+            Vector2 mouth = TunnelMouth;
+            float lastArrive = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                int team = i < _perTeam ? 0 : 1;
+                int k = i % _perTeam;
+                bool isHost = team == host;
+                float centerX = (isHost ? 1f : -1f) * IntroTeamCenterX;
+                _tiSlotX[i] = centerX + (k - (_perTeam - 1) * 0.5f) * IntroRowGap;
+                _tiSlotY[i] = rowY;
+                float teamStart = IntroAerialSeconds + (isHost ? IntroHostDelay : 0f);
+                _tiStart[i] = teamStart + k * IntroGap;
+                float dx = _tiSlotX[i] - mouth.x, dy = _tiSlotY[i] - mouth.y;
+                _tiArrive[i] = _tiStart[i] + Mathf.Sqrt(dx * dx + dy * dy) / IntroWalkSpeed;
+                lastArrive = Mathf.Max(lastArrive, _tiArrive[i]);
+                _tiKickX[i] = kickoff.PlayerX[i];
+                _tiKickY[i] = kickoff.PlayerY[i];
+            }
+
+            _tiPhotoFirst = lastArrive + 0.4f;
+            _tiPhotoSecond = _tiPhotoFirst + IntroPhotoSeconds;
+            _tiRunBegin = _tiPhotoSecond + IntroPhotoSeconds;
+            float end = _tiRunBegin;
+            for (int i = 0; i < n; i++)
+            {
+                float jitter = ((i * 37) % 11) / 10f;
+                _tiRunStart[i] = _tiRunBegin + IntroRunJitter * jitter;
+                float dx = _tiKickX[i] - _tiSlotX[i], dy = _tiKickY[i] - _tiSlotY[i];
+                _tiRunSeconds[i] = Mathf.Sqrt(dx * dx + dy * dy) / IntroRunSpeed;
+                end = Mathf.Max(end, _tiRunStart[i] + _tiRunSeconds[i]);
+            }
+
+            _tiEnd = end + IntroEndPause;
+            _teamIntro = true;
+            TeamIntroDone = false;
+            IntroTeamShown = -1;
+            _teamIntroTime = 0f;
+            _camReady = false;
+        }
+
+        /// <summary>Corta la introducción (la persona la saltó o terminó): los jugadores quedan donde dice el motor.</summary>
+        public void EndTeamIntro()
+        {
+            _teamIntro = false;
+            TeamIntroDone = false;
+            IntroTeamShown = -1;
+            _camReady = false; // la transmisión retoma desde su toma
+        }
+
+        private bool IntroPose(int i, out float x, out float y, out float heading, out float speed)
+        {
+            float t = _teamIntroTime;
+            Vector2 mouth = TunnelMouth;
+            x = mouth.x; y = mouth.y; heading = 0f; speed = 0f;
+            if (t < _tiStart[i])
+            {
+                return false; // todavía en el túnel
+            }
+
+            float faceCamera = 90f; // hacia +Y del motor: la cámara está del lado del campo, mirando al túnel
+            if (t < _tiArrive[i])
+            {
+                float u = Mathf.Clamp01((t - _tiStart[i]) / Mathf.Max(_tiArrive[i] - _tiStart[i], 1e-3f));
+                float jitter = (((i * 13) % 5) - 2) * TunnelHalfWidth * 0.2f;
+                x = Mathf.Lerp(mouth.x + jitter, _tiSlotX[i], u);
+                y = Mathf.Lerp(mouth.y, _tiSlotY[i], u);
+                heading = Mathf.Atan2(_tiSlotY[i] - mouth.y, _tiSlotX[i] - mouth.x - jitter) * Mathf.Rad2Deg;
+                speed = IntroWalkSpeed;
+                return true;
+            }
+
+            if (t < _tiRunStart[i])
+            {
+                x = _tiSlotX[i]; y = _tiSlotY[i]; heading = faceCamera; speed = 0f; // posan mirando a cámara
+                return true;
+            }
+
+            float run = (t - _tiRunStart[i]) / Mathf.Max(_tiRunSeconds[i], 1e-3f);
+            if (run >= 1f)
+            {
+                x = _tiKickX[i]; y = _tiKickY[i];
+                heading = Mathf.Atan2(0f - _tiKickY[i], 0f - _tiKickX[i]) * Mathf.Rad2Deg;
+                return true;
+            }
+
+            float e = run * run * (3f - 2f * run);
+            x = Mathf.Lerp(_tiSlotX[i], _tiKickX[i], e);
+            y = Mathf.Lerp(_tiSlotY[i], _tiKickY[i], e);
+            heading = Mathf.Atan2(_tiKickY[i] - _tiSlotY[i], _tiKickX[i] - _tiSlotX[i]) * Mathf.Rad2Deg;
+            speed = IntroRunSpeed;
+            return true;
+        }
+
+        /// <summary>Cámara de la introducción según el momento: aérea, general sobre las filas, foto de cada equipo y vuelta a la transmisión.</summary>
+        private void IntroCamera(float deltaTime, out Vector3 position, out Vector3 lookAt)
+        {
+            float t = _teamIntroTime;
+            float rowY = -(_pitch.HalfWidth - IntroRowInset);
+            float s = _cameraScale;
+            Vector3 targetPos, targetLook;
+            IntroTeamShown = -1;
+            if (t < IntroAerialSeconds)
+            {
+                targetPos = new Vector3(0f, IntroHeight * 0.55f * s, -IntroHeight * 0.45f * s);
+                targetLook = new Vector3(0f, 0f, -_pitch.HalfWidth * 0.5f);
+            }
+            else if (t < _tiPhotoFirst)
+            {
+                targetPos = new Vector3(0f, IntroWideHeight * s, rowY + IntroWideDistance * s);
+                targetLook = new Vector3(0f, 1.1f, rowY - 1f);
+                IntroTeamShown = t < IntroAerialSeconds + IntroHostDelay ? _tiFirstTeam : _tiSecondTeam;
+            }
+            else if (t < _tiRunBegin)
+            {
+                bool first = t < _tiPhotoSecond;
+                float cx = TeamCenterX(first ? _tiFirstTeam : _tiSecondTeam);
+                targetPos = new Vector3(cx, IntroPhotoHeight, rowY + IntroPhotoDistance * s);
+                targetLook = new Vector3(cx, 1.2f, rowY);
+                IntroTeamShown = first ? _tiFirstTeam : _tiSecondTeam;
+            }
+            else
+            {
+                CameraTuning c = ViewTuning.Current.Camera;
+                targetPos = new Vector3(0f, c.Height * s, -c.Distance * s);
+                targetLook = new Vector3(0f, 0f, 2f);
+            }
+
+            float blend = 1f - Mathf.Exp(-IntroCameraResponse * deltaTime);
+            _camPosition = _camReady ? Vector3.Lerp(_camPosition, targetPos, blend) : targetPos;
+            _camLook = _camReady ? Vector3.Lerp(_camLook, targetLook, blend) : targetLook;
+            _camReady = true;
+            position = _camPosition;
+            lookAt = _camLook;
+        }
+
+        private float TeamCenterX(int team)
+        {
+            bool isHost = team == (_tiSecondTeam);
+            return (isHost ? 1f : -1f) * IntroTeamCenterX;
+        }
+
         // ------------------------------------------------------------------ salida al vestuario
 
         private const float WalkInsetFromLine = 4f;       // los dos equipos se saludan a esta distancia de la banda de los bancos
@@ -1159,6 +1347,15 @@ namespace Football.Game
                 _walkOffTime += deltaTime;
             }
 
+            if (_teamIntro)
+            {
+                _teamIntroTime += deltaTime;
+                if (_teamIntroTime >= _tiEnd)
+                {
+                    TeamIntroDone = true;
+                }
+            }
+
             _confetti?.Update(deltaTime);
             _grass?.Update(deltaTime);
             _rain?.Update(deltaTime, new Vector2(Mathf.Lerp(previous.BallX, current.BallX, alpha), Mathf.Lerp(previous.BallY, current.BallY, alpha)));
@@ -1193,6 +1390,18 @@ namespace Football.Game
                 float heading = Mathf.LerpAngle(previous.PlayerHeading[i] * Mathf.Rad2Deg, current.PlayerHeading[i] * Mathf.Rad2Deg, alpha);
                 float speed = Mathf.Lerp(previous.PlayerSpeed[i], current.PlayerSpeed[i], alpha);
                 PlayerAction walkAction = current.PlayerAction[i];
+                if (_teamIntro)
+                {
+                    if (!IntroPose(i, out x, out y, out heading, out speed))
+                    {
+                        model.SetVisible(false);
+                        _visible[i] = false;
+                        continue;
+                    }
+
+                    walkAction = PlayerAction.Idle;
+                }
+
                 if (_walkOff)
                 {
                     if (_woGone[i] || !WalkOffPose(i, out x, out y, out heading, out speed))
@@ -1378,7 +1587,11 @@ namespace Football.Game
             CameraTuning c = ViewTuning.Current.Camera;
             Transform t = _camera.transform;
             Vector3 position, lookAt;
-            if (!float.IsNaN(_presentationX))
+            if (_teamIntro)
+            {
+                IntroCamera(deltaTime, out position, out lookAt);
+            }
+            else if (!float.IsNaN(_presentationX))
             {
                 // Presentación táctica: toma panorámica alta desde el lateral sobre la mitad del equipo que se presenta.
                 position = new Vector3(_presentationX, PresentationHeight * _cameraScale, -PresentationDistance * _cameraScale);

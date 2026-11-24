@@ -583,5 +583,9 @@
   "music.3": "INSENSATEZ (BAILA NOVA)",
   "music.4": "GAROTA DE IPANEMA (BAILA NOVA)",
   "music.5": "DESAFINADO (BAILA NOVA)",
-  "music.6": "WAVE (BAILA NOVA)"
+  "music.6": "WAVE (BAILA NOVA)",
+  "intro.skip": "Tap the screen to skip the introduction",
+  "intro.home": "HOME",
+  "intro.away": "AWAY",
+  "settings.intro": "TEAM INTRODUCTION"
 }
