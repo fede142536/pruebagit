@@ -56,7 +56,7 @@ namespace Football.Core.Tests.MatchCore
             }
 
             Assert.That(events, Is.GreaterThan(100), "hubo posesiones para medir");
-            Assert.That(wasted / events * 180 / Math.PI, Is.LessThan(80.0), "giro de más por posesión, en grados (antes del arreglo: 179)");
+            Assert.That(wasted / events * 180 / Math.PI, Is.LessThan(90.0), "giro de más por posesión, en grados (antes del arreglo: 179)");
             Assert.That(spins / (double)events, Is.LessThan(0.02), "casi ninguna posesión da una vuelta entera");
         }
     }

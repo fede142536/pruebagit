@@ -31,5 +31,3 @@ TestResults/
 __pycache__/
 .env
 
-# Escudos reales del usuario (marcas registradas, uso personal: no se versionan)
-/Game/Assets/MisEscudos/

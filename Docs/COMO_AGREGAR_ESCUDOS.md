@@ -1,5 +1,10 @@
 # Escudos reales de los clubes (uso personal)
 
+**Estado**: el usuario subió tres hojas con los escudos (`Game/Assets/escudos completos*.jfif`) y `Tools/slice_crests.py` las recorta en un PNG por club
+(47 clubes) dentro de `Game/Assets/MisEscudos/Resources/Crests`, que `ACTUALIZAR_JUEGO.bat` copia a tu proyecto sin borrar nada. Como las hojas son chicas (cada
+escudo mide 40–60 px), se ven borrosos de cerca; los de la hoja de la Primera Nacional se identificaron a ojo y los 17 que figuran ahí pueden estar mal asignados:
+si alguno no coincide, renómbralo. Faltan Deportivo Madryn y Mitre (Santiago del Estero). Para reemplazar uno, pon tu PNG con el mismo nombre.
+
 El juego usa un escudo dibujado por código para cada club. Si quieres los escudos reales, **los pones tú en tu proyecto de Unity** y el juego los usa solos (en el selector de equipos, la carrera y todos los lugares donde se ve el escudo). Los clubes sin imagen siguen con el escudo dibujado.
 
 ## Dónde ponerlos
@@ -8,11 +13,11 @@ El juego usa un escudo dibujado por código para cada club. Si quieres los escud
 2. Copia ahí un PNG por club, **con fondo transparente**, cuadrado y de 256 px o más.
 3. El nombre del archivo es el nombre del club en minúsculas, sin tildes y con guiones bajos (tabla abajo). Ejemplo: `boca_juniors.png`.
 
-**No los pongas en `Assets/Football`**: `ACTUALIZAR_JUEGO.bat` borra de esa carpeta todo lo que no viene del repositorio. En `Assets/MisEscudos` están a salvo.
+**No los pongas en `Assets/Football`**: `ACTUALIZAR_JUEGO.bat` borra de esa carpeta todo lo que no viene del repositorio. En `Assets/MisEscudos` están a salvo (el .bat solo copia, no borra).
 
 ## Por qué no vienen en el repositorio
 
-Los escudos son marcas registradas de los clubes. El repositorio no los incluye (D-12): están en `.gitignore` por si copias la carpeta dentro del proyecto. Úsalos solo en tu copia local y no los subas a un repositorio público.
+Los escudos son marcas registradas de los clubes. Por pedido del usuario (D-69) ahora se versionan en el repositorio (privado, uso personal): no lo hagas público ni redistribuyas el juego con ellos.
 
 ## Nombres de archivo
 

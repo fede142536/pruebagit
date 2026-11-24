@@ -772,10 +772,63 @@ namespace Football.Core.MatchCore
             {
                 // Festejo: el goleador corre al banderín del córner más cercano.
                 float sx = c.Pos.X >= 0f ? 1f : -1f, sy = c.Pos.Y >= 0f ? 1f : -1f;
-                c.Target = new Vec2(sx * (Pitch.HalfLength - CelebrationInset), sy * (Pitch.HalfWidth - CelebrationInset));
+                var corner = new Vec2(sx * (Pitch.HalfLength - CelebrationInset), sy * (Pitch.HalfWidth - CelebrationInset));
+                float toCorner = (corner - c.Pos).Length;
+                // Corre hacia el córner, pero se detiene a unos metros para bailar (la animación no avanza sola).
+                c.Target = toCorner <= Config.Rules.CelebrationRunMeters ? corner : c.Pos + (corner - c.Pos) * (Config.Rules.CelebrationRunMeters / toCorner);
                 c.SpeedFactor = 1f;
                 c.Action = PlayerAction.Celebrate;
                 c.ActionDisplayTimer = Config.Ai.DecisionInterval * 2f;
+                CelebrateWithMates(c, sx, sy);
+            }
+        }
+
+        private readonly MatchPlayer[] _celebrationMates = new MatchPlayer[8];
+
+        /// <summary>Los compañeros de campo más cercanos al goleador corren a festejar con él y se paran alrededor.</summary>
+        private void CelebrateWithMates(MatchPlayer scorer, float sx, float sy)
+        {
+            int wanted = Math.Min(Config.Rules.CelebrationMates, _celebrationMates.Length);
+            for (int k = 0; k < wanted; k++)
+            {
+                _celebrationMates[k] = null;
+            }
+
+            TeamState team = Teams[scorer.Team];
+            for (int i = team.FirstOutfield; i < team.Players.Length; i++)
+            {
+                MatchPlayer p = team.Players[i];
+                if (p == scorer || p.SentOff)
+                {
+                    continue;
+                }
+
+                float d = (p.Pos - scorer.Pos).LengthSquared;
+                for (int k = 0; k < wanted; k++)
+                {
+                    if (_celebrationMates[k] == null || d < (_celebrationMates[k].Pos - scorer.Pos).LengthSquared)
+                    {
+                        for (int m = wanted - 1; m > k; m--)
+                        {
+                            _celebrationMates[m] = _celebrationMates[m - 1];
+                        }
+
+                        _celebrationMates[k] = p;
+                        break;
+                    }
+                }
+            }
+
+            float gap = Config.Rules.CelebrationMateGap;
+            for (int k = 0; k < wanted && _celebrationMates[k] != null; k++)
+            {
+                // Alrededor del goleador, del lado del campo (lejos del córner): una línea y dos diagonales.
+                float ox = k == 1 ? 0f : -sx * gap * (k == 0 ? 1f : 0.8f), oy = k == 0 ? 0f : -sy * gap * (k == 1 ? 1f : 0.8f);
+                MatchPlayer mate = _celebrationMates[k];
+                mate.Target = scorer.Target + new Vec2(ox, oy);
+                mate.SpeedFactor = 1f;
+                mate.Action = PlayerAction.Celebrate;
+                mate.ActionDisplayTimer = Config.Ai.DecisionInterval * 2f;
             }
         }
 

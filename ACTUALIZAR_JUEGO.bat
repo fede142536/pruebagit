@@ -34,6 +34,13 @@ echo   Copiando Plugins\Core...
 robocopy "%SRC%\Plugins\Core" "%PROJ%\Assets\Plugins\Core" /MIR /XF *.meta /NFL /NDL /NJH /NJS /NP
 if errorlevel 8 goto fail
 
+rem Escudos (si vienen en el ZIP): se COPIAN sin borrar nada, asi que los que agregues vos en Assets\MisEscudos se conservan.
+if exist "%SRC%\MisEscudos" (
+    echo   Copiando MisEscudos...
+    robocopy "%SRC%\MisEscudos" "%PROJ%\Assets\MisEscudos" /E /XF *.meta /NFL /NDL /NJH /NJS /NP
+    if errorlevel 8 goto fail
+)
+
 rem Copias "(1)", "(2)"... que quedaron de actualizaciones manuales: dentro de las carpetas del juego se borran.
 for /f "delims=" %%F in ('dir /s /b "%PROJ%\Assets\Football\*(1).*" "%PROJ%\Assets\Football\*(2).*" "%PROJ%\Assets\Plugins\Core\*(1).*" 2^>nul') do (
     echo   Borrando copia duplicada: %%F

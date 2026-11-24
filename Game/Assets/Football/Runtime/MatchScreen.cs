@@ -787,7 +787,7 @@ namespace Football.Game
                             _goalHead = _historyHead;
                             MatchPlayer celebrator = _engine.Celebrator;
                             _view.Focus(celebrator != null ? celebrator.Index : -1);
-                            _celebrationTimer = CelebrationSeconds;
+                            _celebrationTimer = Mathf.Max(0.5f, _engine.Config.Rules.GoalPauseDuration - CelebrationLead);
                             ShowPlate("GOL", new Color(1f, 0.85f, 0.2f), e);
                         }
 
@@ -951,7 +951,7 @@ namespace Football.Game
         private const int FullTeam = 11;
         private TacticalPresentation _presentation;
         private MatchTeamSetup _homeSetup, _awaySetup;
-        private const float CelebrationSeconds = 2.2f;
+        private const float CelebrationLead = 0.4f;   // el festejo con cámara termina un poco antes de que acabe la pausa del gol
         private const float PostShake = 0.25f;
         private const int LineupRows = 11;
         private LowerThird _plate;

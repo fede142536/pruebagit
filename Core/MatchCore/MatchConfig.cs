@@ -397,7 +397,13 @@ namespace Football.Core.MatchCore
         /// <summary>Espera antes del saque inicial (s).</summary>
         public float KickoffDelay = 1.2f;
         /// <summary>Pausa tras un gol (s).</summary>
-        public float GoalPauseDuration = 2.5f;
+        public float GoalPauseDuration = 6f;
+        /// <summary>Hasta dónde corre el goleador hacia el córner para festejar (m): después baila donde llegó, sin patinar.</summary>
+        public float CelebrationRunMeters = 12f;
+        /// <summary>Compañeros que acompañan el festejo del goleador.</summary>
+        public int CelebrationMates = 3;
+        /// <summary>Separación de los compañeros respecto del goleador durante el festejo (m).</summary>
+        public float CelebrationMateGap = 2.6f;
         /// <summary>Tiempo máximo que se espera a que el ejecutor llegue al balón (s).</summary>
         public float TakerTimeout = 4f;
         /// <summary>Distancia al balón a la que se considera que el ejecutor ya está listo (m).</summary>

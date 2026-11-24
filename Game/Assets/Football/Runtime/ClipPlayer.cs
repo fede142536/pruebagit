@@ -17,7 +17,7 @@ namespace Football.Game
         private const float RunningShotSpeed = 3f;       // por encima, el tiro sale en carrera
         private const float HighDive = 1.5f;
 
-        private enum Hold { None, Throw, Rush, Ball }
+        private enum Hold { None, Throw, Rush, Ball, Dance }
 
         private readonly Transform[] _bones;
         private readonly Transform _pelvis;
@@ -36,6 +36,9 @@ namespace Football.Game
         private PlayerAction _lastAction;
         private AnimClip _idle, _keeperIdle, _walk, _jog, _run, _sprint, _kick, _shoot, _shootRun, _pass, _control, _header, _slide, _keeperKick;
         private AnimClip _diveRight, _diveLeft, _rush, _holdBall, _stumble, _throw, _throwHold;
+        private AnimClip[] _dances;
+        private static int _danceCounter;           // reparte los bailes de a uno por festejo (solo visual)
+        private const float CelebrateStandSpeed = 1.2f; // por debajo, ya llegó y baila; por encima, todavía corre
         private int _band = -1; // 0 reposo, 1 caminata, 2 trote, 3 carrera, 4 esprint (con histéresis)
 
         /// <summary>Crea el reproductor para un jugador.</summary>
@@ -68,6 +71,17 @@ namespace Football.Game
             _stumble = AnimClips.Find("stumble");
             _throw = AnimClips.Find("throw");
             _throwHold = AnimClips.Find("throw_hold");
+            var dances = new System.Collections.Generic.List<AnimClip>();
+            foreach (string name in new[] { "celebrate_gangnam", "celebrate_robot", "celebrate_wave", "celebrate_victory", "celebrate_fist", "celebrate_clap" })
+            {
+                AnimClip dance = AnimClips.Find(name);
+                if (dance != null)
+                {
+                    dances.Add(dance);
+                }
+            }
+
+            _dances = dances.ToArray();
         }
 
         /// <summary>
@@ -176,9 +190,20 @@ namespace Football.Game
                 return;
             }
 
-            if (action == PlayerAction.Celebrate || action == PlayerAction.Tackle)
+            if (action == PlayerAction.Tackle)
             {
                 StartClip(null, 1f, 0, Hold.None); // sin clip: queda la procedural
+                return;
+            }
+
+            if (action == PlayerAction.Celebrate && speed <= CelebrateStandSpeed && _dances.Length > 0)
+            {
+                if (_hold != Hold.Dance)
+                {
+                    AnimClip dance = _dances[_danceCounter++ % _dances.Length]; // llegó: baila (todavía corriendo, sigue la carrera)
+                    StartClip(dance, dance.Rate, 0, Hold.Dance);
+                }
+
                 return;
             }
 
@@ -203,6 +228,7 @@ namespace Football.Game
                 case Hold.Throw: return holdingThrow;
                 case Hold.Ball: return holdingBall;
                 case Hold.Rush: return action == PlayerAction.Rush;
+                case Hold.Dance: return action == PlayerAction.Celebrate;
                 default: return false;
             }
         }
