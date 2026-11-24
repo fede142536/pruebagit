@@ -55,7 +55,9 @@ namespace Football.Game.Editor
             PlayerSettings.productName = "Football Game";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.personal.footballgame");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            // Los dos: algunos Samsung de gama baja (Exynos 850) corren Android en 32 bits y rechazan un APK solo ARM64
+            // con «la app no es compatible con el teléfono».
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
             EditorUserBuildSettings.buildAppBundle = false;
