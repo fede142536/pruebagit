@@ -19,6 +19,8 @@ namespace Football.Game
         private const float MaxFrameTime = 0.1f;
         private const float BannerSeconds = 2.4f;
         private const float EndDelaySeconds = 2.5f;
+        private const float WalkOffDelaySeconds = 1.5f;   // tiempo desde el pitazo final hasta que empiezan a irse
+        private bool _walkOffStarted;
         private const ulong BenchmarkSeed = 12345UL;
         private const string BenchmarkReportFile = "benchmark_report.txt";
         private const float BenchmarkHalfSeconds = 150f;
@@ -348,6 +350,8 @@ namespace Football.Game
             _audio.StartCrowd(IsBoca(hostIsSecondTeam ? awayTeam : homeTeam)); // los cánticos de La 12 son de local: solo suenan si Boca es el dueño de casa
             _bannerTimer = 0f;
             _endTimer = 0f;
+            _walkOffStarted = false;
+            _view.EndWalkOff();
             _shownHome = _shownAway = _shownSecond = -1;
             _shownAdded = -1;
             _banner.text = string.Empty;
@@ -631,9 +635,23 @@ namespace Football.Game
             if (_engine.IsFinished && _celebrationTimer <= 0f)
             {
                 _endTimer += deltaTime;
-                if (_endTimer >= EndDelaySeconds)
+                if (_benchmark)
                 {
-                    Finished = true;
+                    Finished = _endTimer >= EndDelaySeconds;
+                }
+                else
+                {
+                    // Los jugadores se saludan y se van gradualmente al túnel; con un toque se salta y aparece el resumen.
+                    if (!_walkOffStarted && _endTimer >= WalkOffDelaySeconds)
+                    {
+                        _walkOffStarted = true;
+                        _view.BeginWalkOff(_current);
+                    }
+
+                    if (_walkOffStarted && (_view.WalkOffDone ? _endTimer >= WalkOffDelaySeconds + EndDelaySeconds * 0f : TappedThisFrame()))
+                    {
+                        Finished = true;
+                    }
                 }
             }
         }

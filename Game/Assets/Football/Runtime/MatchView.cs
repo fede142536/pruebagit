@@ -438,6 +438,11 @@ namespace Football.Game
                 float length = 2f * halfL / LedSegments; // tramos pegados: una sola cinta continua
                 for (int side = -1; side <= 1; side += 2)
                 {
+                    if (side < 0 && Mathf.Abs(x0 + length * 0.5f) < TunnelHalfWidth + length * 0.5f)
+                    {
+                        continue; // hueco de los carteles frente al túnel: por ahí salen los jugadores
+                    }
+
                     merge.Add(MeshKit.Box, new Vector3(x0 + length * 0.5f, BoardHeight * 0.5f, side * halfW), Quaternion.identity,
                         new Vector3(length, BoardHeight, 0.15f), Color.white);
                 }
@@ -553,6 +558,12 @@ namespace Football.Game
                         new Vector3(0.22f, 0.26f, 0.24f));
                 }
             }
+
+            // Túnel de vestuarios: en el centro de la banda, entre los dos bancos (un hueco oscuro con techo).
+            StaticShape("Tunel", MeshKit.Box, new Color(0.02f, 0.02f, 0.03f), new Vector3(0f, 1.25f, z - 1.2f), new Vector3(TunnelHalfWidth * 2f, 2.5f, 0.4f));
+            StaticShape("Tunel", MeshKit.Box, roof, new Vector3(0f, 2.7f, z - 0.5f), new Vector3(TunnelHalfWidth * 2f + 0.6f, 0.25f, 1.8f));
+            StaticShape("Tunel", MeshKit.Box, back, new Vector3(-TunnelHalfWidth - 0.2f, 1.3f, z - 0.5f), new Vector3(0.25f, 2.6f, 1.8f));
+            StaticShape("Tunel", MeshKit.Box, back, new Vector3(TunnelHalfWidth + 0.2f, 1.3f, z - 0.5f), new Vector3(0.25f, 2.6f, 1.8f));
 
             Color vest = new Color(0.95f, 0.75f, 0.1f), camera = new Color(0.05f, 0.05f, 0.06f);
             for (int end = -1; end <= 1; end += 2)
@@ -883,10 +894,117 @@ namespace Football.Game
         /// <param name="passTarget">Índice del receptor previsto del pase, o -1.</param>
         /// <param name="deltaTime">Tiempo del fotograma.</param>
         /// <param name="switchTarget">Jugador que tomarías con CAMBIAR, o -1.</param>
+        // ------------------------------------------------------------------ salida al vestuario
+
+        private const float WalkInsetFromLine = 4f;       // los dos equipos se saludan a esta distancia de la banda de los bancos
+        private const float GreetRowGap = 0.9f;           // separación entre jugadores de la fila del saludo
+        private const float GreetHalfGap = 2f;            // mitad de la distancia entre las dos filas
+        private const float GreetEndSeconds = 9f;         // el saludo termina a los 9 s y empiezan a irse
+        private const float TunnelHalfWidth = 2.2f;
+        private bool _walkOff;
+        private float _walkOffTime;
+        private float[] _woStartX, _woStartY, _woGreetX, _woGreetY, _woArrive, _woLeave, _woSpeed, _woFace;
+        private bool[] _woGone;
+
+        /// <summary>Todos los jugadores ya entraron al túnel.</summary>
+        public bool WalkOffDone { get; private set; }
+
+        /// <summary>Boca del túnel de vestuarios (engine X, Y): en el medio de la banda de los bancos, detrás de los carteles.</summary>
+        private Vector2 TunnelMouth => new Vector2(0f, -(_pitch.HalfWidth + BoardDistance + 1.3f));
+
+        /// <summary>
+        /// Empieza la salida del campo al terminar el partido: cada jugador deja de correr y camina hacia la banda de los bancos, los dos equipos se
+        /// saludan enfrentados en dos filas y después van entrando al túnel de a uno (no todos a la vez, y con ritmos distintos). Es solo visual:
+        /// el motor ya terminó el partido.
+        /// </summary>
+        /// <param name="final">Posiciones al final del partido.</param>
+        public void BeginWalkOff(MatchSnapshot final)
+        {
+            int n = _players.Length;
+            _woStartX = new float[n]; _woStartY = new float[n]; _woGreetX = new float[n]; _woGreetY = new float[n];
+            _woArrive = new float[n]; _woLeave = new float[n]; _woSpeed = new float[n]; _woFace = new float[n];
+            _woGone = new bool[n];
+            float rowY = -(_pitch.HalfWidth - WalkInsetFromLine);
+            for (int i = 0; i < n; i++)
+            {
+                bool home = i < _perTeam;
+                int k = i % _perTeam;
+                _woStartX[i] = final.PlayerX[i];
+                _woStartY[i] = final.PlayerY[i];
+                // Dos filas enfrentadas junto a la banda, cada jugador frente a su par (el arquero también): el del local mira al visitante.
+                _woGreetX[i] = (home ? -1f : 1f) * GreetHalfGap;
+                _woGreetY[i] = rowY + (k - (_perTeam - 1) * 0.5f) * GreetRowGap * (_perTeam > 5 ? 1f : 2.5f);
+                _woFace[i] = home ? 0f : 180f; // grados: hacia +X (local) o hacia −X (visitante)
+                float distance = Mathf.Sqrt((_woGreetX[i] - _woStartX[i]) * (_woGreetX[i] - _woStartX[i]) + (_woGreetY[i] - _woStartY[i]) * (_woGreetY[i] - _woStartY[i]));
+                float jitter = ((i * 37) % 11) / 10f;                       // 0..1 fijo por jugador
+                float toGreet = 2.6f + 0.6f * jitter;                        // m/s: pasan del trote a la caminata
+                _woArrive[i] = 0.8f + 0.12f * k + distance / toGreet;
+                _woLeave[i] = GreetEndSeconds + (home ? 0f : 1.5f) + 0.55f * k + 1.2f * jitter; // se van escalonados, primero el local
+                _woSpeed[i] = 1.9f + 0.7f * (1f - jitter) + (k == 0 ? -0.3f : 0f);              // los arqueros, un poco más lentos
+            }
+
+            _walkOff = true;
+            WalkOffDone = false;
+            _walkOffTime = 0f;
+        }
+
+        /// <summary>Corta la salida (por ejemplo al volver al menú).</summary>
+        public void EndWalkOff()
+        {
+            _walkOff = false;
+            WalkOffDone = false;
+        }
+
+        /// <summary>Posición, rumbo y velocidad de un jugador durante la salida; devuelve falso cuando ya entró al túnel.</summary>
+        private bool WalkOffPose(int i, out float x, out float y, out float heading, out float speed)
+        {
+            float t = _walkOffTime;
+            Vector2 tunnel = TunnelMouth;
+            x = _woStartX[i]; y = _woStartY[i]; heading = 0f; speed = 0f;
+            if (t < _woArrive[i])
+            {
+                float u = Mathf.Clamp01(t / _woArrive[i]);
+                float ease = u * u * (3f - 2f * u); // arranca frenando la carrera y llega caminando
+                x = Mathf.Lerp(_woStartX[i], _woGreetX[i], ease);
+                y = Mathf.Lerp(_woStartY[i], _woGreetY[i], ease);
+                heading = Mathf.Atan2(_woGreetY[i] - _woStartY[i], _woGreetX[i] - _woStartX[i]) * Mathf.Rad2Deg;
+                speed = Mathf.Lerp(3.2f, 1.4f, u);
+                return true;
+            }
+
+            if (t < _woLeave[i])
+            {
+                x = _woGreetX[i]; y = _woGreetY[i]; heading = _woFace[i]; speed = 0f; // saludo
+                return true;
+            }
+
+            float gx = _woGreetX[i], gy = _woGreetY[i];
+            float dx = tunnel.x - gx, dy = tunnel.y - gy;
+            float length = Mathf.Sqrt(dx * dx + dy * dy);
+            float travelled = (t - _woLeave[i]) * _woSpeed[i];
+            if (travelled >= length)
+            {
+                return false;
+            }
+
+            float w = travelled / length;
+            // Se acercan a la boca del túnel por el centro de la fila (sin cruzar el banco): un leve desvío lateral por jugador.
+            x = Mathf.Lerp(gx, tunnel.x + (((i * 13) % 5) - 2) * TunnelHalfWidth * 0.2f, w);
+            y = Mathf.Lerp(gy, tunnel.y, w);
+            heading = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
+            speed = _woSpeed[i];
+            return true;
+        }
+
         public void Render(MatchSnapshot previous, MatchSnapshot current, float alpha, int controlled, int passTarget, float deltaTime,
             int switchTarget = -1)
         {
             _clock += deltaTime;
+            if (_walkOff)
+            {
+                _walkOffTime += deltaTime;
+            }
+
             _confetti?.Update(deltaTime);
             _grass?.Update(deltaTime);
             UpdateLedBoards(deltaTime);
@@ -919,11 +1037,24 @@ namespace Football.Game
                 float y = Mathf.Lerp(previous.PlayerY[i], current.PlayerY[i], alpha);
                 float heading = Mathf.LerpAngle(previous.PlayerHeading[i] * Mathf.Rad2Deg, current.PlayerHeading[i] * Mathf.Rad2Deg, alpha);
                 float speed = Mathf.Lerp(previous.PlayerSpeed[i], current.PlayerSpeed[i], alpha);
+                PlayerAction walkAction = current.PlayerAction[i];
+                if (_walkOff)
+                {
+                    if (_woGone[i] || !WalkOffPose(i, out x, out y, out heading, out speed))
+                    {
+                        _woGone[i] = true;
+                        model.SetVisible(false);
+                        _visible[i] = false;
+                        continue;
+                    }
+
+                    walkAction = PlayerAction.Idle;
+                }
 
                 // Ángulo hacia el balón relativo a la orientación (positivo = a la izquierda en el plano del motor).
                 float toBall = Mathf.Atan2(by - y, bx - x) * Mathf.Rad2Deg;
                 float relative = Mathf.DeltaAngle(heading, toBall);
-                PlayerAction action = current.PlayerAction[i];
+                PlayerAction action = walkAction;
                 Vector2 runUp = RunUpOffset(previous, current, i, x, y, deltaTime);
                 if (runUp.sqrMagnitude > 0f)
                 {
@@ -946,6 +1077,17 @@ namespace Football.Game
                 model.Pose(ToUnity(x, y, 0f), heading, speed, ReferenceTopSpeed, action, -relative, relative < 0f, deltaTime,
                     current.DiveHeight[i], holdingThrow, holdingBall, lookPitch);
                 _heads[i] = ToUnity(x, y, NameHeight);
+            }
+
+            if (_walkOff && !WalkOffDone)
+            {
+                bool all = true;
+                for (int i = 0; i < _woGone.Length && all; i++)
+                {
+                    all = _woGone[i] || _players[i] == null;
+                }
+
+                WalkOffDone = all;
             }
 
             if (_ball != null)
