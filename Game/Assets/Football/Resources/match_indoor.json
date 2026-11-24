@@ -248,7 +248,7 @@
     "DribbleSafeDistance": 4,
     "DecisionNoise": 0.04,
     "DribbleBias": 0.002,
-    "TurnPenalty": 0.05,
+    "TurnPenalty": 0,
     "OwnerCommitDecisions": 2,
     "ClearancePressure": 2.5,
     "SupportDistance": 11,

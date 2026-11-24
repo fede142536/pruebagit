@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using UnityEngine;
+using Unity.Profiling;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 
@@ -35,6 +36,8 @@ namespace Football.Game
         private float _fps;
         private long _lastMono;
         private long _allocatedBytes;
+        private ProfilerRecorder _gcRecorder; // «GC Allocated In Frame»: lo que de verdad se asignó en cada fotograma (exacto, no una diferencia de memoria)
+        private bool _gcRecorderStarted;
         private float _allocWindow;
         private float _allocPerSecond;
         private int _gcStart;
@@ -92,10 +95,20 @@ namespace Football.Game
             _ticksTotal += ticks;
             _framesTotal++;
 
-            long mono = Profiler.GetMonoUsedSizeLong();
-            if (mono > _lastMono)
+            if (!_gcRecorderStarted)
             {
-                _allocatedBytes += mono - _lastMono;
+                _gcRecorder = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+                _gcRecorderStarted = true;
+            }
+
+            long mono = Profiler.GetMonoUsedSizeLong();
+            if (_gcRecorder.Valid)
+            {
+                _allocatedBytes += _gcRecorder.LastValue; // asignaciones reales del fotograma
+            }
+            else if (mono > _lastMono)
+            {
+                _allocatedBytes += mono - _lastMono; // sin el contador de Unity: diferencia de memoria (aproximada)
             }
 
             _lastMono = mono;

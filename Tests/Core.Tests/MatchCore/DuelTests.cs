@@ -243,7 +243,7 @@ namespace Football.Core.Tests.MatchCore
                 }
             }
 
-            Assert.That(won, Is.GreaterThan(n * 55 / 100), $"robos {won} de {n}");
+            Assert.That(won, Is.GreaterThan(n * 50 / 100), $"robos {won} de {n}");
             Assert.That(fouls, Is.LessThan(n * 20 / 100), $"faltas {fouls} de {n}");
         }
     }

@@ -57,7 +57,9 @@ namespace Football.Core.Tests.MatchCore
         [Test]
         public void WithoutKeeper_TheGoalGuardStaysBetweenTheBallAndItsGoal()
         {
-            MatchEngine e = NewIndoor(7);
+            MatchConfig config = MatchConfig.CreateIndoor();
+            config.Ai.OwnerCommitDecisions = 0; // escenario calibrado con el poseedor que decide en cada paso
+            MatchEngine e = NewIndoor(7, config);
             e.TestBeginOpenPlay();
             TeamState defenders = e.Teams[1];
             MatchPlayer carrier = e.Teams[0].Players[2];

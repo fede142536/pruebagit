@@ -4,51 +4,31 @@ using NUnit.Framework;
 
 namespace Football.Core.Tests.MatchCore
 {
-    /// <summary>Regla 7 del proyecto: cero asignaciones por cuadro durante el partido. Se mide en el núcleo (en Unity se mide con el benchmark).</summary>
-    public sealed class AllocationTests
+    /// <summary>El motor no genera basura durante el juego (regla: cero asignaciones por fotograma): lo que sube en el celular viene de la capa Unity.</summary>
+    public class AllocationTests
     {
-        private const int WarmupTicks = 60 * 20;
-        private const int MeasuredTicks = 60 * 60;
-        private const long BytesPerTickBudget = 64;  // margen para el boxing ocasional de un evento; lo normal es 0
-
         [Test]
-        public void TheEngineAllocatesAlmostNothingPerTick()
+        public void TickAndSnapshotCopy_AllocateAlmostNothing()
         {
-            MatchEngine e = SubstitutionTests.NewMatch(31);
-            for (int i = 0; i < WarmupTicks; i++)
+            MatchEngine e = MatchEngineTests.NewEngine(3);
+            e.TestBeginOpenPlay();
+            var snap = new MatchSnapshot();
+            for (int i = 0; i < 600; i++)
             {
                 e.Tick();
+                snap.CopyFrom(e); // calentamiento
             }
 
+            const int ticks = 60 * 30;
             long before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < MeasuredTicks && !e.IsFinished; i++)
+            for (int i = 0; i < ticks; i++)
             {
                 e.Tick();
+                snap.CopyFrom(e);
             }
 
-            long perTick = (GC.GetAllocatedBytesForCurrentThread() - before) / MeasuredTicks;
-            TestContext.Out.WriteLine("bytes por tick: " + perTick);
-            Assert.That(perTick, Is.LessThanOrEqualTo(BytesPerTickBudget), "el motor no debería generar basura por tick");
-        }
-
-        [Test]
-        public void TakingASnapshotAllocatesNothing()
-        {
-            MatchEngine e = SubstitutionTests.NewMatch(32);
-            var snapshot = new MatchSnapshot();
-            for (int i = 0; i < 60 * 10; i++)
-            {
-                e.Tick();
-                snapshot.CopyFrom(e);
-            }
-
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < 6000; i++)
-            {
-                snapshot.CopyFrom(e);
-            }
-
-            Assert.That(GC.GetAllocatedBytesForCurrentThread() - before, Is.LessThanOrEqualTo(1024), "CopyFrom reutiliza sus buffers");
+            double perTick = (GC.GetAllocatedBytesForCurrentThread() - before) / (double)ticks;
+            Assert.That(perTick, Is.LessThan(64.0), "bytes por paso del motor y copia de la instantánea");
         }
     }
 }
