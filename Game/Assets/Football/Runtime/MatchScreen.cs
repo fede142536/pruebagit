@@ -174,7 +174,7 @@ namespace Football.Game
             _tacticsPanel = new TacticsPanel(dim.transform); // va al final: se dibuja encima del resto de la pausa
             _card = new PlayerCardPanel(parent);
             Text tacticHelp = UiKit.Label(dim.transform, "AyudaTactica", new Vector2(1560f, 505f), new Vector2(620f, 140f),
-                "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba.", 24, new Color(1f, 1f, 1f, 0.8f));
+                Locale.Get("match.tactic_help"), 24, new Color(1f, 1f, 1f, 0.8f));
             // Elementos de la pantalla base de la pausa: se ocultan al abrir un submenú para que nada quede detrás de sus listas.
             // (La guía de controles ya no está aquí: vive en Ajustes → Controles.)
             var pauseBase = new System.Collections.Generic.List<GameObject>

@@ -63,7 +63,24 @@ namespace Football.Game
             var rect = (RectTransform)Root.transform;
             rect.anchoredPosition = center;
             rect.sizeDelta = size;
+            FitLabel();
         }
+
+        /// <summary>Ajusta el recuadro de la etiqueta al tamaño actual del botón (con un margen a cada lado) para que el texto nunca se salga.</summary>
+        public void FitLabel()
+        {
+            if (Label == null)
+            {
+                return;
+            }
+
+            RectTransform rect = Label.rectTransform;
+            rect.anchoredPosition = Size * 0.5f;
+            rect.sizeDelta = new Vector2(Mathf.Max(1f, Size.x - 2f * LabelMargin), Size.y);
+        }
+
+        /// <summary>Margen horizontal (unidades de lienzo) entre el borde del botón y su texto.</summary>
+        public const float LabelMargin = 10f;
     }
 
     /// <summary>
@@ -344,9 +361,10 @@ namespace Football.Game
             return image;
         }
 
-        /// <summary>Crea un texto centrado.</summary>
+        /// <summary>Crea un texto centrado. Por defecto se ajusta a su recuadro (<see cref="FitToBox"/>): se achica o pasa a otra línea en vez de salirse.</summary>
+        /// <param name="fit">Falso para los textos que cambian cada cuadro o de tamaño (etiquetas sobre los jugadores).</param>
         public static Text Label(Transform parent, string name, Vector2 center, Vector2 size, string text, int fontSize, Color color,
-            TextAnchor alignment = TextAnchor.MiddleCenter)
+            TextAnchor alignment = TextAnchor.MiddleCenter, bool fit = true)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -364,8 +382,44 @@ namespace Football.Game
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.verticalOverflow = VerticalWrapMode.Overflow;
             label.raycastTarget = false;
+            if (fit)
+            {
+                FitToBox(label); // ningún texto se sale de su recuadro: se achica o pasa a otra línea
+            }
+
             label.text = text;
             return label;
+        }
+
+        /// <summary>Cambia el tamaño de letra de un texto con ajuste automático (el nuevo tamaño pasa a ser el máximo).</summary>
+        /// <param name="label">Texto.</param>
+        /// <param name="fontSize">Tamaño de letra deseado.</param>
+        public static void SetFontSize(Text label, int fontSize)
+        {
+            float ratio = label.fontSize > 0 ? label.resizeTextMinSize / (float)label.fontSize : FitMinScale;
+            label.fontSize = fontSize;
+            if (label.resizeTextForBestFit)
+            {
+                label.resizeTextMaxSize = fontSize;
+                label.resizeTextMinSize = Mathf.Max(10, Mathf.RoundToInt(fontSize * ratio));
+            }
+        }
+
+        /// <summary>Proporción mínima del tamaño de letra al achicar un texto largo para que entre en su recuadro.</summary>
+        public const float FitMinScale = 0.55f;
+
+        /// <summary>
+        /// Hace que el texto nunca se salga de su recuadro: si no entra al tamaño pedido, se achica hasta <see cref="FitMinScale"/> (y si aún no entra,
+        /// pasa a dos líneas). Usar en textos que cambian (nombres, números) o cuyo largo depende del idioma.
+        /// </summary>
+        /// <param name="label">Texto a ajustar (el tamaño de letra actual es el máximo).</param>
+        /// <param name="minScale">Proporción mínima del tamaño de letra.</param>
+        public static void FitToBox(Text label, float minScale = FitMinScale)
+        {
+            label.horizontalOverflow = HorizontalWrapMode.Wrap;
+            label.resizeTextForBestFit = true;
+            label.resizeTextMaxSize = label.fontSize;
+            label.resizeTextMinSize = Mathf.Max(10, Mathf.RoundToInt(label.fontSize * minScale));
         }
 
         /// <summary>Crea un botón con fondo y etiqueta.</summary>
@@ -374,13 +428,14 @@ namespace Football.Game
         {
             Image background = Panel(parent, name, center, size, color, circle);
             Text label = Label(background.transform, "Label", size * 0.5f, size, text, fontSize, Color.white);
+            FitToBox(label); // la etiqueta de un botón nunca se sale del botón
             if (!circle && color == UiTheme.Button)
             {
                 Outline(background, size); // los botones secundarios del manual: contorno fino, fondo casi vacío
             }
 
             var button = new UiButton(background.gameObject, background, label, circle);
-            button.Place(center, size);
+            button.Place(center, size); // también deja la etiqueta con su margen
             return button;
         }
     }

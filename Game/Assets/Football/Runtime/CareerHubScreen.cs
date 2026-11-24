@@ -234,7 +234,7 @@ namespace Football.Game
             if (r.DivisionChange != 0)
             {
                 // Ascenso o descenso del club del usuario al cerrar la temporada.
-                _ceremonyTitle.fontSize = 56;
+                UiKit.SetFontSize(_ceremonyTitle, 56);
                 _ceremonyTitle.text = Locale.Get(r.DivisionChange > 0 ? "ceremony.promoted" : "ceremony.relegated");
                 _ceremonySub.text = Locale.Get(r.DivisionChange > 0 ? "ceremony.promoted_sub" : "ceremony.relegated_sub");
                 _ceremonyDetail.text = string.Empty;
@@ -243,7 +243,7 @@ namespace Football.Game
 
             if (r.Kind == TournamentKind.Promotion)
             {
-                _ceremonyTitle.fontSize = 46;
+                UiKit.SetFontSize(_ceremonyTitle, 46);
                 _ceremonyTitle.text = CareerText.Format("ceremony.end", r.Name.ToUpperInvariant());
                 _ceremonySub.text = CareerText.Format("ceremony.promotion_sub", d.Club(r.ChampionClubId).Name);
                 _ceremonyDetail.text = Locale.Get(r.UserChampion ? "ceremony.promotion_won" : "ceremony.promotion_lost");
@@ -252,14 +252,14 @@ namespace Football.Game
 
             if (r.UserChampion)
             {
-                _ceremonyTitle.fontSize = 72;
+                UiKit.SetFontSize(_ceremonyTitle, 72);
                 _ceremonyTitle.text = Locale.Get("ceremony.champion");
                 _ceremonySub.text = CareerText.Format("ceremony.champion_sub", r.Name);
                 _ceremonyDetail.text = string.Empty;
                 return;
             }
 
-            _ceremonyTitle.fontSize = 46;
+            UiKit.SetFontSize(_ceremonyTitle, 46);
             _ceremonyTitle.text = CareerText.Format("ceremony.end", r.Name.ToUpperInvariant());
             _ceremonySub.text = CareerText.Format("ceremony.end_sub", d.Club(r.ChampionClubId).Name);
             if (r.Kind == TournamentKind.Cup)

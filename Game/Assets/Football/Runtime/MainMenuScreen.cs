@@ -195,7 +195,7 @@ namespace Football.Game
                 float titleY = Mathf.Lerp(bottom + 75f, top - 125f, near);
                 _title[i].rectTransform.anchoredPosition = new Vector2(x, titleY);
                 _title[i].rectTransform.sizeDelta = new Vector2(w - 2f * Pad, 120f);
-                _title[i].fontSize = on ? 48 : 32;
+                UiKit.SetFontSize(_title[i], on ? 48 : 32);
                 _title[i].color = on ? AccentStrong : Ink;
                 _desc[i].rectTransform.anchoredPosition = new Vector2(x, top - 290f);
                 _desc[i].rectTransform.sizeDelta = new Vector2(w - 2f * Pad, 170f);

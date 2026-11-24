@@ -536,3 +536,11 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - Separación del público: `CrowdSpacing` 2,4 / 1,6 / 1,1 m (bajo / medio / alto; antes 2,2 / 1,4 / 0,95), porque hay más filas. Estimado en calidad alta: ~5.000 figuras (~240.000 vértices).
 - **Sin medir en Unity**: hay que mirar los FPS en el A13 en calidad media y alta; si bajan, subir `CrowdSpacing` o quitar filas alternas.
 - Sin tocar: la vista isométrica de la pantalla del estadio (`CareerStadiumScreen`), que sigue con su dibujo propio.
+
+## D-53 · Ningún texto se sale de su recuadro — Aceptada (pedido del usuario, 24/11/2026)
+- Causa: `UiKit.Label` creaba los textos con desborde horizontal libre; un texto más largo que su recuadro se salía y pisaba al vecino (caso visto: «PRIMERA: 20 CLUBES · NACIONAL: 29» sobre el botón de filtro).
+- `UiKit.Label` y `UiKit.Button` ajustan ahora el texto a su recuadro (`UiKit.FitToBox`: se achica hasta el 55 % de la letra y, si aún no entra, pasa a otra línea). Las etiquetas de botón dejan 10 unidades de margen a cada lado y siguen al botón si se lo redimensiona (`UiButton.Place`). Se desactiva con `fit: false` (solo las etiquetas sobre los jugadores, que cambian cada cuadro). Quien cambie el tamaño de letra después de crear un texto debe usar `UiKit.SetFontSize`.
+- Fila superior del selector de club re-medida (modo 290, cantidad 400, filtro 270, contador 110) para que no se pisen ni se achique de más.
+- Texto de ayuda de la pausa movido a `ui_es/ui_en.json` (`match.tactic_help`), estaba incrustado en el código.
+- `Tools/ui_text_audit.py [--lang es|en]` mide con Liberation Sans (igual que la Arial de Unity) los textos de claves de idioma y avisa si alguno no entra ni achicado. No cubre los textos armados en ejecución (nombres, números): el club más largo, «Central Córdoba (Santiago del Estero)», mide 646 en una caja de 540 y ahora se achica.
+- **Sin probar en Unity**: el ajuste automático de Unity (`resizeTextForBestFit`) hay que mirarlo en pantalla; el audio de solapes entre botones hermanos arrojó solo casos de estados alternativos (no visibles a la vez).

@@ -570,5 +570,6 @@
   "record.season_goals": "Más goles en una temporada",
   "record.career_goals": "Más goles en la carrera",
   "record.biggest_win": "Mayor goleada (diferencia de goles)",
-  "manager.type_hint": "Tocá un campo y escribí con el teclado (Enter para terminar)."
+  "manager.type_hint": "Tocá un campo y escribí con el teclado (Enter para terminar).",
+  "match.tactic_help": "Ofensiva: línea más alta y\njuego más directo y arriesgado.\nPresión alta: van a buscar arriba."
 }

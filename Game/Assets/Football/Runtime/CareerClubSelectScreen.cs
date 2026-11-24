@@ -105,10 +105,10 @@ namespace Football.Game
             Transform p = Panel;
             _back = UiKit.Button(p, "Volver", new Vector2(160f, 1020f), new Vector2(220f, 70f), Locale.Get("career.back"), 28, UiTheme.Button);
             UiKit.Label(p, "Titulo", new Vector2(520f, 1020f), new Vector2(420f, 80f), Locale.Get("career.pick_club"), 50, UiTheme.Text, TextAnchor.MiddleLeft);
-            _filter = UiKit.Button(p, "Filtro", new Vector2(1530f, 1020f), new Vector2(320f, 70f), string.Empty, 24, UiTheme.Button);
-            _counter = UiKit.Label(p, "Contador", new Vector2(1790f, 1020f), new Vector2(170f, 60f), string.Empty, 28, UiTheme.TextDim);
-            _size = UiKit.Button(p, "CantidadPrimera", new Vector2(1240f, 1020f), new Vector2(300f, 70f), string.Empty, 20, UiTheme.Button);
-            _mode = UiKit.Button(p, "Modalidad", new Vector2(930f, 1020f), new Vector2(300f, 70f), string.Empty, 20, UiTheme.AccentDark);
+            _filter = UiKit.Button(p, "Filtro", new Vector2(1610f, 1020f), new Vector2(270f, 70f), string.Empty, 24, UiTheme.Button);
+            _counter = UiKit.Label(p, "Contador", new Vector2(1845f, 1020f), new Vector2(110f, 60f), string.Empty, 28, UiTheme.TextDim);
+            _size = UiKit.Button(p, "CantidadPrimera", new Vector2(1265f, 1020f), new Vector2(400f, 70f), string.Empty, 20, UiTheme.Button);
+            _mode = UiKit.Button(p, "Modalidad", new Vector2(905f, 1020f), new Vector2(290f, 70f), string.Empty, 20, UiTheme.AccentDark);
 
             // Ficha del club.
             UiTheme.Frame(p, "Ficha", new Vector2(330f, 545f), new Vector2(580f, 760f));

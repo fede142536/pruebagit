@@ -39,7 +39,8 @@ namespace Football.Game
             _canvas = UiKit.CreateCanvas("NombresUI", parent, 8);
             for (int i = 0; i < _labels.Length; i++)
             {
-                Text label = UiKit.Label(_canvas.transform, "Nombre" + i, Vector2.zero, new Vector2(320f, 40f), string.Empty, FontSize, HomeColor);
+                Text label = UiKit.Label(_canvas.transform, "Nombre" + i, Vector2.zero, new Vector2(320f, 40f), string.Empty, FontSize, HomeColor,
+                    TextAnchor.MiddleCenter, false); // sin ajuste: se actualiza cada cuadro y cambia de tamaño
                 Shadow shadow = label.gameObject.AddComponent<Shadow>();
                 shadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
                 shadow.effectDistance = new Vector2(2f, -2f);
