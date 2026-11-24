@@ -86,6 +86,7 @@ namespace Football.Game
         private readonly CareerCalendarScreen _calendar;
         private readonly CareerHistoryScreen _history;
         private readonly CareerContractsScreen _contracts;
+        private readonly CareerTransfersScreen _transfers;
         private CareerSession _session;
         private PlayerCardPanel _card;
         private CareerSection _section;
@@ -130,7 +131,7 @@ namespace Football.Game
         private List<Player> _squadView = new List<Player>();
         private static readonly string[] PositionGroups = { "all", "gk", "def", "mid", "att" };
         private readonly UiButton[] _tactic = new UiButton[6];
-        private UiButton _openLineup, _openContracts;
+        private UiButton _openLineup, _openContracts, _openTransfers, _loanRequest, _loanBuyRequest;
 
         // mercado
         private UiButton _filterPos, _ageMinus, _agePlus, _ageMaxMinus, _ageMaxPlus, _rateMinus, _ratePlus, _rateMaxMinus, _rateMaxPlus, _search;
@@ -181,6 +182,7 @@ namespace Football.Game
             _calendar = new CareerCalendarScreen(Root, this);
             _history = new CareerHistoryScreen(Root, this);
             _contracts = new CareerContractsScreen(Root, this);
+            _transfers = new CareerTransfersScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(BarLeft + BarStep * 0.5f + i * BarStep, BarY), new Vector2(BarStep - 10f, BarHeight),
@@ -348,12 +350,14 @@ namespace Football.Game
             _calendar.SetVisible(section == CareerSection.Calendar);
             _history.SetVisible(section == CareerSection.History);
             _contracts.SetVisible(section == CareerSection.Contracts);
+            _transfers.SetVisible(section == CareerSection.Transfers);
             _marketPanel.gameObject.SetActive(section == CareerSection.Market);
             _hub.SetVisible(section == CareerSection.Hub);
             _office.SetVisible(section == CareerSection.Office);
             _finance.SetVisible(section == CareerSection.Finance);
             _stadium.SetVisible(section == CareerSection.Stadium);
             int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup || section == CareerSection.Contracts ? (int)CareerSection.Squad
+                : section == CareerSection.Transfers ? (int)CareerSection.Market
                 : section == CareerSection.Calendar || section == CareerSection.History ? (int)CareerSection.Hub : (int)section;
             for (int i = 0; i < Sections; i++)
             {
@@ -465,6 +469,7 @@ namespace Football.Game
                     case CareerSection.Calendar: _calendar.Tap(p); break;
                     case CareerSection.History: _history.Tap(p); break;
                     case CareerSection.Contracts: _contracts.Tap(p); break;
+                    case CareerSection.Transfers: _transfers.Tap(p); break;
                 }
 
                 RefreshHeader();
@@ -492,6 +497,7 @@ namespace Football.Game
                 case CareerSection.Calendar: _calendar.Refresh(); break;
                 case CareerSection.History: _history.Refresh(); break;
                 case CareerSection.Contracts: _contracts.Refresh(); break;
+                case CareerSection.Transfers: _transfers.Refresh(); break;
             }
         }
 
@@ -516,6 +522,7 @@ namespace Football.Game
             _calendar.SetVisible(false);
             _history.SetVisible(false);
             _contracts.SetVisible(false);
+            _transfers.SetVisible(false);
             _managerPage.SetVisible(false);
             _clubPage.SetVisible(false);
         }
@@ -840,6 +847,7 @@ namespace Football.Game
             _nameField.Label.alignment = TextAnchor.MiddleLeft;
             _nameClear = UiKit.Button(p, "NombreBorrar", new Vector2(835f, 868f), new Vector2(64f, 64f), "X", 28, UiTheme.Button);
             _freeToggle = UiKit.Button(p, "SoloLibres", new Vector2(1130f, 868f), new Vector2(400f, 64f), string.Empty, 24, UiTheme.Button);
+            _openTransfers = UiKit.Button(p, "Traspasos", new Vector2(1630f, 868f), new Vector2(330f, 64f), Locale.Get("transfers.open"), 24, UiTheme.AccentDark);
 
             UiTheme.Frame(p, "Resultados", new Vector2(700f, 495f), new Vector2(1280f, 660f));
             _resultMark = UiKit.Panel(p, "Marca", new Vector2(700f, 0f), new Vector2(1260f, 58f), UiTheme.Selected);
@@ -856,6 +864,8 @@ namespace Football.Game
             _clause = UiKit.Button(p, "Clausula", new Vector2(1660f, 495f), new Vector2(420f, 70f), Locale.Get("career.pay_clause"), 26, UiTheme.Button);
             // Jugador libre: se firma sin transferencia, eligiendo los años del contrato (en el lugar de la oferta y la cláusula).
             _signFree = UiKit.Button(p, "FicharLibre", new Vector2(1660f, 605f), new Vector2(420f, 64f), Locale.Get("career.sign_free"), 26, UiTheme.AccentDark);
+            _loanRequest = UiKit.Button(p, "PedirCesion", new Vector2(1555f, 437f), new Vector2(200f, 40f), Locale.Get("transfers.request_loan"), 18, UiTheme.Button);
+            _loanBuyRequest = UiKit.Button(p, "PedirCesionCompra", new Vector2(1765f, 437f), new Vector2(200f, 40f), Locale.Get("transfers.request_loan_buy"), 18, UiTheme.Button);
             _signYears = UiKit.Button(p, "AniosLibre", new Vector2(1660f, 495f), new Vector2(420f, 70f), string.Empty, 26, UiTheme.Button);
 
             UiTheme.Frame(p, "Recibidas", new Vector2(1660f, 240f), new Vector2(480f, 330f));
@@ -905,6 +915,8 @@ namespace Football.Game
             _clause.SetVisible(!free);
             _signFree.SetVisible(free);
             _signYears.SetVisible(free);
+            _loanRequest.SetVisible(selected && !free);
+            _loanBuyRequest.SetVisible(selected && !free);
             if (free)
             {
                 _feeText.text = Format("career.free_wage", Money(_session.FreeAgentWage(_found[_selected])));
@@ -919,7 +931,7 @@ namespace Football.Game
             {
                 bool show = i < offers.Count;
                 _offerLines[i].text = show
-                    ? Format("career.offer_line", d.Club(offers[i].Offer.BuyerClubId).ShortName, ShortName(d.Players[offers[i].Offer.PlayerId]), Money(offers[i].Offer.Fee))
+                    ? Format(offers[i].Kind == DealKind.Sale ? "career.offer_line" : "career.offer_line_loan", d.Club(offers[i].Offer.BuyerClubId).ShortName, ShortName(d.Players[offers[i].Offer.PlayerId]), Money(offers[i].Offer.Fee))
                     : string.Empty;
                 _accept[i].SetVisible(show);
                 _reject[i].SetVisible(show);
@@ -941,6 +953,7 @@ namespace Football.Game
             else if (_nameField.Contains(p)) { StartNameEditing(); }
             else if (_nameClear.Root.activeSelf && _nameClear.Contains(p)) { _nameQuery = string.Empty; RunSearch(); }
             else if (_freeToggle.Contains(p)) { _freeOnly = !_freeOnly; RunSearch(); }
+            else if (_openTransfers.Contains(p)) { StopNameEditing(); Open(CareerSection.Transfers); return; }
             else
             {
                 StopNameEditing();
@@ -1087,7 +1100,16 @@ namespace Football.Game
                 return;
             }
 
-            if (_scout.Contains(p))
+            if (_loanRequest.Contains(p) || _loanBuyRequest.Contains(p))
+            {
+                DealOutcome loan = _session.RequestLoan(pl.Id, _session.LoanRequestWageShare, _loanBuyRequest.Contains(p));
+                SetStatus(Locale.Get("transfers.outcome." + loan.ToString().ToLowerInvariant()));
+                if (loan == DealOutcome.ForeignQuota)
+                {
+                    ShowAlert(Format("alert.foreign_quota", _session.MaxForeigners));
+                }
+            }
+            else if (_scout.Contains(p))
             {
                 SetStatus(Locale.Get(_session.SendScout(pl.Id) ? "career.scout_sent" : "career.scout_refused"));
             }

@@ -35,5 +35,12 @@
   "news.contract_renewed": "Renovaste a {0} hasta {1}.",
   "news.contract_expired": "{0} terminó su contrato y se fue libre.",
   "news.free_agent_signed": "Fichaste a {0}, jugador libre.",
-  "news.contracts_expiring": "Tienes {0} contratos que vencen esta temporada: renueva o se van libres."
+  "news.contracts_expiring": "Tienes {0} contratos que vencen esta temporada: renueva o se van libres.",
+  "news.loan_offer": "{0} piden a {1} a préstamo hasta fin de temporada y pagarían {2}% del sueldo. Respondé desde Mercado.",
+  "news.loan_offer_obligation": "{0} piden a {1} a préstamo con compra obligatoria por {3} (pagan {2}% del sueldo). Respondé desde Mercado.",
+  "news.loan_out": "{0} se va a préstamo a {1}.",
+  "news.loan_in": "{0} llega a préstamo desde {1}.",
+  "news.loan_bought": "{1} compra a {0} por {2} al terminar el préstamo.",
+  "news.loan_returned": "{0} vuelve de su préstamo ({1}).",
+  "news.player_upset_stays": "{0} quería irse y está molesto porque rechazaste la oferta."
 }

@@ -901,6 +901,8 @@ namespace Football.Core.Career
                 _inbox.Post("news.qualified", Data.Club(s.ClubId).Name);
             }
 
+            ProcessLoansAtSeasonEnd(); // los prestados vuelven (o se compran) antes de los retiros y los contratos
+            ExpireBuybacks();
             List<Player> active = Data.Players.Values.Where(p => p.ClubId.HasValue).ToList();
             List<Player> retired = _history.SeasonEnd(active, Data.Today, _dayRng.Fork("retiros"), out List<StaffMember> newStaff);
             foreach (Player p in retired)
@@ -1020,59 +1022,6 @@ namespace Football.Core.Career
 
         /// <summary>Hoy está abierto el libro de pases.</summary>
         public bool TransferWindowOpen => Array.IndexOf(_cfg.Career.TransferWindowMonths, Data.Today.Month) >= 0;
-
-        private void RivalOffers()
-        {
-            if (!TransferWindowOpen || !_dayRng.Chance(_cfg.Career.RivalOfferChancePerWeek))
-            {
-                return;
-            }
-
-            double share = _cfg.Career.RivalOfferShare;
-            long cheapest = Squad(Data.UserClubId).Select(p => (long)(_market.Value(p, Data.Today) * share)).DefaultIfEmpty(long.MaxValue).Min();
-            // Solo ofertan los rivales que pueden pagar al menos a uno de los jugadores del usuario.
-            List<Club> others = Data.Clubs.Where(c => c.Id != Data.UserClubId && Data.Finances[c.Id].TransferBudget >= cheapest).ToList();
-            if (others.Count == 0)
-            {
-                return;
-            }
-
-            Club buyer = others[_dayRng.NextInt(0, others.Count)];
-            long budget = Data.Finances[buyer.Id].TransferBudget;
-            // El rival elige según su perfil, pero solo entre los que puede pagar y por los que no hay otra oferta.
-            IEnumerable<Player> affordable = Squad(Data.UserClubId)
-                .Where(p => _market.Value(p, Data.Today) * share <= budget && _offers.All(o => o.Offer.PlayerId != p.Id));
-            Player target = TransferMarket.AiTarget(ProfileOf(buyer.Id), affordable, Data.Today);
-            if (target == null)
-            {
-                return;
-            }
-
-            long fee = (long)(_market.Value(target, Data.Today) * share);
-
-            _offers.Add(new PendingOffer
-            {
-                Received = Data.Today,
-                Offer = new TransferOffer { PlayerId = target.Id, BuyerClubId = buyer.Id, SellerClubId = Data.UserClubId, Fee = fee }
-            });
-            _inbox.Post("news.offer_received", buyer.Name, FullName(target), Num(fee));
-        }
-
-        /// <summary>Acepta o rechaza una oferta recibida.</summary>
-        /// <param name="offer">Oferta pendiente.</param>
-        /// <param name="accept">Verdadero para vender.</param>
-        public void Respond(PendingOffer offer, bool accept)
-        {
-            if (!_offers.Remove(offer))
-            {
-                return;
-            }
-
-            if (accept)
-            {
-                Transfer(offer.Offer);
-            }
-        }
 
         /// <summary>
         /// Oferta del usuario por un jugador de otro club. El club vendedor responde según su perfil (comprador, vendedor de
@@ -1252,11 +1201,6 @@ namespace Football.Core.Career
 
         /// <summary>Plantel actual de un club.</summary>
         public List<Player> Squad(int clubId) => Data.Players.Values.Where(p => p.ClubId == clubId).OrderBy(p => p.Id).ToList();
-
-        /// <inheritdoc />
-        public long WeeklyWages(int clubId) =>
-            Data.Players.Values.Where(p => p.ClubId == clubId && p.Contract != null).Sum(p => p.Contract.WeeklyWage)
-            + Data.Staff.Where(s => s.ClubId == clubId).Sum(s => s.WeeklyWage);
 
         /// <summary>Perfil de mercado de un club (comprador, vendedor de juveniles o defensivo), fijo por club.</summary>
         public static ClubProfile ProfileOf(int clubId) => (ClubProfile)(clubId % Enum.GetValues(typeof(ClubProfile)).Length);

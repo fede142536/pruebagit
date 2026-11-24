@@ -97,6 +97,18 @@ namespace Football.Core.Career
         public TransferOffer Offer;
         /// <summary>Fecha en que llegó.</summary>
         public DateTime Received;
+        /// <summary>Venta, préstamo o préstamo con compra obligatoria.</summary>
+        public DealKind Kind;
+        /// <summary>En un préstamo, fracción del sueldo que paga el club que lo recibe.</summary>
+        public float WageShare = 1f;
+        /// <summary>En un préstamo con compra obligatoria, el monto de la compra.</summary>
+        public long PurchaseFee;
+        /// <summary>En un préstamo con compra obligatoria, los minutos que tiene que jugar para que se active.</summary>
+        public float MinMinutes;
+        /// <summary>El jugador estaba en la lista de transferibles o cedibles.</summary>
+        public bool Listed;
+        /// <summary>Qué piensa el jugador de irse (solo en los que no estaban en la lista).</summary>
+        public PlayerStance Stance = PlayerStance.Open;
     }
 
     /// <summary>
@@ -150,6 +162,12 @@ namespace Football.Core.Career
         public readonly Dictionary<int, PlayerCondition> Conditions = new Dictionary<int, PlayerCondition>();
         /// <summary>Negociaciones de renovación del usuario (por jugador).</summary>
         public readonly Dictionary<int, RenewalTalk> Talks = new Dictionary<int, RenewalTalk>();
+        /// <summary>Jugadores del usuario en la lista de transferibles o cedibles.</summary>
+        public readonly Dictionary<int, TransferListing> Listings = new Dictionary<int, TransferListing>();
+        /// <summary>Préstamos vigentes (jugadores del usuario cedidos y jugadores ajenos que recibió).</summary>
+        public readonly List<LoanRecord> Loans = new List<LoanRecord>();
+        /// <summary>Cláusulas de recompra vigentes del usuario (jugadores que vendió con la posibilidad de volver a comprarlos).</summary>
+        public readonly List<BuybackClause> Buybacks = new List<BuybackClause>();
         /// <summary>Dinero de cada club.</summary>
         public readonly Dictionary<int, ClubFinances> Finances = new Dictionary<int, ClubFinances>();
         /// <summary>Instalaciones de cada club.</summary>

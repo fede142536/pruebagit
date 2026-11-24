@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 9; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar
+        private const int Version = 10; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -267,6 +267,39 @@ namespace Football.Core.Career
                     w.Write(talk.Rounds);
                     w.Write((int)talk.DemandRole);
                 }
+
+                w.Write(d.Listings.Count);
+                foreach (TransferListing l in d.Listings.Values)
+                {
+                    w.Write(l.PlayerId);
+                    w.Write(l.AskingPrice);
+                    w.Write(l.ForSale);
+                    w.Write(l.ForLoan);
+                    w.Write(l.Date.Ticks);
+                }
+
+                w.Write(d.Loans.Count);
+                foreach (LoanRecord l in d.Loans)
+                {
+                    w.Write(l.PlayerId);
+                    w.Write(l.OwnerClubId);
+                    w.Write(l.BorrowerClubId);
+                    w.Write(l.Start.Ticks);
+                    w.Write(l.BorrowerWageShare);
+                    w.Write(l.Obligation);
+                    w.Write(l.PurchaseFee);
+                    w.Write(l.MinMinutes);
+                }
+
+                w.Write(d.Buybacks.Count);
+                foreach (BuybackClause b in d.Buybacks)
+                {
+                    w.Write(b.PlayerId);
+                    w.Write(b.ClubId);
+                    w.Write(b.HolderClubId);
+                    w.Write(b.Fee);
+                    w.Write(b.Expires.Ticks);
+                }
             }
         }
 
@@ -489,6 +522,38 @@ namespace Football.Core.Career
                             t.DemandRole = (PlayingTimePromise)r.ReadInt32();
                         }
                         d.Talks[t.PlayerId] = t;
+                    }
+                }
+
+                if (version >= 10)
+                {
+                    int n = r.ReadInt32();
+                    for (int i = 0; i < n; i++)
+                    {
+                        var l = new TransferListing
+                        {
+                            PlayerId = r.ReadInt32(), AskingPrice = r.ReadInt64(), ForSale = r.ReadBoolean(), ForLoan = r.ReadBoolean(), Date = new DateTime(r.ReadInt64())
+                        };
+                        d.Listings[l.PlayerId] = l;
+                    }
+
+                    n = r.ReadInt32();
+                    for (int i = 0; i < n; i++)
+                    {
+                        d.Loans.Add(new LoanRecord
+                        {
+                            PlayerId = r.ReadInt32(), OwnerClubId = r.ReadInt32(), BorrowerClubId = r.ReadInt32(), Start = new DateTime(r.ReadInt64()),
+                            BorrowerWageShare = r.ReadSingle(), Obligation = r.ReadBoolean(), PurchaseFee = r.ReadInt64(), MinMinutes = r.ReadSingle()
+                        });
+                    }
+
+                    n = r.ReadInt32();
+                    for (int i = 0; i < n; i++)
+                    {
+                        d.Buybacks.Add(new BuybackClause
+                        {
+                            PlayerId = r.ReadInt32(), ClubId = r.ReadInt32(), HolderClubId = r.ReadInt32(), Fee = r.ReadInt64(), Expires = new DateTime(r.ReadInt64())
+                        });
                     }
                 }
 

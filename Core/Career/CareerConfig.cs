@@ -23,6 +23,46 @@ namespace Football.Core.Career
         public float RivalOfferChancePerWeek = 0.3f;
         /// <summary>Fracción del valor de mercado que ofrece un rival (antes de negociar).</summary>
         public float RivalOfferShare = 0.85f;
+        /// <summary>Probabilidad semanal (con el libro abierto) de que un club ofrezca por un jugador de la lista de transferibles o cedibles.</summary>
+        public float ListedOfferChancePerWeek = 0.5f;
+        /// <summary>Lo que paga un club por un jugador que no está en la lista, como múltiplo de su valor de mercado: media y dispersión por perfil de club (comprador, canterano, defensivo).</summary>
+        public float[] UnlistedOfferMean = { 1.15f, 0.95f, 0.85f };
+        /// <summary>Dispersión (± la mitad) de esa oferta.</summary>
+        public float UnlistedOfferSpread = 0.4f;
+        /// <summary>Lo que paga un club por un jugador de la lista, como múltiplo del precio pedido: media por perfil de club.</summary>
+        public float[] ListedOfferMean = { 1.0f, 0.9f, 0.85f };
+        /// <summary>Dispersión (± la mitad) de esa oferta.</summary>
+        public float ListedOfferSpread = 0.3f;
+        /// <summary>Precio que se pide por defecto al poner a un jugador en la lista: múltiplo de su valor de mercado.</summary>
+        public float ListedAskFactor = 1.2f;
+        /// <summary>Fracción de las ofertas por jugadores de la lista que son préstamos cuando el jugador está en las dos listas.</summary>
+        public float ListedLoanShare = 0.5f;
+        /// <summary>Probabilidad de que un préstamo ofrecido traiga compra obligatoria.</summary>
+        public float LoanObligationChance = 0.4f;
+        /// <summary>Fracción del sueldo que paga el club que recibe un préstamo: mínimo y máximo.</summary>
+        public float LoanWageShareMin = 0.5f, LoanWageShareMax = 1f;
+        /// <summary>Minutos que tiene que jugar un prestado para que se active la compra obligatoria.</summary>
+        public float LoanMinMinutes = 900f;
+        /// <summary>Un club presta a quien no está entre sus mejores: puesto del plantel (por media) desde el que acepta ceder.</summary>
+        public int LoanLenderRank = 12;
+        /// <summary>Cláusula de recompra: el club comprador la acepta si el monto pedido es al menos este múltiplo del precio de la venta.</summary>
+        public float BuybackMinFactor = 1.25f;
+        /// <summary>Años máximos de una cláusula de recompra.</summary>
+        public int BuybackMaxYears = 3;
+        /// <summary>Plantel de la media (puesto) a partir del cual un jugador que recibe una oferta ya no se considera titular.</summary>
+        public int StarterRank = 14;
+        /// <summary>Moral que pierde un jugador al que le rechazan una oferta cuando quería irse, y cuando dudaba.</summary>
+        public float RejectWantsOutMorale = 15f, RejectOpenMorale = 6f;
+        /// <summary>Moral que gana un jugador al que le rechazan una oferta cuando quería quedarse.</summary>
+        public float RejectWantsStayMorale = 4f;
+        /// <summary>Moral que pierde quien quería quedarse y se vende igual.</summary>
+        public float SoldAgainstWillMorale = 10f;
+        /// <summary>Aumento de sueldo con el que se queda un jugador que dudaba (fracción del sueldo actual) y años del contrato nuevo.</summary>
+        public float KeepRaise = 0.2f;
+        /// <summary>Años del contrato nuevo.</summary>
+        public int KeepYears = 3;
+        /// <summary>Moral que gana quien se queda con la mejora.</summary>
+        public float KeepMoraleBonus = 10f;
         /// <summary>Clubes que descienden por promedios al terminar la temporada.</summary>
         public int RelegatedClubs = 2;
         /// <summary>Ingreso anual estimado por punto de reputación sobre el piso (para ajustar la masa salarial inicial al tamaño del club).</summary>

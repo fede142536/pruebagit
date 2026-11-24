@@ -35,5 +35,12 @@
   "news.contract_renewed": "You renewed {0} until {1}.",
   "news.contract_expired": "{0} finished his contract and left on a free.",
   "news.free_agent_signed": "You signed {0} on a free.",
-  "news.contracts_expiring": "{0} contracts expire this season: renew them or they leave on a free."
+  "news.contracts_expiring": "{0} contracts expire this season: renew them or they leave on a free.",
+  "news.loan_offer": "{0} want {1} on loan until season end and would pay {2}% of the wage. Answer from the Market screen.",
+  "news.loan_offer_obligation": "{0} want {1} on loan with an obligation to buy for {3} (paying {2}% of the wage). Answer from the Market screen.",
+  "news.loan_out": "{0} goes on loan to {1}.",
+  "news.loan_in": "{0} arrives on loan from {1}.",
+  "news.loan_bought": "{1} sign {0} for {2} as the loan ends.",
+  "news.loan_returned": "{0} returns from his loan ({1}).",
+  "news.player_upset_stays": "{0} wanted to leave and is upset that you turned the offer down."
 }

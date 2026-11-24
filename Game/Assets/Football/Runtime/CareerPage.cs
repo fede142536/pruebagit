@@ -28,7 +28,9 @@ namespace Football.Game
         /// <summary>Historial de las competiciones jugadas (se abre desde la Central).</summary>
         History,
         /// <summary>Contratos del plantel y renovaciones (se abre desde Plantilla).</summary>
-        Contracts
+        Contracts,
+        /// <summary>Transferibles, ofertas, cesiones y recompras (se abre desde Mercado).</summary>
+        Transfers
     }
 
     /// <summary>Lo que una pantalla de carrera necesita del contenedor: la partida, la línea de estado y la navegación.</summary>
