@@ -11,7 +11,13 @@ nombres de archivo y no están verificados** contra la página de cada sonido: c
 | `boca_song_1.mp3` | `La12_QUIERO_QUEMAR_EL_GALLINERO.mp3` (aportado por el usuario) | Grabación de la hinchada «La 12»; **licencia desconocida, uso personal** | Ambiente de los partidos de Boca Juniors (se recortó el silencio inicial y final) |
 | `boca_song_2.mp3` | `La12_Se_ores_soy_de_Boca_y_lo_sigo_a_todos_lados.mp3` (aportado por el usuario) | ídem | ídem |
 
-Se recodificaron con ffmpeg a MP3 (hinchada y cánticos: mono, 32 kHz, 64 kb/s; música: estéreo, 44,1 kHz, 96 kb/s) para que pesen menos en el celular.
+| `boca_song_3.mp3`, `boca_song_4.mp3` | `La12_-_Canciones_de_Boca__Esta_es_la_barra_de_Boca.mp3`, `La12_-_SIEMPRE_ESTAR__A_TU_LADO_BOCA_JUNIORS_QUERIDO.mp3` (aportados por el usuario, 24/11/2026) | Hinchada «La 12»; **licencia desconocida, uso personal** | Partidos de Boca de local (prioridad) |
+| `music_magalenha.mp3` | `Magalenha - Sergio Mendes.mp3` (aportado por el usuario) | Grabación comercial con derechos de autor; **solo uso personal, no distribuir** | Música de los menús (alterna con `music_menu.mp3`) |
+| `songs/*.mp3` (13 temas) | Cómo olvidar (Los Auténticos Decadentes), Para no olvidar (Calamaro), Cuando yo muera (Rubén Rada), Estás para ganar (Johny Tolengo), No me arrepiento de este amor y Se me ha perdido un corazón (Gilda), Mi historia entre tus dedos (Grignani), Bad moon rising (Creedence), Y dale alegría a mi corazón (Fito Páez), Beso a beso (La Mona Jiménez), Una calle nos separa (Leo Dan), El negro José (Roberto Ternán), Dale vieja dale (Los Pugliese) — aportados por el usuario, 24/11/2026 | Grabaciones comerciales con derechos de autor; **solo uso personal, no distribuir ni publicar el APK** | Temas que suenan al azar durante los partidos |
+
+Sin usar: «La colita» (La Sonora Colombiana) e «It's a heartache» (Bonnie Tyler) llegaron dañados (621 bytes, sin audio); si se vuelven a subir, basta agregarlos a `SongPaths` en `GameAudio.cs`.
+
+Se recodificaron con ffmpeg a MP3 (hinchada, cánticos y temas: mono, 32 kHz, 64 kb/s, sin silencios en los extremos y a volumen parejo con `loudnorm` −20 LUFS; música de menús: estéreo, 44,1 kHz, 96 kb/s) para que pesen menos en el celular.
 
 ## Modelo humanoide
 
