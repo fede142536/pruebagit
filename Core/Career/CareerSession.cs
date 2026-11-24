@@ -531,6 +531,7 @@ namespace Football.Core.Career
             }
 
             AdvanceCup();
+            AdvancePlayoffs();
             AdvancePromotion();
             CheckCompetitionEnds();
             ReviewSupporters();
@@ -599,6 +600,7 @@ namespace Football.Core.Career
             Play(f, report ?? throw new ArgumentNullException(nameof(report)));
             PendingUserFixture = null;
             AdvanceCup();
+            AdvancePlayoffs();
             AdvancePromotion();
             CheckCompetitionEnds();
         }
@@ -610,6 +612,7 @@ namespace Football.Core.Career
             MatchReport report = Play(f, null);
             PendingUserFixture = null;
             AdvanceCup();
+            AdvancePlayoffs();
             AdvancePromotion();
             CheckCompetitionEnds();
             return report;

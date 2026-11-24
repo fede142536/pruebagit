@@ -45,5 +45,7 @@
   "news.player_upset_stays": "{0} quería irse y está molesto porque rechazaste la oferta.",
   "news.reserve_ageout": "{0} cumplió {1} años, dejó la reserva y firmó contrato de primera.",
   "news.reserve_released": "{0} se fue libre de la reserva del club.",
-  "news.last_season": "{0} ({1}) anunció que esta será su última temporada: se retira al terminar."
+  "news.last_season": "{0} ({1}) anunció que esta será su última temporada: se retira al terminar.",
+  "news.playoff_qualified": "Tu club clasificó a la fase final del {0}.",
+  "news.playoff_missed": "Tu club quedó afuera de la fase final del {0}."
 }

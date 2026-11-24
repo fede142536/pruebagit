@@ -45,5 +45,7 @@
   "news.player_upset_stays": "{0} wanted to leave and is upset that you turned the offer down.",
   "news.reserve_ageout": "{0} turned {1}, left the reserves and signed a first-team contract.",
   "news.reserve_released": "{0} left the club's reserves on a free.",
-  "news.last_season": "{0} ({1}) announced this will be his last season: he retires when it ends."
+  "news.last_season": "{0} ({1}) announced this will be his last season: he retires when it ends.",
+  "news.playoff_qualified": "Your club qualified for the {0} playoffs.",
+  "news.playoff_missed": "Your club missed the {0} playoffs."
 }

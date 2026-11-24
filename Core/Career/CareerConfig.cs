@@ -16,7 +16,7 @@ namespace Football.Core.Career
         /// <summary>Días entre jornadas.</summary>
         public int DaysBetweenRounds = 7;
         /// <summary>Días de descanso entre el Apertura y el Clausura.</summary>
-        public int BreakBetweenTournaments = 21;
+        public int BreakBetweenTournaments = 56;
         /// <summary>Meses con el libro de pases abierto (1 = enero).</summary>
         public int[] TransferWindowMonths = { 1, 2, 7 };
         /// <summary>Probabilidad semanal de que un rival ofrezca por un jugador del usuario con el libro abierto.</summary>
@@ -279,5 +279,16 @@ namespace Football.Core.Career
         public float[] ReserveGoalChance = { 0f, 0.03f, 0.08f, 0.22f };
         /// <summary>Probabilidad de asistencia respecto de la de gol.</summary>
         public float ReserveAssistShare = 0.8f;
+
+        // ------------------------------------------------------------------ fases finales
+
+        /// <summary>Clubes de cada zona que pasan a la fase final (se reduce a la potencia de dos más grande que entre en la zona).</summary>
+        public int PlayoffTeamsPerZone = 8;
+        /// <summary>Días entre el último partido de zonas y la primera ronda de la fase final.</summary>
+        public int PlayoffFirstDelayDays = 7;
+        /// <summary>Días entre las rondas de la fase final.</summary>
+        public int PlayoffRoundSpacingDays = 7;
+        /// <summary>Días entre la final del Clausura y el Trofeo de Campeones.</summary>
+        public int TrofeoDelayDays = 14;
     }
 }

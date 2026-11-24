@@ -41,7 +41,7 @@ namespace Football.Game
         /// <param name="round">Número de ronda (desde 1).</param>
         public static string CupStage(int ties, int round)
         {
-            if (ties == 1 && round > 1)
+            if (ties == 1)
             {
                 return Locale.Get("cup.stage.final");
             }

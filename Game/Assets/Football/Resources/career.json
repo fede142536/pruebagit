@@ -2,7 +2,7 @@
   "SeasonStartMonth": 1,
   "SeasonStartDay": 25,
   "DaysBetweenRounds": 7,
-  "BreakBetweenTournaments": 21,
+  "BreakBetweenTournaments": 56,
   "TransferWindowMonths": [
     1,
     2,
@@ -444,5 +444,9 @@
     0.08,
     0.22
   ],
-  "ReserveAssistShare": 0.8
+  "ReserveAssistShare": 0.8,
+  "PlayoffTeamsPerZone": 8,
+  "PlayoffFirstDelayDays": 7,
+  "PlayoffRoundSpacingDays": 7,
+  "TrofeoDelayDays": 14
 }

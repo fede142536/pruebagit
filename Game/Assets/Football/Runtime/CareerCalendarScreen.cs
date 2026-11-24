@@ -86,7 +86,7 @@ namespace Football.Game
                 Fixture f = mine[_offset + k];
                 int row = k + 1;
                 string competition = Session.CompetitionName(f) + "  ·  " + (CareerSession.IsCup(f)
-                    ? CareerText.CupStage(Session.CupFixtures(Season, f.Round).Count, f.Round)
+                    ? CareerText.CupStage(Session.TiesInRound(f), f.Round)
                     : CareerText.Format("career.matchday", f.Round));
                 _grid.SetRow(row, f.Date.ToString("dd/MM/yy", CultureInfo.InvariantCulture), competition, CareerText.Fit(d.Club(f.HomeClubId).Name, 24), CareerText.Score(f),
                     CareerText.Fit(d.Club(f.AwayClubId).Name, 24), Letter(f));

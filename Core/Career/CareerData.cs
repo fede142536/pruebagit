@@ -19,7 +19,13 @@ namespace Football.Core.Career
         /// <summary>Nacional B (segunda división): todos contra todos, ida y vuelta.</summary>
         NacionalB,
         /// <summary>Promoción entre el tercero del Nacional B y un club de Primera: ida y vuelta.</summary>
-        Promotion
+        Promotion,
+        /// <summary>Fase final del Apertura: los mejores de cada zona, a partido único hasta la final.</summary>
+        AperturaPlayoff,
+        /// <summary>Fase final del Clausura.</summary>
+        ClausuraPlayoff,
+        /// <summary>Trofeo de Campeones: el campeón del Apertura contra el del Clausura, a partido único.</summary>
+        TrofeoCampeones
     }
 
     /// <summary>Precio cobrado y público de un partido de local del usuario (historial de entradas).</summary>

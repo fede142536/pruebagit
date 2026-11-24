@@ -83,6 +83,11 @@ namespace Football.Core.Career
                 }
 
                 _announcedCompetitions.Add(c.Id);
+                if (c.Kind == TournamentKind.AperturaPlayoff || c.Kind == TournamentKind.ClausuraPlayoff)
+                {
+                    continue; // el campeón lo anuncia el torneo (Apertura o Clausura) al terminar su fase final
+                }
+
                 if (Data.Fixtures.Any(f => f.CompetitionId == c.Id && Involves(f, Data.UserClubId)))
                 {
                     _ceremonies.Add(record); // solo se muestran las competiciones en las que jugó el usuario
@@ -105,7 +110,8 @@ namespace Football.Core.Career
                 .OrderByDescending(c => c.Season).ThenBy(c => KindOrder(c.Kind)).Select(RecordOf).ToList();
 
         private static int KindOrder(TournamentKind kind) =>
-            kind == TournamentKind.Apertura ? 0 : kind == TournamentKind.NacionalB ? 1 : kind == TournamentKind.Cup ? 2 : kind == TournamentKind.Clausura ? 3 : 4;
+            kind == TournamentKind.Apertura ? 0 : kind == TournamentKind.AperturaPlayoff ? 1 : kind == TournamentKind.NacionalB ? 2 : kind == TournamentKind.Cup ? 3
+            : kind == TournamentKind.Clausura ? 4 : kind == TournamentKind.ClausuraPlayoff ? 5 : kind == TournamentKind.TrofeoCampeones ? 6 : 7;
 
         private CompetitionRecord RecordOf(CompetitionInfo c)
         {
@@ -113,7 +119,15 @@ namespace Football.Core.Career
             List<Fixture> fixtures = Data.Fixtures.Where(f => f.CompetitionId == c.Id).ToList();
             List<Fixture> mine = fixtures.Where(f => Involves(f, Data.UserClubId)).OrderBy(f => f.Date).ToList();
             record.UserPlayed = mine.Count(f => f.IsPlayed);
-            if (c.Kind == TournamentKind.Cup)
+            if (c.Kind == TournamentKind.TrofeoCampeones)
+            {
+                record.Finished = fixtures.Count > 0 && fixtures.All(f => f.IsPlayed);
+                record.ChampionClubId = record.Finished ? Knockout.Winner(fixtures[0], new SeededRandom(Mix(fixtures[0].Id * 31L))) : 0;
+                record.UserChampion = record.Finished && record.ChampionClubId == Data.UserClubId;
+                return record;
+            }
+
+            if (c.Kind == TournamentKind.Cup || c.Kind == TournamentKind.AperturaPlayoff || c.Kind == TournamentKind.ClausuraPlayoff)
             {
                 FillCupRecord(record, fixtures, mine);
                 record.UserChampion = record.Finished && record.ChampionClubId == Data.UserClubId;
@@ -130,6 +144,26 @@ namespace Football.Core.Career
 
             record.Finished = fixtures.Count > 0 && fixtures.All(f => f.IsPlayed);
             List<Standing> table = Table(f => f.CompetitionId == c.Id);
+            if (HasPlayoffs(c))
+            {
+                // Con fase final, el campeón no es el primero de la tabla sino el que gana la final.
+                record.Finished = false;
+                if (record.UserPlayed > 0)
+                {
+                    record.UserPosition = table.FindIndex(s => s.ClubId == Data.UserClubId) + 1;
+                }
+
+                Fixture final = PlayoffFinal(c);
+                if (final != null && final.IsPlayed)
+                {
+                    record.Finished = true;
+                    record.ChampionClubId = Knockout.Winner(final, new SeededRandom(Mix(final.Id * 31L)));
+                    record.UserChampion = record.ChampionClubId == Data.UserClubId;
+                }
+
+                return record;
+            }
+
             if (record.UserPlayed > 0)
             {
                 record.UserPosition = table.FindIndex(s => s.ClubId == Data.UserClubId) + 1;

@@ -317,7 +317,7 @@ namespace Football.Game
                 Club home = d.Club(next.HomeClubId), away = d.Club(next.AwayClubId);
                 _date.text = (today ? Locale.Get("career.today") + "  ·  " : string.Empty) + next.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
                 _round.text = CareerSession.IsCup(next)
-                    ? Locale.Get("career.cup") + "  ·  " + CareerText.Format(Session.IsCupFinal(next) ? "career.cup_final" : "career.cup_round", next.Round)
+                    ? Session.CompetitionName(next) + "  ·  " + CareerText.CupStage(Session.TiesInRound(next), next.Round)
                     : CareerText.Format("career.matchday", next.Round) + "  ·  " + Session.CurrentTournament().Name;
                 MatchForecast forecast = Session.ForecastOf(next);
                 _weather.text = Locale.Get("weather." + (int)forecast.Weather) + "  ·  " + CareerText.Num(forecast.Temperature) + " °C"

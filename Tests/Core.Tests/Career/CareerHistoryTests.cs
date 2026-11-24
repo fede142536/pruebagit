@@ -50,13 +50,15 @@ namespace Football.Core.Tests.Career
             int season = s.Data.Season;
             PlayUntilSeasonEnds(s);
             var history = s.CompetitionHistory();
-            Assert.That(history.Where(h => h.Season == season).Select(h => h.Kind), Is.EquivalentTo(new[] { TournamentKind.Apertura, TournamentKind.Cup, TournamentKind.Clausura }));
-            Assert.That(history.Where(h => h.Season == season && h.Kind != TournamentKind.Cup).All(h => h.UserPosition >= 1 && h.UserPosition <= 30), Is.True);
+            var kinds = history.Where(h => h.Season == season).Select(h => h.Kind).ToList();
+            Assert.That(kinds, Is.SupersetOf(new[] { TournamentKind.Apertura, TournamentKind.Cup, TournamentKind.Clausura }));
+            Assert.That(kinds.Except(new[] { TournamentKind.Apertura, TournamentKind.Cup, TournamentKind.Clausura, TournamentKind.AperturaPlayoff, TournamentKind.ClausuraPlayoff, TournamentKind.TrofeoCampeones }), Is.Empty, "solo las competiciones esperadas (las fases finales y el Trofeo si el usuario jugó)");
+            Assert.That(history.Where(h => h.Season == season && (h.Kind == TournamentKind.Apertura || h.Kind == TournamentKind.Clausura)).All(h => h.UserPosition >= 1 && h.UserPosition <= 30), Is.True);
 
             var mine = s.UserFixtures(season);
             Assert.That(mine.All(f => f.IsPlayed), Is.True);
             Assert.That(mine.Select(f => f.Date), Is.Ordered);
-            Assert.That(mine.Count(f => !CareerSession.IsCup(f)), Is.EqualTo(30), "15 del Apertura y 15 del Clausura");
+            Assert.That(mine.Count(f => !CareerSession.IsCup(f)), Is.EqualTo(30), "15 del Apertura y 15 del Clausura (sin fases finales ni copas)");
             Assert.That(s.SeasonsWithFixtures(), Does.Contain(season));
             Assert.That(s.UserFixtures(season + 1).All(f => !f.IsPlayed), Is.True, "la temporada siguiente ya está armada, sin jugar");
         }

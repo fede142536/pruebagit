@@ -35,8 +35,16 @@ namespace Football.Core.Career
 
         // ------------------------------------------------------------------ Copa Argentina
 
-        /// <summary>Partido de copa.</summary>
-        public static bool IsCup(Fixture f) => f.CompetitionId % 10 == (int)TournamentKind.Cup;
+        /// <summary>Partido de eliminación directa: Copa Argentina, fases finales del Apertura y del Clausura y Trofeo de Campeones.</summary>
+        public static bool IsCup(Fixture f)
+        {
+            var kind = (TournamentKind)(f.CompetitionId % 10);
+            return kind == TournamentKind.Cup || kind == TournamentKind.AperturaPlayoff || kind == TournamentKind.ClausuraPlayoff || kind == TournamentKind.TrofeoCampeones;
+        }
+
+        /// <summary>Cantidad de cruces de la ronda de un partido de eliminación directa (en su propia competición).</summary>
+        /// <param name="f">Partido.</param>
+        public int TiesInRound(Fixture f) => Data.Fixtures.Count(x => x.CompetitionId == f.CompetitionId && x.Round == f.Round);
 
         private void StartCup(DateTime firstLeagueDate, ref int nextId)
         {
