@@ -363,17 +363,12 @@ namespace Football.Game
                 BuildLedBoards(halfL, halfW); // en la cancha cerrada las paredes hacen de carteles
             }
 
-            // Gradas escalonadas detrás de los carteles (tonos variados para sugerir público).
-            Color[] tiers = { new Color(0.32f, 0.12f, 0.14f), new Color(0.14f, 0.2f, 0.38f), new Color(0.3f, 0.3f, 0.34f) }; // tonos de público
+            // Gradas escalonadas detrás de los carteles: cada anillo son escalones que suben (cemento en tonos por anillo), con pasillos oscuros,
+            // un muro al fondo y, en los estadios de dos anillos o más, techo sobre los últimos escalones.
+            Color[] tiers = { new Color(0.36f, 0.37f, 0.41f), new Color(0.3f, 0.32f, 0.38f), new Color(0.41f, 0.41f, 0.44f) };
             int built = Mathf.Clamp(_look.Tiers, 1, tiers.Length);
-            for (int t = 0; t < built; t++)
-            {
-                float offset = TierOffset(t);
-                float height = 2.5f + t * 4f;
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(0f, height * 0.5f, halfW + offset), new Vector3(2f * halfL + 30f, height, TierDepth));
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(-halfL - offset, height * 0.5f, 0f), new Vector3(TierDepth, height, 2f * halfW + 20f));
-                StaticShape("Grada", MeshKit.Box, tiers[t], new Vector3(halfL + offset, height * 0.5f, 0f), new Vector3(TierDepth, height, 2f * halfW + 20f));
-            }
+            BuildStands(halfL, halfW, built, tiers);
+            BuildFloodlights(halfL, halfW);
 
             if (!walls)
             {
@@ -382,6 +377,124 @@ namespace Football.Game
                 if (_look.StandsWork)
                 {
                     BuildScaffolding(halfL, halfW, built);
+                }
+            }
+        }
+
+        private const int StepsPerTier = 5;
+        private const float StepDepth = 1.1f;          // profundidad de cada escalón
+        private const float StepRise = 0.55f;          // cuánto sube cada escalón
+        private const float StandFront = 0.75f;        // distancia entre los carteles y el primer escalón
+        private const float StandBaseHeight = 0.9f;
+        private const float AisleSpacing = 18f, AisleWidth = 1.4f;   // pasillos (vomitorios) que cortan las filas de público
+        private const int RoofSteps = 3;               // el techo cubre los últimos escalones
+        private const float RoofClearance = 3.4f, RoofThickness = 0.25f, RoofOverhang = 1.4f, RoofColumnSpacing = 18f;
+        private const int RoofMinTiers = 2;
+        private const float WallExtraHeight = 2.5f, WallThickness = 0.5f;
+        private const float LateralExtra = 30f, EndExtra = 20f;          // cuánto sobresale cada tribuna del largo/ancho del campo
+        private const float TowerHeight = 30f, TowerPole = 0.7f, TowerOutX = 22f, TowerOutZ = 16f;
+        private static readonly Color WallColor = new Color(0.16f, 0.17f, 0.2f), AisleColor = new Color(0.07f, 0.07f, 0.09f);
+        private static readonly Color RoofColor = new Color(0.82f, 0.83f, 0.86f), ColumnColor = new Color(0.55f, 0.56f, 0.6f);
+        private static readonly Color LampFrame = new Color(0.1f, 0.1f, 0.12f), LampLight = new Color(0.97f, 0.96f, 0.84f);
+
+        /// <summary>Distancia (m) desde los carteles al centro del escalón <paramref name="k"/>.</summary>
+        private static float StepOffset(int k) => StandFront + (k + 0.5f) * StepDepth;
+
+        /// <summary>Altura (m) de la parte de arriba del escalón <paramref name="k"/>.</summary>
+        private static float StepTop(int k) => StandBaseHeight + (k + 1) * StepRise;
+
+        /// <summary>Verdadero si la posición <paramref name="along"/> (desde el centro de una fila de largo <paramref name="length"/>) cae sobre un pasillo.</summary>
+        private static bool OnAisle(float along, float length)
+        {
+            float d = Mathf.Repeat(along + length * 0.5f, AisleSpacing);
+            return d < AisleWidth * 0.5f || d > AisleSpacing - AisleWidth * 0.5f;
+        }
+
+        /// <summary>Gradas con escalones en el lateral de enfrente y las dos cabeceras.</summary>
+        private void BuildStands(float halfL, float halfW, int built, Color[] tiers)
+        {
+            int steps = built * StepsPerTier;
+            float lateralLen = 2f * halfL + LateralExtra, endLen = 2f * halfW + EndExtra;
+            float crowdLateral = 2f * halfL + CrowdLateralExtra, crowdEnd = 2f * halfW + CrowdEndExtra;
+            for (int k = 0; k < steps; k++)
+            {
+                float off = StepOffset(k), top = StepTop(k);
+                Color c = tiers[k / StepsPerTier];
+                if (k % 2 == 1)
+                {
+                    c = Color.Lerp(c, Color.white, 0.07f); // franjas: se distinguen los escalones
+                }
+
+                StaticShape("Escalon", MeshKit.Box, c, new Vector3(0f, top * 0.5f, halfW + off), new Vector3(lateralLen, top, StepDepth));
+                StaticShape("Escalon", MeshKit.Box, c, new Vector3(-halfL - off, top * 0.5f, 0f), new Vector3(StepDepth, top, endLen));
+                StaticShape("Escalon", MeshKit.Box, c, new Vector3(halfL + off, top * 0.5f, 0f), new Vector3(StepDepth, top, endLen));
+                for (float a = -crowdLateral * 0.5f + AisleSpacing; a < crowdLateral * 0.5f - AisleWidth; a += AisleSpacing)
+                {
+                    StaticShape("Pasillo", MeshKit.Box, AisleColor, new Vector3(a, top + 0.02f, halfW + off), new Vector3(AisleWidth, 0.04f, StepDepth));
+                }
+
+                for (float a = -crowdEnd * 0.5f + AisleSpacing; a < crowdEnd * 0.5f - AisleWidth; a += AisleSpacing)
+                {
+                    StaticShape("Pasillo", MeshKit.Box, AisleColor, new Vector3(-halfL - off, top + 0.02f, a), new Vector3(StepDepth, 0.04f, AisleWidth));
+                    StaticShape("Pasillo", MeshKit.Box, AisleColor, new Vector3(halfL + off, top + 0.02f, a), new Vector3(StepDepth, 0.04f, AisleWidth));
+                }
+            }
+
+            float wallOff = StandFront + steps * StepDepth + WallThickness * 0.5f;
+            float wallHeight = StepTop(steps - 1) + WallExtraHeight;
+            StaticShape("Muro", MeshKit.Box, WallColor, new Vector3(0f, wallHeight * 0.5f, halfW + wallOff), new Vector3(lateralLen, wallHeight, WallThickness));
+            StaticShape("Muro", MeshKit.Box, WallColor, new Vector3(-halfL - wallOff, wallHeight * 0.5f, 0f), new Vector3(WallThickness, wallHeight, endLen));
+            StaticShape("Muro", MeshKit.Box, WallColor, new Vector3(halfL + wallOff, wallHeight * 0.5f, 0f), new Vector3(WallThickness, wallHeight, endLen));
+
+            if (built >= RoofMinTiers)
+            {
+                BuildRoofs(halfL, halfW, steps, lateralLen, endLen);
+            }
+        }
+
+        /// <summary>Techo sobre los últimos escalones del lateral y las cabeceras, con columnas en los pasillos.</summary>
+        private void BuildRoofs(float halfL, float halfW, int steps, float lateralLen, float endLen)
+        {
+            float frontOff = StandFront + (steps - RoofSteps) * StepDepth - RoofOverhang;      // borde de adelante del techo
+            float backOff = StandFront + steps * StepDepth + WallThickness;
+            float depth = backOff - frontOff, centerOff = (frontOff + backOff) * 0.5f;
+            float y = StepTop(steps - 1) + RoofClearance;
+            StaticShape("Techo", MeshKit.Box, RoofColor, new Vector3(0f, y, halfW + centerOff), new Vector3(lateralLen, RoofThickness, depth));
+            StaticShape("Techo", MeshKit.Box, RoofColor, new Vector3(-halfL - centerOff, y, 0f), new Vector3(depth, RoofThickness, endLen));
+            StaticShape("Techo", MeshKit.Box, RoofColor, new Vector3(halfL + centerOff, y, 0f), new Vector3(depth, RoofThickness, endLen));
+            for (float a = -lateralLen * 0.5f + RoofColumnSpacing; a < lateralLen * 0.5f - 1f; a += RoofColumnSpacing)
+            {
+                StaticShape("Columna", MeshKit.Box, ColumnColor, new Vector3(a, y * 0.5f, halfW + frontOff + 0.4f), new Vector3(0.35f, y, 0.35f));
+            }
+
+            for (float a = -endLen * 0.5f + RoofColumnSpacing; a < endLen * 0.5f - 1f; a += RoofColumnSpacing)
+            {
+                StaticShape("Columna", MeshKit.Box, ColumnColor, new Vector3(-halfL - frontOff - 0.4f, y * 0.5f, a), new Vector3(0.35f, y, 0.35f));
+                StaticShape("Columna", MeshKit.Box, ColumnColor, new Vector3(halfL + frontOff + 0.4f, y * 0.5f, a), new Vector3(0.35f, y, 0.35f));
+            }
+        }
+
+        /// <summary>Cuatro torres de reflectores en las esquinas (postes y paneles de luz apuntando al centro del campo).</summary>
+        private void BuildFloodlights(float halfL, float halfW)
+        {
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                for (int sz = -1; sz <= 1; sz += 2)
+                {
+                    var foot = new Vector3(sx * (halfL + TowerOutX), 0f, sz * (halfW + TowerOutZ));
+                    StaticShape("Torre", MeshKit.Box, ColumnColor, foot + new Vector3(0f, TowerHeight * 0.5f, 0f), new Vector3(TowerPole, TowerHeight, TowerPole));
+                    Vector3 toCenter = new Vector3(-foot.x, 0f, -foot.z);
+                    Quaternion face = Quaternion.LookRotation(toCenter.normalized, Vector3.up);
+                    Vector3 head = foot + new Vector3(0f, TowerHeight + 1.2f, 0f);
+                    StaticShape("Reflector", MeshKit.Box, LampFrame, head, new Vector3(6.4f, 3.4f, 0.5f), face);
+                    for (int row = 0; row < 3; row++)
+                    {
+                        for (int col = 0; col < 5; col++)
+                        {
+                            Vector3 local = new Vector3((col - 2) * 1.2f, (row - 1) * 1.0f, 0.3f);
+                            StaticShape("Lampara", MeshKit.Box, LampLight, head + face * local, new Vector3(0.85f, 0.7f, 0.12f), face);
+                        }
+                    }
                 }
             }
         }
@@ -396,21 +509,23 @@ namespace Football.Game
         /// </summary>
         private void BuildScaffolding(float halfL, float halfW, int builtTiers)
         {
-            float z = halfW + TierOffset(builtTiers);
-            float height = 2.5f + builtTiers * 4f;
-            float length = 2f * halfL + 30f;
+            int next = builtTiers * StepsPerTier;                       // el anillo nuevo va detrás del último
+            float z = halfW + StepOffset(next + StepsPerTier / 2);
+            float height = StepTop(next + StepsPerTier - 1);
+            float length = 2f * halfL + LateralExtra;
+            float scaffoldDepth = StepsPerTier * StepDepth;
             int poles = (int)(length / ScaffoldPoleSpacing);
             for (int k = 0; k <= poles; k++)
             {
                 float x = -length * 0.5f + k * ScaffoldPoleSpacing;
-                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z - TierDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
-                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z + TierDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z - scaffoldDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(x, height * 0.5f, z + scaffoldDepth * 0.4f), new Vector3(0.15f, height, 0.15f));
             }
 
             for (float y = ScaffoldLevelHeight; y < height; y += ScaffoldLevelHeight)
             {
-                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z - TierDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
-                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z + TierDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z - scaffoldDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
+                StaticShape("Andamio", MeshKit.Box, ScaffoldColor, new Vector3(0f, y, z + scaffoldDepth * 0.4f), new Vector3(length, 0.12f, 0.12f));
             }
         }
 
@@ -491,48 +606,50 @@ namespace Football.Game
 
         // ---- Público ----------------------------------------------------------------------------------------------------
 
-        private static readonly float[] CrowdSpacing = { 2.2f, 1.4f, 0.95f }; // por perfil gráfico: bajo, medio, alto
-        private const int CrowdRowsPerTier = 2;
         private const float CheerHeight = 0.35f;
         private const float CheerFrequency = 11f;
+        private const float CrowdLateralExtra = 26f, CrowdEndExtra = 16f;
         private Transform _crowd;
         private float _cheerTimer;
+        private static readonly float[] CrowdSpacing = { 2.4f, 1.6f, 1.1f }; // por perfil gráfico: bajo, medio, alto
 
         /// <summary>
-        /// Público en las tribunas: figuras simples (torso y cabeza) con colores de los dos equipos y ropa variada,
-        /// agrupadas en una malla por tribuna. La densidad depende del perfil gráfico y la cantidad de gente, de la ocupación
-        /// del partido (<see cref="StadiumLook.Attendance"/>): cada lugar se llena o no según un hash fijo, así el estadio
-        /// semivacío queda salpicado de huecos y no siempre vacío del mismo lado.
+        /// Público en las gradas: una fila de figuras simples (torso y cabeza) sobre cada escalón, agrupadas en una malla por tribuna.
+        /// La cabecera de la izquierda es la «popular» del local (casi todos con su camiseta), la de la derecha tiene mucha gente del visitante y
+        /// el lateral es mezclado. La densidad depende del perfil gráfico y la ocupación (<see cref="StadiumLook.Attendance"/>): cada lugar se
+        /// llena o no según un hash fijo. Los pasillos quedan libres.
         /// </summary>
         private void BuildCrowd(float halfL, float halfW, int tiers)
         {
             _crowd = new GameObject("Publico").transform;
             _crowd.SetParent(_root.transform, false);
             float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
-            // Público multicolor: mayoría con los colores del local, algo del visitante y ropa de todos los días.
             KitColors host = _hostIsSecondTeam ? _awayKit : _homeKit, guest = _hostIsSecondTeam ? _homeKit : _awayKit;
-            Color[] palette =
+            Color white = new Color(0.92f, 0.92f, 0.92f), dark = new Color(0.15f, 0.15f, 0.18f);
+            Color[] mixed =
             {
                 host.Shirt, host.Shirt, host.Secondary, host.Shirt, guest.Shirt, guest.Secondary,
-                new Color(0.92f, 0.92f, 0.92f), new Color(0.15f, 0.15f, 0.18f), new Color(0.55f, 0.4f, 0.3f), new Color(0.85f, 0.2f, 0.2f),
+                white, dark, new Color(0.55f, 0.4f, 0.3f), new Color(0.85f, 0.2f, 0.2f),
                 new Color(0.2f, 0.45f, 0.85f), new Color(0.95f, 0.8f, 0.2f), new Color(0.3f, 0.65f, 0.35f), new Color(0.9f, 0.5f, 0.2f)
             };
+            Color[] homeEnd = { host.Shirt, host.Shirt, host.Shirt, host.Secondary, host.Shirt, host.Shirt, white, host.Shirt };
+            Color[] awayEnd = { guest.Shirt, guest.Shirt, guest.Secondary, guest.Shirt, guest.Shirt, white, dark, host.Shirt };
+            MeshMerge lateral = new MeshMerge(), left = new MeshMerge(), right = new MeshMerge();
             int seed = 0;
-            for (int t = 0; t < tiers; t++)
+            int steps = tiers * StepsPerTier;
+            float lateralLen = 2f * halfL + CrowdLateralExtra, endLen = 2f * halfW + CrowdEndExtra;
+            for (int k = 0; k < steps; k++)
             {
-                float offset = TierOffset(t);
-                float top = 2.5f + t * 4f;
-                // Tribuna lateral (enfrente de la cámara) y las dos cabeceras.
-                CrowdBlock(new Vector3(0f, top, halfW + offset), 2f * halfL + 26f, true, spacing, palette, ref seed, _look.Attendance);
-                CrowdBlock(new Vector3(-halfL - offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed, _look.Attendance);
-                CrowdBlock(new Vector3(halfL + offset, top, 0f), 2f * halfW + 16f, false, spacing, palette, ref seed, _look.Attendance);
+                float off = StepOffset(k), top = StepTop(k);
+                CrowdRow(lateral, new Vector3(0f, top, halfW + off), lateralLen, true, spacing, mixed, ref seed, _look.Attendance);
+                CrowdRow(left, new Vector3(-halfL - off, top, 0f), endLen, false, spacing, homeEnd, ref seed, _look.Attendance);
+                CrowdRow(right, new Vector3(halfL + off, top, 0f), endLen, false, spacing, awayEnd, ref seed, _look.Attendance);
             }
+
+            FinishCrowd(lateral);
+            FinishCrowd(left);
+            FinishCrowd(right);
         }
-
-        private const float TierDepth = 5.5f;
-
-        /// <summary>Distancia de cada anillo de tribuna al borde del campo (tribunas cercanas, al estilo de las canchas argentinas).</summary>
-        private static float TierOffset(int tier) => 3.5f + tier * 5.5f;
 
         /// <summary>
         /// Lateral de abajo (el de la cámara): bancos de suplentes techados a los dos lados de la mitad de la cancha, con
@@ -589,41 +706,44 @@ namespace Football.Game
         private const uint SeatHash = 2654435761u;
         private const float SeatHashRange = 16777216f; // 2^24: los 24 bits altos del hash
 
-        private void CrowdBlock(Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed, float fill)
+        private void CrowdRow(MeshMerge merge, Vector3 center, float length, bool alongX, float spacing, Color[] palette, ref int seed, float fill)
         {
             bool merged = Materials.PlayerShaderAvailable;
-            var merge = new MeshMerge();
             int count = (int)(length / spacing);
-            for (int row = 0; row < CrowdRowsPerTier; row++)
+            for (int k = 0; k < count; k++)
             {
-                float depth = (row - 0.5f) * 2.4f;
-                for (int k = 0; k < count; k++)
+                seed++;
+                if (((uint)seed * SeatHash >> 8) / SeatHashRange >= fill)
                 {
-                    seed++;
-                    if (((uint)seed * SeatHash >> 8) / SeatHashRange >= fill)
-                    {
-                        continue; // lugar vacío
-                    }
+                    continue; // lugar vacío
+                }
 
-                    float along = -length * 0.5f + (k + 0.5f) * spacing + ((seed * 7) % 5 - 2) * 0.08f;
-                    Vector3 p = alongX ? new Vector3(along, 0f, depth) : new Vector3(depth, 0f, along);
-                    Color shirt = palette[(seed * 13 + row * 5) % palette.Length];
-                    Color skin = SkinTones[(seed * 3) % SkinTones.Length];
-                    Vector3 body = center + p + new Vector3(0f, 0.38f, 0f);
-                    Vector3 head = center + p + new Vector3(0f, 0.86f, 0f);
-                    if (merged)
-                    {
-                        merge.Add(MeshKit.Box, body, Quaternion.identity, new Vector3(0.45f, 0.62f, 0.32f), shirt);
-                        merge.Add(MeshKit.Box, head, Quaternion.identity, new Vector3(0.24f, 0.26f, 0.24f), skin);
-                    }
-                    else
-                    {
-                        StaticShape("Hincha", MeshKit.Box, shirt, body, new Vector3(0.45f, 0.62f, 0.32f));
-                    }
+                float along = -length * 0.5f + (k + 0.5f) * spacing + ((seed * 7) % 5 - 2) * 0.08f;
+                if (OnAisle(along, length))
+                {
+                    continue; // pasillo
+                }
+
+                Vector3 p = alongX ? new Vector3(along, 0f, 0f) : new Vector3(0f, 0f, along);
+                Color shirt = palette[(seed * 13) % palette.Length];
+                Color skin = SkinTones[(seed * 3) % SkinTones.Length];
+                Vector3 body = center + p + new Vector3(0f, 0.38f, 0f);
+                Vector3 head = center + p + new Vector3(0f, 0.86f, 0f);
+                if (merged)
+                {
+                    merge.Add(MeshKit.Box, body, Quaternion.identity, new Vector3(0.45f, 0.62f, 0.32f), shirt);
+                    merge.Add(MeshKit.Box, head, Quaternion.identity, new Vector3(0.24f, 0.26f, 0.24f), skin);
+                }
+                else
+                {
+                    StaticShape("Hincha", MeshKit.Box, shirt, body, new Vector3(0.45f, 0.62f, 0.32f));
                 }
             }
+        }
 
-            if (!merged)
+        private void FinishCrowd(MeshMerge merge)
+        {
+            if (!Materials.PlayerShaderAvailable || merge.IsEmpty)
             {
                 return;
             }

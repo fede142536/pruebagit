@@ -528,3 +528,11 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - Menú: «Magalenha» (Sergio Mendes) alterna con la música anterior; arranca por una al azar y pasa a la otra al terminar.
 - Peso: `Resources/Audio` pasó de 3,7 a 17 MB. Dos archivos subidos («La colita», «It's a heartache») estaban dañados y quedaron fuera.
 - **Sin probar en Unity.** Si al cambiar de tema se nota un tirón, en el Inspector hay que poner los clips de `Audio/songs` y `boca_song_*` en «Load Type: Streaming».
+
+## D-52 · Estadio con gradas escalonadas, techo y torres de luz — Aceptada (pedido del usuario, 24/11/2026)
+- Las tribunas dejan de ser cajas planas de un color: cada anillo son 5 escalones de 1,1 m de profundidad y 0,55 m de alto (cemento en tonos por anillo, escalones alternados), con **pasillos** oscuros cada 18 m, un **muro** al fondo y, con 2 anillos o más (capacidad > 20.000), **techo** sobre los últimos 3 escalones con columnas en los pasillos.
+- El público es una fila por escalón (antes 2 por anillo), en 3 mallas (una por tribuna) y sin figuras sobre los pasillos. La cabecera izquierda es la «popular» del local (casi todos con su camiseta); la derecha tiene mucha gente del visitante; el lateral es mezclado.
+- Cuatro **torres de reflectores** en las esquinas (poste y panel de 15 lámparas), sin luces reales. Todo lo fijo sale en las mallas agrupadas por color (el estadio sumó ~6 colores, o sea unas pocas llamadas de dibujo más).
+- Separación del público: `CrowdSpacing` 2,4 / 1,6 / 1,1 m (bajo / medio / alto; antes 2,2 / 1,4 / 0,95), porque hay más filas. Estimado en calidad alta: ~5.000 figuras (~240.000 vértices).
+- **Sin medir en Unity**: hay que mirar los FPS en el A13 en calidad media y alta; si bajan, subir `CrowdSpacing` o quitar filas alternas.
+- Sin tocar: la vista isométrica de la pantalla del estadio (`CareerStadiumScreen`), que sigue con su dibujo propio.
