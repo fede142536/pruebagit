@@ -42,5 +42,7 @@
   "news.loan_in": "{0} arrives on loan from {1}.",
   "news.loan_bought": "{1} sign {0} for {2} as the loan ends.",
   "news.loan_returned": "{0} returns from his loan ({1}).",
-  "news.player_upset_stays": "{0} wanted to leave and is upset that you turned the offer down."
+  "news.player_upset_stays": "{0} wanted to leave and is upset that you turned the offer down.",
+  "news.reserve_ageout": "{0} turned {1}, left the reserves and signed a first-team contract.",
+  "news.reserve_released": "{0} left the club's reserves on a free."
 }

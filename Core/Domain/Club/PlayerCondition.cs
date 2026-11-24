@@ -45,6 +45,14 @@ namespace Football.Core.Domain
         public float MinutesSincePromise;
         /// <summary>Promesa de minutos.</summary>
         public PlayingTimePromise Promise;
+        /// <summary>Está en el equipo de reserva (no juega los partidos del primer equipo).</summary>
+        public bool InReserve;
+        /// <summary>Ya jugó algún partido en primera: solo así puede bajar a la reserva. Verdadero salvo para los canteranos que todavía no debutaron.</summary>
+        public bool Debuted = true;
+        /// <summary>Fracción de punto de atributo acumulada por el desarrollo (se gasta al llegar a 1).</summary>
+        public float DevProgress;
+        /// <summary>Minutos de la temporada ya contados por el desarrollo (para medir los de cada semana).</summary>
+        public float DevMinutesMark;
 
         /// <summary>Puede jugar el próximo partido.</summary>
         public bool Available => InjuryDays <= 0 && SuspendedMatches <= 0;

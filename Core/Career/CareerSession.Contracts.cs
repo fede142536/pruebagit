@@ -62,7 +62,7 @@ namespace Football.Core.Career
 
         /// <summary>Jugadores del usuario cuyo contrato vence al cerrar esta temporada, de mejor a peor media.</summary>
         public List<Player> ExpiringContracts() =>
-            Squad(Data.UserClubId).Where(p => ContractYearsLeft(p) <= 1).OrderByDescending(p => PlayerRatings.Overall(p.Attributes, p.Position)).ToList();
+            FullRoster(Data.UserClubId).Where(p => ContractYearsLeft(p) <= 1).OrderByDescending(p => PlayerRatings.Overall(p.Attributes, p.Position)).ToList();
 
         /// <summary>
         /// Renueva el contrato de un jugador del usuario por <paramref name="years"/> años (contados desde esta temporada, máximo
@@ -165,14 +165,14 @@ namespace Football.Core.Career
             CareerConfig cc = _cfg.Career;
             foreach (Club club in Data.Clubs)
             {
-                List<Player> expiring = Squad(club.Id).Where(p => p.Contract != null && p.Contract.ExpiresOn.Year <= Data.Season).ToList();
+                List<Player> expiring = FullRoster(club.Id).Where(p => p.Contract != null && p.Contract.ExpiresOn.Year <= Data.Season).ToList();
                 if (expiring.Count == 0)
                 {
                     continue;
                 }
 
                 Common.IRandom rng = _dayRng.Fork("contratos" + club.Id);
-                List<Player> squad = Squad(club.Id).OrderByDescending(x => PlayerRatings.Overall(x.Attributes, x.Position)).ToList();
+                List<Player> squad = FullRoster(club.Id).OrderByDescending(x => PlayerRatings.Overall(x.Attributes, x.Position)).ToList();
                 foreach (Player p in expiring)
                 {
                     if (club.Id == Data.UserClubId)
@@ -212,6 +212,19 @@ namespace Football.Core.Career
             foreach (Club club in Data.Clubs.Where(c => c.Id != Data.UserClubId).OrderBy(c => c.Id))
             {
                 List<Player> squad = Squad(club.Id);
+                // Antes de salir a fichar, sube canteranos si le faltan jugadores (los de la reserva ya cobran).
+                foreach (Player kid in ReserveSquad(club.Id).Where(k => k.AgeOn(Data.Today) >= cc.MinFirstTeamAge).OrderByDescending(k => PlayerRatings.Overall(k.Attributes, k.Position)))
+                {
+                    if (squad.Count >= cc.MinAiSquadSize)
+                    {
+                        break;
+                    }
+
+                    GoProfessional(kid);
+                    Data.Conditions[kid.Id].InReserve = false;
+                    squad.Add(kid);
+                }
+
                 while (squad.Count < cc.MinAiSquadSize && free.Count > 0)
                 {
                     bool needKeeper = squad.Count(p => p.Position == Position.Goalkeeper) < cc.MinAiGoalkeepers;

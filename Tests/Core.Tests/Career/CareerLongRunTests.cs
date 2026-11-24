@@ -49,11 +49,21 @@ namespace Football.Core.Tests.Career
                 long[] cash = s.Data.Clubs.Select(c => s.Data.Finances[c.Id].Cash).ToArray();
                 TestContext.Out.WriteLine($"temporada {season}: caja min/mediana/max {cash.Min():N0}/{cash.OrderBy(x => x).ElementAt(15):N0}/{cash.Max():N0}, " +
                                           $"clubes en deuda {cash.Count(x => x < 0)}, jugadores {s.Data.Players.Count}");
+                // El usuario es quien repone a sus arqueros (antes la cantera se los reponía sola).
+                while (s.FullRoster(s.Data.UserClubId).Count(p => p.Position == Position.Goalkeeper) < 2)
+                {
+                    Player keeper = s.Data.Players.Values.Where(p => p.Position == Position.Goalkeeper && s.IsFreeAgent(p)).OrderByDescending(p => p.Attributes[AttributeId.Reflexes]).First();
+                    s.Data.Finances[s.Data.UserClubId].WeeklyWageBudget = long.MaxValue / 4;
+                    Assert.That(s.SignFreeAgent(keeper.Id, 1), Is.EqualTo(ContractOutcome.Accepted));
+                }
+
                 foreach (Club club in s.Data.Clubs)
                 {
                     var squad = s.Squad(club.Id);
-                    Assert.That(squad.Count, Is.InRange(18, club.Id == s.Data.UserClubId ? 60 : cap), club.Name + " temporada " + season + ": tamaño del plantel");
-                    Assert.That(squad.Count(p => p.Position == Position.Goalkeeper), Is.GreaterThanOrEqualTo(2), club.Name + ": arqueros");
+                    // El club del usuario ya no recibe a los canteranos en primera: llegan a la reserva y los sube él.
+                    Assert.That(club.Id == s.Data.UserClubId ? s.FullRoster(club.Id).Count : squad.Count, Is.InRange(18, club.Id == s.Data.UserClubId ? 60 : cap), club.Name + " temporada " + season + ": tamaño del plantel");
+                    Assert.That(squad.Count, Is.GreaterThanOrEqualTo(14), club.Name + " temporada " + season + ": primera jugable");
+                    Assert.That((club.Id == s.Data.UserClubId ? s.FullRoster(club.Id) : squad).Count(p => p.Position == Position.Goalkeeper), Is.GreaterThanOrEqualTo(2), club.Name + ": arqueros");
                 }
 
                 Assert.That(cash.Min(), Is.GreaterThan(FloorCash), "temporada " + season + ": ningún club se funde sin control");

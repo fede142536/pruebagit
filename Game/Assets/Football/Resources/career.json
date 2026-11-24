@@ -384,5 +384,45 @@
     "OverspendShare": 0.6,
     "Overspend": 10,
     "Deficit": 20
-  }
+  },
+  "MinFirstTeamAge": 16,
+  "MaxReserveAge": 21,
+  "MaxReserveSize": 24,
+  "MaxAiReserveSize": 10,
+  "YouthWageFactor": 0.35,
+  "PromotedContractYears": 3,
+  "ReserveStarters": 14,
+  "ReserveBench": 4,
+  "ReserveStarterMinutes": 90,
+  "ReserveBenchMinutes": 30,
+  "ReservePlayingMorale": 65,
+  "ReserveIdleMorale": 35,
+  "ReserveMoraleStep": 0.15,
+  "DevMaxAge": 24,
+  "DevPointsPerWeek": 0.6,
+  "DevAgeFactor": [
+    1,
+    1,
+    0.95,
+    0.85,
+    0.75,
+    0.6,
+    0.5,
+    0.4,
+    0.3
+  ],
+  "DevFullMinutes": 90,
+  "DevIdleShare": 0.35,
+  "DevMoraleRange": [
+    0.6,
+    1.2
+  ],
+  "DevCoachRange": [
+    0.8,
+    1.25
+  ],
+  "DevSlowGap": 10,
+  "PotentialNoise": 10,
+  "AiPromoteMargin": 3,
+  "AiPromoteRank": 17
 }

@@ -511,6 +511,7 @@ namespace Football.Core.Career
             if (Data.Today.DayOfWeek == DayOfWeek.Monday)
             {
                 WeeklyScouting();
+                YouthWeek();
                 RivalOffers();
                 foreach (Club c in Data.Clubs)
                 {
@@ -901,6 +902,7 @@ namespace Football.Core.Career
                 _inbox.Post("news.qualified", Data.Club(s.ClubId).Name);
             }
 
+            AgeOutReserve(); // los que superan la edad de la reserva firman contrato de primera o se van
             ProcessLoansAtSeasonEnd(); // los prestados vuelven (o se compran) antes de los retiros y los contratos
             ExpireBuybacks();
             List<Player> active = Data.Players.Values.Where(p => p.ClubId.HasValue).ToList();
@@ -930,17 +932,21 @@ namespace Football.Core.Career
                     {
                         WeeklyWage = _market.WageDemand(p, PlayingTimePromise.Youngster), ExpiresOn = ContractEnd(cc.YouthContractYears + 1) // el contrato corre desde la temporada que viene
                     };
+                    p.Contract.WeeklyWage = (long)(p.Contract.WeeklyWage * (double)cc.YouthWageFactor); // contrato de juvenil
                     Data.Players[p.Id] = p;
-                    Data.Conditions[p.Id] = new PlayerCondition { PlayerId = p.Id };
+                    Data.Conditions[p.Id] = new PlayerCondition { PlayerId = p.Id, InReserve = true, Debuted = false };
                 }
             }
 
+            PromoteAiYouth();
+            TrimReserves();
             ReleaseSurplusPlayers();
             RefillAiSquads();
 
             foreach (PlayerCondition c in Data.Conditions.Values)
             {
                 c.SeasonMinutes = 0f;
+                c.DevMinutesMark = 0f;
             }
 
             Data.SeasonStats.Clear();
@@ -960,7 +966,7 @@ namespace Football.Core.Career
             CareerConfig cc = _cfg.Career;
             foreach (Club club in Data.Clubs.Where(c => c.Id != Data.UserClubId))
             {
-                List<Player> squad = Squad(club.Id);
+                List<Player> squad = FullRoster(club.Id); // la reserva también paga sueldos
                 int goalkeepers = squad.Count(p => p.Position == Position.Goalkeeper);
                 foreach (Player p in squad.OrderBy(x => PlayerRatings.Overall(x.Attributes, x.Position)).ThenBy(x => x.Id))
                 {
@@ -1199,8 +1205,8 @@ namespace Football.Core.Career
             return true;
         }
 
-        /// <summary>Plantel actual de un club.</summary>
-        public List<Player> Squad(int clubId) => Data.Players.Values.Where(p => p.ClubId == clubId).OrderBy(p => p.Id).ToList();
+        /// <summary>Plantel de primera de un club (sin los juveniles de la reserva).</summary>
+        public List<Player> Squad(int clubId) => Data.Players.Values.Where(p => p.ClubId == clubId && !IsInReserve(p.Id)).OrderBy(p => p.Id).ToList();
 
         /// <summary>Perfil de mercado de un club (comprador, vendedor de juveniles o defensivo), fijo por club.</summary>
         public static ClubProfile ProfileOf(int clubId) => (ClubProfile)(clubId % Enum.GetValues(typeof(ClubProfile)).Length);

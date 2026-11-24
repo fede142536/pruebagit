@@ -203,5 +203,54 @@ namespace Football.Core.Career
         public StadiumConfig Stadium = new StadiumConfig();
         /// <summary>Medidor de gestión.</summary>
         public RatingConfig Rating = new RatingConfig();
+
+        // ------------------------------------------------------------------ juveniles y reserva
+
+        /// <summary>Edad mínima para jugar en primera.</summary>
+        public int MinFirstTeamAge = 16;
+        /// <summary>Edad máxima en la reserva (el año que la superan, firman contrato de primera o se van libres).</summary>
+        public int MaxReserveAge = 21;
+        /// <summary>Tamaño máximo de la reserva (al cierre de temporada se suelta al excedente de menor potencial).</summary>
+        public int MaxReserveSize = 24;
+        /// <summary>Tamaño máximo de la reserva de los clubes de la computadora (pagan sus sueldos).</summary>
+        public int MaxAiReserveSize = 10;
+        /// <summary>Sueldo del juvenil de la reserva respecto del que pediría un profesional.</summary>
+        public float YouthWageFactor = 0.35f;
+        /// <summary>Años del contrato profesional que se firma al subir a primera.</summary>
+        public int PromotedContractYears = 3;
+        /// <summary>Titulares de la reserva simulada (juegan 90 minutos por semana).</summary>
+        public int ReserveStarters = 14;
+        /// <summary>Suplentes de la reserva simulada que juegan <see cref="ReserveBenchMinutes"/> por semana.</summary>
+        public int ReserveBench = 4;
+        /// <summary>Minutos semanales de los titulares de la reserva.</summary>
+        public float ReserveStarterMinutes = 90f;
+        /// <summary>Minutos semanales de los suplentes de la reserva.</summary>
+        public float ReserveBenchMinutes = 30f;
+        /// <summary>Moral a la que tiende un juvenil que juega en la reserva, y a la que tiende el que no juega.</summary>
+        public float ReservePlayingMorale = 65f, ReserveIdleMorale = 35f;
+        /// <summary>Cuánto se acerca la moral a su objetivo cada semana (0–1).</summary>
+        public float ReserveMoraleStep = 0.15f;
+        /// <summary>Edad hasta la que el jugador se desarrolla.</summary>
+        public int DevMaxAge = 24;
+        /// <summary>Puntos de atributo por semana en el mejor caso (joven, jugando, motivado).</summary>
+        public float DevPointsPerWeek = 0.6f;
+        /// <summary>Factor por edad desde los 16 años (un valor por año; la edad mayor repite el último).</summary>
+        public float[] DevAgeFactor = { 1f, 1f, 0.95f, 0.85f, 0.75f, 0.6f, 0.5f, 0.4f, 0.3f };
+        /// <summary>Minutos semanales con los que el desarrollo es completo (90 = un partido).</summary>
+        public float DevFullMinutes = 90f;
+        /// <summary>Desarrollo sin jugar nada, respecto del completo (0–1).</summary>
+        public float DevIdleShare = 0.35f;
+        /// <summary>Rango del factor de moral: con 0 de moral el primero, con 100 el segundo.</summary>
+        public float[] DevMoraleRange = { 0.6f, 1.2f };
+        /// <summary>Rango del factor del entrenador de juveniles: con capacidad 1 el primero, con 20 el segundo.</summary>
+        public float[] DevCoachRange = { 0.8f, 1.25f };
+        /// <summary>Puntos que faltan para el potencial a partir de los cuales el desarrollo se frena.</summary>
+        public float DevSlowGap = 10f;
+        /// <summary>Error máximo (en puntos) con el que se ve el potencial de un juvenil propio con el peor entrenador; con el mejor casi no hay error.</summary>
+        public float PotentialNoise = 10f;
+        /// <summary>Media mínima respecto del peor titular de un club de la computadora para que suba un canterano que cumple la edad máxima.</summary>
+        public int AiPromoteMargin = 3;
+        /// <summary>Puesto en el plantel (de mejor a peor, desde 0) cuyo nivel sirve de vara para subir a un canterano en un club de la computadora.</summary>
+        public int AiPromoteRank = 17;
     }
 }

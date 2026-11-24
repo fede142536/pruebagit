@@ -87,6 +87,7 @@ namespace Football.Game
         private readonly CareerHistoryScreen _history;
         private readonly CareerContractsScreen _contracts;
         private readonly CareerTransfersScreen _transfers;
+        private readonly CareerReserveScreen _reserve;
         private CareerSession _session;
         private PlayerCardPanel _card;
         private CareerSection _section;
@@ -131,7 +132,7 @@ namespace Football.Game
         private List<Player> _squadView = new List<Player>();
         private static readonly string[] PositionGroups = { "all", "gk", "def", "mid", "att" };
         private readonly UiButton[] _tactic = new UiButton[6];
-        private UiButton _openLineup, _openContracts, _openTransfers, _loanRequest, _loanBuyRequest;
+        private UiButton _openLineup, _openContracts, _openTransfers, _openReserve, _loanRequest, _loanBuyRequest;
 
         // mercado
         private UiButton _filterPos, _ageMinus, _agePlus, _ageMaxMinus, _ageMaxPlus, _rateMinus, _ratePlus, _rateMaxMinus, _rateMaxPlus, _search;
@@ -183,6 +184,7 @@ namespace Football.Game
             _history = new CareerHistoryScreen(Root, this);
             _contracts = new CareerContractsScreen(Root, this);
             _transfers = new CareerTransfersScreen(Root, this);
+            _reserve = new CareerReserveScreen(Root, this);
             for (int i = 0; i < Sections; i++)
             {
                 _bar[i] = UiKit.Button(Root, "Seccion" + i, new Vector2(BarLeft + BarStep * 0.5f + i * BarStep, BarY), new Vector2(BarStep - 10f, BarHeight),
@@ -351,12 +353,13 @@ namespace Football.Game
             _history.SetVisible(section == CareerSection.History);
             _contracts.SetVisible(section == CareerSection.Contracts);
             _transfers.SetVisible(section == CareerSection.Transfers);
+            _reserve.SetVisible(section == CareerSection.Reserve);
             _marketPanel.gameObject.SetActive(section == CareerSection.Market);
             _hub.SetVisible(section == CareerSection.Hub);
             _office.SetVisible(section == CareerSection.Office);
             _finance.SetVisible(section == CareerSection.Finance);
             _stadium.SetVisible(section == CareerSection.Stadium);
-            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup || section == CareerSection.Contracts ? (int)CareerSection.Squad
+            int highlighted = section == CareerSection.Stadium ? (int)CareerSection.Finance : section == CareerSection.Lineup || section == CareerSection.Contracts || section == CareerSection.Reserve ? (int)CareerSection.Squad
                 : section == CareerSection.Transfers ? (int)CareerSection.Market
                 : section == CareerSection.Calendar || section == CareerSection.History ? (int)CareerSection.Hub : (int)section;
             for (int i = 0; i < Sections; i++)
@@ -470,6 +473,7 @@ namespace Football.Game
                     case CareerSection.History: _history.Tap(p); break;
                     case CareerSection.Contracts: _contracts.Tap(p); break;
                     case CareerSection.Transfers: _transfers.Tap(p); break;
+                    case CareerSection.Reserve: _reserve.Tap(p); break;
                 }
 
                 RefreshHeader();
@@ -498,6 +502,7 @@ namespace Football.Game
                 case CareerSection.History: _history.Refresh(); break;
                 case CareerSection.Contracts: _contracts.Refresh(); break;
                 case CareerSection.Transfers: _transfers.Refresh(); break;
+                case CareerSection.Reserve: _reserve.Refresh(); break;
             }
         }
 
@@ -523,6 +528,7 @@ namespace Football.Game
             _history.SetVisible(false);
             _contracts.SetVisible(false);
             _transfers.SetVisible(false);
+            _reserve.SetVisible(false);
             _managerPage.SetVisible(false);
             _clubPage.SetVisible(false);
         }
@@ -593,6 +599,7 @@ namespace Football.Game
             _filterPosition = UiKit.Button(p, "FiltroPuesto", new Vector2(250f, 168f), new Vector2(380f, 54f), string.Empty, 20, UiTheme.Button);
             _filterNation = UiKit.Button(p, "FiltroNacion", new Vector2(650f, 168f), new Vector2(380f, 54f), string.Empty, 20, UiTheme.Button);
             _openLineup = UiKit.Button(p, "ArmarOnce", new Vector2(1450f, 108f), new Vector2(255f, 76f), Locale.Get("lineup.open"), 19, UiTheme.AccentDark);
+            _openReserve = UiKit.Button(p, "Reserva", new Vector2(1060f, 168f), new Vector2(380f, 54f), Locale.Get("reserve.open"), 20, UiTheme.AccentDark);
             _openContracts = UiKit.Button(p, "Contratos", new Vector2(1710f, 108f), new Vector2(255f, 76f), Locale.Get("contracts.open"), 22, UiTheme.AccentDark);
         }
 
@@ -799,6 +806,12 @@ namespace Football.Game
             if (_openLineup.Contains(p))
             {
                 Open(CareerSection.Lineup);
+                return;
+            }
+
+            if (_openReserve.Contains(p))
+            {
+                Open(CareerSection.Reserve);
                 return;
             }
 

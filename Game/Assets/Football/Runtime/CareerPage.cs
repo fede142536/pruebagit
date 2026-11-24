@@ -30,7 +30,9 @@ namespace Football.Game
         /// <summary>Contratos del plantel y renovaciones (se abre desde Plantilla).</summary>
         Contracts,
         /// <summary>Transferibles, ofertas, cesiones y recompras (se abre desde Mercado).</summary>
-        Transfers
+        Transfers,
+        /// <summary>Reserva y juveniles (se abre desde Plantilla).</summary>
+        Reserve
     }
 
     /// <summary>Lo que una pantalla de carrera necesita del contenedor: la partida, la línea de estado y la navegación.</summary>

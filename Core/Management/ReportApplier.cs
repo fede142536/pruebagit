@@ -42,6 +42,7 @@ namespace Football.Core.Management
                 }
 
                 played.Add(p.PlayerId);
+                cond.Debuted = true; // el canterano que pisa la cancha en primera ya puede bajar a la reserva
                 cond.SeasonMinutes += p.Minutes;
                 cond.MinutesSincePromise += p.Minutes;
                 cond.Fitness = Math.Min(cond.Fitness, p.StaminaLeft);

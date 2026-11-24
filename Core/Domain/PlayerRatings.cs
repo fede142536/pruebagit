@@ -32,6 +32,19 @@ namespace Football.Core.Domain
             }
         }
 
+        /// <summary>Atributos que componen la valoración de una línea (los que sube el desarrollo).</summary>
+        /// <param name="line">Línea.</param>
+        public static AttributeId[] KeyAttributes(PitchLine line)
+        {
+            switch (line)
+            {
+                case PitchLine.Goalkeeper: return new[] { AttributeId.Reflexes, AttributeId.Handling, AttributeId.GoalkeeperPositioning };
+                case PitchLine.Defence: return new[] { AttributeId.Tackling, AttributeId.Positioning, AttributeId.Strength, AttributeId.Heading, AttributeId.Pace };
+                case PitchLine.Attack: return new[] { AttributeId.Finishing, AttributeId.Shooting, AttributeId.Dribbling, AttributeId.Pace, AttributeId.Composure };
+                default: return new[] { AttributeId.Passing, AttributeId.Vision, AttributeId.FirstTouch, AttributeId.Decisions, AttributeId.Dribbling };
+            }
+        }
+
         /// <summary>Valoración (1–100) en una línea: media de los atributos que importan en ella.</summary>
         /// <param name="a">Atributos.</param>
         /// <param name="line">Línea.</param>

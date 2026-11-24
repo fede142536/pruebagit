@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 10; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras
+        private const int Version = 11; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras; 11: reserva, debut y desarrollo
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -145,6 +145,10 @@ namespace Football.Core.Career
                     w.Write((int)k.Promise);
                     w.Write(k.TeamMatchesSincePromise);
                     w.Write(k.MinutesSincePromise);
+                    w.Write(k.InReserve);
+                    w.Write(k.Debuted);
+                    w.Write(k.DevProgress);
+                    w.Write(k.DevMinutesMark);
                 }
 
                 w.Write(d.Staff.Count);
@@ -416,6 +420,14 @@ namespace Football.Core.Career
                         SuspendedMatches = r.ReadInt32(), AccumulatedYellows = r.ReadInt32(), SeasonMinutes = r.ReadSingle(),
                         Promise = (PlayingTimePromise)r.ReadInt32(), TeamMatchesSincePromise = r.ReadInt32(), MinutesSincePromise = r.ReadSingle()
                     };
+                    if (version >= 11)
+                    {
+                        PlayerCondition cond = d.Conditions[p.Id];
+                        cond.InReserve = r.ReadBoolean();
+                        cond.Debuted = r.ReadBoolean();
+                        cond.DevProgress = r.ReadSingle();
+                        cond.DevMinutesMark = r.ReadSingle();
+                    }
                 }
 
                 int staff = r.ReadInt32();
