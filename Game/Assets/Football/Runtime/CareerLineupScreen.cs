@@ -23,7 +23,6 @@ namespace Football.Game
         private const int ReserveRows = 9;
         private static readonly string[] FormationNames = { "4-4-2", "4-3-3", "4-2-3-1", "4-3-1-2" };
         private static readonly Color Unavailable = new Color(0.45f, 0.14f, 0.12f, 1f);
-        private static readonly Color OutOfPositionInk = new Color(1f, 0.6f, 0.3f);
         private static readonly Vector2 BoardScale = new Vector2(1f, 0.84f), BoardOffset = new Vector2(0f, 40f);
         private const float BoardSize = 0.84f;
 
@@ -119,10 +118,10 @@ namespace Football.Game
                 int shown = Mathf.RoundToInt(RosterFactory.DisplayRating(pl.Attributes, slot.Role));
                 sum += shown;
                 bool selected = _selectedGroup == Group.Starter && _selectedIndex == i;
-                Color fill = selected ? UiTheme.Accent : !Available(pl.Id) ? Unavailable : kit;
                 bool offPosition = PlayerRatings.LineOf(pl.Position) != PlayerRatings.LineOf(slot.Role);
-                Color ink = offPosition ? OutOfPositionInk : LineupBoard.ReadableOn(fill);
-                _board.SetToken(i, _board.SlotPosition(slot.X, slot.Y), PlayerLabels.Code(slot.Role), PlayerLabels.Surname(pl.LastName), shown, fill, ink);
+                // Ficha del color del club con número blanco o negro; selección, no disponible y fuera de posición, en el anillo.
+                Color? ring = selected ? UiTheme.Accent : !Available(pl.Id) ? LineupBoard.UnavailableRing : offPosition ? LineupBoard.OffPositionRing : (Color?)null;
+                _board.SetToken(i, _board.SlotPosition(slot.X, slot.Y), PlayerLabels.Code(slot.Role), PlayerLabels.Surname(pl.LastName), shown, kit, LineupBoard.ReadableOn(kit), ring);
             }
 
             _board.Rating.text = CareerText.Format("lineup.rating", (sum / Mathf.Max(1, _starterIds.Count)).ToString("0.0", CultureInfo.InvariantCulture));

@@ -23,6 +23,7 @@ namespace Football.Game
         private const float PitchHeight = 620f;
         private const float PitchMargin = 0.9f;     // las bandas y las líneas de fondo no se usan: los puntos quedan dentro
         private const float DotSize = 54f;
+        private const float DotRing = 5f;
         private const float LineWidth = 3f;
         private const float RowTop = 760f;
         private const float RowStep = 56f;
@@ -42,6 +43,7 @@ namespace Football.Game
         private readonly GameObject _root;
         private readonly UiButton[] _field = new UiButton[MaxRows];
         private readonly UiButton[] _bench = new UiButton[MaxBench];
+        private readonly Image[] _dotRings = new Image[MaxRows];            // anillo de cada punto: selección, cambio pedido o expulsado
         private readonly UiButton[] _dots = new UiButton[MaxRows];     // los mismos jugadores sobre la cancha, en su puesto de la formación
         private readonly Text[] _dotNames = new Text[MaxRows];
         private readonly UiButton _formationPrevious, _formationNext, _back, _defensive, _corners, _marking;
@@ -87,6 +89,7 @@ namespace Football.Game
 
             for (int i = 0; i < MaxRows; i++)
             {
+                _dotRings[i] = UiKit.Panel(t, "AnilloPunto" + i, Vector2.zero, new Vector2(DotSize + 2f * DotRing, DotSize + 2f * DotRing), Color.clear, true);
                 _dots[i] = UiKit.Button(t, "Punto" + i, Vector2.zero, new Vector2(DotSize, DotSize), string.Empty, 22, DefenderDot, true);
                 _dotNames[i] = UiKit.Label(t, "NombrePunto" + i, Vector2.zero, new Vector2(140f, 24f), string.Empty, 16, Color.white);
             }
@@ -321,7 +324,14 @@ namespace Football.Game
             _dots[i].Label.text = Mathf.RoundToInt(RosterFactory.DisplayRating(incoming != null ? incoming.Attributes : p.Attr, p.Role)).ToString();
             _dots[i].Label.color = LineupBoard.ReadableOn(_kit);
             _dotNames[i].text = PlayerLabels.Surname(incoming != null ? incoming.Name : p.Name);
-            _dots[i].Background.color = i == _selected ? UiTheme.Accent : pending ? Pending : p.SentOff ? Unavailable : _kit;
+            _dots[i].Background.color = _kit; // siempre del color del club (número en blanco o negro); el estado va en el anillo
+            Color? ring = i == _selected ? UiTheme.Accent : pending ? LineupBoard.OffPositionRing : p.SentOff ? LineupBoard.UnavailableRing : (Color?)null;
+            _dotRings[i].gameObject.SetActive(ring.HasValue);
+            if (ring.HasValue)
+            {
+                _dotRings[i].color = ring.Value;
+                _dotRings[i].rectTransform.anchoredPosition = at;
+            }
         }
 
         private void Refresh()
@@ -340,6 +350,11 @@ namespace Football.Game
                 bool used = i < team.Players.Length;
                 _field[i].SetVisible(used);
                 _dots[i].SetVisible(used);
+                if (!used)
+                {
+                    _dotRings[i].gameObject.SetActive(false);
+                }
+
                 _dotNames[i].gameObject.SetActive(used);
                 if (!used)
                 {

@@ -14,6 +14,8 @@ namespace Football.Game
         /// <summary>Una ficha de titular sobre la cancha.</summary>
         public sealed class Token
         {
+            /// <summary>Anillo detrás del círculo: marca la selección y los avisos (no disponible, fuera de posición) sin cambiar el color del club.</summary>
+            public Image Ring;
             /// <summary>Círculo tocable con la media.</summary>
             public UiButton Circle;
             /// <summary>Código del puesto, arriba de la ficha.</summary>
@@ -99,6 +101,8 @@ namespace Football.Game
             for (int i = 0; i < Tokens.Length; i++)
             {
                 var token = new Token();
+                token.Ring = UiKit.Panel(parent, "AnilloTitular" + i, Vector2.zero, new Vector2((TokenSize + 2f * RingWidth) * _size, (TokenSize + 2f * RingWidth) * _size), Color.clear, true);
+                token.Ring.gameObject.SetActive(false);
                 token.Circle = UiKit.Button(parent, "Titular" + i, Vector2.zero, new Vector2(TokenSize * _size, TokenSize * _size), string.Empty, Font(32), Color.white, true);
                 token.Role = UiKit.Label(parent, "Puesto" + i, Vector2.zero, new Vector2(120f * _size, 30f * _size), string.Empty, Font(20), UiTheme.TextDim);
                 token.Name = UiKit.Label(parent, "NombreTitular" + i, Vector2.zero, new Vector2(200f * _size, 30f * _size), string.Empty, Font(24), UiTheme.Text);
@@ -156,9 +160,17 @@ namespace Football.Game
         /// <param name="rating">Media.</param>
         /// <param name="fill">Color de la ficha.</param>
         /// <param name="ratingColor">Color del número.</param>
-        public void SetToken(int i, Vector2 position, string role, string name, int rating, Color fill, Color ratingColor)
+        /// <param name="ring">Color del anillo (selección o aviso); null = sin anillo.</param>
+        public void SetToken(int i, Vector2 position, string role, string name, int rating, Color fill, Color ratingColor, Color? ring = null)
         {
             Token token = Tokens[i];
+            token.Ring.gameObject.SetActive(ring.HasValue);
+            if (ring.HasValue)
+            {
+                token.Ring.color = ring.Value;
+                token.Ring.rectTransform.anchoredPosition = position;
+            }
+
             token.Circle.SetVisible(true);
             token.Role.gameObject.SetActive(true);
             token.Name.gameObject.SetActive(true);
@@ -179,6 +191,7 @@ namespace Football.Game
             for (int i = used; i < Tokens.Length; i++)
             {
                 Tokens[i].Circle.SetVisible(false);
+                Tokens[i].Ring.gameObject.SetActive(false);
                 Tokens[i].Role.gameObject.SetActive(false);
                 Tokens[i].Name.gameObject.SetActive(false);
             }
@@ -194,8 +207,21 @@ namespace Football.Game
         /// <param name="background">Color de la ficha.</param>
         public static Color ReadableOn(Color background)
         {
-            float brightness = background.r * 0.3f + background.g * 0.59f + background.b * 0.11f;
-            return brightness > 0.6f ? new Color(0.08f, 0.08f, 0.1f) : Color.white;
+            // Blanco o casi negro, el que más contraste da (relación de contraste de la WCAG con la luminancia relativa del color).
+            float luminance = 0.2126f * Linear(background.r) + 0.7152f * Linear(background.g) + 0.0722f * Linear(background.b);
+            Color dark = new Color(0.05f, 0.05f, 0.07f);
+            float darkLuminance = 0.2126f * Linear(dark.r) + 0.7152f * Linear(dark.g) + 0.0722f * Linear(dark.b);
+            float againstWhite = 1.05f / (luminance + 0.05f);
+            float againstDark = (luminance + 0.05f) / (darkLuminance + 0.05f);
+            return againstDark >= againstWhite ? dark : Color.white;
         }
+
+        private static float Linear(float c) => c <= 0.04045f ? c / 12.92f : Mathf.Pow((c + 0.055f) / 1.055f, 2.4f);
+
+        /// <summary>Anillo de una ficha de un jugador fuera de su posición natural.</summary>
+        public static readonly Color OffPositionRing = new Color(1f, 0.6f, 0.3f);
+        /// <summary>Anillo de una ficha de un jugador no disponible (lesionado, suspendido, expulsado).</summary>
+        public static readonly Color UnavailableRing = new Color(0.9f, 0.2f, 0.2f);
+        private const float RingWidth = 6f;
     }
 }

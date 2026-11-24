@@ -14,7 +14,6 @@ namespace Football.Game
     {
         private const int MaxBench = SquadSelection.DefaultBenchSize;
         private const int MaxReserves = 14;
-        private static readonly Color OutOfPosition = new Color(1f, 0.6f, 0.3f);
         private static readonly Color RowColor = UiTheme.Button;
 
         private readonly FriendlySetup _setup;
@@ -86,9 +85,9 @@ namespace Football.Game
                 FormationSlot slot = squad.Formation.Slots[i];
                 int effective = squad.EffectiveRating(team, i);
                 sum += effective;
-                Color fill = IsSelected(SquadGroup.Starter, i) ? UiTheme.Accent : kit.Shirt;
-                Color ink = effective < p.Rating ? OutOfPosition : LineupBoard.ReadableOn(kit.Shirt);
-                _board.SetToken(i, _board.SlotPosition(slot.X, slot.Y), UiTheme.Code(slot.Role), TeamBuilder.DisplayName(p), effective, fill, ink);
+                // La ficha va siempre del color del club con el número en blanco o negro según el contraste; la selección y el aviso de fuera de posición van en el anillo.
+                Color? ring = IsSelected(SquadGroup.Starter, i) ? UiTheme.Accent : effective < p.Rating ? LineupBoard.OffPositionRing : (Color?)null;
+                _board.SetToken(i, _board.SlotPosition(slot.X, slot.Y), UiTheme.Code(slot.Role), TeamBuilder.DisplayName(p), effective, kit.Shirt, LineupBoard.ReadableOn(kit.Shirt), ring);
             }
 
             _rating.text = "Media " + (sum / starters).ToString("F1");
