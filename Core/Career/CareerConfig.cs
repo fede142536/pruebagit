@@ -252,5 +252,32 @@ namespace Football.Core.Career
         public int AiPromoteMargin = 3;
         /// <summary>Puesto en el plantel (de mejor a peor, desde 0) cuyo nivel sirve de vara para subir a un canterano en un club de la computadora.</summary>
         public int AiPromoteRank = 17;
+
+        // ------------------------------------------------------------------ declive y partidos de reserva
+
+        /// <summary>Edad mínima a la que puede empezar el declive; cada jugador arranca entre esa edad y esa edad más <see cref="DeclineOnsetSpread"/> - 1 (al azar, fijo por jugador).</summary>
+        public int DeclineMinAge = 30;
+        /// <summary>Años entre los que se reparte el comienzo del declive.</summary>
+        public int DeclineOnsetSpread = 4;
+        /// <summary>Puntos de atributo por semana que pierde en el primer año de declive (con velocidad media).</summary>
+        public float DeclinePointsPerWeek = 0.25f;
+        /// <summary>Aumento del declive por cada año transcurrido desde que empezó (fracción).</summary>
+        public float DeclineAcceleration = 0.25f;
+        /// <summary>Rango de la velocidad personal de declive (fija por jugador): mínimo y máximo.</summary>
+        public float[] DeclineSpeedRange = { 0.5f, 1.5f };
+        /// <summary>Variación semanal al azar del declive (±fracción).</summary>
+        public float DeclineWeeklyNoise = 0.5f;
+        /// <summary>Fracción de los puntos perdidos que cae en atributos físicos.</summary>
+        public float DeclinePhysicalShare = 0.65f;
+        /// <summary>Los arqueros declinan más despacio (factor).</summary>
+        public float DeclineGoalkeeperFactor = 0.6f;
+        /// <summary>Los profesionales declinan más despacio (factor).</summary>
+        public float DeclineProfessionalFactor = 0.7f;
+        /// <summary>Probabilidad semanal de que la reserva juegue su partido.</summary>
+        public float ReserveMatchChance = 0.6f;
+        /// <summary>Probabilidad de gol por partido según la línea del jugador: arquero, defensa, medio y ataque.</summary>
+        public float[] ReserveGoalChance = { 0f, 0.03f, 0.08f, 0.22f };
+        /// <summary>Probabilidad de asistencia respecto de la de gol.</summary>
+        public float ReserveAssistShare = 0.8f;
     }
 }

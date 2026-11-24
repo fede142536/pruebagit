@@ -675,5 +675,20 @@
   "reserve.move.onloan": "He is on loan.",
   "reserve.move.alreadythere": "He is already there.",
   "reserve.move.foreignquota": "The club already has its foreign player quota.",
-  "reserve.move.done": "Done."
+  "reserve.move.done": "Done.",
+  "reserve.sort": "SORT",
+  "reserve.sort0": "Potential",
+  "reserve.sort1": "Rating",
+  "reserve.sort2": "Avg. mark",
+  "reserve.sort3": "Matches",
+  "reserve.sort4": "First-team min.",
+  "reserve.sort5": "Age (youngest)",
+  "reserve.col.r_matches": "R Ap",
+  "reserve.col.r_goals": "R G",
+  "reserve.col.r_assists": "R A",
+  "reserve.col.r_rating": "R Mark",
+  "reserve.col.f_matches": "1st Ap",
+  "reserve.col.f_minutes": "1st Min",
+  "reserve.stats": "Reserves: {0} matches · {1} goals · {2} assists · mark {3}\\nFirst team: {4} matches · {5} min · {6} goals",
+  "contracts.retiring": "Announced this is his last season: he retires when it ends."
 }

@@ -23,7 +23,7 @@ namespace Football.Core.Persistence
         private static readonly string[] TablesChildrenFirst =
         {
             "renewal_talks", "career_meta", "management_history", "signings", "ticket_history", "supporters", "stadium_works", "club_stadiums", "club_info", "manager",
-            "player_season_stats", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
+            "reserve_stats", "player_season_stats", "news", "records", "hall_of_fame", "scouting", "staff", "player_conditions", "rivalries", "fixtures",
             "competitions", "facilities", "ledger", "club_finances", "contracts", "player_attributes", "players", "clubs"
         };
 
@@ -217,12 +217,15 @@ namespace Football.Core.Persistence
                 {
                     SqlHelper.Execute(Connection,
                         @"INSERT INTO player_conditions (player_id, form, morale, fitness, injury_days, suspended_matches, accumulated_yellows,
-                            season_minutes, promise, promise_matches, promise_minutes)
-                          VALUES (@id, @form, @morale, @fitness, @injury, @suspended, @yellows, @minutes, @promise, @pmatches, @pminutes)", tx,
+                            season_minutes, promise, promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress)
+                          VALUES (@id, @form, @morale, @fitness, @injury, @suspended, @yellows, @minutes, @promise, @pmatches, @pminutes,
+                            @reserve, @debuted, @devp, @devm, @retiring, @decline)", tx,
                         ("@id", p.Id), ("@form", (double)c.Form), ("@morale", (double)c.Morale), ("@fitness", (double)Math.Max(0f, Math.Min(1f, c.Fitness))),
                         ("@injury", c.InjuryDays), ("@suspended", c.SuspendedMatches), ("@yellows", c.AccumulatedYellows),
                         ("@minutes", (double)c.SeasonMinutes), ("@promise", (int)c.Promise), ("@pmatches", c.TeamMatchesSincePromise),
-                        ("@pminutes", (double)c.MinutesSincePromise));
+                        ("@pminutes", (double)c.MinutesSincePromise), ("@reserve", c.InReserve ? 1 : 0), ("@debuted", c.Debuted ? 1 : 0),
+                        ("@devp", (double)c.DevProgress), ("@devm", (double)c.DevMinutesMark), ("@retiring", c.RetiringAtEnd ? 1 : 0),
+                        ("@decline", (double)c.DeclineProgress));
                 }
             }
         }
@@ -269,13 +272,15 @@ namespace Football.Core.Persistence
                     Promise = (PlayingTimePromise)r.GetInt32(4)
                 });
             Read(@"SELECT player_id, form, morale, fitness, injury_days, suspended_matches, accumulated_yellows, season_minutes, promise,
-                     promise_matches, promise_minutes FROM player_conditions",
+                     promise_matches, promise_minutes, in_reserve, debuted, dev_progress, dev_minutes_mark, retiring, decline_progress FROM player_conditions",
                 r => data.Conditions[r.GetInt32(0)] = new PlayerCondition
                 {
                     PlayerId = r.GetInt32(0), Form = (float)r.GetDouble(1), Morale = (float)r.GetDouble(2), Fitness = (float)r.GetDouble(3),
                     InjuryDays = r.GetInt32(4), SuspendedMatches = r.GetInt32(5), AccumulatedYellows = r.GetInt32(6),
                     SeasonMinutes = (float)r.GetDouble(7), Promise = (PlayingTimePromise)r.GetInt32(8), TeamMatchesSincePromise = r.GetInt32(9),
-                    MinutesSincePromise = (float)r.GetDouble(10)
+                    MinutesSincePromise = (float)r.GetDouble(10), InReserve = r.GetInt32(11) != 0, Debuted = r.GetInt32(12) != 0,
+                    DevProgress = (float)r.GetDouble(13), DevMinutesMark = (float)r.GetDouble(14), RetiringAtEnd = r.GetInt32(15) != 0,
+                    DeclineProgress = (float)r.GetDouble(16)
                 });
         }
 
@@ -385,6 +390,14 @@ namespace Football.Core.Persistence
                     ("@n", st.Value.Rated));
             }
 
+            foreach (KeyValuePair<int, CardStats> st in data.ReserveStats)
+            {
+                SqlHelper.Execute(Connection,
+                    "INSERT INTO reserve_stats (player_id, matches, goals, assists, rating_sum, rated) VALUES (@id, @m, @g, @a, @r, @n)", tx,
+                    ("@id", st.Key), ("@m", st.Value.Matches), ("@g", st.Value.Goals), ("@a", st.Value.Assists), ("@r", (double)st.Value.RatingSum),
+                    ("@n", st.Value.Rated));
+            }
+
             foreach (int id in data.HallOfFame)
             {
                 SqlHelper.Execute(Connection, "INSERT INTO hall_of_fame (player_id, inducted_season) VALUES (@id, @season)", tx,
@@ -410,6 +423,10 @@ namespace Football.Core.Persistence
                 data.Records.Add(new RecordEntry { Key = key, Value = (float)r.GetDouble(1), HolderId = r.GetInt32(2), Season = r.GetInt32(3) });
             });
             Read("SELECT player_id FROM hall_of_fame ORDER BY inducted_season, player_id", r => data.HallOfFame.Add(r.GetInt32(0)));
+            Read("SELECT player_id, matches, goals, assists, rating_sum, rated FROM reserve_stats", r => data.ReserveStats[r.GetInt32(0)] = new CardStats
+            {
+                Matches = r.GetInt32(1), Goals = r.GetInt32(2), Assists = r.GetInt32(3), RatingSum = (float)r.GetDouble(4), Rated = r.GetInt32(5)
+            });
             Read("SELECT player_id, matches, goals, assists, rating_sum, rated FROM player_season_stats", r => data.SeasonStats[r.GetInt32(0)] = new CardStats
             {
                 Matches = r.GetInt32(1), Goals = r.GetInt32(2), Assists = r.GetInt32(3), RatingSum = (float)r.GetDouble(4), Rated = r.GetInt32(5)

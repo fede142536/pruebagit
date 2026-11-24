@@ -44,5 +44,6 @@
   "news.loan_returned": "{0} returns from his loan ({1}).",
   "news.player_upset_stays": "{0} wanted to leave and is upset that you turned the offer down.",
   "news.reserve_ageout": "{0} turned {1}, left the reserves and signed a first-team contract.",
-  "news.reserve_released": "{0} left the club's reserves on a free."
+  "news.reserve_released": "{0} left the club's reserves on a free.",
+  "news.last_season": "{0} ({1}) announced this will be his last season: he retires when it ends."
 }

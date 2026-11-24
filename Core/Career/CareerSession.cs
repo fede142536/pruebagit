@@ -429,6 +429,7 @@ namespace Football.Core.Career
                 Data.Fixtures.Add(f);
             }
 
+            AnnounceRetirements();
             Data.SeasonStartCash = Data.Finances[Data.UserClubId].Cash;
             if (Data.TournamentOnly)
             {
@@ -906,7 +907,8 @@ namespace Football.Core.Career
             ProcessLoansAtSeasonEnd(); // los prestados vuelven (o se compran) antes de los retiros y los contratos
             ExpireBuybacks();
             List<Player> active = Data.Players.Values.Where(p => p.ClubId.HasValue).ToList();
-            List<Player> retired = _history.SeasonEnd(active, Data.Today, _dayRng.Fork("retiros"), out List<StaffMember> newStaff);
+            List<Player> retired = _history.SeasonEnd(active, Data.Today, _dayRng.Fork("retiros"), out List<StaffMember> newStaff,
+                p => Data.Conditions.TryGetValue(p.Id, out PlayerCondition rc) && rc.RetiringAtEnd); // se retiran los que avisaron al empezar la temporada
             foreach (Player p in retired)
             {
                 foreach (StaffMember s in newStaff.Where(s => s.FormerPlayerId == p.Id))
@@ -947,9 +949,11 @@ namespace Football.Core.Career
             {
                 c.SeasonMinutes = 0f;
                 c.DevMinutesMark = 0f;
+                c.RetiringAtEnd = false;
             }
 
             Data.SeasonStats.Clear();
+            Data.ReserveStats.Clear();
 
             _inbox.Post("news.season_end", Data.Season.ToString(CultureInfo.InvariantCulture));
             Data.Season++;

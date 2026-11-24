@@ -675,5 +675,20 @@
   "reserve.move.onloan": "Está cedido a otro club.",
   "reserve.move.alreadythere": "Ya está ahí.",
   "reserve.move.foreignquota": "El club ya tiene el cupo de extranjeros completo.",
-  "reserve.move.done": "Hecho."
+  "reserve.move.done": "Hecho.",
+  "reserve.sort": "ORDEN",
+  "reserve.sort0": "Potencial",
+  "reserve.sort1": "Media",
+  "reserve.sort2": "Nota",
+  "reserve.sort3": "Partidos",
+  "reserve.sort4": "Min. primera",
+  "reserve.sort5": "Edad (menor)",
+  "reserve.col.r_matches": "R PJ",
+  "reserve.col.r_goals": "R G",
+  "reserve.col.r_assists": "R A",
+  "reserve.col.r_rating": "R Nota",
+  "reserve.col.f_matches": "1ª PJ",
+  "reserve.col.f_minutes": "1ª Min",
+  "reserve.stats": "Reserva: {0} partidos · {1} goles · {2} asist. · nota {3}\\nPrimera: {4} partidos · {5} min · {6} goles",
+  "contracts.retiring": "Anunció que esta es su última temporada: se retira al terminar."
 }

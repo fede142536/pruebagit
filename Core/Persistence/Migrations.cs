@@ -275,7 +275,18 @@ namespace Football.Core.Persistence
                 "ALTER TABLE players ADD COLUMN nationality TEXT NOT NULL DEFAULT 'ARG'"),
 
             new SqlMigration(16, "Rol que pide el jugador al renovar",
-                "ALTER TABLE renewal_talks ADD COLUMN demand_role INTEGER NOT NULL DEFAULT 2")
+                "ALTER TABLE renewal_talks ADD COLUMN demand_role INTEGER NOT NULL DEFAULT 2"),
+
+            new SqlMigration(17, "Reserva, debut, desarrollo, declive, retiro anunciado y estadísticas de la reserva",
+                "ALTER TABLE player_conditions ADD COLUMN in_reserve INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE player_conditions ADD COLUMN debuted INTEGER NOT NULL DEFAULT 1",
+                "ALTER TABLE player_conditions ADD COLUMN dev_progress REAL NOT NULL DEFAULT 0",
+                "ALTER TABLE player_conditions ADD COLUMN dev_minutes_mark REAL NOT NULL DEFAULT 0",
+                "ALTER TABLE player_conditions ADD COLUMN retiring INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE player_conditions ADD COLUMN decline_progress REAL NOT NULL DEFAULT 0",
+                @"CREATE TABLE reserve_stats (
+                    player_id INTEGER PRIMARY KEY, matches INTEGER NOT NULL, goals INTEGER NOT NULL, assists INTEGER NOT NULL,
+                    rating_sum REAL NOT NULL, rated INTEGER NOT NULL)")
         };
     }
 }

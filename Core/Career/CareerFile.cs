@@ -16,7 +16,7 @@ namespace Football.Core.Career
     public static partial class CareerFile
     {
         private const uint Magic = 0x50545243; // "PTRC"
-        private const int Version = 11; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras; 11: reserva, debut y desarrollo
+        private const int Version = 12; // 2: estadísticas de temporada; 3: DT, estadio y obras, socios, entradas, fichajes y medidor; 4: alineación elegida; 5: divisiones (Primera y Nacional B); 6: dorsales; 7: negociaciones de renovación; 8: nacionalidad; 9: rol que pide el jugador al renovar; 10: transferibles, préstamos y recompras; 11: reserva, debut y desarrollo; 12: declive, retiro anunciado y estadísticas de la reserva
 
         /// <summary>Guarda la partida en un archivo, sin riesgo de dejarlo a medias.</summary>
         /// <param name="path">Ruta del archivo.</param>
@@ -149,6 +149,8 @@ namespace Football.Core.Career
                     w.Write(k.Debuted);
                     w.Write(k.DevProgress);
                     w.Write(k.DevMinutesMark);
+                    w.Write(k.RetiringAtEnd);
+                    w.Write(k.DeclineProgress);
                 }
 
                 w.Write(d.Staff.Count);
@@ -304,6 +306,17 @@ namespace Football.Core.Career
                     w.Write(b.Fee);
                     w.Write(b.Expires.Ticks);
                 }
+
+                w.Write(d.ReserveStats.Count);
+                foreach (KeyValuePair<int, CardStats> st in d.ReserveStats)
+                {
+                    w.Write(st.Key);
+                    w.Write(st.Value.Matches);
+                    w.Write(st.Value.Goals);
+                    w.Write(st.Value.Assists);
+                    w.Write(st.Value.RatingSum);
+                    w.Write(st.Value.Rated);
+                }
             }
         }
 
@@ -427,6 +440,13 @@ namespace Football.Core.Career
                         cond.Debuted = r.ReadBoolean();
                         cond.DevProgress = r.ReadSingle();
                         cond.DevMinutesMark = r.ReadSingle();
+                    }
+
+                    if (version >= 12)
+                    {
+                        PlayerCondition cond12 = d.Conditions[p.Id];
+                        cond12.RetiringAtEnd = r.ReadBoolean();
+                        cond12.DeclineProgress = r.ReadSingle();
                     }
                 }
 
@@ -566,6 +586,18 @@ namespace Football.Core.Career
                         {
                             PlayerId = r.ReadInt32(), ClubId = r.ReadInt32(), HolderClubId = r.ReadInt32(), Fee = r.ReadInt64(), Expires = new DateTime(r.ReadInt64())
                         });
+                    }
+                }
+
+                if (version >= 12)
+                {
+                    int reserveStats = r.ReadInt32();
+                    for (int i = 0; i < reserveStats; i++)
+                    {
+                        d.ReserveStats[r.ReadInt32()] = new CardStats
+                        {
+                            Matches = r.ReadInt32(), Goals = r.ReadInt32(), Assists = r.ReadInt32(), RatingSum = r.ReadSingle(), Rated = r.ReadInt32()
+                        };
                     }
                 }
 

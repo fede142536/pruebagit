@@ -190,6 +190,9 @@ namespace Football.Core.Career
         public readonly Dictionary<int, int> CareerGoals = new Dictionary<int, int>();
         /// <summary>Estadísticas de la temporada en curso de cada jugador (partidos, goles, asistencias, notas).</summary>
         public readonly Dictionary<int, CardStats> SeasonStats = new Dictionary<int, CardStats>();
+
+        /// <summary>Estadísticas de la temporada en los partidos de la reserva (simulados), por jugador.</summary>
+        public readonly Dictionary<int, CardStats> ReserveStats = new Dictionary<int, CardStats>();
         /// <summary>Salón de la fama.</summary>
         public readonly List<int> HallOfFame = new List<int>();
 

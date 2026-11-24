@@ -109,6 +109,11 @@ namespace Football.Game
                 Color warn = left <= 1 ? StatusColors.Bad : left == 2 ? StatusColors.Fair : UiTheme.Text;
                 _grid.SetColor(row, 5, warn);
                 _grid.SetColor(row, 6, warn);
+                if (Session.IsRetiringThisSeason(pl.Id))
+                {
+                    _grid.SetColor(row, 0, UiTheme.Gold); // se retira al terminar la temporada
+                }
+
                 _grid.Highlight(row, _offset + k == _selected);
             }
 
@@ -140,6 +145,10 @@ namespace Football.Game
             _name.text = pl.FirstName + " " + pl.LastName;
             _info.text = CareerText.Format("contracts.info", pl.AgeOn(Data.Today), PlayerLabels.Code(pl.Position), Session.VisibleRating(pl),
                 CareerText.Num(pl.Contract.ExpiresOn.Year), CareerText.Money(pl.Contract.WeeklyWage), CareerText.Num((int)c.Morale));
+            if (Session.IsRetiringThisSeason(pl.Id))
+            {
+                _info.text += "\n" + Locale.Get("contracts.retiring");
+            }
             bool canExtend = left < max;
             bool thinking = talk != null && talk.Status == TalkStatus.Thinking;
             bool refused = talk != null && talk.Status == TalkStatus.Refused;

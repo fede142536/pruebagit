@@ -51,6 +51,10 @@ namespace Football.Core.Domain
         public bool Debuted = true;
         /// <summary>Fracción de punto de atributo acumulada por el desarrollo (se gasta al llegar a 1).</summary>
         public float DevProgress;
+        /// <summary>Anunció que esta es su última temporada: se retira al cerrarla.</summary>
+        public bool RetiringAtEnd;
+        /// <summary>Fracción de punto de atributo que lleva perdida por el declive de la edad.</summary>
+        public float DeclineProgress;
         /// <summary>Minutos de la temporada ya contados por el desarrollo (para medir los de cada semana).</summary>
         public float DevMinutesMark;
 

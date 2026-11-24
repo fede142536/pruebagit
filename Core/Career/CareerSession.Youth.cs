@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Football.Core.Domain;
 using Football.Core.Management;
+using Football.Core.MatchCore;
 
 namespace Football.Core.Career
 {
@@ -168,6 +169,57 @@ namespace Football.Core.Career
             return (int)Math.Max(1f, Math.Min(AttributeScale.Max, Math.Round(p.Potential + unit * noise)));
         }
 
+        private DeclineSettings DeclineConfig()
+        {
+            CareerConfig cc = _cfg.Career;
+            return new DeclineSettings
+            {
+                MinAge = cc.DeclineMinAge, OnsetSpread = cc.DeclineOnsetSpread, PointsPerWeek = cc.DeclinePointsPerWeek, Acceleration = cc.DeclineAcceleration,
+                SpeedRange = cc.DeclineSpeedRange, WeeklyNoise = cc.DeclineWeeklyNoise, PhysicalShare = cc.DeclinePhysicalShare,
+                GoalkeeperFactor = cc.DeclineGoalkeeperFactor, ProfessionalFactor = cc.DeclineProfessionalFactor
+            };
+        }
+
+        /// <summary>Partido de la reserva (simulado): los que jugaron suman partido, y al azar goles, asistencias y nota según su media y su moral.</summary>
+        private void SimulateReserveMatch(int clubId, List<Player> reserve, Dictionary<int, float> minutes, Common.IRandom rng)
+        {
+            CareerConfig cc = _cfg.Career;
+            if (reserve.Count == 0 || !rng.Chance(cc.ReserveMatchChance))
+            {
+                return;
+            }
+
+            foreach (Player p in reserve.Where(x => minutes.TryGetValue(x.Id, out float m) && m > 0f))
+            {
+                if (!Data.ReserveStats.TryGetValue(p.Id, out CardStats st))
+                {
+                    st = new CardStats();
+                    Data.ReserveStats[p.Id] = st;
+                }
+
+                float overall = PlayerRatings.Overall(p.Attributes, p.Position);
+                int line = (int)PlayerRatings.LineOf(p.Position);
+                float scale = overall / ReserveReferenceRating;
+                st.Matches++;
+                if (rng.Chance(Math.Min(1f, cc.ReserveGoalChance[line] * scale)))
+                {
+                    st.Goals++;
+                }
+
+                if (rng.Chance(Math.Min(1f, cc.ReserveGoalChance[line] * cc.ReserveAssistShare * scale)))
+                {
+                    st.Assists++;
+                }
+
+                float mood = (Data.Conditions[p.Id].Morale - ReserveNeutralMorale) / ReserveMoraleScale;
+                st.RatingSum += Math.Max(ReserveMinRating, Math.Min(ReserveMaxRating, ReserveBaseRating + (overall - ReserveReferenceRating) / ReserveRatingScale + mood + (rng.NextFloat() - 0.5f)));
+                st.Rated++;
+            }
+        }
+
+        private const float ReserveReferenceRating = 60f, ReserveNeutralMorale = 50f, ReserveMoraleScale = 100f, ReserveBaseRating = 6.3f;
+        private const float ReserveRatingScale = 20f, ReserveMinRating = 4f, ReserveMaxRating = 9.5f;
+
         private DevelopmentSettings DevSettings()
         {
             CareerConfig cc = _cfg.Career;
@@ -183,9 +235,10 @@ namespace Football.Core.Career
         {
             CareerConfig cc = _cfg.Career;
             DevelopmentSettings dev = DevSettings();
+            DeclineSettings decline = DeclineConfig();
             foreach (Club club in Data.Clubs)
             {
-                Common.IRandom rng = _dayRng.Fork("desarrollo" + club.Id);
+                Common.IRandom rng = _dayRng.Fork("desarrollo" + club.Id + "-" + Data.Today.Ticks);
                 StaffMember coach = Data.Staff.Find(s => s.ClubId == club.Id && s.Role == StaffRole.YouthCoach);
                 int ability = coach?.Ability ?? cc.StaffAbilityPivot;
                 var reserveMinutes = new Dictionary<int, float>();
@@ -196,6 +249,7 @@ namespace Football.Core.Career
                     reserveMinutes[reserve[i].Id] = i < cc.ReserveStarters ? cc.ReserveStarterMinutes : i < cc.ReserveStarters + cc.ReserveBench ? cc.ReserveBenchMinutes : 0f;
                 }
 
+                SimulateReserveMatch(club.Id, reserve, reserveMinutes, rng);
                 foreach (Player p in FullRoster(club.Id))
                 {
                     PlayerCondition cond = Data.Conditions[p.Id];
@@ -209,6 +263,12 @@ namespace Football.Core.Career
                     float week = Math.Max(0f, cond.SeasonMinutes - cond.DevMinutesMark) + fromReserve;
                     cond.DevMinutesMark = cond.SeasonMinutes;
                     int age = p.AgeOn(Data.Today);
+                    if (age >= cc.DeclineMinAge)
+                    {
+                        float loss = YouthDevelopment.WeeklyDecline(decline, p.Id, age, p.Position, p.Personality == PersonalityTrait.Professional, rng);
+                        YouthDevelopment.ApplyDecline(p, cond, loss, cc.DeclinePhysicalShare, rng);
+                    }
+
                     if (age > cc.DevMaxAge)
                     {
                         continue;
@@ -296,5 +356,40 @@ namespace Football.Core.Career
                 }
             }
         }
+
+        /// <summary>
+        /// Al empezar la temporada se sortea quién se retira al terminarla (desde la edad de retiro, más probable cuanto mayor). El del club del usuario
+        /// lo anuncia en el buzón: esa es su última temporada.
+        /// </summary>
+        internal void AnnounceRetirements()
+        {
+            foreach (Player p in Data.Players.Values.Where(x => x.ClubId.HasValue).OrderBy(x => x.Id))
+            {
+                if (!Data.Conditions.TryGetValue(p.Id, out PlayerCondition cond))
+                {
+                    continue;
+                }
+
+                cond.RetiringAtEnd = _history.ShouldRetire(p, Data.Today, new Common.SeededRandom(Mix(p.Id * RetirementSalt + Data.Season)));
+                if (cond.RetiringAtEnd && p.ClubId == Data.UserClubId)
+                {
+                    _inbox.Post("news.last_season", FullName(p), Num(p.AgeOn(Data.Today)));
+                }
+            }
+        }
+
+        private const long RetirementSalt = 7919L;
+
+        /// <summary>Si el jugador anunció que esta es su última temporada.</summary>
+        /// <param name="playerId">Jugador.</param>
+        public bool IsRetiringThisSeason(int playerId) => Data.Conditions.TryGetValue(playerId, out PlayerCondition c) && c.RetiringAtEnd;
+
+        /// <summary>Estadísticas de la temporada en los partidos de la reserva (null si todavía no jugó).</summary>
+        /// <param name="playerId">Jugador.</param>
+        public CardStats ReserveStatsOf(int playerId) => Data.ReserveStats.TryGetValue(playerId, out CardStats s) ? s : null;
+
+        /// <summary>Estadísticas de la temporada en los partidos de primera (null si todavía no jugó).</summary>
+        /// <param name="playerId">Jugador.</param>
+        public CardStats FirstTeamStatsOf(int playerId) => Data.SeasonStats.TryGetValue(playerId, out CardStats s) ? s : null;
     }
 }

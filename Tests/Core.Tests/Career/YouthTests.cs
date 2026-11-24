@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Football.Core.Career;
 using Football.Core.Domain;
+using Football.Core.MatchCore;
 using NUnit.Framework;
 
 namespace Football.Core.Tests.Career
@@ -123,6 +124,7 @@ namespace Football.Core.Tests.Career
             for (int w = 0; w < 52; w++)
             {
                 s.YouthWeek();
+                s.Data.Today = s.Data.Today.AddDays(7); // cada semana es otra tirada
             }
 
             float gainPlays = PlayerRatings.Overall(plays.Attributes, plays.Position) - before;
@@ -139,6 +141,7 @@ namespace Football.Core.Tests.Career
             for (int w = 0; w < 200; w++)
             {
                 s.YouthWeek();
+                s.Data.Today = s.Data.Today.AddDays(7); // cada semana es otra tirada
             }
 
             Assert.That(PlayerRatings.Overall(p.Attributes, p.Position), Is.LessThanOrEqualTo(62.5f));
@@ -159,6 +162,7 @@ namespace Football.Core.Tests.Career
             for (int w = 0; w < 20; w++)
             {
                 s.YouthWeek();
+                s.Data.Today = s.Data.Today.AddDays(7); // cada semana es otra tirada
             }
 
             Assert.That(s.Data.Conditions[plays.Id].Morale, Is.GreaterThan(60f));
@@ -249,5 +253,113 @@ namespace Football.Core.Tests.Career
 
         /// <summary>Configuración de carrera por defecto (atajo de las pruebas).</summary>
         public static CareerConfig Config(this CareerSession s) => new CareerConfigs().Career;
+    }
+}
+
+namespace Football.Core.Tests.Career
+{
+    using Football.Core.Management;
+
+    /// <summary>Declive de los veteranos, retiro anunciado y estadísticas de la reserva.</summary>
+    public class VeteranTests
+    {
+        private static CareerSession New() =>
+            CareerSession.NewGame(CareerSessionTests.Argentina(), "Rosario Central", 2027, 5, new CareerConfigs(), false, null, 30);
+
+        private static Player Old(CareerSession s, int index, int age)
+        {
+            Player p = s.FullRoster(s.Data.UserClubId).Where(x => x.Position == Position.CentralMidfielder || x.Position == Position.Striker)
+                .OrderBy(x => x.Id).Skip(index).First();
+            p.BirthDate = s.Data.Today.AddYears(-age).AddDays(-10);
+            foreach (AttributeId id in AttributeSet.All)
+            {
+                p.Attributes[id] = 70;
+            }
+
+            return p;
+        }
+
+        [Test]
+        public void Decline_NeverStartsBeforeThirty_AndStartsAtADifferentAgePerPlayer()
+        {
+            var c = new CareerConfig();
+            var d = new DeclineSettings
+            {
+                MinAge = c.DeclineMinAge, OnsetSpread = c.DeclineOnsetSpread, PointsPerWeek = c.DeclinePointsPerWeek, Acceleration = c.DeclineAcceleration,
+                SpeedRange = c.DeclineSpeedRange, WeeklyNoise = c.DeclineWeeklyNoise, PhysicalShare = c.DeclinePhysicalShare,
+                GoalkeeperFactor = c.DeclineGoalkeeperFactor, ProfessionalFactor = c.DeclineProfessionalFactor
+            };
+            var onsets = Enumerable.Range(1, 200).Select(id => YouthDevelopment.OnsetAge(d, id)).ToList();
+            Assert.That(onsets.Min(), Is.EqualTo(30));
+            Assert.That(onsets.Max(), Is.EqualTo(30 + c.DeclineOnsetSpread - 1));
+            Assert.That(onsets.Distinct().Count(), Is.GreaterThan(1), "no es la misma edad para todos");
+            var rng = new Football.Core.Common.SeededRandom(1);
+            Assert.That(YouthDevelopment.WeeklyDecline(d, 1, 29, Position.Striker, false, rng), Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void AVeteran_LosesLevelOverTheYears_MoreThanAPlayerInHisPrime()
+        {
+            CareerSession s = New();
+            Player vet = Old(s, 0, 35);
+            Player prime = Old(s, 1, 26);
+            float vetBefore = PlayerRatings.Overall(vet.Attributes, vet.Position), primeBefore = PlayerRatings.Overall(prime.Attributes, prime.Position);
+            for (int w = 0; w < 52; w++)
+            {
+                s.YouthWeek();
+                s.Data.Today = s.Data.Today.AddDays(7); // cada semana es otra tirada
+            }
+
+            Assert.That(vetBefore - PlayerRatings.Overall(vet.Attributes, vet.Position), Is.GreaterThan(0.5f).And.LessThan(8f));
+            Assert.That(primeBefore - PlayerRatings.Overall(prime.Attributes, prime.Position), Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void Retirement_IsAnnouncedAtTheStartOfTheSeason_AndHappensAtTheEnd()
+        {
+            CareerSession s = New();
+            Player old = Old(s, 0, 40);
+            s.Data.Conditions[old.Id].RetiringAtEnd = false;
+            s.AnnounceRetirements();
+            Assert.That(s.IsRetiringThisSeason(old.Id), Is.True, "con 40 años el retiro está casi asegurado");
+            Assert.That(s.Inbox.Chronological.Any(n => n.Key == "news.last_season"), Is.True, "el buzón avisa que es su última temporada");
+            Player young = Old(s, 1, 25);
+            s.AnnounceRetirements();
+            Assert.That(s.IsRetiringThisSeason(young.Id), Is.False);
+        }
+
+        [Test]
+        public void ReserveMatches_AccumulateStatsForThosePlaying()
+        {
+            CareerSession s = New();
+            Player p = s.FullRoster(s.Data.UserClubId).First(x => x.Position == Position.Striker);
+            p.BirthDate = s.Data.Today.AddYears(-18);
+            s.Data.Conditions[p.Id].InReserve = true;
+            for (int w = 0; w < 52; w++)
+            {
+                s.YouthWeek();
+                s.Data.Today = s.Data.Today.AddDays(7); // cada semana es otra tirada
+            }
+
+            CardStats st = s.ReserveStatsOf(p.Id);
+            Assert.That(st, Is.Not.Null);
+            Assert.That(st.Matches, Is.InRange(15, 52));
+            Assert.That(st.AverageRating, Is.InRange(4f, 9.5f));
+        }
+
+        [Test]
+        public void SaveFile_KeepsRetirementAndReserveStats()
+        {
+            CareerSession s = New();
+            Player p = s.FullRoster(s.Data.UserClubId).First();
+            s.Data.Conditions[p.Id].RetiringAtEnd = true;
+            s.Data.ReserveStats[p.Id] = new CardStats { Matches = 7, Goals = 3, Assists = 2, RatingSum = 40f, Rated = 6 };
+            var ms = new MemoryStream();
+            CareerFile.Write(ms, s.Data);
+            ms.Position = 0;
+            CareerData back = CareerFile.Read(ms);
+            Assert.That(back.Conditions[p.Id].RetiringAtEnd, Is.True);
+            Assert.That(back.ReserveStats[p.Id].Goals, Is.EqualTo(3));
+        }
     }
 }

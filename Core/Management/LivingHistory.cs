@@ -108,6 +108,18 @@ namespace Football.Core.Management
             }
         }
 
+        /// <summary>Sortea si un jugador se retira esta temporada: desde <see cref="ManagementConfig.RetirementAge"/>, más probable cuanto mayor.</summary>
+        /// <param name="p">Jugador.</param>
+        /// <param name="today">Fecha.</param>
+        /// <param name="rng">Azar.</param>
+        public bool ShouldRetire(Player p, DateTime today, IRandom rng)
+        {
+            int over = p.AgeOn(today) - _config.RetirementAge;
+            return over >= 0 && rng.Chance(Math.Min(MaxRetirementChance, _config.RetirementChancePerYear * (over + 1)));
+        }
+
+        private const float MaxRetirementChance = 0.95f;
+
         /// <summary>
         /// Fin de temporada: los veteranos pueden retirarse (más probable cuanto mayores). Los líderes y profesionales pasan
         /// al cuerpo técnico (técnicos con capacidad según su nivel); los grandes goleadores entran al salón de la fama.
@@ -117,14 +129,14 @@ namespace Football.Core.Management
         /// <param name="rng">Azar.</param>
         /// <param name="newStaff">Fichas de cuerpo técnico creadas.</param>
         /// <returns>Jugadores que se retiraron.</returns>
-        public List<Player> SeasonEnd(IEnumerable<Player> players, DateTime today, IRandom rng, out List<StaffMember> newStaff)
+        /// <param name="decide">Si se pasa, decide quién se retira en lugar del azar (para los retiros anunciados al empezar la temporada).</param>
+        public List<Player> SeasonEnd(IEnumerable<Player> players, DateTime today, IRandom rng, out List<StaffMember> newStaff, Func<Player, bool> decide = null)
         {
             newStaff = new List<StaffMember>();
             var retired = new List<Player>();
             foreach (Player p in players.OrderBy(x => x.Id))
             {
-                int over = p.AgeOn(today) - _config.RetirementAge;
-                if (over < 0 || !rng.Chance(Math.Min(0.95f, _config.RetirementChancePerYear * (over + 1))))
+                if (!(decide != null ? decide(p) : ShouldRetire(p, today, rng)))
                 {
                     continue;
                 }

@@ -70,8 +70,8 @@
   "ChemistryFullMinutes": 1800,
   "ChemistryBonus": 0.02,
   "LeaderMoralePull": 0.25,
-  "RetirementAge": 37,
+  "RetirementAge": 34,
   "FreeAgentMaxAge": 40,
-  "RetirementChancePerYear": 0.25,
+  "RetirementChancePerYear": 0.2,
   "HallOfFameGoals": 100
 }

@@ -424,5 +424,25 @@
   "DevSlowGap": 10,
   "PotentialNoise": 10,
   "AiPromoteMargin": 3,
-  "AiPromoteRank": 17
+  "AiPromoteRank": 17,
+  "DeclineMinAge": 30,
+  "DeclineOnsetSpread": 4,
+  "DeclinePointsPerWeek": 0.25,
+  "DeclineAcceleration": 0.25,
+  "DeclineSpeedRange": [
+    0.5,
+    1.5
+  ],
+  "DeclineWeeklyNoise": 0.5,
+  "DeclinePhysicalShare": 0.65,
+  "DeclineGoalkeeperFactor": 0.6,
+  "DeclineProfessionalFactor": 0.7,
+  "ReserveMatchChance": 0.6,
+  "ReserveGoalChance": [
+    0,
+    0.03,
+    0.08,
+    0.22
+  ],
+  "ReserveAssistShare": 0.8
 }
