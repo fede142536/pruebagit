@@ -52,6 +52,9 @@ namespace Football.Game
             Item(SettingCategory.Audio, true, s => "VOLUMEN GENERAL: " + GameSettings.VolumeLabels[s.MasterVolume], s => s.MasterVolume = (s.MasterVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "AMBIENTE DE ESTADIO: " + GameSettings.VolumeLabels[s.StadiumVolume], s => s.StadiumVolume = (s.StadiumVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "MÚSICA DE LOS MENÚS: " + GameSettings.VolumeLabels[s.MusicVolume], s => s.MusicVolume = (s.MusicVolume + 1) % 5),
+            Item(SettingCategory.Audio, false, s => Locale.Get("music.all") + ": " + MenuMusic.OnCount(s.MenuSongs) + " / " + MenuMusic.Count,
+                s => s.MenuSongs = MenuMusic.ToggleAll(s.MenuSongs)),
+            Song(0), Song(1), Song(2), Song(3), Song(4), Song(5), Song(6),
             Item(SettingCategory.Audio, true, s => "BALÓN, SILBATO Y RED: " + GameSettings.VolumeLabels[s.EffectsVolume], s => s.EffectsVolume = (s.EffectsVolume + 1) % 5),
             Item(SettingCategory.Audio, true, s => "VIBRACIÓN (GOLES Y PALOS): " + YesNo(s.Vibration), s => s.Vibration = !s.Vibration),
 
@@ -75,6 +78,11 @@ namespace Football.Game
 
         private static SettingItem Item(SettingCategory c, bool live, Func<GameSettings, string> text, Action<GameSettings> next) =>
             new SettingItem { Category = c, Live = live, Text = text, Next = next };
+
+        /// <summary>Encender o apagar una canción de los menús (no se puede cambiar en el partido: ahí la música no suena).</summary>
+        private static SettingItem Song(int index) =>
+            Item(SettingCategory.Audio, false, s => Locale.Get("music." + index) + ": " + YesNo(MenuMusic.IsOn(s.MenuSongs, index)),
+                s => s.MenuSongs = MenuMusic.Toggle(s.MenuSongs, index));
 
         private static string YesNo(bool v) => v ? "SÍ" : "NO";
 

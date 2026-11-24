@@ -575,5 +575,13 @@
   "match.second_half": "SEGUNDO TIEMPO",
   "match.second_half_detail": "Empieza el segundo tiempo",
   "weather.random": "Al azar",
-  "setup.weather": "CLIMA"
+  "setup.weather": "CLIMA",
+  "music.all": "CANCIONES ENCENDIDAS",
+  "music.0": "LATIN LOOP BRASIL",
+  "music.1": "MAGALENHA (SÉRGIO MENDES)",
+  "music.2": "CHEGA DE SAUDADE (BAILA NOVA)",
+  "music.3": "INSENSATEZ (BAILA NOVA)",
+  "music.4": "GAROTA DE IPANEMA (BAILA NOVA)",
+  "music.5": "DESAFINADO (BAILA NOVA)",
+  "music.6": "WAVE (BAILA NOVA)"
 }

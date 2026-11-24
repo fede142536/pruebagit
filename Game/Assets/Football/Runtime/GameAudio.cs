@@ -27,7 +27,6 @@ namespace Football.Game
             "Audio/songs/se_me_ha_perdido_un_corazon", "Audio/songs/y_dale_alegria", "Audio/songs/beso_a_beso",
             "Audio/songs/una_calle_nos_separa", "Audio/songs/el_negro_jose", "Audio/songs/dale_vieja_dale"
         };
-        private static readonly string[] MenuPaths = { "Audio/music_menu", "Audio/music_magalenha" };
         private const float BocaOwnSongChance = 0.75f;  // con Boca de local, tres de cada cuatro temas son de La 12 y el resto sale del repertorio general
         private const float SongGain = 0.55f;           // los temas de estudio suenan más bajos que las grabaciones de la hinchada
         private const float CheerSeconds = 7f;         // lo que dura el grito de gol antes de apagarse
@@ -199,8 +198,25 @@ namespace Football.Game
         private void PlayNextMenuTrack()
         {
             AudioClip previous = _menuClip;
-            _menuTrack = _menuClip == null ? _presentationRng.NextInt(0, MenuPaths.Length) : (_menuTrack + 1) % MenuPaths.Length; // arranca por uno al azar y se alternan
-            _menuClip = Resources.Load<AudioClip>(MenuPaths[_menuTrack]);
+            int mask = _settings.MenuSongs;
+            if (MenuMusic.OnCount(mask) == 0)
+            {
+                return; // la persona apagó todas las canciones
+            }
+
+            // Arranca por una encendida al azar y sigue con la próxima encendida, en orden y dando la vuelta.
+            int track = _menuClip == null ? _presentationRng.NextInt(0, MenuMusic.Count) : _menuTrack + 1;
+            for (int k = 0; k < MenuMusic.Count; k++)
+            {
+                int candidate = (track + k) % MenuMusic.Count;
+                if (MenuMusic.IsOn(mask, candidate))
+                {
+                    _menuTrack = candidate;
+                    break;
+                }
+            }
+
+            _menuClip = Resources.Load<AudioClip>(MenuMusic.Paths[_menuTrack]);
             if (previous != null && previous != _menuClip)
             {
                 Resources.UnloadAsset(previous);
@@ -224,9 +240,18 @@ namespace Football.Game
             {
                 _music.Stop();
             }
-            else if (_musicTarget > 0f && !_music.isPlaying && !AudioListener.pause)
+            else if (_musicTarget > 0f && _music.isPlaying && !MenuMusic.IsOn(_settings.MenuSongs, _menuTrack))
             {
-                PlayNextMenuTrack(); // terminó el tema: sigue el otro
+                // La persona apagó la canción que suena: pasa a la próxima encendida (o se calla si no queda ninguna).
+                _music.Stop();
+                if (MenuMusic.OnCount(_settings.MenuSongs) > 0)
+                {
+                    PlayNextMenuTrack();
+                }
+            }
+            else if (_musicTarget > 0f && !_music.isPlaying && !AudioListener.pause && MenuMusic.OnCount(_settings.MenuSongs) > 0)
+            {
+                PlayNextMenuTrack(); // terminó el tema (o se encendió alguna): sigue la próxima
             }
         }
 

@@ -575,5 +575,13 @@
   "match.second_half": "SECOND HALF",
   "match.second_half_detail": "The second half begins",
   "weather.random": "Random",
-  "setup.weather": "WEATHER"
+  "setup.weather": "WEATHER",
+  "music.all": "SONGS ON",
+  "music.0": "LATIN LOOP BRAZIL",
+  "music.1": "MAGALENHA (SÉRGIO MENDES)",
+  "music.2": "CHEGA DE SAUDADE (BAILA NOVA)",
+  "music.3": "INSENSATEZ (BAILA NOVA)",
+  "music.4": "GAROTA DE IPANEMA (BAILA NOVA)",
+  "music.5": "DESAFINADO (BAILA NOVA)",
+  "music.6": "WAVE (BAILA NOVA)"
 }

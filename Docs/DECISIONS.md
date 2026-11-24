@@ -556,3 +556,9 @@ sin excepciones ni partidos sin terminar. Pase 85,9 %.
 - **Medidor de basura**: el benchmark imprime las asignaciones **por parte del cuadro** (`AllocProbe`: controles, motor, eventos/marcador, vistas previas, dibujo, radar, aro del jugador, nombres, resto). La causa de los ~1.000 KB/s aún no está ubicada; esa lista la dirá en la próxima corrida.
 - **Animaciones Quaternius**: el pack (UAL1) solo trae locomoción y gestos sueltos (Idle, Walk, Jog, Sprint, Jump, Roll, Punch, Push, Death…): **no tiene patear, entrada, estirada de arquero ni saque de banda**. No se integró porque exige retargetear 65 huesos a nuestros 20 y no cubriría los movimientos de fútbol; ver la propuesta en el mensaje de entrega.
 - Pruebas: `OwnerTurningTests` acepta 80° (antes 70°; medía 72,5° tras cambiar la secuencia de azar; sin el arreglo medía 179°).
+
+## D-55 · Cinco canciones más en el menú y selector de canciones — Aceptada (pedido del usuario, 24/11/2026)
+- Menú: 7 canciones (el loop brasileño, Magalenha y cinco de Baila Nova). Suenan una tras otra, empezando por una encendida al azar y siguiendo en orden. En **Ajustes → Audio** hay una fila por canción (SÍ/NO) y «CANCIONES ENCENDIDAS: n / 7» que las apaga o enciende todas. La elección se guarda (`GameSettings.MenuSongs`, máscara de bits); si se apaga la que suena, pasa a la siguiente encendida; con todas apagadas el menú queda en silencio. No se cambia en el partido (ahí la música no suena).
+- La pantalla de ajustes muestra ahora dos columnas (el audio tiene 13 filas).
+- Audio en `Resources/Audio` recodificado a mono y con `.meta` de *Streaming* para las canciones de menú (ver `ASSETS_LICENSES.md`); **los `.meta` están escritos a mano y sin probar en Unity**: si Unity los rehace o muestra un error de importación, ajustar «Load Type: Streaming» desde el Inspector.
+- Se subieron 5 archivos, no 2 como decía el mensaje: están los 5 en el menú.

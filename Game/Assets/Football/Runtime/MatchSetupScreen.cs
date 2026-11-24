@@ -196,7 +196,7 @@ namespace Football.Game
                     SettingsCatalog.CategoryLabels[i], 28, UiTheme.Button);
             }
 
-            _list = new SettingsList(Root, new Vector2(560f, 800f), new Vector2(880f, 60f), 68f, 10, 0f, 1);
+            _list = new SettingsList(Root, new Vector2(500f, 800f), new Vector2(880f, 60f), 68f, 10, 940f, 2); // dos columnas: el audio tiene una fila por canción
             // Guía de controles: solo en la pestaña de controles, sobre un panel opaco para que se lea bien.
             Image panel = UiKit.Panel(Root, "Guia", new Vector2(1440f, 500f), new Vector2(820f, 700f), new Color(0.07f, 0.09f, 0.13f, 1f));
             _guidePanel = panel.gameObject;

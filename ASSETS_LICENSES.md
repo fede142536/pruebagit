@@ -15,6 +15,10 @@ nombres de archivo y no están verificados** contra la página de cada sonido: c
 | `music_magalenha.mp3` | `Magalenha - Sergio Mendes.mp3` (aportado por el usuario) | Grabación comercial con derechos de autor; **solo uso personal, no distribuir** | Música de los menús (alterna con `music_menu.mp3`) |
 | `songs/*.mp3` (13 temas) | Cómo olvidar (Los Auténticos Decadentes), Para no olvidar (Calamaro), Cuando yo muera (Rubén Rada), Estás para ganar (Johny Tolengo), No me arrepiento de este amor y Se me ha perdido un corazón (Gilda), Mi historia entre tus dedos (Grignani), Bad moon rising (Creedence), Y dale alegría a mi corazón (Fito Páez), Beso a beso (La Mona Jiménez), Una calle nos separa (Leo Dan), El negro José (Roberto Ternán), Dale vieja dale (Los Pugliese) — aportados por el usuario, 24/11/2026 | Grabaciones comerciales con derechos de autor; **solo uso personal, no distribuir ni publicar el APK** | Temas que suenan al azar durante los partidos |
 
+| `music_chega_de_saudade.mp3`, `music_insensatez.mp3`, `music_garota_de_ipanema.mp3`, `music_desafinado.mp3`, `music_wave.mp3` | `Baila Nova - Chega de Saudade / Insensatez / Garota de Ipanema / Desafinado / Wave.mp3` (aportados por el usuario, 24/11/2026) | Grabaciones comerciales con derechos de autor; **solo uso personal, no distribuir** | Música de los menús (se elige cuáles suenan en Ajustes → Audio) |
+
+Las canciones de los menús (`music_*.mp3`) llevan un `.meta` con el audio en modo *Streaming* (se lee del disco mientras suena en vez de descomprimirse entera: una canción de 8 minutos serían ~85 MB de memoria) y mono; Unity las recomprime al exportar.
+
 Sin usar: «La colita» (La Sonora Colombiana) e «It's a heartache» (Bonnie Tyler) llegaron dañados (621 bytes, sin audio); si se vuelven a subir, basta agregarlos a `SongPaths` en `GameAudio.cs`.
 
 Se recodificaron con ffmpeg a MP3 (hinchada, cánticos y temas: mono, 32 kHz, 64 kb/s, sin silencios en los extremos y a volumen parejo con `loudnorm` −20 LUFS; música de menús: estéreo, 44,1 kHz, 96 kb/s) para que pesen menos en el celular.
