@@ -588,6 +588,7 @@ namespace Football.Game
                     }
                 }
 
+                IntroAmbience(deltaTime);
                 _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
                 return;
             }
@@ -605,6 +606,7 @@ namespace Football.Game
                 else
                 {
                     ShowIntroPlate(_view.IntroTeamShown);
+                    IntroAmbience(deltaTime);
                     _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
                     return;
                 }
@@ -621,6 +623,7 @@ namespace Football.Game
                     _view.SkipIntro();
                 }
 
+                IntroAmbience(deltaTime);
                 _view.Render(_previous, _current, 1f, -1, -1, deltaTime);
                 return;
             }
@@ -863,6 +866,14 @@ namespace Football.Game
                 }
             }
         }
+
+        /// <summary>
+        /// Ambiente del estadio durante las presentaciones (táctica, introducción de TV y plano aéreo): el partido todavía no corre, pero la hinchada ya suena como cuando el
+        /// balón está cerca de un arco. Sin esto el volumen quedaba en cero hasta el pitazo inicial.
+        /// </summary>
+        private void IntroAmbience(float deltaTime) => _audio.UpdateCrowd(IntroCrowdCloseness, deltaTime);
+
+        private const float IntroCrowdCloseness = 0.8f;
 
         private void UpdateHud()
         {

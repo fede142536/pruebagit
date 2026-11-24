@@ -36,6 +36,24 @@ namespace Football.Game
         private static long _last;
         private static float _seconds;
         private static bool _working;
+        private static bool _useMono;
+        private static bool _sourceChosen;
+
+        /// <summary>
+        /// Bytes asignados hasta ahora. <c>GC.GetAllocatedBytesForCurrentThread</c> devuelve 0 con el motor Mono de Unity (el Editor y las compilaciones Mono); en ese caso
+        /// se usa el tamaño del montón de Mono (<c>Profiler.GetMonoUsedSizeLong</c>), que sube con cada asignación (si hubo una recolección en el medio, ese tramo no suma).
+        /// </summary>
+        private static long Allocated()
+        {
+            if (!_sourceChosen)
+            {
+                _sourceChosen = true;
+                long first = GC.GetAllocatedBytesForCurrentThread();
+                _useMono = first == 0 && GC.GetAllocatedBytesForCurrentThread() == 0;
+            }
+
+            return _useMono ? UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong() : GC.GetAllocatedBytesForCurrentThread();
+        }
 
         /// <summary>Se mide solo si es verdadero (benchmark).</summary>
         public static bool Enabled { get; set; }
@@ -58,7 +76,7 @@ namespace Football.Game
             }
 
             _seconds += deltaTime;
-            _last = GC.GetAllocatedBytesForCurrentThread();
+            _last = Allocated();
             _working = true;
         }
 
@@ -71,8 +89,8 @@ namespace Football.Game
                 return;
             }
 
-            long now = GC.GetAllocatedBytesForCurrentThread();
-            Totals[(int)part] += now - _last;
+            long now = Allocated();
+            Totals[(int)part] += Math.Max(0L, now - _last); // si bajó, hubo una recolección: ese tramo no se cuenta
             _last = now;
         }
 
@@ -91,10 +109,10 @@ namespace Football.Game
             }
 
             var sb = new StringBuilder();
-            sb.Append("Asignaciones por parte (KB/s, total ").Append((sum / 1024f / _seconds).ToString("F1")).Append("):\n");
+            sb.Append(_useMono ? "Asignaciones por parte (KB/s, por tamaño del montón de Mono, total " : "Asignaciones por parte (KB/s, total ").Append((sum / 1024f / _seconds).ToString("F1")).Append("):\n");
             if (sum == 0)
             {
-                sb.Append("  el medidor devolvió 0 en este dispositivo (usar el Profiler)\n");
+                sb.Append("  el medidor devolvió 0 (usar el Profiler)\n");
                 return sb.ToString();
             }
 

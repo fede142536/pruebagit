@@ -227,7 +227,7 @@ namespace Football.Game
         }
 
         // Piezas fijas (carteles, gradas, paredes, arcos): se juntan en una malla por color al terminar de construir.
-        private readonly Dictionary<Color, MeshMerge> _static = new Dictionary<Color, MeshMerge>();
+        private Dictionary<Color, MeshMerge> _static = new Dictionary<Color, MeshMerge>();
 
         /// <summary>Anota una pieza que nunca se mueve; se dibuja junto con las demás del mismo color.</summary>
         private void StaticShape(string name, Mesh mesh, Color color, Vector3 position, Vector3 scale) =>
@@ -245,14 +245,16 @@ namespace Football.Game
         }
 
         /// <summary>Crea un objeto por color con todas las piezas fijas: de unas 40 llamadas de dibujo a menos de 10.</summary>
-        private void FlushStatic()
+        private void FlushStatic() => FlushStatic(_root.transform);
+
+        private void FlushStatic(Transform parent)
         {
             foreach (KeyValuePair<Color, MeshMerge> batch in _static)
             {
                 Mesh mesh = batch.Value.Build();
                 _meshes.Add(mesh);
                 var go = new GameObject("Fijo");
-                go.transform.SetParent(_root.transform, false);
+                go.transform.SetParent(parent, false);
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
                 var renderer = go.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = Materials.Get(batch.Key);
@@ -409,6 +411,7 @@ namespace Football.Game
             {
                 BuildCrowd(halfL, halfW, built);
                 BuildBenchesAndPhotographers(_pitch.HalfLength, _pitch.HalfWidth);
+                BuildNearStand(halfL, halfW, built, tiers);
                 if (_look.StandsWork)
                 {
                     BuildScaffolding(halfL, halfW, built);
@@ -486,6 +489,57 @@ namespace Football.Game
                 BuildRoofs(halfL, halfW, steps, lateralLen, endLen);
             }
         }
+
+        private const float NearStandGap = 5f;   // los bancos y el túnel quedan delante de la tribuna cercana
+        private Transform _nearStand;
+
+        /// <summary>
+        /// Tribuna del lateral de la cámara de transmisión (detrás de los bancos y del túnel) con su público. Solo se ve durante las presentaciones y la introducción de TV,
+        /// cuando la cámara mira hacia ese lateral; en el partido se oculta para que no tape la cámara de juego.
+        /// </summary>
+        private void BuildNearStand(float halfL, float halfW, int built, Color[] tiers)
+        {
+            _nearStand = new GameObject("TribunaCercana").transform;
+            _nearStand.SetParent(_root.transform, false);
+            Dictionary<Color, MeshMerge> outer = _static;
+            _static = new Dictionary<Color, MeshMerge>();
+            int steps = built * StepsPerTier;
+            float lateralLen = 2f * halfL + LateralExtra;
+            for (int k = 0; k < steps; k++)
+            {
+                float off = NearStandGap + StepOffset(k), top = StepTop(k);
+                Color c = tiers[k / StepsPerTier];
+                if (k % 2 == 1)
+                {
+                    c = Color.Lerp(c, Color.white, 0.07f);
+                }
+
+                StaticShape("Escalon", MeshKit.Box, c, new Vector3(0f, top * 0.5f, -(halfW + off)), new Vector3(lateralLen, top, StepDepth));
+            }
+
+            float wallOff = NearStandGap + StandFront + steps * StepDepth + WallThickness * 0.5f;
+            float wallHeight = StepTop(steps - 1) + WallExtraHeight;
+            StaticShape("Muro", MeshKit.Box, WallColor, new Vector3(0f, wallHeight * 0.5f, -(halfW + wallOff)), new Vector3(lateralLen, wallHeight, WallThickness));
+            FlushStatic(_nearStand);
+            _static = outer;
+
+            float spacing = CrowdSpacing[Mathf.Clamp(GraphicsQuality.Level, 0, CrowdSpacing.Length - 1)];
+            KitColors host = _hostIsSecondTeam ? _awayKit : _homeKit;
+            KitColors first = _hostKits != null ? _hostKits[0] : host, second = _hostKits != null && _hostKits.Length > 1 ? _hostKits[1] : first;
+            Color[] mixed = { first.Shirt, first.Shirt, first.Shirt, second.Shirt, second.Shirt, first.Secondary, second.Secondary, first.Shirt };
+            var crowd = new MeshMerge();
+            int seed = NearStandSeed;
+            float crowdLength = 2f * halfL + CrowdLateralExtra;
+            for (int k = 0; k < steps; k++)
+            {
+                CrowdRow(crowd, new Vector3(0f, StepTop(k), -(halfW + NearStandGap + StepOffset(k))), crowdLength, true, spacing, mixed, ref seed, _look.Attendance);
+            }
+
+            FinishCrowd(crowd, _nearStand);
+            _nearStand.gameObject.SetActive(false);
+        }
+
+        private const int NearStandSeed = 100000;
 
         /// <summary>Techo sobre los últimos escalones del lateral y las cabeceras, con columnas en los pasillos.</summary>
         private void BuildRoofs(float halfL, float halfW, int steps, float lateralLen, float endLen)
@@ -775,7 +829,9 @@ namespace Football.Game
             }
         }
 
-        private void FinishCrowd(MeshMerge merge)
+        private void FinishCrowd(MeshMerge merge) => FinishCrowd(merge, _crowd);
+
+        private void FinishCrowd(MeshMerge merge, Transform parent)
         {
             if (!Materials.PlayerShaderAvailable || merge.IsEmpty)
             {
@@ -785,7 +841,7 @@ namespace Football.Game
             Mesh mesh = merge.Build();
             _meshes.Add(mesh);
             var go = new GameObject("Hinchas");
-            go.transform.SetParent(_crowd, false);
+            go.transform.SetParent(parent, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = go.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = Materials.GetCrowd(Color.white); // colores por vértice, sin sombra proyectada
@@ -1626,6 +1682,15 @@ namespace Football.Game
                 _camLook = Vector3.Lerp(_camLook, lookAt, blend);
                 position = _camPosition;
                 lookAt = _camLook;
+            }
+
+            if (_nearStand != null)
+            {
+                bool wantNear = _teamIntro || _introTime < _introDuration; // la tribuna del lateral de la cámara solo se ve mientras la cámara mira hacia ahí
+                if (_nearStand.gameObject.activeSelf != wantNear)
+                {
+                    _nearStand.gameObject.SetActive(wantNear);
+                }
             }
 
             if (_introTime < _introDuration)
