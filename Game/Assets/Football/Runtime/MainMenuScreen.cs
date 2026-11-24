@@ -83,6 +83,7 @@ namespace Football.Game
             UiKit.Label(Root, "Logo", new Vector2(MarginX + 350f, 960f), new Vector2(700f, 100f), Locale.Get("app.title"), 84, AccentStrong, TextAnchor.MiddleLeft);
             UiKit.Label(Root, "Lema", new Vector2(MarginX + 380f, 890f), new Vector2(760f, 36f), Locale.Get("app.tagline"), 22, Dim, TextAnchor.MiddleLeft);
 
+            _shadow = UiKit.Panel(Root, "SombraModo", new Vector2(960f, CardY), new Vector2(BigW, BigH), Accent); // sombra sólida de la tarjeta elegida (manual de diseño)
             for (int i = 0; i < Entries.Length; i++)
             {
                 _edge[i] = UiKit.Panel(Root, "BordeModo" + i, new Vector2(960f, CardY), new Vector2(SmallW, SmallH), Line);
