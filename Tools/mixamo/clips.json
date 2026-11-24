@@ -1,0 +1,26 @@
+{
+  "fps": 30,
+  "_nota": "start/end en segundos de la animación original; align: 'foot' recorta alrededor del golpe (instante de máxima velocidad del pie); loop repite; hold deja la última pose; rate es la velocidad de reproducción base.",
+  "clips": [
+    { "name": "idle",        "file": "offensive idle.fbx",           "loop": true },
+    { "name": "keeper_idle", "file": "goalkeeper idle.fbx",          "loop": true },
+    { "name": "walk",        "file": "Walking.fbx",                  "loop": true },
+    { "name": "jog",         "file": "jog forward.fbx",              "loop": true },
+    { "name": "run",         "file": "Standard Run.fbx",             "loop": true },
+    { "name": "sprint",      "file": "Running.fbx",                  "loop": true },
+    { "name": "kick",        "file": "kick soccerball (2).fbx",      "start": 0.12, "end": 0.5 },
+    { "name": "shoot",       "file": "kick soccerball.fbx",          "start": 0.15, "end": 0.57 },
+    { "name": "shoot_run",   "file": "strike foward jog.fbx",        "start": 0.2, "end": 1.0 },
+    { "name": "pass",        "file": "Soccer Pass.fbx",              "start": 0.45, "end": 1.1 },
+    { "name": "control",     "file": "kneeing soccerball (2).fbx",   "start": 0.0, "end": 0.6, "rate": 1.5 },
+    { "name": "header",      "file": "header soccerball.fbx",        "start": 0.45, "end": 1.05, "rate": 1.3 },
+    { "name": "slide",       "file": "soccer tackle (2).fbx",        "start": 0.0, "end": 1.77, "rate": 1.55 },
+    { "name": "dive_right",  "file": "Goalkeeper Diving Save.fbx",   "start": 0.35, "end": 2.9, "rate": 1.8 },
+    { "name": "dive_left",   "file": "Goalkeeper Diving Save.fbx",   "start": 0.35, "end": 2.9, "rate": 1.8, "mirror": true },
+    { "name": "rush",        "file": "goalkeeper body block.fbx",    "start": 0.0, "end": 0.8, "hold": true, "rate": 1.4 },
+    { "name": "hold",        "file": "goalkeeper catch (2).fbx",     "start": 0.0, "end": 0.97, "hold": true, "rate": 1.3 },
+    { "name": "stumble",     "file": "soccer trip.fbx",              "start": 0.0, "end": 0.66, "rate": 1.4 },
+    { "name": "throw",       "file": "throw in.fbx",                 "start": 1.2, "end": 2.1 },
+    { "name": "throw_hold",  "file": "throw in.fbx",                 "start": 1.2, "end": 1.24, "hold": true }
+  ]
+}

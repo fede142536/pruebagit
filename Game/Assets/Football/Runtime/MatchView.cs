@@ -1230,8 +1230,8 @@ namespace Football.Game
                     if (!_diveLatched[i])
                     {
                         _diveLatched[i] = true;
-                        _diveFacing[i] = heading;
                         float toBallStart = Mathf.Atan2(by - y, bx - x) * Mathf.Rad2Deg;
+                        _diveFacing[i] = toBallStart; // el cuerpo mira al balón (la animación ya se tira de costado)
                         float side = Mathf.DeltaAngle(toBallStart, heading); // hacia dónde se mueve respecto de donde mira el balón
                         _diveRight[i] = Mathf.Abs(side) > DiveSideMinDegrees ? side < 0f : relative < 0f;
                     }

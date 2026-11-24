@@ -160,6 +160,7 @@ namespace Football.Game
         private readonly Transform _armL, _armR, _elbowL, _elbowR;
         private readonly Transform _shadow;
         private readonly SkinnedMeshRenderer _near, _far;
+        private readonly ClipPlayer _clips;
         private readonly float[] _delta = new float[Channels];
         private readonly bool[] _pinned = new bool[2];
         private readonly bool[] _wasStance = new bool[2];
@@ -232,6 +233,7 @@ namespace Football.Game
             _elbowL = Bone(BodyBone.ElbowL);
             _elbowR = Bone(BodyBone.ElbowR);
             _pelvisHeight = SkinnedBodyGeometry.BindPositions[(int)BodyBone.Pelvis].y;
+            _clips = new ClipPlayer(_bones, look.Keeper);
             _ankleHeight = SkinnedBodyGeometry.BindPositions[(int)BodyBone.AnkleL].y;
 
             // Dos niveles de detalle sobre el mismo esqueleto: se alterna encendiendo y apagando el renderer (el apagado no se anima ni se dibuja).
@@ -659,6 +661,8 @@ namespace Football.Game
             }
 
             Look(lookYaw, lookPitch);
+            // Animaciones de fútbol (Mixamo): si hay clip para lo que hace el jugador pisan la pose procedural, con fundido en los cambios.
+            _clips.Update(deltaTime, action, speed, diveRight, diveHeight, holdingThrow, holdingBall);
         }
 
         /// <summary>Suaviza la diferencia entre la pose pedida y la base de la zancada; el primer fotograma salta directo a la pose.</summary>

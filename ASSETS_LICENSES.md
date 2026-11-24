@@ -39,3 +39,4 @@ Las texturas del pack no se usan (el juego pinta por vértice con los colores de
 | Archivo | Origen | Licencia | Uso |
 |---|---|---|---|
 | `ThirdParty/Mixamo_Soccer/*.fbx` (54 animaciones + `X Bot.fbx`) | Mixamo (Adobe), descargadas por el usuario el 24/11/2026 | Términos de Mixamo: uso gratuito en proyectos propios; **no redistribuir las animaciones sueltas** | Patear, entradas, atajadas, estiradas, saque de banda, cabezazos y trote en 8 direcciones (a integrar al esqueleto del juego) |
+| `Game/Assets/Football/Resources/Anim/clips.bytes` | Derivado de las animaciones de Mixamo de arriba con `Tools/mixamo/import_animations.py` (retargeteado a 20 huesos, recortado, sin malla) | Mismos términos de Mixamo; **solo uso personal, no redistribuir el archivo suelto** | 20 animaciones que mueven a los jugadores en el partido |
