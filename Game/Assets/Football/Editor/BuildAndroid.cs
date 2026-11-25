@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
@@ -79,9 +80,14 @@ namespace Football.Game.Editor
 
             if (report.summary.result == BuildResult.Succeeded)
             {
-                Debug.Log("Football: APK generado en " + Path.GetFullPath(ApkPath) + " (" + (report.summary.totalSize / 1048576) + " MB)");
+                string abis = ListAbis(ApkPath);
+                Debug.Log("Football: APK generado en " + Path.GetFullPath(ApkPath) + " (" + (report.summary.totalSize / 1048576) + " MB). Arquitecturas dentro del APK: " + abis
+                          + ". Android mínimo: API " + (int)PlayerSettings.Android.minSdkVersion + ".");
                 if (!Application.isBatchMode)
                 {
+                    EditorUtility.DisplayDialog("Football",
+                        "APK generado.\n\nArquitecturas dentro del APK: " + abis + "\nAndroid mínimo: API " + (int)PlayerSettings.Android.minSdkVersion
+                        + "\n\nSi el teléfono dice que no es compatible, mándame esos datos y la versión de Android del teléfono.", "Entendido");
                     EditorUtility.RevealInFinder(ApkPath);
                 }
 
@@ -90,6 +96,24 @@ namespace Football.Game.Editor
 
             Debug.LogError("Football: falló la compilación (" + report.summary.result + "). Revisa los errores de la consola.");
             return false;
+        }
+
+        /// <summary>Carpetas de arquitectura (<c>lib/&lt;abi&gt;</c>) que trae el APK, para comprobar que lleva 32 y 64 bits.</summary>
+        private static string ListAbis(string apk)
+        {
+            try
+            {
+                using (ZipArchive zip = ZipFile.OpenRead(apk))
+                {
+                    string[] abis = zip.Entries.Select(e => e.FullName).Where(n => n.StartsWith("lib/")).Select(n => n.Split('/')).Where(p => p.Length > 2)
+                        .Select(p => p[1]).Distinct().OrderBy(a => a).ToArray();
+                    return abis.Length == 0 ? "ninguna (no se pudo leer)" : string.Join(", ", abis);
+                }
+            }
+            catch (IOException e)
+            {
+                return "no se pudo leer el APK (" + e.Message + ")";
+            }
         }
 
         private static string CreateEmptyScene()
